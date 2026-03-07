@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+server/.pytest_cache/
+server/.mypy_cache/
+server/.ruff_cache/
+
+web/node_modules/
+web/.next/
+
+.env
