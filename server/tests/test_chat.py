@@ -1,11 +1,7 @@
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-client = TestClient(app)
-
-
-def test_chat_returns_stub_answer() -> None:
+def test_chat_returns_stub_answer(client: TestClient) -> None:
     response = client.post(
         "/api/v1/workspaces/demo/chat",
         json={"question": "What is this?", "mode": "rag"},

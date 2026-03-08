@@ -1,16 +1,21 @@
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
+
+from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.models.base import Base, utc_now
 
 
-@dataclass(slots=True)
-class Trace:
-    id: str
-    workspace_id: str
-    trace_type: str
-    request_json: dict = field(default_factory=dict)
-    response_json: dict = field(default_factory=dict)
-    latency_ms: int = 0
-    token_input: int = 0
-    token_output: int = 0
-    estimated_cost: float = 0.0
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+class Trace(Base):
+    __tablename__ = "traces"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), index=True)
+    trace_type: Mapped[str] = mapped_column(String(50))
+    request_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    response_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    token_input: Mapped[int] = mapped_column(Integer, default=0)
+    token_output: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_cost: Mapped[float] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

@@ -1,11 +1,7 @@
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-client = TestClient(app)
-
-
-def test_workspace_crud() -> None:
+def test_workspace_crud(client: TestClient) -> None:
     create_response = client.post(
         "/api/v1/workspaces",
         json={"name": "Research Demo", "type": "research", "description": "Initial workspace"},
