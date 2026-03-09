@@ -16,7 +16,7 @@ class Document(Base):
     file_path: Mapped[str | None] = mapped_column(Text(), nullable=True)
     mime_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="uploaded")
-    created_by: Mapped[str] = mapped_column(String(36), default="demo-user")
+    created_by: Mapped[str] = mapped_column(String(36))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
