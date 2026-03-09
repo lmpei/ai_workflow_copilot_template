@@ -1,39 +1,35 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.schemas.auth import LoginRequest, RegisterRequest
-from app.services.auth_service import preview_registered_user
+from app.core.security import get_current_user
+from app.models.user import User
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, UserResponse
+from app.services.auth_service import (
+    AuthConflictError,
+    AuthCredentialsError,
+    get_current_user_response,
+    login_user,
+    register_user,
+)
 
 router = APIRouter()
 
 
-@router.post("/auth/register", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def register(payload: RegisterRequest) -> dict:
-    user = preview_registered_user(payload)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "status": "scaffolded",
-            "message": "Auth persistence and token issuance start in Phase 1 Platform MVP.",
-            "preview_user": user.model_dump(mode="json"),
-        },
-    )
+@router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(payload: RegisterRequest) -> UserResponse:
+    try:
+        return register_user(payload)
+    except AuthConflictError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
 
 
-@router.post("/auth/login", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def login(payload: LoginRequest) -> dict:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "status": "scaffolded",
-            "message": "Login is planned for Phase 1 after database and auth provider integration.",
-            "email": payload.email,
-        },
-    )
+@router.post("/auth/login", response_model=LoginResponse)
+async def login(payload: LoginRequest) -> LoginResponse:
+    try:
+        return login_user(payload)
+    except AuthCredentialsError as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(error)) from error
 
 
-@router.get("/auth/me", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def me() -> dict:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Current-user lookup is a Phase 1 scaffold and is not implemented yet.",
-    )
+@router.get("/auth/me", response_model=UserResponse)
+async def me(current_user: User = Depends(get_current_user)) -> UserResponse:
+    return get_current_user_response(current_user)

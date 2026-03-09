@@ -1,12 +1,55 @@
-from app.core.security import hash_password
-from app.schemas.auth import RegisterRequest, UserResponse
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+)
+from app.repositories import user_repository
+from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, UserResponse
 
 
-def preview_registered_user(payload: RegisterRequest) -> UserResponse:
-    password_hash = hash_password(payload.password)
+class AuthConflictError(Exception):
+    pass
+
+
+class AuthCredentialsError(Exception):
+    pass
+
+
+def _to_user_response(user) -> UserResponse:
     return UserResponse(
-        id=f"user-{password_hash[:8]}",
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        role=user.role,
+    )
+
+
+def register_user(payload: RegisterRequest) -> UserResponse:
+    existing_user = user_repository.get_user_by_email(payload.email)
+    if existing_user is not None:
+        raise AuthConflictError("Email already registered")
+
+    password_hash = hash_password(payload.password)
+    user = user_repository.create_user(
         email=payload.email,
+        password_hash=password_hash,
         name=payload.name,
         role="owner",
     )
+    return _to_user_response(user)
+
+
+def login_user(payload: LoginRequest) -> LoginResponse:
+    user = user_repository.get_user_by_email(payload.email)
+    if user is None or not verify_password(payload.password, user.password_hash):
+        raise AuthCredentialsError("Invalid email or password")
+
+    access_token = create_access_token(user_id=user.id)
+    return LoginResponse(
+        access_token=access_token,
+        user=_to_user_response(user),
+    )
+
+
+def get_current_user_response(user) -> UserResponse:
+    return _to_user_response(user)
