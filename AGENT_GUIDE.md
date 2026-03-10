@@ -4,7 +4,7 @@ This repository supports AI coding agents and follows the workflow in `AI_WORKFL
 
 ## Stack
 
-- Frontend: Next.js
+- Frontend: Next.js App Router with a TypeScript-first standard
 - Backend: FastAPI
 - Database: PostgreSQL
 - Cache/Queue: Redis
@@ -37,6 +37,7 @@ This repository supports AI coding agents and follows the workflow in `AI_WORKFL
 - Add or update tests for new behavior
 - Prefer small, scoped changes
 - Reuse existing modules before creating new abstractions
+- Frontend code should default to TypeScript (`.ts` / `.tsx`) unless a scoped task explicitly says otherwise
 - Do not present scaffold endpoints as product-complete features
 - Do not edit environment or deployment files unless the task explicitly requires it
 

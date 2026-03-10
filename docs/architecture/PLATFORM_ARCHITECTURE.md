@@ -11,7 +11,7 @@ It is the architectural north star for implementation and should not be used to 
 Users
   |
   v
-Next.js App Router
+Next.js App Router (TypeScript-first standard)
   |
   +-- Auth UI
   +-- Workspace UI
@@ -102,6 +102,7 @@ FastAPI REST API
 - Task submission and status tracking
 - Evaluation and observability dashboards
 - Scenario-specific UI for job, support, and research modules
+- Frontend pages, components, and shared helpers default to TypeScript
 
 ## Backend Responsibilities
 

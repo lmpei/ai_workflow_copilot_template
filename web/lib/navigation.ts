@@ -1,4 +1,14 @@
-export const platformModules = [
+type PlatformModule = {
+  title: string;
+  description: string;
+};
+
+type WorkspaceTab = {
+  label: string;
+  suffix: string;
+};
+
+export const platformModules: ReadonlyArray<PlatformModule> = [
   {
     title: "Platform Core",
     description: "Shared auth, workspaces, documents, chat, tasks, and metrics foundations.",
@@ -17,7 +27,7 @@ export const platformModules = [
   },
 ];
 
-export const workspaceTabs = [
+export const workspaceTabs: ReadonlyArray<WorkspaceTab> = [
   { label: "Overview", suffix: "" },
   { label: "Documents", suffix: "/documents" },
   { label: "Chat", suffix: "/chat" },

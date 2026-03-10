@@ -2,7 +2,11 @@ import Link from "next/link";
 
 import { workspaceTabs } from "../../lib/navigation";
 
-export default function WorkspaceNav({ workspaceId }) {
+type WorkspaceNavProps = {
+  workspaceId: string;
+};
+
+export default function WorkspaceNav({ workspaceId }: WorkspaceNavProps) {
   return (
     <nav style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
       {workspaceTabs.map((tab) => (

@@ -2,7 +2,13 @@ import ChatScaffold from "../../../../components/chat/chat-scaffold";
 import SectionCard from "../../../../components/ui/section-card";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
-export default function WorkspaceChatPage({ params }) {
+type WorkspacePageProps = {
+  params: {
+    workspaceId: string;
+  };
+};
+
+export default function WorkspaceChatPage({ params }: WorkspacePageProps) {
   const { workspaceId } = params;
 
   return (

@@ -1,7 +1,13 @@
 import SectionCard from "../../../components/ui/section-card";
 import WorkspaceNav from "../../../components/workspace/workspace-nav";
 
-export default function WorkspaceOverviewPage({ params }) {
+type WorkspacePageProps = {
+  params: {
+    workspaceId: string;
+  };
+};
+
+export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
   const { workspaceId } = params;
 
   return (

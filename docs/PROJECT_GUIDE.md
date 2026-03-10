@@ -14,6 +14,11 @@ implementation aligned with the original platform vision.
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - Defines the target system architecture and the intended responsibilities of each layer.
 
+### Archive and Decision Records
+
+- `docs/archive/FRONTEND_TYPESCRIPT_MIGRATION.md`
+  - Records the completed feasibility assessment and migration boundary for moving the frontend scaffold to TypeScript.
+
 ### Process and Execution
 
 - `AI_WORKFLOW.md`
@@ -90,11 +95,11 @@ implementation aligned with the original platform vision.
 ### Frontend Folders
 
 - `web/app/`
-  - Route-level UI organized by App Router structure.
+  - Route-level UI organized by App Router structure; new frontend work should default to TypeScript.
 - `web/components/`
-  - Reusable UI building blocks and page sections.
+  - Reusable UI building blocks and page sections; new frontend work should default to TypeScript.
 - `web/lib/`
-  - Frontend integration helpers, navigation constants, and shared client logic.
+  - Frontend integration helpers, navigation constants, and shared client logic; new frontend work should default to TypeScript.
 
 ## Current Development Status
 
@@ -114,6 +119,7 @@ The repository is currently in `Phase 0: Scaffold & Alignment`.
 - CI with lint, type check, tests, and frontend build
 - Backend layer skeleton for core, routes, schemas, services, repositories, workers, and agents
 - Frontend route skeleton for auth, dashboard, workspaces, documents, chat, tasks, and analytics
+- Frontend scaffold migrated to TypeScript
 - Minimal demo loop for health, workspaces, chat, and metrics
 
 ### Not Yet Complete
@@ -190,3 +196,4 @@ Development is on track when:
 - New routes, services, and UI pages reinforce the shared platform core.
 - Retrieval, tasks, traces, and metrics evolve as shared primitives.
 - Scenario-specific work reuses the same platform contracts instead of bypassing them.
+- Frontend changes follow the TypeScript-first standard captured in the architecture and agent guide.

@@ -49,6 +49,11 @@ surface.
 - Agent orchestration
 - Evaluation and observability
 
+## Implementation Defaults
+
+- Frontend: Next.js App Router with TypeScript
+- Backend: FastAPI with Python
+
 ## Success Criteria
 
 - The same core APIs and data model can support job, support, and research workflows

@@ -2,7 +2,7 @@
 
 This repository is the scaffold for an AI workflow platform with:
 
-- Next.js App Router frontend
+- Next.js App Router frontend with a TypeScript-first standard
 - FastAPI backend
 - PostgreSQL + Redis via Docker Compose
 - RAG, task, and agent scaffolding
@@ -24,6 +24,9 @@ Project-level docs:
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
 - `AGENT_GUIDE.md`
+
+The frontend scaffold is now TypeScript-based. The migration record is archived in
+`docs/archive/FRONTEND_TYPESCRIPT_MIGRATION.md` and `tasks/archive/frontend-typescript-migration.md`.
 
 ## AI-native workflow
 

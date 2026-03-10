@@ -11,5 +11,6 @@ server/tests/test_app.db
 
 web/node_modules/
 web/.next/
+web/tsconfig.tsbuildinfo
 
 .env
