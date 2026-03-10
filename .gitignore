@@ -7,6 +7,7 @@ __pycache__/
 server/.pytest_cache/
 server/.mypy_cache/
 server/.ruff_cache/
+server/tests/test_app.db
 
 web/node_modules/
 web/.next/
