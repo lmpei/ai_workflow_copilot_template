@@ -66,22 +66,36 @@ For full local Windows setup and PowerShell-specific notes, see `docs/developmen
 
 ## Current Phase
 
-The repository is currently in `Phase 0: Scaffold & Alignment`.
+The repository is currently in `Phase 1: Platform MVP`.
 
-Phase 0 includes:
+Phase 1 is now implemented with:
 
-- Product, architecture, workflow, and review docs aligned to one roadmap
-- Docker, CI, verification commands, and Windows development support
-- Backend skeleton for `core/`, `models/`, `schemas/`, `repositories/`, `workers/`, and planned route groups
-- Frontend route skeleton for auth, dashboard, workspace overview, documents, chat, tasks, and analytics
-- Demo routes for `health`, `workspaces`, `chat`, and `metrics`
+- Auth boundary and browser session flow
+- PostgreSQL-backed workspace persistence
+- Document upload and document metadata listing
+- Chat contract with persisted traces
+- Workspace metrics loop
+- Frontend MVP integration for auth, workspaces, documents, chat, and metrics
 
-Phase 1 starts when the repository adds:
+## Current MVP Demo Path
 
-- Auth boundary and session flow
-- Workspace persistence backed by PostgreSQL
-- Document API surface beyond placeholders
-- Stable chat, trace, and metrics contracts
+You can now demo the current platform MVP in this order:
+
+1. Register or log in from `http://localhost:3000/register` or `http://localhost:3000/login`
+2. Create a workspace from `http://localhost:3000/workspaces`
+3. Open the workspace documents page and upload a file
+4. Open the workspace chat page and submit a prompt
+5. Open the workspace analytics page and inspect metrics
+
+## Not Implemented Yet
+
+The following capabilities remain out of scope for Phase 1:
+
+- Real RAG retrieval and source-backed answers
+- Redis-backed workers and async pipelines
+- LangGraph tasks and agent orchestration
+- Evaluation datasets and review workflows
+- Scenario-specific job, support, and research modules
 
 ## Verification
 

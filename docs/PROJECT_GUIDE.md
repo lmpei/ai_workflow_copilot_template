@@ -103,34 +103,37 @@ implementation aligned with the original platform vision.
 
 ## Current Development Status
 
-The repository is currently in `Phase 0: Scaffold & Alignment`.
+The repository is currently in `Phase 1: Platform MVP`.
 
-### Phase 0 Requirements
+### Phase 1 Requirements
 
-- Product, architecture, workflow, and review docs point to the same roadmap
-- Local run, local verification, and CI paths exist and are documented
-- Backend and frontend folder structure reflect the target platform shape
-- Placeholder APIs exist for planned platform surfaces without pretending those features are complete
+- Auth, workspaces, documents, chat, and metrics are implemented as one shared platform core
+- The frontend and backend together support a runnable MVP flow
+- Local run, local verification, and CI paths remain documented and usable
+- Phase 2+ capabilities stay clearly marked as future work
 
 ### Already Established
 
 - Development workflow and spec-driven process
 - Docker-based runnable environment
 - CI with lint, type check, tests, and frontend build
-- Backend layer skeleton for core, routes, schemas, services, repositories, workers, and agents
-- Frontend route skeleton for auth, dashboard, workspaces, documents, chat, tasks, and analytics
+- Backend layer structure for core, routes, schemas, services, repositories, workers, and agents
+- Frontend route structure for auth, dashboard, workspaces, documents, chat, tasks, and analytics
 - Frontend scaffold migrated to TypeScript
-- Minimal demo loop for health, workspaces, chat, and metrics
+- Auth register/login/me flow
+- Workspace persistence and workspace membership scoping
+- Document upload and document metadata APIs
+- Chat requests with persisted conversations, messages, and traces
+- Workspace metrics aggregated from traces
+- Frontend MVP flow for auth -> workspace -> documents -> chat -> metrics
 
 ### Not Yet Complete
 
-- Real authentication and session management
-- PostgreSQL-backed persistence
-- File upload and document storage
+- Real RAG retrieval with source-backed responses
 - Parsing, chunking, embedding, and Chroma indexing
 - Redis-backed worker execution
 - LangGraph durable agent execution
-- Evaluation datasets, trace persistence, and analytics dashboards
+- Evaluation datasets and review workflows
 - Scenario-module business logic for job, support, and research
 
 ## Alignment Rules
@@ -159,6 +162,7 @@ To stay aligned with the original project vision:
 - Document API surface
 - Chat contract
 - Trace and metrics minimal loop
+- Frontend MVP integration
 
 ### Phase 2: Document Ingest + RAG
 

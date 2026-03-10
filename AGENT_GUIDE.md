@@ -20,7 +20,7 @@ This repository supports AI coding agents and follows the workflow in `AI_WORKFL
   - `docs/prd/PLATFORM_PRD.md`
   - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - `docs/PROJECT_GUIDE.md`
-- Current repository status: `Phase 0: Scaffold & Alignment`
+- Current repository status: `Phase 1: Platform MVP`
 
 ## Workflow contract
 

@@ -105,6 +105,21 @@ surface.
 
 ## Current Status
 
-The repository is currently in `Phase 0: Scaffold & Alignment`.
-It provides the engineering skeleton, the workflow documents, a minimal workspace/chat/metrics demo loop, and
-placeholder route modules for the remaining platform areas.
+The repository is currently in `Phase 1: Platform MVP`.
+
+The current implemented MVP includes:
+
+- register/login auth endpoints and frontend auth flow
+- workspace creation and persistence
+- document upload and document metadata listing
+- chat requests with persisted traces
+- workspace metrics
+- a frontend demo path that connects auth -> workspace -> documents -> chat -> metrics
+
+The repository does not yet implement:
+
+- real retrieval-backed RAG answers
+- Redis-backed async workers
+- LangGraph agent runs
+- evaluation datasets or quality review flows
+- scenario-specific job, support, or research modules
