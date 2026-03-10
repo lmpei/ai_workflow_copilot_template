@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from sqlalchemy import select
+
 from app.core.database import session_scope
 from app.models.trace import Trace
 
@@ -33,3 +35,14 @@ def create_trace(
         session.flush()
         session.refresh(trace)
         return trace
+
+
+def list_traces_for_workspace(workspace_id: str) -> list[Trace]:
+    with session_scope() as session:
+        statement = (
+            select(Trace)
+            .where(Trace.workspace_id == workspace_id)
+            .order_by(Trace.created_at.asc())
+        )
+        result = session.scalars(statement)
+        return list(result)
