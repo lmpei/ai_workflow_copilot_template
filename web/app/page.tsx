@@ -15,13 +15,14 @@ export default async function Home() {
       </p>
 
       <SectionCard
-        title="Current Phase: Phase 0"
-        description="The repository is in Scaffold & Alignment: docs, Docker, CI, and route/page scaffolds are aligned with the platform roadmap."
+        title="Platform MVP Surfaces"
+        description="The frontend now connects to the Phase 1 auth, workspace, document, chat, and metrics APIs."
       >
         <ul>
-          <li>Phase 0 demo APIs: health, workspaces, chat, metrics</li>
-          <li>Scaffolded APIs reserved for later phases: auth, documents, tasks, agents, evals</li>
-          <li>Phase 1 target: auth boundary, workspace persistence, document API surface, trace and metrics loop</li>
+          <li>Register and sign in from the frontend</li>
+          <li>Create and open authenticated workspaces</li>
+          <li>Upload documents, submit chat prompts, and inspect workspace metrics</li>
+          <li>Tasks, agents, and eval dashboards remain reserved for later phases</li>
         </ul>
       </SectionCard>
 
@@ -44,13 +45,13 @@ export default async function Home() {
             <Link href="/workspaces">Workspaces</Link>
           </li>
           <li>
-            <Link href="/workspaces/demo/chat">Demo Chat View</Link>
+            <Link href="/register">Register</Link>
           </li>
           <li>
-            <Link href="/workspaces/demo/documents">Demo Documents View</Link>
+            <Link href="/login">Login</Link>
           </li>
           <li>
-            <Link href="/login">Auth Entry</Link>
+            <Link href="/workspaces">Workspace Hub</Link>
           </li>
         </ul>
       </SectionCard>

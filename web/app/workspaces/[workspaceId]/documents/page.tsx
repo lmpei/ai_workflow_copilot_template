@@ -1,5 +1,4 @@
-import IngestChecklist from "../../../../components/documents/ingest-checklist";
-import SectionCard from "../../../../components/ui/section-card";
+import DocumentManager from "../../../../components/documents/document-manager";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspacePageProps = {
@@ -15,12 +14,8 @@ export default function WorkspaceDocumentsPage({ params }: WorkspacePageProps) {
     <main>
       <h1>Documents</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <SectionCard
-        title="Document Ingest Pipeline"
-        description="This page reserves the workflow for upload, parsing, chunking, and indexing."
-      >
-        <IngestChecklist />
-      </SectionCard>
+      <p>Phase 1 supports document upload and metadata listing. Parsing and indexing remain in Phase 2.</p>
+      <DocumentManager workspaceId={workspaceId} />
     </main>
   );
 }

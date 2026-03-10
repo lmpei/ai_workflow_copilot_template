@@ -1,5 +1,4 @@
-import ChatScaffold from "../../../../components/chat/chat-scaffold";
-import SectionCard from "../../../../components/ui/section-card";
+import ChatPanel from "../../../../components/chat/chat-panel";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspacePageProps = {
@@ -15,12 +14,8 @@ export default function WorkspaceChatPage({ params }: WorkspacePageProps) {
     <main>
       <h1>Chat</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <SectionCard
-        title="Grounded Chat"
-        description="The API route exists today; this page reserves the full chat experience for citations and traces."
-      >
-        <ChatScaffold />
-      </SectionCard>
+      <p>Phase 1 supports authenticated chat requests and trace IDs on top of the workspace contract.</p>
+      <ChatPanel workspaceId={workspaceId} />
     </main>
   );
 }
