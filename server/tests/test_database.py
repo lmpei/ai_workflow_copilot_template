@@ -13,6 +13,8 @@ def test_database_foundation_creates_phase_one_tables() -> None:
         "workspaces",
         "workspace_members",
         "documents",
+        "document_chunks",
+        "embeddings",
         "conversations",
         "messages",
         "traces",
