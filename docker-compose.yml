@@ -15,6 +15,13 @@ services:
     ports:
       - "6379:6379"
 
+  chroma:
+    image: chromadb/chroma:0.5.5
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
   server:
     build: ./server
     env_file: .env
@@ -23,6 +30,7 @@ services:
     depends_on:
       - db
       - redis
+      - chroma
     volumes:
       - ./server:/app
 
@@ -38,3 +46,4 @@ services:
 
 volumes:
   postgres_data:
+  chroma_data:
