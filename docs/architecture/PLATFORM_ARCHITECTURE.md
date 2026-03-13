@@ -217,6 +217,47 @@ The target platform data model includes:
 - `evaluations`
 - `traces`
 
+## Phase 2 Defaults
+
+The Phase 2 implementation should use these defaults unless a later approved task changes them:
+
+- Document status lifecycle:
+  - `uploaded`
+  - `parsing`
+  - `chunked`
+  - `indexing`
+  - `indexed`
+  - `failed`
+- `document_chunks` should keep a pragmatic schema:
+  - fixed columns for `document_id`, `chunk_index`, `content`, `token_count`, and timestamps
+  - variable parsing details such as offsets, page numbers, or section labels should live in `metadata_json`
+- `embeddings` should store vector-store mapping records, not raw vectors in PostgreSQL
+- Phase 2 ingest should stay synchronous and inline with upload/reindex requests
+- Redis-backed background ingest remains a Phase 3 concern
+- Phase 2 real-integration validation should default to Alibaba Cloud Model Studio's OpenAI-compatible APIs
+- Phase 2 provider wiring should remain configurable so chat and embedding providers can be switched without changing service orchestration
+- Phase 2 should use one platform chat model by default for that validation path:
+  - `qwen-plus`
+- Phase 2 should use one platform embedding model by default for that validation path:
+  - `text-embedding-v4`
+- Chat and embedding base URLs must stay configurable because Model Studio region endpoints differ
+- Phase 2 should use one Chroma collection for workspace documents and rely on metadata filtering by `workspace_id`
+- Chroma metadata should include at least:
+  - `workspace_id`
+  - `document_id`
+  - `chunk_id`
+  - `chunk_index`
+  - `document_title`
+  - `mime_type`
+  - `source_type`
+  - `page_number` when available
+- Retrieval-backed chat citations should preserve stable ids and expose minimally displayable source data:
+  - `document_id`
+  - `chunk_id`
+  - `document_title`
+  - `chunk_index`
+  - `snippet`
+
 ## Target API Surface
 
 The platform should expose these endpoint groups:
