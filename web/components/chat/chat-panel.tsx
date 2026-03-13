@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { isApiClientError, sendWorkspaceChat } from "../../lib/api";
+import type { ChatSource } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -15,7 +16,7 @@ type ChatEntry = {
   question: string;
   answer: string;
   traceId: string;
-  sourceCount: number;
+  sources: ChatSource[];
 };
 
 export default function ChatPanel({ workspaceId }: ChatPanelProps) {
@@ -44,7 +45,7 @@ export default function ChatPanel({ workspaceId }: ChatPanelProps) {
           question,
           answer: response.answer,
           traceId: response.trace_id,
-          sourceCount: response.sources.length,
+          sources: response.sources,
         },
         ...currentEntries,
       ]);
@@ -66,7 +67,10 @@ export default function ChatPanel({ workspaceId }: ChatPanelProps) {
 
   return (
     <>
-      <SectionCard title="Ask a question" description={`Workspace: ${workspaceId}`}>
+      <SectionCard
+        title="Ask a question"
+        description={`Workspace: ${workspaceId}. Answers use indexed workspace content when available.`}
+      >
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <label style={{ display: "grid", gap: 6 }}>
             <span>Question</span>
@@ -98,8 +102,24 @@ export default function ChatPanel({ workspaceId }: ChatPanelProps) {
               <div>
                 <strong>Trace ID:</strong> {entry.traceId}
               </div>
-              <div>
-                <strong>Sources returned:</strong> {entry.sourceCount}
+              <div style={{ marginTop: 8 }}>
+                <strong>Sources:</strong>
+                {entry.sources.length === 0 ? (
+                  <div>No grounded sources returned.</div>
+                ) : (
+                  <ul style={{ marginTop: 8, paddingLeft: 18 }}>
+                    {entry.sources.map((source) => (
+                      <li key={`${entry.traceId}-${source.chunk_id}`} style={{ marginBottom: 8 }}>
+                        <div>
+                          <strong>{source.document_title}</strong> - chunk {source.chunk_index}
+                        </div>
+                        <div>Document ID: {source.document_id}</div>
+                        <div>Chunk ID: {source.chunk_id}</div>
+                        <div>{source.snippet}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </li>
           ))}

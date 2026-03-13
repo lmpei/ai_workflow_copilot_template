@@ -14,7 +14,7 @@ export default function WorkspaceChatPage({ params }: WorkspacePageProps) {
     <main>
       <h1>Chat</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <p>Phase 1 supports authenticated chat requests and trace IDs on top of the workspace contract.</p>
+      <p>Phase 2 returns grounded answers with source citations from indexed workspace documents.</p>
       <ChatPanel workspaceId={workspaceId} />
     </main>
   );

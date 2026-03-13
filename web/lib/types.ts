@@ -54,7 +54,7 @@ export type DocumentRecord = {
   source_type: string;
   file_path: string | null;
   mime_type: string | null;
-  status: string;
+  status: "uploaded" | "parsing" | "chunked" | "indexing" | "indexed" | "failed";
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -69,6 +69,9 @@ export type ChatRequestPayload = {
 export type ChatSource = {
   document_id: string;
   chunk_id: string;
+  document_title: string;
+  chunk_index: number;
+  snippet: string;
 };
 
 export type ChatResponsePayload = {

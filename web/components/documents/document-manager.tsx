@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { isApiClientError, listWorkspaceDocuments, uploadWorkspaceDocument } from "../../lib/api";
+import {
+  isApiClientError,
+  listWorkspaceDocuments,
+  reindexDocument,
+  uploadWorkspaceDocument,
+} from "../../lib/api";
 import type { DocumentRecord } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
@@ -20,6 +25,7 @@ export default function DocumentManager({ workspaceId }: DocumentManagerProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [reindexingDocumentId, setReindexingDocumentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) {
@@ -71,6 +77,57 @@ export default function DocumentManager({ workspaceId }: DocumentManagerProps) {
     }
   };
 
+  const handleReindex = async (documentId: string) => {
+    if (!session) {
+      return;
+    }
+
+    setReindexingDocumentId(documentId);
+    setErrorMessage(null);
+
+    try {
+      const updatedDocument = await reindexDocument(session.accessToken, documentId);
+      setDocuments((currentDocuments) =>
+        currentDocuments.map((document) =>
+          document.id === updatedDocument.id ? updatedDocument : document,
+        ),
+      );
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to reindex document");
+    } finally {
+      setReindexingDocumentId(null);
+    }
+  };
+
+  const renderStatus = (status: DocumentRecord["status"]) => {
+    const statusStyles: Record<DocumentRecord["status"], { label: string; color: string }> = {
+      uploaded: { label: "uploaded", color: "#92400e" },
+      parsing: { label: "parsing", color: "#1d4ed8" },
+      chunked: { label: "chunked", color: "#0369a1" },
+      indexing: { label: "indexing", color: "#7c3aed" },
+      indexed: { label: "indexed", color: "#15803d" },
+      failed: { label: "failed", color: "#b91c1c" },
+    };
+    const style = statusStyles[status];
+
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          borderRadius: 999,
+          padding: "2px 10px",
+          fontSize: 12,
+          fontWeight: 600,
+          color: style.color,
+          backgroundColor: `${style.color}14`,
+          textTransform: "uppercase",
+        }}
+      >
+        {style.label}
+      </span>
+    );
+  };
+
   if (!isReady) {
     return <SectionCard title="Documents">Loading session...</SectionCard>;
   }
@@ -81,7 +138,10 @@ export default function DocumentManager({ workspaceId }: DocumentManagerProps) {
 
   return (
     <>
-      <SectionCard title="Upload document" description="Phase 1 stores file metadata and upload artifacts.">
+      <SectionCard
+        title="Upload document"
+        description="Phase 2 runs synchronous ingest and indexing during upload."
+      >
         <form onSubmit={handleUpload} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
           <input
             onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
@@ -101,10 +161,22 @@ export default function DocumentManager({ workspaceId }: DocumentManagerProps) {
         <ul>
           {documents.map((document) => (
             <li key={document.id} style={{ marginBottom: 12 }}>
-              <strong>{document.title}</strong> - {document.status}
+              <div style={{ alignItems: "center", display: "flex", gap: 10, marginBottom: 6 }}>
+                <strong>{document.title}</strong>
+                {renderStatus(document.status)}
+              </div>
               <div>Source type: {document.source_type}</div>
               <div>MIME type: {document.mime_type ?? "unknown"}</div>
               <div>Stored path: {document.file_path ?? "n/a"}</div>
+              <div>Updated: {new Date(document.updated_at).toLocaleString()}</div>
+              <button
+                disabled={reindexingDocumentId === document.id}
+                onClick={() => void handleReindex(document.id)}
+                style={{ marginTop: 8 }}
+                type="button"
+              >
+                {reindexingDocumentId === document.id ? "Reindexing..." : "Reindex"}
+              </button>
             </li>
           ))}
         </ul>

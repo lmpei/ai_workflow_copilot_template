@@ -189,6 +189,19 @@ export async function uploadWorkspaceDocument(
   );
 }
 
+export async function reindexDocument(
+  accessToken: string,
+  documentId: string,
+): Promise<DocumentRecord> {
+  return fetchBrowserApiJson<DocumentRecord>(
+    `/documents/${documentId}/reindex`,
+    {
+      method: "POST",
+    },
+    accessToken,
+  );
+}
+
 export async function sendWorkspaceChat(
   accessToken: string,
   workspaceId: string,
