@@ -1,8 +1,22 @@
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 from sqlalchemy import select
 
 from app.core.database import session_scope
 from app.models.trace import Trace
+from app.services import retrieval_service
+
+
+class _FallbackRetriever:
+    def retrieve(self, *, workspace_id: str, question: str) -> list[object]:
+        return []
+
+
+class _UnusedAnswerGenerator:
+    def generate_answer(self, *, question: str, retrieved_chunks: list[object]) -> object:
+        raise AssertionError(
+            "Answer generator should not be called when retrieval returns no chunks",
+        )
 
 
 def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[str, str]:
@@ -59,10 +73,19 @@ def test_metrics_returns_zeroed_values_for_empty_workspace(client: TestClient) -
     }
 
 
-def test_metrics_aggregate_persisted_traces(client: TestClient) -> None:
+def test_metrics_aggregate_persisted_traces(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
     auth = _register_and_login(client, email="owner@example.com", name="Owner")
     headers = {"Authorization": f"Bearer {auth['token']}"}
     workspace_id = _create_workspace(client, auth["token"])
+    monkeypatch.setattr(retrieval_service, "get_retriever", lambda: _FallbackRetriever())
+    monkeypatch.setattr(
+        retrieval_service,
+        "get_answer_generator",
+        lambda: _UnusedAnswerGenerator(),
+    )
 
     first_response = client.post(
         f"/api/v1/workspaces/{workspace_id}/chat",

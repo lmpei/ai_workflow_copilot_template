@@ -10,6 +10,9 @@ class ChatRequest(BaseModel):
 class SourceReference(BaseModel):
     document_id: str
     chunk_id: str
+    document_title: str
+    chunk_index: int
+    snippet: str
 
 
 class ChatResponse(BaseModel):

@@ -12,8 +12,14 @@ def record_chat_trace(
     question: str,
     answer: str,
     mode: str,
-    sources: list[dict[str, str]],
+    sources: list[dict[str, object]],
+    retrieved_chunks: list[dict[str, object]],
+    prompt: str,
     latency_ms: int,
+    token_input: int = 0,
+    token_output: int = 0,
+    estimated_cost: float = 0.0,
+    error: str | None = None,
 ) -> str:
     trace = trace_repository.create_trace(
         workspace_id=workspace_id,
@@ -22,15 +28,18 @@ def record_chat_trace(
             "conversation_id": conversation_id,
             "question": question,
             "mode": mode,
+            "prompt": prompt,
+            "retrieved_chunks": retrieved_chunks,
         },
         response_json={
             "answer": answer,
             "sources": sources,
+            "error": error,
         },
         latency_ms=latency_ms,
-        token_input=0,
-        token_output=0,
-        estimated_cost=0.0,
+        token_input=token_input,
+        token_output=token_output,
+        estimated_cost=estimated_cost,
     )
     return trace.id
 

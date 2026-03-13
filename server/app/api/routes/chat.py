@@ -3,7 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.retrieval_service import ChatAccessError, process_chat_request
+from app.services.retrieval_service import (
+    ChatAccessError,
+    ChatProcessingError,
+    process_chat_request,
+)
 
 router = APIRouter()
 
@@ -22,3 +26,8 @@ async def chat(
         )
     except ChatAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except ChatProcessingError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
