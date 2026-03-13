@@ -11,7 +11,6 @@ from app.schemas.chat import ChatRequest, ChatResponse, SourceReference
 from app.services.indexing_service import DocumentIndexingError, get_embedding_provider
 from app.services.trace_service import record_chat_trace
 
-DEFAULT_CHAT_MODEL = "gpt-4o-mini"
 RETRIEVAL_LIMIT = 4
 FALLBACK_ANSWER = "I couldn't find relevant indexed content in this workspace."
 SNIPPET_LENGTH = 240
@@ -123,10 +122,11 @@ class ChromaRetriever:
 
 
 @dataclass(slots=True)
-class OpenAIAnswerGenerator:
+class OpenAICompatibleAnswerGenerator:
     api_key: str
-    model: str = DEFAULT_CHAT_MODEL
+    model: str
     base_url: str = "https://api.openai.com/v1"
+    provider_name: str = "openai"
 
     def generate_answer(
         self,
@@ -135,7 +135,9 @@ class OpenAIAnswerGenerator:
         retrieved_chunks: list[RetrievedChunk],
     ) -> GeneratedAnswer:
         if not self.api_key or self.api_key == "replace_me":
-            raise ChatProcessingError("OPENAI_API_KEY must be configured for chat generation")
+            raise ChatProcessingError(
+                f"{self.provider_name} chat API key must be configured for chat generation",
+            )
 
         prompt = _build_grounded_prompt(question=question, retrieved_chunks=retrieved_chunks)
         try:
@@ -193,7 +195,17 @@ def get_retriever() -> Retriever:
 
 def get_answer_generator() -> AnswerGenerator:
     settings = get_settings()
-    return OpenAIAnswerGenerator(api_key=settings.openai_api_key)
+    if settings.chat_provider not in {"openai", "qwen"}:
+        raise ChatProcessingError(f"Unsupported chat provider: {settings.chat_provider}")
+    api_key = settings.chat_api_key
+    if api_key == "replace_me" and settings.chat_provider == "openai":
+        api_key = settings.openai_api_key
+    return OpenAICompatibleAnswerGenerator(
+        api_key=api_key,
+        model=settings.chat_model,
+        base_url=settings.chat_base_url,
+        provider_name=settings.chat_provider,
+    )
 
 
 def _build_snippet(content: str) -> str:

@@ -45,16 +45,19 @@ class VectorStoreClient(Protocol):
 
 
 @dataclass(slots=True)
-class OpenAIEmbeddingProvider:
+class OpenAICompatibleEmbeddingProvider:
     api_key: str
     model: str
     base_url: str = "https://api.openai.com/v1"
+    provider_name: str = "openai"
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
         if not self.api_key or self.api_key == "replace_me":
-            raise DocumentIndexingError("OPENAI_API_KEY must be configured for document indexing")
+            raise DocumentIndexingError(
+                f"{self.provider_name} embedding API key must be configured for document indexing",
+            )
 
         try:
             response = httpx.post(
@@ -147,13 +150,18 @@ class ChromaVectorStore:
 
 def get_embedding_provider() -> EmbeddingProvider:
     settings = get_settings()
-    if settings.embedding_provider != "openai":
+    if settings.embedding_provider not in {"openai", "qwen"}:
         raise DocumentIndexingError(
             f"Unsupported embedding provider: {settings.embedding_provider}",
         )
-    return OpenAIEmbeddingProvider(
-        api_key=settings.openai_api_key,
+    api_key = settings.embedding_api_key
+    if api_key == "replace_me" and settings.embedding_provider == "openai":
+        api_key = settings.openai_api_key
+    return OpenAICompatibleEmbeddingProvider(
+        api_key=api_key,
         model=settings.embedding_model,
+        base_url=settings.embedding_base_url,
+        provider_name=settings.embedding_provider,
     )
 
 
