@@ -1,10 +1,11 @@
 import shutil
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.repositories.document_repository import list_document_chunks
+from app.repositories.document_repository import create_document, list_document_chunks
 from app.services import document_service
 from app.services.document_service import (
     DocumentProcessingError,
@@ -53,22 +54,32 @@ def _create_workspace(client: TestClient, token: str, *, name: str = "Research D
     return response.json()["id"]
 
 
-def _upload_document(
-    client: TestClient,
+def _create_uploaded_document(
     *,
-    token: str,
     workspace_id: str,
+    user_id: str,
     filename: str,
     content: bytes,
     mime_type: str,
 ) -> dict[str, str]:
-    response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/documents/upload",
-        headers={"Authorization": f"Bearer {token}"},
-        files={"file": (filename, content, mime_type)},
+    document_id = str(uuid4())
+    relative_path = Path("uploads") / workspace_id / document_id / filename
+    full_path = Path("storage") / relative_path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    full_path.write_bytes(content)
+
+    document = create_document(
+        document_id=document_id,
+        workspace_id=workspace_id,
+        title=filename,
+        file_path=relative_path.as_posix(),
+        mime_type=mime_type,
+        created_by=user_id,
     )
-    assert response.status_code == 201
-    return response.json()
+    return {
+        "id": document.id,
+        "file_path": document.file_path or "",
+    }
 
 
 def setup_function() -> None:
@@ -83,10 +94,9 @@ def test_parse_plain_text_document_into_ordered_chunks(client: TestClient) -> No
     auth = _register_and_login(client, email="plain-owner@example.com", name="Owner")
     workspace_id = _create_workspace(client, auth["token"])
     long_text = ("Alpha beta gamma delta " * 120).encode("utf-8")
-    uploaded = _upload_document(
-        client,
-        token=auth["token"],
+    uploaded = _create_uploaded_document(
         workspace_id=workspace_id,
+        user_id=auth["user_id"],
         filename="knowledge.txt",
         content=long_text,
         mime_type="text/plain",
@@ -109,10 +119,9 @@ def test_parse_plain_text_document_into_ordered_chunks(client: TestClient) -> No
 def test_parse_small_markdown_document_produces_single_chunk(client: TestClient) -> None:
     auth = _register_and_login(client, email="markdown-owner@example.com", name="Owner")
     workspace_id = _create_workspace(client, auth["token"])
-    uploaded = _upload_document(
-        client,
-        token=auth["token"],
+    uploaded = _create_uploaded_document(
         workspace_id=workspace_id,
+        user_id=auth["user_id"],
         filename="notes.md",
         content=b"# Summary\n\n- first point\n- second point\n",
         mime_type="text/markdown",
@@ -136,10 +145,9 @@ def test_parse_pdf_document_uses_pdf_parser_and_preserves_page_metadata(
 ) -> None:
     auth = _register_and_login(client, email="pdf-owner@example.com", name="Owner")
     workspace_id = _create_workspace(client, auth["token"])
-    uploaded = _upload_document(
-        client,
-        token=auth["token"],
+    uploaded = _create_uploaded_document(
         workspace_id=workspace_id,
+        user_id=auth["user_id"],
         filename="report.pdf",
         content=b"%PDF-1.4 fake content",
         mime_type="application/pdf",
@@ -170,10 +178,9 @@ def test_parse_pdf_document_uses_pdf_parser_and_preserves_page_metadata(
 def test_parse_unsupported_document_marks_document_failed(client: TestClient) -> None:
     auth = _register_and_login(client, email="unsupported-owner@example.com", name="Owner")
     workspace_id = _create_workspace(client, auth["token"])
-    uploaded = _upload_document(
-        client,
-        token=auth["token"],
+    uploaded = _create_uploaded_document(
         workspace_id=workspace_id,
+        user_id=auth["user_id"],
         filename="payload.json",
         content=b'{\"hello\": \"world\"}',
         mime_type="application/json",

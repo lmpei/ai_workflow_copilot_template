@@ -6,6 +6,7 @@ from app.core.database import reset_database_for_tests
 from app.repositories.document_repository import (
     DocumentChunkCreate,
     create_document,
+    get_document,
     list_document_embeddings,
     replace_document_chunks,
     update_document_status,
@@ -183,3 +184,38 @@ def test_index_document_embeddings_marks_failed_on_provider_or_store_errors() ->
             embedding_provider=provider,
             vector_store=failing_store,
         )
+
+    failed_document = get_document(document_id=document_id, user_id=user_id)
+    assert failed_document is not None
+    assert failed_document.status == "failed"
+
+
+def test_index_document_embeddings_cleans_up_upserted_vectors_when_mapping_write_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    user_id, document_id = _create_chunked_document_fixture()
+    provider = FakeEmbeddingProvider()
+    vector_store = FakeVectorStore()
+
+    def fail_replace_document_embeddings(*args: object, **kwargs: object) -> object:
+        raise ValueError("Failed to persist embedding mappings")
+
+    monkeypatch.setattr(
+        "app.services.indexing_service.document_repository.replace_document_embeddings",
+        fail_replace_document_embeddings,
+    )
+
+    with pytest.raises(ValueError, match="Failed to persist embedding mappings"):
+        index_document_embeddings(
+            document_id=document_id,
+            user_id=user_id,
+            embedding_provider=provider,
+            vector_store=vector_store,
+        )
+
+    failed_document = get_document(document_id=document_id, user_id=user_id)
+    assert failed_document is not None
+    assert failed_document.status == "failed"
+    assert len(vector_store.upserts) == 1
+    assert vector_store.deleted[-1]["ids"] == vector_store.upserts[0]["ids"]
+    assert list_document_embeddings(document_id) == []

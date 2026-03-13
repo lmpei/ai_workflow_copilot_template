@@ -194,6 +194,9 @@ def index_document_embeddings(
         raise DocumentIndexingError("Document not found")
 
     indexing_started = False
+    active_vector_store: VectorStoreClient | None = vector_store
+    collection_name = get_settings().chroma_collection_name
+    upserted_vector_ids: list[str] = []
     try:
         updated_document = document_repository.update_document_status(
             document_id=document_id,
@@ -208,9 +211,8 @@ def index_document_embeddings(
             raise DocumentIndexingError("Document has no chunks to index")
 
         active_embedding_provider = embedding_provider or get_embedding_provider()
-        active_vector_store = vector_store or get_vector_store()
+        active_vector_store = active_vector_store or get_vector_store()
         settings = get_settings()
-        collection_name = settings.chroma_collection_name
 
         stale_embeddings = document_repository.list_document_embeddings(document_id)
         stale_vector_ids = [embedding.vector_store_id for embedding in stale_embeddings]
@@ -232,6 +234,7 @@ def index_document_embeddings(
             embeddings=embeddings,
             metadatas=metadatas,
         )
+        upserted_vector_ids = vector_ids
 
         document_repository.replace_document_embeddings(
             document_id,
@@ -254,6 +257,14 @@ def index_document_embeddings(
             raise DocumentIndexingError("Document not found")
         return DocumentResponse.from_model(updated_document)
     except (DocumentIndexingError, ValueError):
+        if active_vector_store is not None and upserted_vector_ids:
+            try:
+                active_vector_store.delete_embeddings(
+                    collection_name=collection_name,
+                    ids=upserted_vector_ids,
+                )
+            except DocumentIndexingError:
+                pass
         if indexing_started:
             document_repository.update_document_status(
                 document_id=document_id,

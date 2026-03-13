@@ -169,6 +169,20 @@ def replace_document_chunks(
         return created_chunks
 
 
+def clear_document_derived_state(document_id: str) -> None:
+    with session_scope() as session:
+        chunk_ids = list(
+            session.scalars(
+                select(DocumentChunk.id).where(DocumentChunk.document_id == document_id),
+            ),
+        )
+        if chunk_ids:
+            session.execute(
+                delete(Embedding).where(Embedding.document_chunk_id.in_(chunk_ids)),
+            )
+        session.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+
+
 def list_document_embeddings(document_id: str) -> list[Embedding]:
     with session_scope() as session:
         statement = (

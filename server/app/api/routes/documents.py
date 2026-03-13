@@ -5,12 +5,14 @@ from app.models.user import User
 from app.schemas.document import DocumentResponse
 from app.services.document_service import (
     DocumentAccessError,
+    DocumentProcessingError,
     DocumentUploadError,
     get_document,
     list_documents,
     reindex_document,
     upload_document,
 )
+from app.services.indexing_service import DocumentIndexingError
 
 router = APIRouter()
 
@@ -35,6 +37,13 @@ async def upload_workspace_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except DocumentUploadError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except DocumentProcessingError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except DocumentIndexingError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
 
 
 @router.get("/workspaces/{workspace_id}/documents", response_model=list[DocumentResponse])
@@ -64,7 +73,17 @@ async def reindex_workspace_document(
     document_id: str,
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
-    document = reindex_document(document_id=document_id, user_id=current_user.id)
-    if document is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
-    return document
+    try:
+        document = reindex_document(document_id=document_id, user_id=current_user.id)
+        if document is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        return document
+    except DocumentAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except DocumentProcessingError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except DocumentIndexingError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error

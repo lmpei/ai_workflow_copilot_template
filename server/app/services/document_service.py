@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
+from app.core.config import get_settings
 from app.models.document import (
     DOCUMENT_STATUS_CHUNKED,
     DOCUMENT_STATUS_FAILED,
@@ -13,6 +14,14 @@ from app.models.document import (
 from app.repositories import document_repository
 from app.repositories.document_repository import DocumentChunkCreate
 from app.schemas.document import DocumentResponse
+from app.services.indexing_service import (
+    DocumentIndexingError,
+    EmbeddingProvider,
+    VectorStoreClient,
+    get_embedding_provider,
+    get_vector_store,
+    index_document_embeddings,
+)
 
 UPLOAD_ROOT = Path("storage") / "uploads"
 CHUNK_SIZE = 1000
@@ -184,6 +193,71 @@ def _build_document_chunks(segments: list[ParsedDocumentSegment]) -> list[Docume
     return created_chunks
 
 
+def _mark_document_failed(document_id: str) -> None:
+    try:
+        document_repository.update_document_status(
+            document_id=document_id,
+            next_status=DOCUMENT_STATUS_FAILED,
+        )
+    except ValueError:
+        pass
+
+
+def _delete_stale_vectors(*, document_id: str, vector_store: VectorStoreClient) -> None:
+    stale_embeddings = document_repository.list_document_embeddings(document_id)
+    stale_vector_ids = [embedding.vector_store_id for embedding in stale_embeddings]
+    if not stale_vector_ids:
+        return
+
+    vector_store.delete_embeddings(
+        collection_name=get_settings().chroma_collection_name,
+        ids=stale_vector_ids,
+    )
+
+
+def ingest_document(
+    *,
+    document_id: str,
+    user_id: str,
+    reset_for_reindex: bool = False,
+    embedding_provider: EmbeddingProvider | None = None,
+    vector_store: VectorStoreClient | None = None,
+) -> DocumentResponse:
+    document = document_repository.get_document(document_id=document_id, user_id=user_id)
+    if document is None:
+        raise DocumentAccessError("Document not found")
+
+    try:
+        active_embedding_provider = embedding_provider or get_embedding_provider()
+        active_vector_store = vector_store or get_vector_store()
+
+        if reset_for_reindex:
+            _delete_stale_vectors(document_id=document_id, vector_store=active_vector_store)
+            document_repository.clear_document_derived_state(document_id)
+            reset_document = document_repository.reindex_document(
+                document_id=document_id,
+                user_id=user_id,
+            )
+            if reset_document is None:
+                raise DocumentAccessError("Document not found")
+
+        parse_document_into_chunks(document_id=document_id, user_id=user_id)
+        return index_document_embeddings(
+            document_id=document_id,
+            user_id=user_id,
+            embedding_provider=active_embedding_provider,
+            vector_store=active_vector_store,
+        )
+    except DocumentAccessError:
+        raise
+    except (DocumentProcessingError, DocumentIndexingError):
+        _mark_document_failed(document_id)
+        raise
+    except Exception as error:
+        _mark_document_failed(document_id)
+        raise DocumentProcessingError(f"Document ingest failed: {error}") from error
+
+
 async def upload_document(
     *,
     workspace_id: str,
@@ -223,7 +297,7 @@ async def upload_document(
     finally:
         await file.close()
 
-    return DocumentResponse.from_model(document)
+    return ingest_document(document_id=document.id, user_id=user_id)
 
 
 def list_documents(*, workspace_id: str, user_id: str) -> list[DocumentResponse]:
@@ -246,10 +320,10 @@ def get_document(*, document_id: str, user_id: str) -> DocumentResponse | None:
 
 
 def reindex_document(*, document_id: str, user_id: str) -> DocumentResponse | None:
-    document = document_repository.reindex_document(document_id=document_id, user_id=user_id)
+    document = document_repository.get_document(document_id=document_id, user_id=user_id)
     if document is None:
         return None
-    return DocumentResponse.from_model(document)
+    return ingest_document(document_id=document_id, user_id=user_id, reset_for_reindex=True)
 
 
 def parse_document_into_chunks(*, document_id: str, user_id: str) -> DocumentResponse:
