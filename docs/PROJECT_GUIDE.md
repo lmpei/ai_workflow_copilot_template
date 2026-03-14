@@ -103,15 +103,16 @@ implementation aligned with the original platform vision.
 
 ## Current Development Status
 
-The repository is currently in `Phase 2: Document Ingest + RAG`.
+The repository is currently in `Phase 3: Tasks + Agents`.
 
-### Phase 2 Requirements
+### Phase 3 Requirements
 
-- Auth, workspaces, documents, chat, and metrics continue to operate as one shared platform core
-- Upload and reindex run through a real ingest pipeline: parse -> chunk -> embed -> index
-- Chat uses indexed workspace content and returns grounded citations
+- Auth, workspaces, documents, chat, tasks, and metrics continue to operate as one shared platform core
+- Redis-backed queueing and worker execution are real platform capabilities, not placeholders
+- Agent runs and tool calls are persisted alongside task state in PostgreSQL
+- The first agent stays platform-level and reuses workspace/document primitives instead of jumping to scenario modules
 - Local run, local verification, and CI paths remain documented and usable
-- Phase 3+ capabilities stay clearly marked as future work
+- Phase 4+ capabilities stay clearly marked as future work
 
 ### Already Established
 
@@ -127,14 +128,19 @@ The repository is currently in `Phase 2: Document Ingest + RAG`.
 - Reindex orchestration that refreshes derived chunks and vector mappings
 - Chat requests with persisted conversations, messages, traces, grounded retrieval, and citations
 - Workspace metrics aggregated from traces
-- Frontend Phase 2 flow for auth -> workspace -> ingest status -> reindex -> grounded chat -> metrics
+- Task, agent run, and tool call persistence with minimal state models
+- Redis-backed ARQ worker foundation and task enqueue path
+- Task API surface for `research_summary` and `workspace_report`
+- Static Python tool registry for workspace document access and search
+- LangGraph-powered `workspace_research_agent`
+- Frontend Phase 3 flow for auth -> workspace -> indexed documents -> grounded chat -> task creation -> task result inspection
 - A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation and `text-embedding-v4` embeddings
 
 ### Not Yet Complete
 
-- Redis-backed worker execution
-- LangGraph durable agent execution
+- Durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - Evaluation datasets and review workflows
+- Advanced observability and quality analysis beyond current traces/metrics
 - Scenario-module business logic for job, support, and research
 
 ## Alignment Rules

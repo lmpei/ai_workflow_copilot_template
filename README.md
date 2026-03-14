@@ -79,17 +79,17 @@ see `docs/development/WINDOWS_SETUP.md`.
 - `server`
   - FastAPI API for platform logic and orchestration
 - `db`
-  - PostgreSQL system of record for users, workspaces, documents, messages, traces, and embedding mappings
+  - PostgreSQL system of record for users, workspaces, documents, messages, traces, tasks, agent runs, tool calls, and embedding mappings
 - `chroma`
-  - Vector store used by Phase 2 ingest and retrieval-backed chat
+  - Vector store used by ingest, retrieval-backed chat, and document search tools
 - `redis`
-  - Queue/cache service reserved for Phase 3 task execution and workers; it runs in local Docker now but is not part of the main Phase 2 request path
+  - Queue service used by Phase 3 task execution and the ARQ worker runtime
 
 ## Current Phase
 
-The repository is currently in `Phase 2: Document Ingest + RAG`.
+The repository is currently in `Phase 3: Tasks + Agents`.
 
-Phase 2 is now implemented with:
+Phase 3 is now implemented with:
 
 - Auth boundary and browser session flow
 - PostgreSQL-backed workspace persistence
@@ -97,7 +97,10 @@ Phase 2 is now implemented with:
 - Reindex support through the same synchronous ingest path
 - Retrieval-backed chat with grounded source citations
 - Workspace metrics driven by persisted traces
-- Frontend support for ingest status, reindex actions, and grounded citations
+- Redis-backed task queueing with ARQ worker execution
+- PostgreSQL-backed task, agent run, and tool call persistence
+- A LangGraph-powered `workspace_research_agent` with a static Python tool registry
+- Frontend support for task creation, task status polling, and final result inspection
 - A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and `text-embedding-v4` for embeddings
 
 ## Current MVP Demo Path
@@ -108,17 +111,19 @@ You can now demo the current platform in this order:
 2. Create a workspace from `http://localhost:3000/workspaces`
 3. Open the workspace documents page and upload a supported text, markdown, or PDF file
 4. Confirm the document reaches `indexed` status
-5. Trigger `Reindex` from the documents page to refresh derived chunks and vector mappings
-6. Open the workspace chat page and submit a prompt against indexed content
-7. Review grounded citations and trace identifiers in chat responses
-8. Open the workspace analytics page and inspect metrics
+5. Open the workspace chat page and submit a prompt against indexed content
+6. Review grounded citations and trace identifiers in chat responses
+7. Open the workspace tasks page and create a `research_summary` or `workspace_report` task
+8. Watch the task move through `pending -> running -> done/failed`
+9. Open the task result to inspect final agent output and any execution errors
+10. Optionally review workspace analytics for trace-driven metrics
 
 ## Not Implemented Yet
 
-The following capabilities remain out of scope for Phase 2:
+The following capabilities remain out of scope for Phase 3:
 
-- Redis-backed workers and async pipelines
-- LangGraph tasks and agent orchestration
+- Durable or multi-agent orchestration beyond the minimal LangGraph workflow
+- Human-in-the-loop approvals, retries, and advanced job scheduling
 - Evaluation datasets and review workflows
 - Scenario-specific job, support, and research modules
 

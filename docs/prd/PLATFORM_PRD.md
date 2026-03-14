@@ -105,7 +105,7 @@ surface.
 
 ## Current Status
 
-The repository is currently in `Phase 2: Document Ingest + RAG`.
+The repository is currently in `Phase 3: Tasks + Agents`.
 
 The current implemented platform increment includes:
 
@@ -115,12 +115,15 @@ The current implemented platform increment includes:
 - reindex support through the same synchronous ingest pipeline
 - retrieval-backed chat with grounded source citations and persisted traces
 - workspace metrics
+- Redis-backed task queueing with ARQ worker execution
+- persisted tasks, agent runs, and tool calls
+- a LangGraph-powered `workspace_research_agent` and static tool registry
+- a frontend demo path that connects auth -> workspace -> documents -> grounded chat -> tasks -> agent results
 - a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` and `text-embedding-v4`
-- a frontend demo path that connects auth -> workspace -> documents -> reindex -> grounded chat -> metrics
 
 The repository does not yet implement:
 
-- Redis-backed async workers
-- LangGraph agent runs
+- durable or multi-agent orchestration beyond the minimal LangGraph workflow
+- human approval flows, retries, or advanced scheduling
 - evaluation datasets or quality review flows
 - scenario-specific job, support, or research modules
