@@ -1,8 +1,9 @@
 export const workspaceTypes = ["job", "support", "research"] as const;
-export const taskTypes = ["ingest", "qa", "report", "classify", "match"] as const;
+export const taskTypes = ["research_summary", "workspace_report"] as const;
 
 export type WorkspaceType = (typeof workspaceTypes)[number];
 export type TaskType = (typeof taskTypes)[number];
+export type JsonObject = Record<string, unknown>;
 
 export type User = {
   id: string;
@@ -87,4 +88,22 @@ export type WorkspaceMetrics = {
   retrieval_hit_count: number;
   token_usage: number;
   task_success_rate: number;
+};
+
+export type TaskCreatePayload = {
+  task_type: TaskType;
+  input: JsonObject;
+};
+
+export type TaskRecord = {
+  id: string;
+  workspace_id: string;
+  task_type: TaskType;
+  status: "pending" | "running" | "done" | "failed";
+  created_by: string;
+  input_json: JsonObject;
+  output_json: JsonObject;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
 };

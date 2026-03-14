@@ -6,6 +6,8 @@ import type {
   LoginRequestPayload,
   LoginResponsePayload,
   RegisterRequestPayload,
+  TaskCreatePayload,
+  TaskRecord,
   User,
   Workspace,
   WorkspaceCreatePayload,
@@ -229,4 +231,30 @@ export async function getWorkspaceMetrics(
     {},
     accessToken,
   );
+}
+
+export async function createWorkspaceTask(
+  accessToken: string,
+  workspaceId: string,
+  payload: TaskCreatePayload,
+): Promise<TaskRecord> {
+  return fetchBrowserApiJson<TaskRecord>(
+    `/workspaces/${workspaceId}/tasks`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function listWorkspaceTasks(
+  accessToken: string,
+  workspaceId: string,
+): Promise<TaskRecord[]> {
+  return fetchBrowserApiJson<TaskRecord[]>(`/workspaces/${workspaceId}/tasks`, {}, accessToken);
+}
+
+export async function getTask(accessToken: string, taskId: string): Promise<TaskRecord> {
+  return fetchBrowserApiJson<TaskRecord>(`/tasks/${taskId}`, {}, accessToken);
 }
