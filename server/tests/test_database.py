@@ -18,4 +18,7 @@ def test_database_foundation_creates_phase_one_tables() -> None:
         "conversations",
         "messages",
         "traces",
+        "tasks",
+        "agent_runs",
+        "tool_calls",
     }.issubset(tables)
