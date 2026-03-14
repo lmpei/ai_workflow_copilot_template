@@ -1,38 +1,61 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.schemas.task import TaskCreate
+from app.core.security import get_current_user
+from app.models.user import User
+from app.schemas.task import TaskCreate, TaskResponse
+from app.services import task_service
+from app.services.task_service import TaskAccessError, TaskQueueError, TaskValidationError
 
 router = APIRouter()
 
 
-@router.post("/workspaces/{workspace_id}/tasks", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def create_task(workspace_id: str, payload: TaskCreate) -> dict:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "status": "scaffolded",
-            "message": "Task orchestration is planned for Phase 3 with Redis-backed workers.",
-            "workspace_id": workspace_id,
-            "task_type": payload.task_type,
-        },
-    )
+@router.post(
+    "/workspaces/{workspace_id}/tasks",
+    response_model=TaskResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_task(
+    workspace_id: str,
+    payload: TaskCreate,
+    current_user: User = Depends(get_current_user),
+) -> TaskResponse:
+    try:
+        return await task_service.create_task(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+            payload=payload,
+        )
+    except TaskAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except TaskValidationError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except TaskQueueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
 
 
-@router.get("/tasks/{task_id}", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def get_task(task_id: str) -> dict:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Task lookup is a Phase 3 scaffold and is not implemented yet.",
-    )
+@router.get("/tasks/{task_id}", response_model=TaskResponse)
+async def get_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+) -> TaskResponse:
+    task = task_service.get_task(task_id=task_id, user_id=current_user.id)
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    return task
 
 
-@router.get("/workspaces/{workspace_id}/tasks", status_code=status.HTTP_501_NOT_IMPLEMENTED)
-async def list_tasks(workspace_id: str) -> dict:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "status": "scaffolded",
-            "message": "Workspace task listing is planned for Phase 3 with task persistence.",
-            "workspace_id": workspace_id,
-        },
-    )
+@router.get("/workspaces/{workspace_id}/tasks", response_model=list[TaskResponse])
+async def list_tasks(
+    workspace_id: str,
+    current_user: User = Depends(get_current_user),
+) -> list[TaskResponse]:
+    try:
+        return task_service.list_workspace_tasks(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+        )
+    except TaskAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
