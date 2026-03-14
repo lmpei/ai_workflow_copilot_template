@@ -4,11 +4,13 @@ from uuid import uuid4
 import pytest
 
 from app.core.database import reset_database_for_tests
-from app.repositories.task_repository import create_task, get_task
+from app.models.document import DOCUMENT_STATUS_INDEXED
+from app.repositories import document_repository, task_repository
 from app.repositories.user_repository import create_user
 from app.repositories.workspace_repository import create_workspace
 from app.schemas.workspace import WorkspaceCreate
 from app.services import task_execution_service
+from app.services.retrieval_service import RetrievedChunk
 from app.services.task_execution_service import TaskExecutionError
 from app.workers.task_worker import run_platform_task
 
@@ -42,7 +44,12 @@ def reset_database() -> None:
     reset_database_for_tests()
 
 
-def _create_task_fixture() -> str:
+def _create_task_fixture(
+    *,
+    task_type: str = "research_summary",
+    goal: str | None = None,
+    with_document: bool = True,
+) -> str:
     unique_suffix = uuid4().hex
     user = create_user(
         email=f"phase3-worker-{unique_suffix}@example.com",
@@ -53,11 +60,21 @@ def _create_task_fixture() -> str:
         WorkspaceCreate(name="Phase 3 Worker Workspace", type="research"),
         owner_id=user.id,
     )
-    task = create_task(
+    if with_document:
+        document_repository.create_document(
+            document_id=str(uuid4()),
+            workspace_id=workspace.id,
+            title="demo.txt",
+            file_path="uploads/demo.txt",
+            mime_type="text/plain",
+            created_by=user.id,
+            status=DOCUMENT_STATUS_INDEXED,
+        )
+    task = task_repository.create_task(
         workspace_id=workspace.id,
-        task_type="research_summary",
+        task_type=task_type,
         created_by=user.id,
-        input_json={"goal": "summarize"},
+        input_json={"goal": goal} if goal is not None else {},
     )
     return task.id
 
@@ -85,43 +102,122 @@ def test_enqueue_task_execution_uses_arq_pool(monkeypatch: pytest.MonkeyPatch) -
     assert fake_pool.closed is True
 
 
-def test_run_task_execution_marks_task_done_and_persists_output() -> None:
-    task_id = _create_task_fixture()
+def test_run_task_execution_executes_research_summary_and_persists_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Who owns the project?"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="The owner is Alice.",
+                    content="The owner is Alice.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    task_id = _create_task_fixture(goal="Who owns the project?")
 
     output = task_execution_service.run_task_execution(task_id)
-    persisted_task = get_task(task_id)
+    persisted_task = task_repository.get_task(task_id)
 
     assert output["worker"] == "arq"
+    assert output["task_type"] == "research_summary"
+    assert output["agent_name"] == "workspace_research_agent"
+    assert output["result"]["matches"][0]["document_title"] == "demo.txt"
     assert persisted_task is not None
     assert persisted_task.status == "done"
     assert persisted_task.output_json == output
 
+    agent_runs = task_repository.list_task_agent_runs(task_id)
+    assert len(agent_runs) == 1
+    assert agent_runs[0].status == "completed"
 
-def test_run_task_execution_marks_task_failed_when_execution_raises(
+    tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == [
+        "list_workspace_documents",
+        "search_documents",
+    ]
+    assert all(tool_call.status == "completed" for tool_call in tool_calls)
+
+
+def test_run_task_execution_completes_workspace_report_with_limited_context() -> None:
+    task_id = _create_task_fixture(
+        task_type="workspace_report",
+        goal=None,
+        with_document=False,
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "workspace_report"
+    assert output["result"]["document_count"] == 0
+    assert output["result"]["matches"] == []
+    assert output["result"]["summary"] == "No workspace documents are available for analysis."
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+    agent_runs = task_repository.list_task_agent_runs(task_id)
+    assert len(agent_runs) == 1
+    tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == ["list_workspace_documents"]
+
+
+def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    task_id = _create_task_fixture()
+    class FailingRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            raise RuntimeError("Chroma unavailable")
 
-    def fail_placeholder(_task: object) -> dict[str, object]:
-        raise RuntimeError("placeholder failed")
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FailingRetriever())
 
-    monkeypatch.setattr(task_execution_service, "_build_placeholder_task_output", fail_placeholder)
+    task_id = _create_task_fixture(goal="Who owns the project?")
 
     with pytest.raises(TaskExecutionError, match="Task execution failed"):
         task_execution_service.run_task_execution(task_id)
 
-    persisted_task = get_task(task_id)
+    persisted_task = task_repository.get_task(task_id)
     assert persisted_task is not None
     assert persisted_task.status == "failed"
-    assert persisted_task.error_message == "placeholder failed"
+    assert persisted_task.error_message == "Chroma unavailable"
+
+    agent_runs = task_repository.list_task_agent_runs(task_id)
+    assert len(agent_runs) == 1
+    assert agent_runs[0].status == "failed"
 
 
-def test_run_platform_task_worker_entrypoint_executes_task() -> None:
-    task_id = _create_task_fixture()
+def test_run_platform_task_worker_entrypoint_executes_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="The owner is Alice.",
+                    content="The owner is Alice.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    task_id = _create_task_fixture(goal="Who owns the project?")
 
     output = asyncio.run(run_platform_task({}, task_id))
-    persisted_task = get_task(task_id)
+    persisted_task = task_repository.get_task(task_id)
 
     assert output["task_id"] == task_id
+    assert output["agent_name"] == "workspace_research_agent"
     assert persisted_task is not None
     assert persisted_task.status == "done"
