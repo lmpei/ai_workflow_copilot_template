@@ -59,39 +59,61 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Backend: `http://localhost:8000`  
-Frontend: `http://localhost:3000`
+Make sure Docker Desktop or the local Docker engine is running before `docker compose up --build`.
+
+Frontend: `http://localhost:3000`  
+API base: `http://localhost:8000/api/v1`  
+Health check: `http://localhost:8000/api/v1/health`
 
 For full local Windows setup and PowerShell-specific notes, see `docs/development/WINDOWS_SETUP.md`.
 
+## Runtime Services
+
+`docker compose up` starts the platform and its backing services together:
+
+- `web`
+  - Next.js frontend for auth, workspaces, documents, chat, and analytics
+- `server`
+  - FastAPI API for platform logic and orchestration
+- `db`
+  - PostgreSQL system of record for users, workspaces, documents, messages, traces, and embedding mappings
+- `chroma`
+  - Vector store used by Phase 2 ingest and retrieval-backed chat
+- `redis`
+  - Queue/cache service reserved for Phase 3 task execution and workers; it runs in local Docker now but is not part of the main Phase 2 request path
+
 ## Current Phase
 
-The repository is currently in `Phase 1: Platform MVP`.
+The repository is currently in `Phase 2: Document Ingest + RAG`.
 
-Phase 1 is now implemented with:
+Phase 2 is now implemented with:
 
 - Auth boundary and browser session flow
 - PostgreSQL-backed workspace persistence
-- Document upload and document metadata listing
-- Chat contract with persisted traces
-- Workspace metrics loop
-- Frontend MVP integration for auth, workspaces, documents, chat, and metrics
+- Document upload, parsing, chunking, embedding, and Chroma indexing
+- Reindex support through the same synchronous ingest path
+- Retrieval-backed chat with grounded source citations
+- Workspace metrics driven by persisted traces
+- Frontend support for ingest status, reindex actions, and grounded citations
+- A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and `text-embedding-v4` for embeddings
 
 ## Current MVP Demo Path
 
-You can now demo the current platform MVP in this order:
+You can now demo the current platform in this order:
 
 1. Register or log in from `http://localhost:3000/register` or `http://localhost:3000/login`
 2. Create a workspace from `http://localhost:3000/workspaces`
-3. Open the workspace documents page and upload a file
-4. Open the workspace chat page and submit a prompt
-5. Open the workspace analytics page and inspect metrics
+3. Open the workspace documents page and upload a supported text, markdown, or PDF file
+4. Confirm the document reaches `indexed` status
+5. Trigger `Reindex` from the documents page to refresh derived chunks and vector mappings
+6. Open the workspace chat page and submit a prompt against indexed content
+7. Review grounded citations and trace identifiers in chat responses
+8. Open the workspace analytics page and inspect metrics
 
 ## Not Implemented Yet
 
-The following capabilities remain out of scope for Phase 1:
+The following capabilities remain out of scope for Phase 2:
 
-- Real RAG retrieval and source-backed answers
 - Redis-backed workers and async pipelines
 - LangGraph tasks and agent orchestration
 - Evaluation datasets and review workflows

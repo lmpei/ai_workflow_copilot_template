@@ -103,14 +103,15 @@ implementation aligned with the original platform vision.
 
 ## Current Development Status
 
-The repository is currently in `Phase 1: Platform MVP`.
+The repository is currently in `Phase 2: Document Ingest + RAG`.
 
-### Phase 1 Requirements
+### Phase 2 Requirements
 
-- Auth, workspaces, documents, chat, and metrics are implemented as one shared platform core
-- The frontend and backend together support a runnable MVP flow
+- Auth, workspaces, documents, chat, and metrics continue to operate as one shared platform core
+- Upload and reindex run through a real ingest pipeline: parse -> chunk -> embed -> index
+- Chat uses indexed workspace content and returns grounded citations
 - Local run, local verification, and CI paths remain documented and usable
-- Phase 2+ capabilities stay clearly marked as future work
+- Phase 3+ capabilities stay clearly marked as future work
 
 ### Already Established
 
@@ -122,15 +123,15 @@ The repository is currently in `Phase 1: Platform MVP`.
 - Frontend scaffold migrated to TypeScript
 - Auth register/login/me flow
 - Workspace persistence and workspace membership scoping
-- Document upload and document metadata APIs
-- Chat requests with persisted conversations, messages, and traces
+- Document upload, parsing, chunking, embeddings, and Chroma indexing
+- Reindex orchestration that refreshes derived chunks and vector mappings
+- Chat requests with persisted conversations, messages, traces, grounded retrieval, and citations
 - Workspace metrics aggregated from traces
-- Frontend MVP flow for auth -> workspace -> documents -> chat -> metrics
+- Frontend Phase 2 flow for auth -> workspace -> ingest status -> reindex -> grounded chat -> metrics
+- A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation and `text-embedding-v4` embeddings
 
 ### Not Yet Complete
 
-- Real RAG retrieval with source-backed responses
-- Parsing, chunking, embedding, and Chroma indexing
 - Redis-backed worker execution
 - LangGraph durable agent execution
 - Evaluation datasets and review workflows
@@ -166,10 +167,10 @@ To stay aligned with the original project vision:
 
 ### Phase 2: Document Ingest + RAG
 
-- Upload
-- Metadata persistence
+- Upload and metadata persistence
 - Parsing and chunking
 - Embeddings and Chroma indexing
+- Reindex orchestration
 - Source-backed chat
 
 ### Phase 3: Tasks + Agents

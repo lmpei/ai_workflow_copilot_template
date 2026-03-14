@@ -105,20 +105,21 @@ surface.
 
 ## Current Status
 
-The repository is currently in `Phase 1: Platform MVP`.
+The repository is currently in `Phase 2: Document Ingest + RAG`.
 
-The current implemented MVP includes:
+The current implemented platform increment includes:
 
 - register/login auth endpoints and frontend auth flow
 - workspace creation and persistence
-- document upload and document metadata listing
-- chat requests with persisted traces
+- document upload, parsing, chunking, embedding, and Chroma indexing
+- reindex support through the same synchronous ingest pipeline
+- retrieval-backed chat with grounded source citations and persisted traces
 - workspace metrics
-- a frontend demo path that connects auth -> workspace -> documents -> chat -> metrics
+- a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` and `text-embedding-v4`
+- a frontend demo path that connects auth -> workspace -> documents -> reindex -> grounded chat -> metrics
 
 The repository does not yet implement:
 
-- real retrieval-backed RAG answers
 - Redis-backed async workers
 - LangGraph agent runs
 - evaluation datasets or quality review flows
