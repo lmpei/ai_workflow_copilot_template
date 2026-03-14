@@ -1,6 +1,8 @@
 # Windows Development
 
-This repository supports local development on Windows with PowerShell or Command Prompt.
+This document is a Windows-specific supplement to `README.md`.
+Use `README.md` as the primary project startup guide.
+Use this file only for Windows shell differences, optional local dependency setup, and verification helpers.
 
 ## Recommended tools
 
@@ -14,18 +16,33 @@ This repository supports local development on Windows with PowerShell or Command
 - Use `npm.cmd` in PowerShell if `npm.ps1` is blocked by execution policy
 - Prefer `python -m <tool>` for Python commands inside the local virtual environment
 
-## Quick start
+## Project startup
 
 From the repository root:
 
 ```powershell
 Copy-Item .env.example .env
+docker compose up --build
+```
+
+Before running Docker commands, make sure Docker Desktop is open and the Docker engine is running.
+
+Useful local URLs after startup:
+
+- Frontend: `http://localhost:3000`
+- API base: `http://localhost:8000/api/v1`
+- Health check: `http://localhost:8000/api/v1/health`
+
+## Optional local dependency setup
+
+Use this only if you want local Python/Node development outside the Docker-only startup path.
+
+```powershell
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r server\requirements.txt
 cd web
 npm.cmd ci
 cd ..
-docker compose up --build
 ```
 
 ## Local verification
@@ -52,6 +69,13 @@ cd ..
 
 - `scripts\setup-windows.cmd`
 - `scripts\verify-windows.cmd`
+
+These are local development helpers, not project startup commands.
+
+- `setup-windows.cmd`
+  - prepares a local Windows development environment
+- `verify-windows.cmd`
+  - runs local backend and frontend verification
 
 Run them from PowerShell with:
 

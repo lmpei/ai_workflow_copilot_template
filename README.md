@@ -45,6 +45,8 @@ document ownership, folder responsibilities, and current project stage.
 
 ## Quick start
 
+Recommended startup path for all platforms:
+
 PowerShell on Windows:
 
 ```powershell
@@ -65,7 +67,8 @@ Frontend: `http://localhost:3000`
 API base: `http://localhost:8000/api/v1`  
 Health check: `http://localhost:8000/api/v1/health`
 
-For full local Windows setup and PowerShell-specific notes, see `docs/development/WINDOWS_SETUP.md`.
+This is the primary project startup path. For Windows-specific shell notes, local dependency setup, and verification helpers,
+see `docs/development/WINDOWS_SETUP.md`.
 
 ## Runtime Services
 
