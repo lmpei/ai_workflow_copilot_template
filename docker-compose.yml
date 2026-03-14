@@ -34,6 +34,16 @@ services:
     volumes:
       - ./server:/app
 
+  worker:
+    build: ./server
+    env_file: .env
+    command: ["python", "-m", "arq", "app.workers.task_worker.WorkerSettings"]
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./server:/app
+
   web:
     build: ./web
     env_file: .env

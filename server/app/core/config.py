@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/ai_workflow"
     redis_url: str = "redis://redis:6379/0"
+    task_queue_name: str = "platform_tasks"
     openai_api_key: str = "replace_me"
     chat_provider: str = "qwen"
     chat_api_key: str = "replace_me"
