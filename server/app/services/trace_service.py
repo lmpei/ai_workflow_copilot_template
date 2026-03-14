@@ -5,6 +5,44 @@ class TraceAccessError(Exception):
     pass
 
 
+def record_trace(
+    *,
+    workspace_id: str,
+    trace_type: str,
+    request_json: dict[str, object],
+    response_json: dict[str, object],
+    metadata_json: dict[str, object] | None = None,
+    parent_trace_id: str | None = None,
+    task_id: str | None = None,
+    agent_run_id: str | None = None,
+    tool_call_id: str | None = None,
+    eval_run_id: str | None = None,
+    latency_ms: int,
+    token_input: int = 0,
+    token_output: int = 0,
+    estimated_cost: float = 0.0,
+    error_message: str | None = None,
+) -> str:
+    trace = trace_repository.create_trace(
+        workspace_id=workspace_id,
+        parent_trace_id=parent_trace_id,
+        task_id=task_id,
+        agent_run_id=agent_run_id,
+        tool_call_id=tool_call_id,
+        eval_run_id=eval_run_id,
+        trace_type=trace_type,
+        request_json=request_json,
+        response_json=response_json,
+        metadata_json=metadata_json,
+        error_message=error_message,
+        latency_ms=latency_ms,
+        token_input=token_input,
+        token_output=token_output,
+        estimated_cost=estimated_cost,
+    )
+    return trace.id
+
+
 def record_chat_trace(
     *,
     workspace_id: str,
@@ -20,9 +58,19 @@ def record_chat_trace(
     token_output: int = 0,
     estimated_cost: float = 0.0,
     error: str | None = None,
+    parent_trace_id: str | None = None,
+    task_id: str | None = None,
+    agent_run_id: str | None = None,
+    tool_call_id: str | None = None,
+    eval_run_id: str | None = None,
 ) -> str:
-    trace = trace_repository.create_trace(
+    return record_trace(
         workspace_id=workspace_id,
+        parent_trace_id=parent_trace_id,
+        task_id=task_id,
+        agent_run_id=agent_run_id,
+        tool_call_id=tool_call_id,
+        eval_run_id=eval_run_id,
         trace_type="rag",
         request_json={
             "conversation_id": conversation_id,
@@ -36,12 +84,16 @@ def record_chat_trace(
             "sources": sources,
             "error": error,
         },
+        metadata_json={
+            "prompt": prompt,
+            "retrieved_chunks": retrieved_chunks,
+        },
+        error_message=error,
         latency_ms=latency_ms,
         token_input=token_input,
         token_output=token_output,
         estimated_cost=estimated_cost,
     )
-    return trace.id
 
 
 def get_metrics_snapshot(workspace_id: str) -> dict:
