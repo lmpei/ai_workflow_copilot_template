@@ -4,6 +4,10 @@ from app.models.conversation import Conversation
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.embedding import Embedding
+from app.models.eval_case import EvalCase
+from app.models.eval_dataset import EvalDataset
+from app.models.eval_result import EvalResult
+from app.models.eval_run import EvalRun
 from app.models.message import Message
 from app.models.task import Task
 from app.models.tool_call import ToolCall
@@ -19,6 +23,10 @@ __all__ = [
     "Document",
     "DocumentChunk",
     "Embedding",
+    "EvalCase",
+    "EvalDataset",
+    "EvalResult",
+    "EvalRun",
     "Message",
     "Task",
     "Trace",

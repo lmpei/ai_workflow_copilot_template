@@ -22,6 +22,10 @@ def test_database_foundation_creates_phase_one_tables() -> None:
         "tasks",
         "agent_runs",
         "tool_calls",
+        "eval_datasets",
+        "eval_cases",
+        "eval_runs",
+        "eval_results",
     }.issubset(tables)
 
     trace_columns = {column["name"] for column in inspector.get_columns("traces")}
