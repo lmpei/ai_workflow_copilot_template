@@ -3,11 +3,17 @@ import type {
   ChatRequestPayload,
   ChatResponsePayload,
   DocumentRecord,
+  EvalDatasetCreatePayload,
+  EvalDatasetRecord,
+  EvalResultRecord,
+  EvalRunCreatePayload,
+  EvalRunRecord,
   LoginRequestPayload,
   LoginResponsePayload,
   RegisterRequestPayload,
   TaskCreatePayload,
   TaskRecord,
+  TraceRecord,
   User,
   Workspace,
   WorkspaceCreatePayload,
@@ -228,6 +234,85 @@ export async function getWorkspaceMetrics(
 ): Promise<WorkspaceMetrics> {
   return fetchBrowserApiJson<WorkspaceMetrics>(
     `/workspaces/${workspaceId}/metrics`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getWorkspaceAnalytics(
+  accessToken: string,
+  workspaceId: string,
+): Promise<WorkspaceMetrics> {
+  return fetchBrowserApiJson<WorkspaceMetrics>(
+    `/workspaces/${workspaceId}/analytics`,
+    {},
+    accessToken,
+  );
+}
+
+export async function listWorkspaceTraces(
+  accessToken: string,
+  workspaceId: string,
+  limit = 20,
+): Promise<TraceRecord[]> {
+  return fetchBrowserApiJson<TraceRecord[]>(
+    `/workspaces/${workspaceId}/traces?limit=${limit}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function createEvalDataset(
+  accessToken: string,
+  workspaceId: string,
+  payload: EvalDatasetCreatePayload,
+): Promise<EvalDatasetRecord> {
+  return fetchBrowserApiJson<EvalDatasetRecord>(
+    `/workspaces/${workspaceId}/evals/datasets`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function listEvalDatasets(
+  accessToken: string,
+  workspaceId: string,
+): Promise<EvalDatasetRecord[]> {
+  return fetchBrowserApiJson<EvalDatasetRecord[]>(
+    `/workspaces/${workspaceId}/evals/datasets`,
+    {},
+    accessToken,
+  );
+}
+
+export async function createEvalRun(
+  accessToken: string,
+  workspaceId: string,
+  payload: EvalRunCreatePayload,
+): Promise<EvalRunRecord> {
+  return fetchBrowserApiJson<EvalRunRecord>(
+    `/workspaces/${workspaceId}/evals/runs`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function getEvalRun(accessToken: string, evalRunId: string): Promise<EvalRunRecord> {
+  return fetchBrowserApiJson<EvalRunRecord>(`/evals/runs/${evalRunId}`, {}, accessToken);
+}
+
+export async function listEvalRunResults(
+  accessToken: string,
+  evalRunId: string,
+): Promise<EvalResultRecord[]> {
+  return fetchBrowserApiJson<EvalResultRecord[]>(
+    `/evals/runs/${evalRunId}/results`,
     {},
     accessToken,
   );

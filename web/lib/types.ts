@@ -86,8 +86,105 @@ export type WorkspaceMetrics = {
   total_requests: number;
   avg_latency_ms: number;
   retrieval_hit_count: number;
+  retrieval_hit_rate: number;
   token_usage: number;
+  total_estimated_cost: number;
   task_success_rate: number;
+  eval_run_count: number;
+  eval_case_count: number;
+  eval_pass_rate: number;
+  avg_eval_score: number;
+};
+
+export type EvalType = "retrieval_chat";
+
+export type EvalCaseCreatePayload = {
+  input_json: JsonObject;
+  expected_json?: JsonObject;
+  metadata_json?: JsonObject;
+};
+
+export type EvalDatasetCreatePayload = {
+  name: string;
+  eval_type: EvalType;
+  description?: string;
+  config_json?: JsonObject;
+  cases: EvalCaseCreatePayload[];
+};
+
+export type EvalCaseRecord = {
+  id: string;
+  case_index: number;
+  input_json: JsonObject;
+  expected_json: JsonObject;
+  metadata_json: JsonObject;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EvalDatasetRecord = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  eval_type: EvalType;
+  description: string | null;
+  created_by: string;
+  config_json: JsonObject;
+  cases: EvalCaseRecord[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type EvalRunCreatePayload = {
+  dataset_id: string;
+};
+
+export type EvalRunRecord = {
+  id: string;
+  workspace_id: string;
+  dataset_id: string;
+  eval_type: EvalType;
+  status: "pending" | "running" | "completed" | "failed";
+  created_by: string;
+  summary_json: JsonObject;
+  error_message: string | null;
+  created_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+};
+
+export type EvalResultRecord = {
+  id: string;
+  eval_run_id: string;
+  eval_case_id: string;
+  status: "pending" | "completed" | "failed";
+  output_json: JsonObject;
+  metrics_json: JsonObject;
+  score: number | null;
+  passed: boolean | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TraceRecord = {
+  id: string;
+  workspace_id: string;
+  parent_trace_id: string | null;
+  task_id: string | null;
+  agent_run_id: string | null;
+  tool_call_id: string | null;
+  eval_run_id: string | null;
+  trace_type: string;
+  request_json: JsonObject;
+  response_json: JsonObject;
+  metadata_json: JsonObject;
+  error_message: string | null;
+  latency_ms: number;
+  token_input: number;
+  token_output: number;
+  estimated_cost: number;
+  created_at: string;
 };
 
 export type TaskCreatePayload = {
