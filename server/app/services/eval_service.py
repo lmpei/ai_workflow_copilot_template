@@ -6,6 +6,7 @@ from app.schemas.eval import (
     EvalRunCreate,
     EvalRunResponse,
 )
+from app.services.eval_execution_service import EvalExecutionError, enqueue_eval_run
 
 
 class EvalAccessError(Exception):
@@ -13,6 +14,10 @@ class EvalAccessError(Exception):
 
 
 class EvalValidationError(Exception):
+    pass
+
+
+class EvalQueueError(Exception):
     pass
 
 
@@ -69,7 +74,7 @@ def list_workspace_eval_datasets(*, workspace_id: str, user_id: str) -> list[Eva
     ]
 
 
-def create_eval_run(
+async def create_eval_run(
     *,
     workspace_id: str,
     user_id: str,
@@ -91,6 +96,18 @@ def create_eval_run(
             "failed_cases": 0,
         },
     )
+    try:
+        await enqueue_eval_run(eval_run.id)
+    except EvalExecutionError as error:
+        failed_eval_run = eval_repository.update_eval_run_status(
+            eval_run.id,
+            next_status="failed",
+            summary_json=eval_run.summary_json,
+            error_message=str(error),
+        )
+        if failed_eval_run is None:
+            raise EvalQueueError("Failed to enqueue eval run") from error
+        raise EvalQueueError(str(error)) from error
     return EvalRunResponse.from_model(eval_run)
 
 

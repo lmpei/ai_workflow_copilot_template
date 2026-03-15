@@ -1,4 +1,9 @@
+import pytest
 from fastapi.testclient import TestClient
+
+from app.repositories import eval_repository
+from app.services import eval_service
+from app.services.eval_execution_service import EvalExecutionError
 
 
 def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[str, str]:
@@ -37,6 +42,14 @@ def _create_workspace(client: TestClient, token: str, *, name: str = "Eval Demo"
     )
     assert response.status_code == 201
     return response.json()["id"]
+
+
+@pytest.fixture(autouse=True)
+def stub_eval_enqueue(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_enqueue_eval_run(eval_run_id: str) -> str:
+        return f"job-{eval_run_id}"
+
+    monkeypatch.setattr(eval_service, "enqueue_eval_run", fake_enqueue_eval_run)
 
 
 
@@ -157,3 +170,44 @@ def test_eval_api_rejects_invalid_eval_type(client: TestClient) -> None:
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Unsupported eval type: agent_quality"
+
+
+
+def test_eval_api_marks_run_failed_when_enqueue_fails(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="queue-owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    dataset_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/datasets",
+        json={
+            "name": "Queue Failure Dataset",
+            "eval_type": "retrieval_chat",
+            "cases": [{"input_json": {"question": "Who owns Apollo?"}}],
+        },
+        headers=headers,
+    )
+    assert dataset_response.status_code == 201
+    dataset_id = dataset_response.json()["id"]
+
+    async def failing_enqueue(_eval_run_id: str) -> str:
+        raise EvalExecutionError("Redis unavailable")
+
+    monkeypatch.setattr(eval_service, "enqueue_eval_run", failing_enqueue)
+
+    create_run_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/runs",
+        json={"dataset_id": dataset_id},
+        headers=headers,
+    )
+
+    assert create_run_response.status_code == 500
+    assert create_run_response.json()["detail"] == "Redis unavailable"
+
+    persisted_runs = eval_repository.list_workspace_eval_runs(workspace_id, auth["user_id"])
+    assert len(persisted_runs) == 1
+    assert persisted_runs[0].status == "failed"
+    assert persisted_runs[0].error_message == "Redis unavailable"
