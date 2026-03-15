@@ -114,6 +114,26 @@ def test_eval_api_creates_lists_datasets_and_creates_runs(client: TestClient) ->
     assert get_run_response.status_code == 200
     assert get_run_response.json()["id"] == eval_run["id"]
 
+    eval_repository.create_eval_result(
+        eval_run_id=eval_run["id"],
+        eval_case_id=dataset["cases"][0]["id"],
+        status="completed",
+        output_json={"answer": "Alice"},
+        metrics_json={"rule_score": 1.0, "judge_score": 0.8},
+        score=0.9,
+        passed=True,
+    )
+    results_response = client.get(
+        f"/api/v1/evals/runs/{eval_run['id']}/results",
+        headers=headers,
+    )
+    assert results_response.status_code == 200
+    results = results_response.json()
+    assert len(results) == 1
+    assert results[0]["eval_run_id"] == eval_run["id"]
+    assert results[0]["score"] == 0.9
+    assert results[0]["passed"] is True
+
 
 
 def test_eval_api_rejects_unauthorized_and_cross_workspace_access(client: TestClient) -> None:
@@ -151,6 +171,20 @@ def test_eval_api_rejects_unauthorized_and_cross_workspace_access(client: TestCl
         headers=owner_headers,
     )
     assert wrong_workspace_run_response.status_code == 404
+
+    owner_run_response = client.post(
+        f"/api/v1/workspaces/{owner_workspace_id}/evals/runs",
+        json={"dataset_id": dataset_id},
+        headers=owner_headers,
+    )
+    assert owner_run_response.status_code == 201
+    owner_run_id = owner_run_response.json()["id"]
+
+    foreign_results_response = client.get(
+        f"/api/v1/evals/runs/{owner_run_id}/results",
+        headers=other_headers,
+    )
+    assert foreign_results_response.status_code == 404
 
 
 

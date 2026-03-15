@@ -1,4 +1,10 @@
-from app.repositories import trace_repository, workspace_repository
+from app.repositories import (
+    eval_repository,
+    task_repository,
+    trace_repository,
+    workspace_repository,
+)
+from app.schemas.analytics import TraceResponse, WorkspaceAnalyticsResponse
 
 
 class TraceAccessError(Exception):
@@ -96,11 +102,12 @@ def record_chat_trace(
     )
 
 
-def get_metrics_snapshot(workspace_id: str) -> dict:
+def get_metrics_snapshot(*, workspace_id: str, user_id: str) -> dict:
     traces = trace_repository.list_traces_for_workspace(workspace_id)
     total_requests = len(traces)
     total_latency_ms = sum(trace.latency_ms for trace in traces)
     token_usage = sum(trace.token_input + trace.token_output for trace in traces)
+    total_estimated_cost = round(sum(trace.estimated_cost for trace in traces), 6)
     retrieval_hit_count = sum(
         1
         for trace in traces
@@ -108,14 +115,42 @@ def get_metrics_snapshot(workspace_id: str) -> dict:
         and len(trace.response_json["sources"]) > 0
     )
     avg_latency_ms = int(total_latency_ms / total_requests) if total_requests > 0 else 0
+    retrieval_hit_rate = (
+        round(retrieval_hit_count / total_requests, 4) if total_requests > 0 else 0.0
+    )
+
+    tasks = task_repository.list_workspace_tasks(workspace_id, user_id)
+    successful_tasks = sum(1 for task in tasks if task.status == "done")
+    task_success_rate = round(successful_tasks / len(tasks), 4) if tasks else 0.0
+
+    eval_runs = eval_repository.list_workspace_eval_runs(workspace_id, user_id)
+    eval_results = [
+        result
+        for eval_run in eval_runs
+        for result in eval_repository.list_eval_run_results(eval_run.id)
+    ]
+    scored_values = [float(result.score) for result in eval_results if result.score is not None]
+    passed_results = [result for result in eval_results if result.passed is True]
+    eval_pass_rate = round(len(passed_results) / len(eval_results), 4) if eval_results else 0.0
+    avg_eval_score = (
+        round(sum(scored_values) / len(scored_values), 4)
+        if scored_values
+        else 0.0
+    )
 
     return {
         "workspace_id": workspace_id,
         "total_requests": total_requests,
         "avg_latency_ms": avg_latency_ms,
         "retrieval_hit_count": retrieval_hit_count,
+        "retrieval_hit_rate": retrieval_hit_rate,
         "token_usage": token_usage,
-        "task_success_rate": 0.0,
+        "total_estimated_cost": total_estimated_cost,
+        "task_success_rate": task_success_rate,
+        "eval_run_count": len(eval_runs),
+        "eval_case_count": len(eval_results),
+        "eval_pass_rate": eval_pass_rate,
+        "avg_eval_score": avg_eval_score,
     }
 
 
@@ -123,4 +158,28 @@ def get_workspace_metrics(*, workspace_id: str, user_id: str) -> dict:
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
         raise TraceAccessError("Workspace not found")
-    return get_metrics_snapshot(workspace_id=workspace_id)
+    return get_metrics_snapshot(workspace_id=workspace_id, user_id=user_id)
+
+
+def get_workspace_analytics(*, workspace_id: str, user_id: str) -> WorkspaceAnalyticsResponse:
+    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
+    if workspace is None:
+        raise TraceAccessError("Workspace not found")
+    return WorkspaceAnalyticsResponse(
+        **get_metrics_snapshot(workspace_id=workspace_id, user_id=user_id)
+    )
+
+
+def list_workspace_traces(
+    *,
+    workspace_id: str,
+    user_id: str,
+    limit: int = 50,
+) -> list[TraceResponse]:
+    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
+    if workspace is None:
+        raise TraceAccessError("Workspace not found")
+
+    normalized_limit = max(1, min(limit, 200))
+    traces = trace_repository.list_traces_for_workspace(workspace_id)
+    return [TraceResponse.from_model(trace) for trace in traces[-normalized_limit:]]

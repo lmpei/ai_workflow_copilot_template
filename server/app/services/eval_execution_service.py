@@ -232,6 +232,8 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
     total_cases = len(cases)
     completed_cases = 0
     failed_cases = 0
+    passed_cases = 0
+    score_total = 0.0
     error_messages: list[str] = []
 
     try:
@@ -289,6 +291,9 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 if completed_result is None:
                     raise EvalExecutionError("Eval result not found")
                 completed_cases += 1
+                if evaluation_result.passed is True:
+                    passed_cases += 1
+                score_total += evaluation_result.score
             except EvalExecutionError as error:
                 failed_result = eval_repository.update_eval_result(
                     eval_result.id,
@@ -309,6 +314,13 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                         "total_cases": total_cases,
                         "completed_cases": completed_cases,
                         "failed_cases": failed_cases,
+                        "passed_cases": passed_cases,
+                        "avg_score": round(score_total / completed_cases, 4)
+                        if completed_cases > 0
+                        else 0.0,
+                        "pass_rate": round(passed_cases / total_cases, 4)
+                        if total_cases > 0
+                        else 0.0,
                     },
                 )
                 if refreshed is None:
@@ -321,6 +333,13 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 "total_cases": total_cases,
                 "completed_cases": completed_cases,
                 "failed_cases": failed_cases,
+                "passed_cases": passed_cases,
+                "avg_score": round(score_total / completed_cases, 4)
+                if completed_cases > 0
+                else 0.0,
+                "pass_rate": round(passed_cases / total_cases, 4)
+                if total_cases > 0
+                else 0.0,
             },
             error_message=str(error),
         )
@@ -335,6 +354,13 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 "total_cases": total_cases,
                 "completed_cases": completed_cases,
                 "failed_cases": failed_cases,
+                "passed_cases": passed_cases,
+                "avg_score": round(score_total / completed_cases, 4)
+                if completed_cases > 0
+                else 0.0,
+                "pass_rate": round(passed_cases / total_cases, 4)
+                if total_cases > 0
+                else 0.0,
             },
             error_message=str(error),
         )
@@ -346,6 +372,9 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
         "total_cases": total_cases,
         "completed_cases": completed_cases,
         "failed_cases": failed_cases,
+        "passed_cases": passed_cases,
+        "avg_score": round(score_total / completed_cases, 4) if completed_cases > 0 else 0.0,
+        "pass_rate": round(passed_cases / total_cases, 4) if total_cases > 0 else 0.0,
     }
     if failed_cases > 0:
         failed_eval_run = eval_repository.update_eval_run_status(

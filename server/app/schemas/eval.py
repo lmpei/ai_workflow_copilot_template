@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.models.eval_case import EvalCase
 from app.models.eval_dataset import EvalDataset
+from app.models.eval_result import EvalResult
 from app.models.eval_run import EvalRun
 
 SUPPORTED_EVAL_TYPES = (
@@ -111,4 +112,34 @@ class EvalRunResponse(BaseModel):
             created_at=eval_run.created_at,
             started_at=eval_run.started_at,
             ended_at=eval_run.ended_at,
+        )
+
+
+class EvalResultResponse(BaseModel):
+    id: str
+    eval_run_id: str
+    eval_case_id: str
+    status: str
+    output_json: dict[str, object]
+    metrics_json: dict[str, object]
+    score: float | None = None
+    passed: bool | None = None
+    error_message: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_model(cls, eval_result: EvalResult) -> "EvalResultResponse":
+        return cls(
+            id=eval_result.id,
+            eval_run_id=eval_result.eval_run_id,
+            eval_case_id=eval_result.eval_case_id,
+            status=eval_result.status,
+            output_json=eval_result.output_json,
+            metrics_json=eval_result.metrics_json,
+            score=eval_result.score,
+            passed=eval_result.passed,
+            error_message=eval_result.error_message,
+            created_at=eval_result.created_at,
+            updated_at=eval_result.updated_at,
         )

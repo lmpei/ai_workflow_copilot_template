@@ -2,7 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.security import get_current_user
 from app.models.user import User
-from app.schemas.eval import EvalDatasetCreate, EvalDatasetResponse, EvalRunCreate, EvalRunResponse
+from app.schemas.eval import (
+    EvalDatasetCreate,
+    EvalDatasetResponse,
+    EvalResultResponse,
+    EvalRunCreate,
+    EvalRunResponse,
+)
 from app.services import eval_service
 from app.services.eval_service import EvalAccessError, EvalQueueError, EvalValidationError
 
@@ -84,3 +90,14 @@ async def get_eval_run(
     if eval_run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Eval run not found")
     return eval_run
+
+
+@router.get("/evals/runs/{eval_run_id}/results", response_model=list[EvalResultResponse])
+async def list_eval_run_results(
+    eval_run_id: str,
+    current_user: User = Depends(get_current_user),
+) -> list[EvalResultResponse]:
+    try:
+        return eval_service.list_eval_run_results(eval_run_id=eval_run_id, user_id=current_user.id)
+    except EvalAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error

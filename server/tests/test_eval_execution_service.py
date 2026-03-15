@@ -228,6 +228,9 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
         "total_cases": 2,
         "completed_cases": 2,
         "failed_cases": 0,
+        "passed_cases": 2,
+        "avg_score": 0.9,
+        "pass_rate": 1.0,
     }
     assert persisted_run is not None
     assert persisted_run.status == "completed"
@@ -235,6 +238,9 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
         "total_cases": 2,
         "completed_cases": 2,
         "failed_cases": 0,
+        "passed_cases": 2,
+        "avg_score": 0.9,
+        "pass_rate": 1.0,
     }
     assert len(persisted_results) == 2
     assert all(result.status == "completed" for result in persisted_results)
@@ -283,6 +289,9 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
         "total_cases": 2,
         "completed_cases": 1,
         "failed_cases": 1,
+        "passed_cases": 1,
+        "avg_score": 0.9,
+        "pass_rate": 0.5,
     }
     assert persisted_run is not None
     assert persisted_run.status == "failed"
@@ -290,6 +299,9 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
         "total_cases": 2,
         "completed_cases": 1,
         "failed_cases": 1,
+        "passed_cases": 1,
+        "avg_score": 0.9,
+        "pass_rate": 0.5,
     }
     assert persisted_run.error_message == "Judge unavailable"
     assert len(persisted_results) == 2

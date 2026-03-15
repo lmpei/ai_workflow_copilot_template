@@ -3,6 +3,7 @@ from app.schemas.eval import (
     SUPPORTED_EVAL_TYPES,
     EvalDatasetCreate,
     EvalDatasetResponse,
+    EvalResultResponse,
     EvalRunCreate,
     EvalRunResponse,
 )
@@ -116,3 +117,11 @@ def get_eval_run(*, eval_run_id: str, user_id: str) -> EvalRunResponse | None:
     if eval_run is None:
         return None
     return EvalRunResponse.from_model(eval_run)
+
+
+def list_eval_run_results(*, eval_run_id: str, user_id: str) -> list[EvalResultResponse]:
+    eval_run = eval_repository.get_eval_run_for_user(eval_run_id, user_id)
+    if eval_run is None:
+        raise EvalAccessError("Eval run not found")
+    results = eval_repository.list_eval_run_results(eval_run_id)
+    return [EvalResultResponse.from_model(result) for result in results]
