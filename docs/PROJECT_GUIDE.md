@@ -103,16 +103,16 @@ implementation aligned with the original platform vision.
 
 ## Current Development Status
 
-The repository is currently in `Phase 3: Tasks + Agents`.
+The repository is currently in `Phase 4: Evaluation + Observability`.
 
-### Phase 3 Requirements
+### Phase 4 Requirements
 
-- Auth, workspaces, documents, chat, tasks, and metrics continue to operate as one shared platform core
-- Redis-backed queueing and worker execution are real platform capabilities, not placeholders
-- Agent runs and tool calls are persisted alongside task state in PostgreSQL
-- The first agent stays platform-level and reuses workspace/document primitives instead of jumping to scenario modules
+- Auth, workspaces, documents, chat, tasks, evals, and analytics continue to operate as one shared platform core
+- Redis-backed queueing and worker execution are real platform capabilities for both tasks and eval runs
+- Trace, cost, latency, and quality signals are persisted alongside operational state in PostgreSQL
+- Evaluation datasets, eval runs, and eval results are platform primitives rather than scenario-specific add-ons
 - Local run, local verification, and CI paths remain documented and usable
-- Phase 4+ capabilities stay clearly marked as future work
+- Phase 5 scenario-module work stays clearly marked as future work
 
 ### Already Established
 
@@ -127,20 +127,24 @@ The repository is currently in `Phase 3: Tasks + Agents`.
 - Document upload, parsing, chunking, embeddings, and Chroma indexing
 - Reindex orchestration that refreshes derived chunks and vector mappings
 - Chat requests with persisted conversations, messages, traces, grounded retrieval, and citations
-- Workspace metrics aggregated from traces
+- Workspace analytics aggregated from traces
 - Task, agent run, and tool call persistence with minimal state models
 - Redis-backed ARQ worker foundation and task enqueue path
 - Task API surface for `research_summary` and `workspace_report`
 - Static Python tool registry for workspace document access and search
 - LangGraph-powered `workspace_research_agent`
-- Frontend Phase 3 flow for auth -> workspace -> indexed documents -> grounded chat -> task creation -> task result inspection
-- A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation and `text-embedding-v4` embeddings
+- Eval dataset, eval case, eval run, and eval result persistence with minimal state models
+- Eval API surface and ARQ-backed eval worker execution
+- Chat evaluator framework with rule checks plus an independently configured LLM judge path
+- Analytics and observability APIs for traces, eval results, and workspace summaries
+- Frontend Phase 4 flow for auth -> workspace -> indexed documents -> grounded chat -> tasks -> eval runs -> observability review
+- A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation/judging and `text-embedding-v4` embeddings
 
 ### Not Yet Complete
 
 - Durable or multi-agent orchestration beyond the minimal LangGraph workflow
-- Evaluation datasets and review workflows
-- Advanced observability and quality analysis beyond current traces/metrics
+- Human approval flows, retries, and advanced scheduling
+- External observability stacks, alerting, and richer BI-style analysis beyond current in-product summaries
 - Scenario-module business logic for job, support, and research
 
 ## Alignment Rules

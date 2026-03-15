@@ -75,35 +75,36 @@ see `docs/development/WINDOWS_SETUP.md`.
 `docker compose up` starts the platform and its backing services together:
 
 - `web`
-  - Next.js frontend for auth, workspaces, documents, chat, and analytics
+  - Next.js frontend for auth, workspaces, documents, chat, tasks, evaluations, and analytics
 - `server`
-  - FastAPI API for platform logic and orchestration
+  - FastAPI API for platform logic, orchestration, evaluation runs, and observability surfaces
 - `db`
-  - PostgreSQL system of record for users, workspaces, documents, messages, traces, tasks, agent runs, tool calls, and embedding mappings
+  - PostgreSQL system of record for users, workspaces, documents, messages, traces, tasks, agent runs, tool calls, eval datasets, eval runs, and eval results
 - `chroma`
-  - Vector store used by ingest, retrieval-backed chat, and document search tools
+  - Vector store used by ingest, retrieval-backed chat, document search tools, and retrieval-focused evaluation runs
 - `redis`
-  - Queue service used by Phase 3 task execution and the ARQ worker runtime
+  - Queue service used by ARQ workers for Phase 3 task execution and Phase 4 eval execution
 
 ## Current Phase
 
-The repository is currently in `Phase 3: Tasks + Agents`.
+The repository is currently in `Phase 4: Evaluation + Observability`.
 
-Phase 3 is now implemented with:
+Phase 4 is now implemented with:
 
 - Auth boundary and browser session flow
 - PostgreSQL-backed workspace persistence
 - Document upload, parsing, chunking, embedding, and Chroma indexing
 - Reindex support through the same synchronous ingest path
 - Retrieval-backed chat with grounded source citations
-- Workspace metrics driven by persisted traces
-- Redis-backed task queueing with ARQ worker execution
-- PostgreSQL-backed task, agent run, and tool call persistence
+- Workspace analytics driven by persisted traces, latency, token, cost, task, and eval signals
+- Redis-backed ARQ worker execution for both platform tasks and eval runs
+- PostgreSQL-backed task, agent run, tool call, eval dataset, eval run, and eval result persistence
 - A LangGraph-powered `workspace_research_agent` with a static Python tool registry
-- Frontend support for task creation, task status polling, and final result inspection
-- A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and `text-embedding-v4` for embeddings
+- A chat evaluator framework with rule checks and an independently configured LLM judge path
+- Frontend support for task creation, task status polling, eval dataset creation, eval run inspection, recent trace review, and analytics summaries
+- A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and judge flows and `text-embedding-v4` for embeddings
 
-## Current MVP Demo Path
+## Current Demo Path
 
 You can now demo the current platform in this order:
 
@@ -114,17 +115,18 @@ You can now demo the current platform in this order:
 5. Open the workspace chat page and submit a prompt against indexed content
 6. Review grounded citations and trace identifiers in chat responses
 7. Open the workspace tasks page and create a `research_summary` or `workspace_report` task
-8. Watch the task move through `pending -> running -> done/failed`
-9. Open the task result to inspect final agent output and any execution errors
-10. Optionally review workspace analytics for trace-driven metrics
+8. Watch the task move through `pending -> running -> done/failed` and inspect the final result
+9. Open the workspace analytics page and create an eval dataset with one or more retrieval-chat questions
+10. Launch an eval run, wait for the run to complete, and inspect per-case scores and pass/fail outcomes
+11. Review recent traces and workspace analytics summaries for latency, cost, retrieval, task, and eval signals
 
 ## Not Implemented Yet
 
-The following capabilities remain out of scope for Phase 3:
+The following capabilities remain out of scope for Phase 4:
 
 - Durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - Human-in-the-loop approvals, retries, and advanced job scheduling
-- Evaluation datasets and review workflows
+- External observability stacks, alerting, and complex BI-style dashboards
 - Scenario-specific job, support, and research modules
 
 ## Verification

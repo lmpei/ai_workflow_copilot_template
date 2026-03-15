@@ -105,7 +105,7 @@ surface.
 
 ## Current Status
 
-The repository is currently in `Phase 3: Tasks + Agents`.
+The repository is currently in `Phase 4: Evaluation + Observability`.
 
 The current implemented platform increment includes:
 
@@ -114,16 +114,17 @@ The current implemented platform increment includes:
 - document upload, parsing, chunking, embedding, and Chroma indexing
 - reindex support through the same synchronous ingest pipeline
 - retrieval-backed chat with grounded source citations and persisted traces
-- workspace metrics
-- Redis-backed task queueing with ARQ worker execution
-- persisted tasks, agent runs, and tool calls
+- workspace analytics covering request volume, latency, token usage, cost, retrieval quality, task success, and eval summaries
+- Redis-backed task queueing and eval queueing with ARQ worker execution
+- persisted tasks, agent runs, tool calls, eval datasets, eval runs, and eval results
 - a LangGraph-powered `workspace_research_agent` and static tool registry
-- a frontend demo path that connects auth -> workspace -> documents -> grounded chat -> tasks -> agent results
-- a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` and `text-embedding-v4`
+- a chat evaluator framework that combines rule checks with an independently configured LLM judge path
+- a frontend demo path that connects auth -> workspace -> indexed documents -> grounded chat -> tasks -> eval runs -> observability review
+- a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` for chat/judge flows and `text-embedding-v4` for embeddings
 
 The repository does not yet implement:
 
 - durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - human approval flows, retries, or advanced scheduling
-- evaluation datasets or quality review flows
+- external observability stacks, alerting, or advanced BI-style dashboards
 - scenario-specific job, support, or research modules
