@@ -15,7 +15,7 @@ from app.models.eval_run import (
     EVAL_RUN_STATUS_RUNNING,
 )
 from app.repositories import eval_repository
-from app.services import retrieval_service, trace_service
+from app.services import chat_evaluator_service, retrieval_service, trace_service
 from app.services.retrieval_service import (
     ChatProcessingError,
     GeneratedAnswer,
@@ -265,11 +265,26 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                     case_index=eval_case.case_index,
                     input_json=eval_case.input_json,
                 )
+                evaluation_result = chat_evaluator_service.evaluate_retrieval_chat_output(
+                    question=str(eval_case.input_json.get("question", "")),
+                    expected_json=eval_case.expected_json,
+                    output_json=execution_result.output_json,
+                )
                 completed_result = eval_repository.update_eval_result(
                     eval_result.id,
                     next_status=EVAL_RESULT_STATUS_COMPLETED,
-                    output_json=execution_result.output_json,
-                    metrics_json=execution_result.metrics_json,
+                    output_json={
+                        **execution_result.output_json,
+                        "evaluation": evaluation_result.details_json,
+                    },
+                    metrics_json={
+                        **execution_result.metrics_json,
+                        "rule_score": evaluation_result.rule_score,
+                        "judge_score": evaluation_result.judge_score,
+                        "judge_error": evaluation_result.judge_error,
+                    },
+                    score=evaluation_result.score,
+                    passed=evaluation_result.passed,
                 )
                 if completed_result is None:
                     raise EvalExecutionError("Eval result not found")

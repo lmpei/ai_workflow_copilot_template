@@ -8,7 +8,7 @@ from app.repositories import eval_repository, trace_repository
 from app.repositories.user_repository import create_user
 from app.repositories.workspace_repository import create_workspace
 from app.schemas.workspace import WorkspaceCreate
-from app.services import eval_execution_service
+from app.services import chat_evaluator_service, eval_execution_service
 from app.services.retrieval_service import ChatProcessingError, GeneratedAnswer, RetrievedChunk
 from app.workers.task_worker import run_eval_run
 
@@ -98,6 +98,35 @@ class ExplodingRetriever:
         raise RuntimeError("Vector store unavailable")
 
 
+class FakeJudgeScorer:
+    def score_retrieval_chat(
+        self,
+        *,
+        question: str,
+        expected_json: dict[str, object],
+        output_json: dict[str, object],
+    ) -> chat_evaluator_service.JudgeScoreResult:
+        assert question
+        assert isinstance(expected_json, dict)
+        assert isinstance(output_json, dict)
+        return chat_evaluator_service.JudgeScoreResult(
+            score=0.8,
+            reasoning="Grounded and correct.",
+        )
+
+
+class FailingJudgeScorer:
+    def score_retrieval_chat(
+        self,
+        *,
+        question: str,
+        expected_json: dict[str, object],
+        output_json: dict[str, object],
+    ) -> chat_evaluator_service.JudgeScoreResult:
+        raise chat_evaluator_service.ChatEvaluatorError("Judge unavailable")
+
+
+
 def _create_eval_run_fixture(*, questions: list[str]) -> dict[str, str]:
     unique_suffix = uuid4().hex
     user = create_user(
@@ -120,7 +149,7 @@ def _create_eval_run_fixture(*, questions: list[str]) -> dict[str, str]:
             dataset_id=dataset.id,
             case_index=index,
             input_json={"question": question},
-            expected_json={"answer_contains": [question]},
+            expected_json={},
         )
     eval_run = eval_repository.create_eval_run(
         workspace_id=workspace.id,
@@ -182,6 +211,11 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
         "get_answer_generator",
         lambda: FakeAnswerGenerator(),
     )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(),
+    )
 
     summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
     persisted_run = eval_repository.get_eval_run(fixture["eval_run_id"])
@@ -205,7 +239,12 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
     assert len(persisted_results) == 2
     assert all(result.status == "completed" for result in persisted_results)
     assert all("answer" in result.output_json for result in persisted_results)
+    assert all("evaluation" in result.output_json for result in persisted_results)
     assert all(result.metrics_json["retrieval_hit"] is True for result in persisted_results)
+    assert all(result.metrics_json["rule_score"] == 1.0 for result in persisted_results)
+    assert all(result.metrics_json["judge_score"] == 0.8 for result in persisted_results)
+    assert all(result.score == 0.9 for result in persisted_results)
+    assert all(result.passed is True for result in persisted_results)
     assert len(persisted_traces) == 2
     assert all(trace.trace_type == "eval" for trace in persisted_traces)
 
@@ -226,6 +265,11 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
         eval_execution_service.retrieval_service,
         "get_answer_generator",
         lambda: PartiallyFailingAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(),
     )
 
     summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
@@ -250,8 +294,41 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
     assert persisted_run.error_message == "Judge unavailable"
     assert len(persisted_results) == 2
     assert [result.status for result in persisted_results] == ["completed", "failed"]
+    assert persisted_results[0].score == 0.9
+    assert persisted_results[0].passed is True
     assert persisted_results[1].error_message == "Judge unavailable"
     assert len(persisted_traces) == 2
+
+
+
+def test_run_eval_execution_captures_judge_failure_without_losing_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _create_eval_run_fixture(questions=["Who owns Apollo?"])
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_retriever",
+        lambda: FakeRetriever(),
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_answer_generator",
+        lambda: FakeAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FailingJudgeScorer(),
+    )
+
+    summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+    persisted_result = eval_repository.list_eval_run_results(fixture["eval_run_id"])[0]
+
+    assert summary["status"] == "completed"
+    assert persisted_result.status == "completed"
+    assert persisted_result.score == 1.0
+    assert persisted_result.passed is True
+    assert persisted_result.metrics_json["judge_error"] == "Judge unavailable"
 
 
 
@@ -263,6 +340,11 @@ def test_run_eval_execution_marks_run_failed_on_worker_level_error(
         eval_execution_service.retrieval_service,
         "get_retriever",
         lambda: ExplodingRetriever(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FailingJudgeScorer(),
     )
 
     summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
@@ -292,6 +374,11 @@ def test_run_eval_run_worker_entrypoint_executes_eval_run(
         eval_execution_service.retrieval_service,
         "get_answer_generator",
         lambda: FakeAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(),
     )
 
     output = asyncio.run(run_eval_run({}, fixture["eval_run_id"]))
