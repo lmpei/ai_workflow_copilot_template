@@ -44,11 +44,13 @@ def reset_database() -> None:
     reset_database_for_tests()
 
 
+
 def _create_task_fixture(
     *,
     task_type: str = "research_summary",
     goal: str | None = None,
     with_document: bool = True,
+    workspace_type: str = "research",
 ) -> str:
     unique_suffix = uuid4().hex
     user = create_user(
@@ -57,7 +59,7 @@ def _create_task_fixture(
         name="Phase 3 Worker",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 3 Worker Workspace", type="research"),
+        WorkspaceCreate(name="Phase 3 Worker Workspace", type=workspace_type),
         owner_id=user.id,
     )
     if with_document:
@@ -77,6 +79,7 @@ def _create_task_fixture(
         input_json={"goal": goal} if goal is not None else {},
     )
     return task.id
+
 
 
 def test_enqueue_task_execution_uses_arq_pool(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,6 +103,7 @@ def test_enqueue_task_execution_uses_arq_pool(monkeypatch: pytest.MonkeyPatch) -
         },
     ]
     assert fake_pool.closed is True
+
 
 
 def test_run_task_execution_executes_research_summary_and_persists_output(
@@ -130,7 +134,10 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert output["worker"] == "arq"
     assert output["task_type"] == "research_summary"
     assert output["agent_name"] == "workspace_research_agent"
-    assert output["result"]["matches"][0]["document_title"] == "demo.txt"
+    assert output["result"]["module_type"] == "research"
+    assert output["result"]["task_type"] == "research_summary"
+    assert output["result"]["artifacts"]["matches"][0]["document_title"] == "demo.txt"
+    assert output["result"]["evidence"][0]["metadata"]["document_id"] == "doc-1"
     assert persisted_task is not None
     assert persisted_task.status == "done"
     assert persisted_task.output_json == output
@@ -147,6 +154,7 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert all(tool_call.status == "completed" for tool_call in tool_calls)
 
 
+
 def test_run_task_execution_completes_workspace_report_with_limited_context() -> None:
     task_id = _create_task_fixture(
         task_type="workspace_report",
@@ -158,8 +166,9 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     persisted_task = task_repository.get_task(task_id)
 
     assert output["task_type"] == "workspace_report"
-    assert output["result"]["document_count"] == 0
-    assert output["result"]["matches"] == []
+    assert output["result"]["title"] == "Workspace Report"
+    assert output["result"]["artifacts"]["document_count"] == 0
+    assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["summary"] == "No workspace documents are available for analysis."
     assert persisted_task is not None
     assert persisted_task.status == "done"
@@ -168,6 +177,7 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     assert len(agent_runs) == 1
     tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
     assert [tool_call.tool_name for tool_call in tool_calls] == ["list_workspace_documents"]
+
 
 
 def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
@@ -192,6 +202,19 @@ def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
     agent_runs = task_repository.list_task_agent_runs(task_id)
     assert len(agent_runs) == 1
     assert agent_runs[0].status == "failed"
+
+
+
+def test_run_task_execution_rejects_invalid_module_task_combination() -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?", workspace_type="support")
+
+    with pytest.raises(TaskExecutionError, match="Task type research_summary is not supported"):
+        task_execution_service.run_task_execution(task_id)
+
+    persisted_task = task_repository.get_task(task_id)
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+
 
 
 def test_run_platform_task_worker_entrypoint_executes_task(
@@ -219,5 +242,6 @@ def test_run_platform_task_worker_entrypoint_executes_task(
 
     assert output["task_id"] == task_id
     assert output["agent_name"] == "workspace_research_agent"
+    assert output["result"]["module_type"] == "research"
     assert persisted_task is not None
     assert persisted_task.status == "done"

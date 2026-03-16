@@ -3,6 +3,8 @@ from typing import TypedDict, cast
 from langgraph.graph import END, START, StateGraph
 
 from app.agents.tool_registry import invoke_tool
+from app.schemas.research import ResearchTaskType
+from app.services.research_assistant_service import build_research_task_result
 
 WORKSPACE_RESEARCH_AGENT_NAME = "workspace_research_agent"
 
@@ -11,6 +13,7 @@ class WorkspaceResearchState(TypedDict, total=False):
     agent_run_id: str
     workspace_id: str
     user_id: str
+    task_type: ResearchTaskType
     goal: str
     should_search: bool
     documents: list[dict[str, object]]
@@ -20,11 +23,13 @@ class WorkspaceResearchState(TypedDict, total=False):
     final_output: dict[str, object]
 
 
+
 def _plan_research(state: WorkspaceResearchState) -> WorkspaceResearchState:
     return {
         "goal": state.get("goal", "").strip(),
         "should_search": bool(state.get("goal", "").strip()),
     }
+
 
 
 def _list_workspace_documents(state: WorkspaceResearchState) -> WorkspaceResearchState:
@@ -44,12 +49,14 @@ def _list_workspace_documents(state: WorkspaceResearchState) -> WorkspaceResearc
     }
 
 
+
 def _should_search(state: WorkspaceResearchState) -> str:
     if not state.get("should_search"):
         return "compose_result"
     if not state.get("documents"):
         return "compose_result"
     return "search_documents"
+
 
 
 def _search_documents(state: WorkspaceResearchState) -> WorkspaceResearchState:
@@ -67,34 +74,21 @@ def _search_documents(state: WorkspaceResearchState) -> WorkspaceResearchState:
     }
 
 
+
 def _compose_result(state: WorkspaceResearchState) -> WorkspaceResearchState:
     documents = state.get("documents", [])
     matches = state.get("matches", [])
 
-    if not documents:
-        summary = "No workspace documents are available for analysis."
-    elif not matches:
-        summary = (
-            f"Reviewed {len(documents)} workspace document(s), "
-            "but no relevant indexed matches were found for the goal."
-        )
-    else:
-        top_match = matches[0]
-        summary = (
-            f"Reviewed {len(documents)} workspace document(s). "
-            f"Top match from {top_match['document_title']} says: {top_match['snippet']}"
-        )
-
     return {
-        "final_output": {
-            "goal": state.get("goal", ""),
-            "document_count": len(documents),
-            "documents": documents,
-            "matches": matches,
-            "summary": summary,
-            "tool_call_ids": state.get("tool_call_ids", []),
-        },
+        "final_output": build_research_task_result(
+            task_type=state["task_type"],
+            goal=state.get("goal", ""),
+            documents=documents,
+            matches=matches,
+            tool_call_ids=state.get("tool_call_ids", []),
+        ),
     }
+
 
 
 def build_workspace_research_graph():
@@ -117,6 +111,7 @@ def build_workspace_research_graph():
     workflow.add_edge("search_documents", "compose_result")
     workflow.add_edge("compose_result", END)
     return workflow.compile()
+
 
 
 def build_workspace_research_preview(goal: str) -> dict[str, object]:

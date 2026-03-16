@@ -30,14 +30,22 @@ def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[st
     }
 
 
-def _create_workspace(client: TestClient, token: str, *, name: str = "Research Demo") -> str:
+
+def _create_workspace(
+    client: TestClient,
+    token: str,
+    *,
+    name: str = "Research Demo",
+    workspace_type: str = "research",
+) -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": "research"},
+        json={"name": name, "type": workspace_type},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
     return response.json()["id"]
+
 
 
 def test_task_routes_require_authentication(client: TestClient) -> None:
@@ -51,6 +59,7 @@ def test_task_routes_require_authentication(client: TestClient) -> None:
     assert post_response.status_code == 401
     assert get_response.status_code == 401
     assert list_response.status_code == 401
+
 
 
 def test_create_get_and_list_tasks_for_workspace_member(
@@ -95,6 +104,7 @@ def test_create_get_and_list_tasks_for_workspace_member(
     assert listed_ids == [created_task["id"]]
 
 
+
 def test_task_routes_scope_access_to_workspace_membership(
     client: TestClient,
     monkeypatch,
@@ -132,6 +142,7 @@ def test_task_routes_scope_access_to_workspace_membership(
     assert other_list_response.status_code == 404
 
 
+
 def test_create_task_rejects_unsupported_task_type(
     client: TestClient,
     monkeypatch,
@@ -156,6 +167,37 @@ def test_create_task_rejects_unsupported_task_type(
 
     assert response.status_code == 400
     assert "Unsupported task type" in response.json()["detail"]
+
+
+
+def test_create_task_rejects_invalid_module_task_combination(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={"task_type": "research_summary", "input": {"goal": "Summarize support docs"}},
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert (
+        "Task type research_summary is not supported for workspace module support"
+        in response.json()["detail"]
+    )
+
 
 
 def test_create_task_returns_500_and_marks_failed_when_queueing_fails(

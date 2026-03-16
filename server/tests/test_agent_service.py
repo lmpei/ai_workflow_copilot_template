@@ -21,7 +21,12 @@ def reset_database() -> None:
     reset_database_for_tests()
 
 
-def _create_runtime_fixture(*, with_document: bool = True) -> tuple[str, str, str]:
+
+def _create_runtime_fixture(
+    *,
+    with_document: bool = True,
+    workspace_type: str = "research",
+) -> tuple[str, str, str]:
     unique_suffix = uuid4().hex
     user = create_user(
         email=f"phase3-agent-{unique_suffix}@example.com",
@@ -29,7 +34,7 @@ def _create_runtime_fixture(*, with_document: bool = True) -> tuple[str, str, st
         name="Phase 3 Agent",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 3 Agent Workspace", type="research"),
+        WorkspaceCreate(name="Phase 3 Agent Workspace", type=workspace_type),
         owner_id=user.id,
     )
     task = task_repository.create_task(
@@ -49,6 +54,7 @@ def _create_runtime_fixture(*, with_document: bool = True) -> tuple[str, str, st
             status=DOCUMENT_STATUS_INDEXED,
         )
     return user.id, workspace.id, task.id
+
 
 
 def test_workspace_research_agent_completes_tool_using_workflow(
@@ -81,9 +87,16 @@ def test_workspace_research_agent_completes_tool_using_workflow(
     )
 
     assert result.agent_name == "workspace_research_agent"
-    assert result.final_output["goal"] == "Who owns the project?"
-    assert result.final_output["document_count"] == 1
-    assert result.final_output["matches"][0]["document_title"] == "demo.txt"
+    assert result.final_output["module_type"] == "research"
+    assert result.final_output["task_type"] == "research_summary"
+    assert result.final_output["title"] == "Research Summary"
+    assert result.final_output["summary"].startswith("Reviewed 1 workspace document")
+    assert result.final_output["highlights"] == ["demo.txt: The owner is Alice."]
+    assert result.final_output["artifacts"]["document_count"] == 1
+    assert result.final_output["artifacts"]["match_count"] == 1
+    assert result.final_output["artifacts"]["matches"][0]["document_title"] == "demo.txt"
+    assert result.final_output["evidence"][0]["metadata"]["document_id"] == "doc-1"
+    assert result.final_output["metadata"]["goal"] == "Who owns the project?"
 
     agent_runs = task_repository.list_task_agent_runs(task_id)
     assert len(agent_runs) == 1
@@ -98,6 +111,7 @@ def test_workspace_research_agent_completes_tool_using_workflow(
     assert all(tool_call.status == "completed" for tool_call in tool_calls)
 
 
+
 def test_workspace_research_agent_completes_with_minimal_available_context() -> None:
     user_id, workspace_id, task_id = _create_runtime_fixture(with_document=False)
 
@@ -108,13 +122,17 @@ def test_workspace_research_agent_completes_with_minimal_available_context() -> 
         goal="Summarize this workspace",
     )
 
-    assert result.final_output["document_count"] == 0
-    assert result.final_output["matches"] == []
+    assert result.final_output["module_type"] == "research"
+    assert result.final_output["artifacts"]["document_count"] == 0
+    assert result.final_output["artifacts"]["match_count"] == 0
+    assert result.final_output["artifacts"]["matches"] == []
+    assert result.final_output["evidence"] == []
     assert result.final_output["summary"] == "No workspace documents are available for analysis."
 
     tool_calls = task_repository.list_agent_run_tool_calls(result.agent_run_id)
     assert [tool_call.tool_name for tool_call in tool_calls] == ["list_workspace_documents"]
     assert tool_calls[0].status == "completed"
+
 
 
 def test_workspace_research_agent_marks_agent_run_failed_on_tool_error(
@@ -151,6 +169,7 @@ def test_workspace_research_agent_marks_agent_run_failed_on_tool_error(
     assert tool_calls[1].status == "failed"
 
 
+
 def test_workspace_research_agent_rejects_foreign_task_access() -> None:
     user_id, workspace_id, task_id = _create_runtime_fixture()
 
@@ -159,5 +178,18 @@ def test_workspace_research_agent_rejects_foreign_task_access() -> None:
             task_id=task_id,
             workspace_id=workspace_id,
             user_id=str(uuid4()),
+            goal="Who owns the project?",
+        )
+
+
+
+def test_workspace_research_agent_rejects_invalid_module_task_combination() -> None:
+    user_id, workspace_id, task_id = _create_runtime_fixture(workspace_type="support")
+
+    with pytest.raises(AgentRuntimeError, match="Task type research_summary is not supported"):
+        run_workspace_research_agent(
+            task_id=task_id,
+            workspace_id=workspace_id,
+            user_id=user_id,
             goal="Who owns the project?",
         )

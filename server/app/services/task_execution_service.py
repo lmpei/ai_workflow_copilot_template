@@ -3,12 +3,17 @@ from arq import create_pool
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
 from app.models.task import TASK_STATUS_DONE, TASK_STATUS_FAILED, TASK_STATUS_RUNNING, Task
-from app.repositories import task_repository
+from app.repositories import task_repository, workspace_repository
 from app.services.agent_service import (
     AgentAccessError,
     AgentExecutionResult,
     AgentRuntimeError,
     run_workspace_research_agent,
+)
+from app.services.research_assistant_service import (
+    ResearchAssistantContractError,
+    normalize_research_task_input,
+    validate_research_task_contract,
 )
 
 TASK_EXECUTION_JOB_NAME = "run_platform_task"
@@ -22,8 +27,10 @@ class TaskExecutionError(Exception):
     pass
 
 
+
 def _resolve_task_goal(task: Task) -> str:
-    input_goal = task.input_json.get("goal")
+    normalized_input = normalize_research_task_input(task.input_json)
+    input_goal = normalized_input.get("goal")
     if isinstance(input_goal, str) and input_goal.strip():
         return input_goal.strip()
 
@@ -32,9 +39,22 @@ def _resolve_task_goal(task: Task) -> str:
     return "Summarize the most relevant findings in this workspace."
 
 
+
 def _execute_task_agent(task: Task) -> AgentExecutionResult:
     if task.task_type not in SUPPORTED_EXECUTION_TASK_TYPES:
         raise TaskExecutionError(f"Unsupported task type: {task.task_type}")
+
+    workspace = workspace_repository.get_workspace(task.workspace_id, task.created_by)
+    if workspace is None:
+        raise TaskExecutionError("Workspace not found")
+
+    try:
+        validate_research_task_contract(
+            workspace_module_type=workspace.module_type,
+            task_type=task.task_type,
+        )
+    except ResearchAssistantContractError as error:
+        raise TaskExecutionError(str(error)) from error
 
     goal = _resolve_task_goal(task)
     return run_workspace_research_agent(
@@ -43,6 +63,7 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
         user_id=task.created_by,
         goal=goal,
     )
+
 
 
 def _build_task_output(*, task: Task, execution_result: AgentExecutionResult) -> dict[str, object]:
@@ -72,6 +93,7 @@ async def enqueue_task_execution(task_id: str) -> str:
     return str(job.job_id)
 
 
+
 def run_task_execution(task_id: str) -> dict[str, object]:
     task = task_repository.get_task(task_id)
     if task is None:
@@ -92,7 +114,16 @@ def run_task_execution(task_id: str) -> dict[str, object]:
         if completed_task is None:
             raise TaskExecutionError("Task not found")
         return output
-    except (AgentRuntimeError, AgentAccessError) as error:
+    except TaskExecutionError as error:
+        failed_task = task_repository.update_task_status(
+            task.id,
+            next_status=TASK_STATUS_FAILED,
+            error_message=str(error),
+        )
+        if failed_task is None:
+            raise TaskExecutionError("Task not found") from error
+        raise
+    except (AgentRuntimeError, AgentAccessError, ResearchAssistantContractError) as error:
         failed_task = task_repository.update_task_status(
             task.id,
             next_status=TASK_STATUS_FAILED,

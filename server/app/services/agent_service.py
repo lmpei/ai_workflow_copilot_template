@@ -6,7 +6,11 @@ from app.agents.graph import (
     build_workspace_research_graph,
     build_workspace_research_preview,
 )
-from app.repositories import task_repository
+from app.repositories import task_repository, workspace_repository
+from app.services.research_assistant_service import (
+    ResearchAssistantContractError,
+    validate_research_task_contract,
+)
 
 
 class AgentAccessError(Exception):
@@ -42,6 +46,18 @@ def run_workspace_research_agent(
     if task is None or task.workspace_id != workspace_id:
         raise AgentAccessError("Task not found")
 
+    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
+    if workspace is None:
+        raise AgentAccessError("Workspace not found")
+
+    try:
+        validate_research_task_contract(
+            workspace_module_type=workspace.module_type,
+            task_type=task.task_type,
+        )
+    except ResearchAssistantContractError as error:
+        raise AgentRuntimeError(str(error)) from error
+
     agent_run = task_repository.create_agent_run(
         task_id=task_id,
         agent_name=WORKSPACE_RESEARCH_AGENT_NAME,
@@ -61,6 +77,7 @@ def run_workspace_research_agent(
                 "agent_run_id": agent_run.id,
                 "workspace_id": workspace_id,
                 "user_id": user_id,
+                "task_type": task.task_type,
                 "goal": goal,
                 "tool_call_ids": [],
                 "documents": [],
