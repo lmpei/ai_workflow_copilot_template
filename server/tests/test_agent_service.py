@@ -11,6 +11,7 @@ from app.schemas.workspace import WorkspaceCreate
 from app.services.agent_service import (
     AgentAccessError,
     AgentRuntimeError,
+    run_workspace_job_agent,
     run_workspace_research_agent,
     run_workspace_support_agent,
 )
@@ -226,6 +227,85 @@ def test_workspace_support_agent_returns_bounded_shape_without_documents() -> No
     assert result.final_output["evidence"] == []
 
 
+def test_workspace_job_agent_completes_resume_match_with_grounded_signal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Platform engineer"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="candidate_resume.md",
+                    chunk_index=0,
+                    snippet=(
+                        "Strong Python backend experience "
+                        "with API design and reliability work."
+                    ),
+                    content=(
+                        "Strong Python backend experience "
+                        "with API design and reliability work."
+                    ),
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        workspace_type="job",
+        task_type="resume_match",
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    result = run_workspace_job_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        target_role="Platform engineer",
+    )
+
+    assert result.agent_name == "workspace_job_agent"
+    assert result.final_output["module_type"] == "job"
+    assert result.final_output["task_type"] == "resume_match"
+    assert result.final_output["artifacts"]["fit_signal"] == "grounded_match_found"
+    assert result.final_output["artifacts"]["recommended_next_step"].startswith(
+        "Review the top grounded match",
+    )
+    assert result.final_output["evidence"][0]["metadata"]["document_id"] == "doc-1"
+    assert result.final_output["metadata"]["target_role"] == "Platform engineer"
+
+    tool_calls = task_repository.list_agent_run_tool_calls(result.agent_run_id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == [
+        "list_workspace_documents",
+        "search_documents",
+    ]
+
+
+def test_workspace_job_agent_returns_bounded_shape_without_documents() -> None:
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        with_document=False,
+        workspace_type="job",
+        task_type="jd_summary",
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    result = run_workspace_job_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        target_role="Platform engineer",
+    )
+
+    assert result.final_output["module_type"] == "job"
+    assert result.final_output["artifacts"]["document_count"] == 0
+    assert result.final_output["artifacts"]["match_count"] == 0
+    assert result.final_output["artifacts"]["fit_signal"] == "no_documents_available"
+    assert result.final_output["summary"] == "No job documents are available for this workspace."
+    assert result.final_output["evidence"] == []
+
+
 
 def test_workspace_research_agent_marks_agent_run_failed_on_tool_error(
     monkeypatch: pytest.MonkeyPatch,
@@ -301,4 +381,20 @@ def test_workspace_support_agent_rejects_invalid_module_task_combination() -> No
             workspace_id=workspace_id,
             user_id=user_id,
             customer_issue="Customer billing question",
+        )
+
+
+def test_workspace_job_agent_rejects_invalid_module_task_combination() -> None:
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        workspace_type="research",
+        task_type="jd_summary",
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    with pytest.raises(AgentRuntimeError, match="Task type jd_summary is not supported"):
+        run_workspace_job_agent(
+            task_id=task_id,
+            workspace_id=workspace_id,
+            user_id=user_id,
+            target_role="Platform engineer",
         )

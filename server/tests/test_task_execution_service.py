@@ -256,6 +256,69 @@ def test_run_task_execution_completes_support_ticket_summary_with_limited_contex
     assert persisted_task.status == "done"
 
 
+def test_run_task_execution_executes_job_resume_match_and_persists_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Platform engineer"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="candidate_resume.md",
+                    chunk_index=0,
+                    snippet=(
+                        "Strong Python backend experience "
+                        "with API design and reliability work."
+                    ),
+                    content=(
+                        "Strong Python backend experience "
+                        "with API design and reliability work."
+                    ),
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    task_id = _create_task_fixture(
+        task_type="resume_match",
+        workspace_type="job",
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "resume_match"
+    assert output["agent_name"] == "workspace_job_agent"
+    assert output["result"]["module_type"] == "job"
+    assert output["result"]["artifacts"]["fit_signal"] == "grounded_match_found"
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
+def test_run_task_execution_completes_job_jd_summary_with_limited_context() -> None:
+    task_id = _create_task_fixture(
+        task_type="jd_summary",
+        workspace_type="job",
+        with_document=False,
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "jd_summary"
+    assert output["result"]["title"] == "Job Description Summary"
+    assert output["result"]["artifacts"]["document_count"] == 0
+    assert output["result"]["artifacts"]["fit_signal"] == "no_documents_available"
+    assert output["result"]["summary"] == "No job documents are available for this workspace."
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
 
 def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
     monkeypatch: pytest.MonkeyPatch,
@@ -302,6 +365,21 @@ def test_run_task_execution_rejects_invalid_support_module_task_combination() ->
     )
 
     with pytest.raises(TaskExecutionError, match="Task type ticket_summary is not supported"):
+        task_execution_service.run_task_execution(task_id)
+
+    persisted_task = task_repository.get_task(task_id)
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+
+
+def test_run_task_execution_rejects_invalid_job_module_task_combination() -> None:
+    task_id = _create_task_fixture(
+        task_type="jd_summary",
+        workspace_type="support",
+        input_json={"target_role": "Platform engineer"},
+    )
+
+    with pytest.raises(TaskExecutionError, match="Task type jd_summary is not supported"):
         task_execution_service.run_task_execution(task_id)
 
     persisted_task = task_repository.get_task(task_id)

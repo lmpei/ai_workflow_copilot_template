@@ -6,6 +6,7 @@ import { getWorkspace, isApiClientError } from "../../lib/api";
 import type { Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
+import JobAssistantPanel from "../job/job-assistant-panel";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
 import SupportCopilotPanel from "../support/support-copilot-panel";
 import SectionCard from "../ui/section-card";
@@ -63,6 +64,10 @@ export default function TaskModuleSurface({ workspaceId }: TaskModuleSurfaceProp
 
   if (workspace?.module_type === "support") {
     return <SupportCopilotPanel workspaceId={workspaceId} />;
+  }
+
+  if (workspace?.module_type === "job") {
+    return <JobAssistantPanel workspaceId={workspaceId} />;
   }
 
   if (workspace?.module_type === "research") {

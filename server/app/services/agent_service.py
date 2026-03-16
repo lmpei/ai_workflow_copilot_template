@@ -2,14 +2,21 @@
 from typing import Callable, Protocol
 
 from app.agents.graph import (
+    WORKSPACE_JOB_AGENT_NAME,
     WORKSPACE_RESEARCH_AGENT_NAME,
     WORKSPACE_SUPPORT_AGENT_NAME,
+    build_workspace_job_graph,
+    build_workspace_job_preview,
     build_workspace_research_graph,
     build_workspace_research_preview,
     build_workspace_support_graph,
     build_workspace_support_preview,
 )
 from app.repositories import task_repository, workspace_repository
+from app.services.job_assistant_service import (
+    JobAssistantContractError,
+    validate_job_task_contract,
+)
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
     validate_research_task_contract,
@@ -65,7 +72,11 @@ def _run_workspace_agent(
             workspace_module_type=workspace.module_type,
             task_type=task.task_type,
         )
-    except (ResearchAssistantContractError, SupportCopilotContractError) as error:
+    except (
+        ResearchAssistantContractError,
+        SupportCopilotContractError,
+        JobAssistantContractError,
+    ) as error:
         raise AgentRuntimeError(str(error)) from error
 
     agent_run = task_repository.create_agent_run(
@@ -173,6 +184,26 @@ def run_workspace_support_agent(
     )
 
 
+def run_workspace_job_agent(
+    *,
+    task_id: str,
+    workspace_id: str,
+    user_id: str,
+    target_role: str,
+    graph_runner: GraphRunner | None = None,
+) -> AgentExecutionResult:
+    return _run_workspace_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        goal=target_role,
+        agent_name=WORKSPACE_JOB_AGENT_NAME,
+        graph_builder=build_workspace_job_graph,
+        validate_contract=validate_job_task_contract,
+        graph_runner=graph_runner,
+    )
+
+
 
 def run_agent_preview(goal: str) -> dict[str, object]:
     return build_workspace_research_preview(goal)
@@ -181,3 +212,7 @@ def run_agent_preview(goal: str) -> dict[str, object]:
 
 def run_support_agent_preview(goal: str) -> dict[str, object]:
     return build_workspace_support_preview(goal)
+
+
+def run_job_agent_preview(goal: str) -> dict[str, object]:
+    return build_workspace_job_preview(goal)

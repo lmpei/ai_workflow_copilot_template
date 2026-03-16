@@ -8,8 +8,14 @@ from app.services.agent_service import (
     AgentAccessError,
     AgentExecutionResult,
     AgentRuntimeError,
+    run_workspace_job_agent,
     run_workspace_research_agent,
     run_workspace_support_agent,
+)
+from app.services.job_assistant_service import (
+    JobAssistantContractError,
+    normalize_job_task_input,
+    validate_job_task_contract,
 )
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
@@ -31,7 +37,11 @@ SUPPORT_TASK_TYPES = {
     "ticket_summary",
     "reply_draft",
 }
-SUPPORTED_EXECUTION_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES
+JOB_TASK_TYPES = {
+    "jd_summary",
+    "resume_match",
+}
+SUPPORTED_EXECUTION_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_TASK_TYPES
 
 
 class TaskExecutionError(Exception):
@@ -58,6 +68,16 @@ def _resolve_task_prompt(task: Task) -> str:
         if task.task_type == "reply_draft":
             return "Draft a grounded customer reply for the current support issue."
         return "Summarize the current support issue and the best grounded next steps."
+
+    if task.task_type in JOB_TASK_TYPES:
+        normalized_input = normalize_job_task_input(task.input_json)
+        target_role = normalized_input.get("target_role")
+        if isinstance(target_role, str) and target_role.strip():
+            return target_role.strip()
+
+        if task.task_type == "resume_match":
+            return "Assess fit between the indexed hiring materials and the target role."
+        return "Summarize the key role requirements from the indexed job materials."
 
     raise TaskExecutionError(f"Unsupported task type: {task.task_type}")
 
@@ -88,19 +108,35 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             goal=prompt,
         )
 
+    if task.task_type in SUPPORT_TASK_TYPES:
+        try:
+            validate_support_task_contract(
+                workspace_module_type=workspace.module_type,
+                task_type=task.task_type,
+            )
+        except SupportCopilotContractError as error:
+            raise TaskExecutionError(str(error)) from error
+
+        return run_workspace_support_agent(
+            task_id=task.id,
+            workspace_id=task.workspace_id,
+            user_id=task.created_by,
+            customer_issue=prompt,
+        )
+
     try:
-        validate_support_task_contract(
+        validate_job_task_contract(
             workspace_module_type=workspace.module_type,
             task_type=task.task_type,
         )
-    except SupportCopilotContractError as error:
+    except JobAssistantContractError as error:
         raise TaskExecutionError(str(error)) from error
 
-    return run_workspace_support_agent(
+    return run_workspace_job_agent(
         task_id=task.id,
         workspace_id=task.workspace_id,
         user_id=task.created_by,
-        customer_issue=prompt,
+        target_role=prompt,
     )
 
 
@@ -167,6 +203,7 @@ def run_task_execution(task_id: str) -> dict[str, object]:
         AgentAccessError,
         ResearchAssistantContractError,
         SupportCopilotContractError,
+        JobAssistantContractError,
     ) as error:
         failed_task = task_repository.update_task_status(
             task.id,

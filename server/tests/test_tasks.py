@@ -136,6 +136,37 @@ def test_create_support_task_for_support_workspace_member(
     assert created_task["input_json"] == {"customer_issue": "Customer cannot reset their password"}
 
 
+def test_create_job_task_for_job_workspace_member(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-owner@example.com", name="Job Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "resume_match",
+            "input": {"target_role": "Platform engineer"},
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    created_task = create_response.json()
+    assert created_task["task_type"] == "resume_match"
+    assert created_task["status"] == "pending"
+    assert created_task["input_json"] == {"target_role": "Platform engineer"}
+
+
 
 def test_task_routes_scope_access_to_workspace_membership(
     client: TestClient,
@@ -259,6 +290,61 @@ def test_create_task_rejects_invalid_support_module_task_combination(
         "Task type ticket_summary is not supported for workspace module research"
         in response.json()["detail"]
     )
+
+
+def test_create_task_rejects_invalid_job_module_task_combination(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-owner@example.com", name="Support Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={"task_type": "jd_summary", "input": {"target_role": "Platform engineer"}},
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert (
+        "Task type jd_summary is not supported for workspace module support"
+        in response.json()["detail"]
+    )
+
+
+def test_create_task_rejects_invalid_job_task_input(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-owner-2@example.com", name="Job Owner 2")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={"task_type": "jd_summary", "input": {"target_role": {"role": "Engineer"}}},
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "Invalid job task input" in response.json()["detail"]
 
 
 

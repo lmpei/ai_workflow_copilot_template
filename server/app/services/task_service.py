@@ -2,6 +2,11 @@
 
 from app.repositories import task_repository, workspace_repository
 from app.schemas.task import TaskCreate, TaskResponse
+from app.services.job_assistant_service import (
+    JobAssistantContractError,
+    normalize_job_task_input,
+    validate_job_task_contract,
+)
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
     normalize_research_task_input,
@@ -22,7 +27,11 @@ SUPPORT_TASK_TYPES = {
     "ticket_summary",
     "reply_draft",
 }
-SUPPORTED_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES
+JOB_TASK_TYPES = {
+    "jd_summary",
+    "resume_match",
+}
+SUPPORTED_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_TASK_TYPES
 
 
 class TaskAccessError(Exception):
@@ -55,6 +64,12 @@ def _normalize_task_input(
             task_type=task_type,
         )
         return normalize_support_task_input(input_json)
+    if task_type in JOB_TASK_TYPES:
+        validate_job_task_contract(
+            workspace_module_type=workspace_module_type,
+            task_type=task_type,
+        )
+        return normalize_job_task_input(input_json)
     raise TaskValidationError(f"Unsupported task type: {task_type}")
 
 
@@ -80,6 +95,7 @@ async def create_task(
     except (
         ResearchAssistantContractError,
         SupportCopilotContractError,
+        JobAssistantContractError,
         ValidationError,
     ) as error:
         raise TaskValidationError(str(error)) from error
