@@ -46,6 +46,8 @@ def test_workspace_crud_requires_auth_and_persists_owner(client: TestClient) -> 
     workspace_id = created["id"]
     assert created["name"] == "Research Demo"
     assert created["type"] == "research"
+    assert created["module_type"] == "research"
+    assert created["module_config_json"]["result_type"] == "research_report"
     assert created["owner_id"] == auth["user_id"]
 
     get_response = client.get(f"/api/v1/workspaces/{workspace_id}", headers=headers)
@@ -119,3 +121,44 @@ def test_workspace_access_returns_not_found_for_non_members(client: TestClient) 
         headers=other_headers,
     )
     assert other_patch_response.status_code == 404
+
+
+def test_workspace_module_contract_can_be_switched_with_shared_defaults(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    create_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Research Demo"},
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    workspace_id = create_response.json()["id"]
+
+    patch_response = client.patch(
+        f"/api/v1/workspaces/{workspace_id}",
+        json={"module_type": "support"},
+        headers=headers,
+    )
+    assert patch_response.status_code == 200
+
+    updated = patch_response.json()
+    assert updated["type"] == "support"
+    assert updated["module_type"] == "support"
+    assert updated["module_config_json"]["entry_task_types"] == [
+        "ticket_summary",
+        "reply_draft",
+    ]
+    assert updated["module_config_json"]["result_type"] == "support_case_summary"
+
+
+def test_workspace_rejects_unsupported_module_type(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    create_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Research Demo", "module_type": "sales"},
+        headers=headers,
+    )
+    assert create_response.status_code == 422

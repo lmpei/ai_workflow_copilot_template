@@ -7,6 +7,7 @@ from app.core.database import session_scope
 from app.models.workspace import Workspace
 from app.models.workspace_member import WorkspaceMember
 from app.schemas.workspace import WorkspaceCreate, WorkspaceUpdate
+from app.services.scenario_contract_service import resolve_workspace_module_contract
 
 
 def list_workspaces(user_id: str) -> list[Workspace]:
@@ -36,12 +37,19 @@ def get_workspace(workspace_id: str, user_id: str) -> Workspace | None:
 
 def create_workspace(payload: WorkspaceCreate, owner_id: str) -> Workspace:
     now = datetime.now(UTC)
+    module_type, module_config_json = resolve_workspace_module_contract(
+        requested_type=payload.type,
+        requested_module_type=payload.module_type,
+        requested_module_config_json=payload.module_config_json,
+    )
     workspace = Workspace(
         id=str(uuid4()),
         owner_id=owner_id,
         name=payload.name,
-        type=payload.type or "research",
+        type=module_type,
+        module_type=module_type,
         description=payload.description,
+        module_config_json=module_config_json,
         created_at=now,
         updated_at=now,
     )
@@ -74,12 +82,39 @@ def update_workspace(workspace_id: str, user_id: str, payload: WorkspaceUpdate) 
         if workspace is None:
             return None
 
+        has_module_contract_update = any(
+            value is not None
+            for value in (
+                payload.type,
+                payload.module_type,
+                payload.module_config_json,
+            )
+        )
+        if has_module_contract_update:
+            module_type, module_config_json = resolve_workspace_module_contract(
+                current_type=workspace.type,
+                current_module_type=workspace.module_type,
+                current_module_config_json=workspace.module_config_json,
+                requested_type=payload.type,
+                requested_module_type=payload.module_type,
+                requested_module_config_json=payload.module_config_json,
+            )
+        else:
+            module_type = workspace.module_type
+            module_config_json = workspace.module_config_json
+
         changed = False
         if payload.name is not None:
             workspace.name = payload.name
             changed = True
-        if payload.type is not None:
-            workspace.type = payload.type
+        if has_module_contract_update and (
+            workspace.type != module_type
+            or workspace.module_type != module_type
+            or workspace.module_config_json != module_config_json
+        ):
+            workspace.type = module_type
+            workspace.module_type = module_type
+            workspace.module_config_json = module_config_json
             changed = True
         if payload.description is not None:
             workspace.description = payload.description

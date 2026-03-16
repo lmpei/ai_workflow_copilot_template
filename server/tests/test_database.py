@@ -38,3 +38,9 @@ def test_database_foundation_creates_phase_one_tables() -> None:
         "metadata_json",
         "error_message",
     }.issubset(trace_columns)
+
+    workspace_columns = {column["name"] for column in inspector.get_columns("workspaces")}
+    assert {
+        "module_type",
+        "module_config_json",
+    }.issubset(workspace_columns)

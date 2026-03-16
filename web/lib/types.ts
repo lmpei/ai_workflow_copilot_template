@@ -1,9 +1,38 @@
 export const workspaceTypes = ["job", "support", "research"] as const;
 export const taskTypes = ["research_summary", "workspace_report"] as const;
+export const scenarioTaskTypes = [
+  "research_summary",
+  "workspace_report",
+  "ticket_summary",
+  "reply_draft",
+  "jd_summary",
+  "resume_match",
+] as const;
 
 export type WorkspaceType = (typeof workspaceTypes)[number];
 export type TaskType = (typeof taskTypes)[number];
+export type ModuleType = WorkspaceType;
+export type ScenarioTaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
+
+export type ScenarioEvidenceItem = {
+  kind: string;
+  ref_id: string;
+  title?: string | null;
+  snippet?: string | null;
+  metadata: JsonObject;
+};
+
+export type ScenarioTaskResult = {
+  module_type: ModuleType;
+  task_type: ScenarioTaskType;
+  title: string;
+  summary: string;
+  highlights: string[];
+  evidence: ScenarioEvidenceItem[];
+  artifacts: JsonObject;
+  metadata: JsonObject;
+};
 
 export type User = {
   id: string;
@@ -36,15 +65,19 @@ export type Workspace = {
   id: string;
   owner_id: string;
   name: string;
-  type: string;
+  type: WorkspaceType;
+  module_type: ModuleType;
   description: string | null;
+  module_config_json: JsonObject;
   created_at: string;
   updated_at: string;
 };
 
 export type WorkspaceCreatePayload = {
   name: string;
-  type: WorkspaceType;
+  type?: WorkspaceType;
+  module_type?: ModuleType;
+  module_config_json?: JsonObject;
   description?: string;
 };
 
