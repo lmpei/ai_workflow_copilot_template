@@ -1,4 +1,4 @@
-from pydantic import ValidationError
+﻿from pydantic import ValidationError
 
 from app.repositories import task_repository, workspace_repository
 from app.schemas.task import TaskCreate, TaskResponse
@@ -7,12 +7,22 @@ from app.services.research_assistant_service import (
     normalize_research_task_input,
     validate_research_task_contract,
 )
+from app.services.support_copilot_service import (
+    SupportCopilotContractError,
+    normalize_support_task_input,
+    validate_support_task_contract,
+)
 from app.services.task_execution_service import TaskExecutionError, enqueue_task_execution
 
-SUPPORTED_TASK_TYPES = {
+RESEARCH_TASK_TYPES = {
     "research_summary",
     "workspace_report",
 }
+SUPPORT_TASK_TYPES = {
+    "ticket_summary",
+    "reply_draft",
+}
+SUPPORTED_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES
 
 
 class TaskAccessError(Exception):
@@ -25,6 +35,27 @@ class TaskValidationError(Exception):
 
 class TaskQueueError(Exception):
     pass
+
+
+def _normalize_task_input(
+    *,
+    workspace_module_type: str,
+    task_type: str,
+    input_json: dict[str, object],
+) -> dict[str, object]:
+    if task_type in RESEARCH_TASK_TYPES:
+        validate_research_task_contract(
+            workspace_module_type=workspace_module_type,
+            task_type=task_type,
+        )
+        return normalize_research_task_input(input_json)
+    if task_type in SUPPORT_TASK_TYPES:
+        validate_support_task_contract(
+            workspace_module_type=workspace_module_type,
+            task_type=task_type,
+        )
+        return normalize_support_task_input(input_json)
+    raise TaskValidationError(f"Unsupported task type: {task_type}")
 
 
 async def create_task(
@@ -41,12 +72,16 @@ async def create_task(
         raise TaskValidationError(f"Unsupported task type: {payload.task_type}")
 
     try:
-        validate_research_task_contract(
+        normalized_input = _normalize_task_input(
             workspace_module_type=workspace.module_type,
             task_type=payload.task_type,
+            input_json=payload.input,
         )
-        normalized_input = normalize_research_task_input(payload.input)
-    except (ResearchAssistantContractError, ValidationError) as error:
+    except (
+        ResearchAssistantContractError,
+        SupportCopilotContractError,
+        ValidationError,
+    ) as error:
         raise TaskValidationError(str(error)) from error
 
     task = task_repository.create_task(

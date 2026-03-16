@@ -1,5 +1,4 @@
 export const workspaceTypes = ["job", "support", "research"] as const;
-export const taskTypes = ["research_summary", "workspace_report"] as const;
 export const scenarioTaskTypes = [
   "research_summary",
   "workspace_report",
@@ -8,9 +7,10 @@ export const scenarioTaskTypes = [
   "jd_summary",
   "resume_match",
 ] as const;
+export const taskTypes = scenarioTaskTypes;
 
 export type WorkspaceType = (typeof workspaceTypes)[number];
-export type TaskType = (typeof taskTypes)[number];
+export type TaskType = (typeof scenarioTaskTypes)[number];
 export type ModuleType = WorkspaceType;
 export type ScenarioTaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
@@ -34,7 +34,8 @@ export type ScenarioTaskResult = {
   metadata: JsonObject;
 };
 
-export type ResearchTaskType = TaskType;
+export type ResearchTaskType = Extract<TaskType, "research_summary" | "workspace_report">;
+export type SupportTaskType = Extract<TaskType, "ticket_summary" | "reply_draft">;
 
 export type ResearchDocumentSummary = {
   id: string;
@@ -64,6 +65,24 @@ export type ResearchTaskResult = ScenarioTaskResult & {
   module_type: "research";
   task_type: ResearchTaskType;
   artifacts: ResearchArtifacts;
+};
+
+export type SupportDocumentSummary = ResearchDocumentSummary;
+export type SupportMatch = ResearchMatch;
+
+export type SupportArtifacts = {
+  document_count: number;
+  match_count: number;
+  documents: SupportDocumentSummary[];
+  matches: SupportMatch[];
+  tool_call_ids: string[];
+  draft_reply?: string | null;
+};
+
+export type SupportTaskResult = ScenarioTaskResult & {
+  module_type: "support";
+  task_type: SupportTaskType;
+  artifacts: SupportArtifacts;
 };
 
 export type User = {

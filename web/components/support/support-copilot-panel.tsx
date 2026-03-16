@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -9,32 +9,39 @@ import {
   isApiClientError,
   listWorkspaceTasks,
 } from "../../lib/api";
-import type { JsonObject, ResearchArtifacts, ResearchTaskResult, ResearchTaskType, TaskRecord, Workspace } from "../../lib/types";
+import type {
+  JsonObject,
+  SupportArtifacts,
+  SupportTaskResult,
+  SupportTaskType,
+  TaskRecord,
+  Workspace,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
 
-type ResearchAssistantPanelProps = {
+type SupportCopilotPanelProps = {
   workspaceId: string;
 };
 
 const TASK_OPTIONS: Record<
-  ResearchTaskType,
+  SupportTaskType,
   {
     label: string;
     description: string;
     placeholder: string;
   }
 > = {
-  research_summary: {
-    label: "Research Summary",
-    description: "Summarize the most relevant indexed findings for a focused question or goal.",
-    placeholder: "Optional. Example: Summarize the strongest findings about Project Apollo.",
+  ticket_summary: {
+    label: "Ticket Summary",
+    description: "Summarize the support issue and collect the strongest grounded next steps.",
+    placeholder: "Example: Customer cannot reset their password after clicking the email link.",
   },
-  workspace_report: {
-    label: "Workspace Report",
-    description: "Produce a broader report from the currently indexed workspace context.",
-    placeholder: "Optional. Example: Build a concise report on the current workspace knowledge base.",
+  reply_draft: {
+    label: "Reply Draft",
+    description: "Draft a support response grounded in the current workspace knowledge base.",
+    placeholder: "Example: Customer asks how to fix an expired password reset link.",
   },
 };
 
@@ -42,14 +49,14 @@ function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
+function parseSupportTaskResult(task: TaskRecord): SupportTaskResult | null {
   const result = task.output_json.result;
   if (!isJsonObject(result)) {
     return null;
   }
 
   if (
-    result.module_type !== "research" ||
+    result.module_type !== "support" ||
     typeof result.task_type !== "string" ||
     typeof result.title !== "string" ||
     typeof result.summary !== "string" ||
@@ -61,20 +68,20 @@ function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
     return null;
   }
 
-  return result as unknown as ResearchTaskResult;
+  return result as unknown as SupportTaskResult;
 }
 
-function parseEntryTaskTypes(workspace: Workspace | null): ResearchTaskType[] {
+function parseEntryTaskTypes(workspace: Workspace | null): SupportTaskType[] {
   const entryTaskTypes = workspace?.module_config_json.entry_task_types;
   if (!Array.isArray(entryTaskTypes)) {
-    return ["research_summary", "workspace_report"];
+    return ["ticket_summary", "reply_draft"];
   }
 
   const supported = entryTaskTypes.filter(
-    (entryTaskType): entryTaskType is ResearchTaskType =>
-      entryTaskType === "research_summary" || entryTaskType === "workspace_report",
+    (entryTaskType): entryTaskType is SupportTaskType =>
+      entryTaskType === "ticket_summary" || entryTaskType === "reply_draft",
   );
-  return supported.length > 0 ? supported : ["research_summary", "workspace_report"];
+  return supported.length > 0 ? supported : ["ticket_summary", "reply_draft"];
 }
 
 function sortTasks(tasks: TaskRecord[]): TaskRecord[] {
@@ -108,7 +115,7 @@ function renderStatus(status: TaskRecord["status"]) {
   );
 }
 
-function renderArtifactStats(artifacts: ResearchArtifacts) {
+function renderArtifactStats(artifacts: SupportArtifacts) {
   const cards = [
     { label: "Documents", value: artifacts.document_count },
     { label: "Matches", value: artifacts.match_count },
@@ -135,18 +142,18 @@ function renderArtifactStats(artifacts: ResearchArtifacts) {
   );
 }
 
-function extractGoal(task: TaskRecord): string | null {
-  const goal = task.input_json.goal;
-  return typeof goal === "string" && goal.length > 0 ? goal : null;
+function extractCustomerIssue(task: TaskRecord): string | null {
+  const customerIssue = task.input_json.customer_issue;
+  return typeof customerIssue === "string" && customerIssue.length > 0 ? customerIssue : null;
 }
 
-export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistantPanelProps) {
+export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [taskType, setTaskType] = useState<ResearchTaskType>("research_summary");
-  const [goal, setGoal] = useState("");
+  const [taskType, setTaskType] = useState<SupportTaskType>("ticket_summary");
+  const [customerIssue, setCustomerIssue] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -156,7 +163,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
   useEffect(() => {
     if (!availableTaskTypes.includes(taskType)) {
-      setTaskType(availableTaskTypes[0] ?? "research_summary");
+      setTaskType(availableTaskTypes[0] ?? "ticket_summary");
     }
   }, [availableTaskTypes, taskType]);
 
@@ -198,7 +205,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
           return loadedTasks[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research tasks");
+        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load support tasks");
       } finally {
         if (!silent) {
           setIsLoadingTasks(false);
@@ -232,7 +239,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     [selectedTaskId, tasks],
   );
   const selectedResult = useMemo(
-    () => (selectedTask ? parseResearchTaskResult(selectedTask) : null),
+    () => (selectedTask ? parseSupportTaskResult(selectedTask) : null),
     [selectedTask],
   );
 
@@ -249,31 +256,31 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     try {
       const createdTask = await createWorkspaceTask(session.accessToken, workspaceId, {
         task_type: taskType,
-        input: goal.trim().length > 0 ? { goal: goal.trim() } : {},
+        input: customerIssue.trim().length > 0 ? { customer_issue: customerIssue.trim() } : {},
       });
       setTasks((currentTasks) => sortTasks([createdTask, ...currentTasks]));
       setSelectedTaskId(createdTask.id);
-      setGoal("");
+      setCustomerIssue("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch research task");
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch support task");
     } finally {
       setIsCreating(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Research Assistant">Loading session...</SectionCard>;
+    return <SectionCard title="Support Copilot">Loading session...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to run research tasks and inspect structured findings." />;
+    return <AuthRequired description="Sign in to run support tasks and inspect grounded outputs." />;
   }
 
   return (
     <>
       <SectionCard
-        title="Research Assistant"
-        description="Launch research tasks, inspect structured findings, and follow linked evidence back to workspace documents."
+        title="Support Copilot"
+        description="Launch support tasks, inspect grounded outputs, and review linked knowledge evidence."
       >
         {isLoadingWorkspace ? <p>Loading workspace configuration...</p> : null}
         {workspace ? (
@@ -288,27 +295,27 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               <strong>Features:</strong>{" "}
               {Array.isArray(workspace.module_config_json.features)
                 ? workspace.module_config_json.features.join(", ")
-                : "documents, grounded_chat, tasks, evals"}
+                : "knowledge_base, reply_drafts, tasks, evals"}
             </div>
           </div>
         ) : null}
-        {workspace?.module_type && workspace.module_type !== "research" ? (
+        {workspace?.module_type && workspace.module_type !== "support" ? (
           <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 12 }}>
-            This surface is only available for research workspaces. Current module: {workspace.module_type}.
+            This surface is only available for support workspaces. Current module: {workspace.module_type}.
           </p>
         ) : null}
       </SectionCard>
 
       <SectionCard
-        title="Launch research task"
-        description="Use a focused goal for a targeted answer, or leave it blank to let the default research flow summarize the current workspace."
+        title="Launch support task"
+        description="Use a customer issue or ticket prompt to generate a grounded summary or reply draft from the current workspace knowledge base."
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
             <span>Task type</span>
             <select
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
-              onChange={(event) => setTaskType(event.target.value as ResearchTaskType)}
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+              onChange={(event) => setTaskType(event.target.value as SupportTaskType)}
               value={taskType}
             >
               {availableTaskTypes.map((availableTaskType) => (
@@ -320,36 +327,36 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
           </label>
           <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Research goal</span>
+            <span>Customer issue</span>
             <textarea
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
-              onChange={(event) => setGoal(event.target.value)}
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+              onChange={(event) => setCustomerIssue(event.target.value)}
               placeholder={TASK_OPTIONS[taskType].placeholder}
               rows={4}
-              value={goal}
+              value={customerIssue}
             />
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button
             disabled={
-              isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "research")
+              isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "support")
             }
             type="submit"
           >
-            {isCreating ? "Launching..." : "Launch research task"}
+            {isCreating ? "Launching..." : "Launch support task"}
           </button>
         </form>
       </SectionCard>
 
       <SectionCard
-        title="Research runs"
-        description="Tasks are refreshed automatically every 2 seconds so you can watch pending and running work settle into final results."
+        title="Support runs"
+        description="Tasks refresh automatically every 2 seconds so you can watch support runs settle into final grounded outputs."
       >
-        {isLoadingTasks ? <p>Loading research tasks...</p> : null}
-        {!isLoadingTasks && tasks.length === 0 ? <p>No research tasks yet. Launch one to generate a structured result.</p> : null}
+        {isLoadingTasks ? <p>Loading support tasks...</p> : null}
+        {!isLoadingTasks && tasks.length === 0 ? <p>No support tasks yet. Launch one to generate a structured output.</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {tasks.map((task) => {
-            const result = parseResearchTaskResult(task);
+            const result = parseSupportTaskResult(task);
             return (
               <li
                 key={task.id}
@@ -361,11 +368,11 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 }}
               >
                 <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 6 }}>
-                  <strong>{TASK_OPTIONS[task.task_type as ResearchTaskType].label}</strong>
+                  <strong>{TASK_OPTIONS[task.task_type as SupportTaskType]?.label ?? task.task_type}</strong>
                   {renderStatus(task.status)}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
-                  {result?.summary ?? extractGoal(task) ?? "No custom goal provided."}
+                  {result?.summary ?? extractCustomerIssue(task) ?? "No customer issue provided."}
                 </div>
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
@@ -382,9 +389,9 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
       <SectionCard
         title="Structured result"
-        description="Inspect the research output, evidence trail, and source artifacts from the selected task."
+        description="Inspect the support output, evidence trail, and draft reply from the selected task."
       >
-        {!selectedTask ? <p>Select a research task to inspect its output.</p> : null}
+        {!selectedTask ? <p>Select a support task to inspect its output.</p> : null}
         {selectedTask ? (
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
@@ -395,18 +402,18 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <strong>Status:</strong> {renderStatus(selectedTask.status)}
               </div>
               <div>
-                <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as ResearchTaskType].label}
+                <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as SupportTaskType]?.label ?? selectedTask.task_type}
               </div>
-              {extractGoal(selectedTask) ? (
+              {extractCustomerIssue(selectedTask) ? (
                 <div>
-                  <strong>Goal:</strong> {extractGoal(selectedTask)}
+                  <strong>Customer issue:</strong> {extractCustomerIssue(selectedTask)}
                 </div>
               ) : null}
             </div>
 
             {selectedTask.error_message ? (
               <div>
-                <strong style={{ color: "#b91c1c" }}>Research error</strong>
+                <strong style={{ color: "#b91c1c" }}>Support error</strong>
                 <p style={{ color: "#b91c1c", marginBottom: 0 }}>{selectedTask.error_message}</p>
               </div>
             ) : null}
@@ -419,6 +426,13 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 </div>
 
                 {renderArtifactStats(selectedResult.artifacts)}
+
+                {selectedResult.artifacts.draft_reply ? (
+                  <div>
+                    <strong>Draft reply</strong>
+                    <p style={{ marginBottom: 0, marginTop: 8 }}>{selectedResult.artifacts.draft_reply}</p>
+                  </div>
+                ) : null}
 
                 <div>
                   <strong>Highlights</strong>
@@ -446,76 +460,27 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                             padding: 12,
                           }}
                         >
-                          <div style={{ fontWeight: 600 }}>
-                            {evidence.title ?? evidence.kind}
-                          </div>
+                          <div style={{ fontWeight: 600 }}>{evidence.title ?? evidence.kind}</div>
                           {evidence.snippet ? (
-                            <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>
-                              {evidence.snippet}
-                            </p>
+                            <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>{evidence.snippet}</p>
                           ) : null}
-                          <div style={{ color: "#475569", fontSize: 14 }}>
-                            Ref ID: {evidence.ref_id}
-                          </div>
+                          <div style={{ color: "#475569", fontSize: 14 }}>Ref ID: {evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>
-                                Open document context
-                              </Link>
+                              <Link href={`/workspaces/${workspaceId}/documents`}>Open knowledge base context</Link>
                             </div>
                           ) : null}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No linked evidence was returned. This usually means the workspace had limited indexed context.</p>
-                  )}
-                </div>
-
-                <div>
-                  <strong>Matched chunks</strong>
-                  {selectedResult.artifacts.matches.length > 0 ? (
-                    <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
-                      {selectedResult.artifacts.matches.map((match) => (
-                        <li
-                          key={match.chunk_id}
-                          style={{
-                            border: "1px solid #cbd5e1",
-                            borderRadius: 12,
-                            padding: 12,
-                          }}
-                        >
-                          <div style={{ fontWeight: 600 }}>{match.document_title}</div>
-                          <div style={{ color: "#475569", fontSize: 14, marginTop: 4 }}>
-                            Chunk {match.chunk_index}
-                          </div>
-                          <p style={{ marginBottom: 0, marginTop: 8 }}>{match.snippet}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No matched chunks were found for this run.</p>
-                  )}
-                </div>
-
-                <div>
-                  <strong>Workspace documents considered</strong>
-                  {selectedResult.artifacts.documents.length > 0 ? (
-                    <ul>
-                      {selectedResult.artifacts.documents.map((document) => (
-                        <li key={document.id}>
-                          {document.title} 鈥?{document.status} ({document.source_type})
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No workspace documents were available when this task ran.</p>
+                    <p>No linked evidence was returned. This usually means the workspace had limited indexed support context.</p>
                   )}
                 </div>
               </>
             ) : (
               <p>
-                This task does not have a completed structured research payload yet. If it is still running,
+                This task does not have a completed structured support payload yet. If it is still running,
                 wait for the next refresh cycle.
               </p>
             )}
@@ -525,4 +490,3 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     </>
   );
 }
-

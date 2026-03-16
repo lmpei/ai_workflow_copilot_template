@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 from uuid import uuid4
 
 import pytest
@@ -51,6 +51,7 @@ def _create_task_fixture(
     goal: str | None = None,
     with_document: bool = True,
     workspace_type: str = "research",
+    input_json: dict[str, object] | None = None,
 ) -> str:
     unique_suffix = uuid4().hex
     user = create_user(
@@ -76,7 +77,11 @@ def _create_task_fixture(
         workspace_id=workspace.id,
         task_type=task_type,
         created_by=user.id,
-        input_json={"goal": goal} if goal is not None else {},
+        input_json=(
+            input_json
+            if input_json is not None
+            else ({"goal": goal} if goal is not None else {})
+        ),
     )
     return task.id
 
@@ -180,6 +185,78 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
 
 
 
+def test_run_task_execution_executes_support_reply_draft_and_persists_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Customer cannot reset their password"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="support-guide.md",
+                    chunk_index=0,
+                    snippet=(
+                        "Reset links expire after 15 minutes; "
+                        "users should request a new email."
+                    ),
+                    content=(
+                        "Reset links expire after 15 minutes; "
+                        "users should request a new email."
+                    ),
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    task_id = _create_task_fixture(
+        task_type="reply_draft",
+        workspace_type="support",
+        input_json={"customer_issue": "Customer cannot reset their password"},
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "reply_draft"
+    assert output["agent_name"] == "workspace_support_agent"
+    assert output["result"]["module_type"] == "support"
+    assert output["result"]["task_type"] == "reply_draft"
+    assert output["result"]["artifacts"]["draft_reply"].startswith(
+        "Thanks for reaching out",
+    )
+    assert output["result"]["artifacts"]["match_count"] == 1
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
+
+def test_run_task_execution_completes_support_ticket_summary_with_limited_context() -> None:
+    task_id = _create_task_fixture(
+        task_type="ticket_summary",
+        workspace_type="support",
+        with_document=False,
+        input_json={"customer_issue": "Customer billing question"},
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "ticket_summary"
+    assert output["result"]["title"] == "Support Ticket Summary"
+    assert output["result"]["artifacts"]["document_count"] == 0
+    assert output["result"]["artifacts"]["matches"] == []
+    assert (
+        output["result"]["summary"]
+        == "No support knowledge documents are available for this workspace."
+    )
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
+
 def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -209,6 +286,22 @@ def test_run_task_execution_rejects_invalid_module_task_combination() -> None:
     task_id = _create_task_fixture(goal="Who owns the project?", workspace_type="support")
 
     with pytest.raises(TaskExecutionError, match="Task type research_summary is not supported"):
+        task_execution_service.run_task_execution(task_id)
+
+    persisted_task = task_repository.get_task(task_id)
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+
+
+
+def test_run_task_execution_rejects_invalid_support_module_task_combination() -> None:
+    task_id = _create_task_fixture(
+        task_type="ticket_summary",
+        workspace_type="research",
+        input_json={"customer_issue": "Customer billing question"},
+    )
+
+    with pytest.raises(TaskExecutionError, match="Task type ticket_summary is not supported"):
         task_execution_service.run_task_execution(task_id)
 
     persisted_task = task_repository.get_task(task_id)

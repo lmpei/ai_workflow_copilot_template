@@ -1,4 +1,4 @@
-from uuid import uuid4
+﻿from uuid import uuid4
 
 import pytest
 
@@ -12,6 +12,7 @@ from app.services.agent_service import (
     AgentAccessError,
     AgentRuntimeError,
     run_workspace_research_agent,
+    run_workspace_support_agent,
 )
 from app.services.retrieval_service import RetrievedChunk
 
@@ -26,6 +27,8 @@ def _create_runtime_fixture(
     *,
     with_document: bool = True,
     workspace_type: str = "research",
+    task_type: str = "research_summary",
+    input_json: dict[str, object] | None = None,
 ) -> tuple[str, str, str]:
     unique_suffix = uuid4().hex
     user = create_user(
@@ -39,9 +42,9 @@ def _create_runtime_fixture(
     )
     task = task_repository.create_task(
         workspace_id=workspace.id,
-        task_type="research_summary",
+        task_type=task_type,
         created_by=user.id,
-        input_json={"goal": "Summarize workspace findings"},
+        input_json=input_json or {"goal": "Summarize workspace findings"},
     )
     if with_document:
         document_repository.create_document(
@@ -135,6 +138,95 @@ def test_workspace_research_agent_completes_with_minimal_available_context() -> 
 
 
 
+def test_workspace_support_agent_completes_grounded_reply_draft(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Customer cannot reset their password"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="support-guide.md",
+                    chunk_index=0,
+                    snippet=(
+                        "Reset links expire after 15 minutes; "
+                        "users should request a new email."
+                    ),
+                    content=(
+                        "Reset links expire after 15 minutes; "
+                        "users should request a new email."
+                    ),
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        workspace_type="support",
+        task_type="reply_draft",
+        input_json={"customer_issue": "Customer cannot reset their password"},
+    )
+
+    result = run_workspace_support_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        customer_issue="Customer cannot reset their password",
+    )
+
+    assert result.agent_name == "workspace_support_agent"
+    assert result.final_output["module_type"] == "support"
+    assert result.final_output["task_type"] == "reply_draft"
+    assert result.final_output["title"] == "Grounded Reply Draft"
+    assert result.final_output["artifacts"]["document_count"] == 1
+    assert result.final_output["artifacts"]["match_count"] == 1
+    assert result.final_output["artifacts"]["draft_reply"].startswith(
+        "Thanks for reaching out",
+    )
+    assert result.final_output["evidence"][0]["metadata"]["document_id"] == "doc-1"
+    assert (
+        result.final_output["metadata"]["customer_issue"]
+        == "Customer cannot reset their password"
+    )
+
+    tool_calls = task_repository.list_agent_run_tool_calls(result.agent_run_id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == [
+        "list_workspace_documents",
+        "search_documents",
+    ]
+
+
+
+def test_workspace_support_agent_returns_bounded_shape_without_documents() -> None:
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        with_document=False,
+        workspace_type="support",
+        task_type="ticket_summary",
+        input_json={"customer_issue": "Customer billing question"},
+    )
+
+    result = run_workspace_support_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        customer_issue="Customer billing question",
+    )
+
+    assert result.final_output["module_type"] == "support"
+    assert result.final_output["artifacts"]["document_count"] == 0
+    assert result.final_output["artifacts"]["match_count"] == 0
+    assert result.final_output["artifacts"]["matches"] == []
+    assert (
+        result.final_output["summary"]
+        == "No support knowledge documents are available for this workspace."
+    )
+    assert result.final_output["evidence"] == []
+
+
+
 def test_workspace_research_agent_marks_agent_run_failed_on_tool_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -192,4 +284,21 @@ def test_workspace_research_agent_rejects_invalid_module_task_combination() -> N
             workspace_id=workspace_id,
             user_id=user_id,
             goal="Who owns the project?",
+        )
+
+
+
+def test_workspace_support_agent_rejects_invalid_module_task_combination() -> None:
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        workspace_type="research",
+        task_type="ticket_summary",
+        input_json={"customer_issue": "Customer billing question"},
+    )
+
+    with pytest.raises(AgentRuntimeError, match="Task type ticket_summary is not supported"):
+        run_workspace_support_agent(
+            task_id=task_id,
+            workspace_id=workspace_id,
+            user_id=user_id,
+            customer_issue="Customer billing question",
         )

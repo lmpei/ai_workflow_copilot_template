@@ -1,15 +1,22 @@
-from dataclasses import dataclass
-from typing import Protocol
+﻿from dataclasses import dataclass
+from typing import Callable, Protocol
 
 from app.agents.graph import (
     WORKSPACE_RESEARCH_AGENT_NAME,
+    WORKSPACE_SUPPORT_AGENT_NAME,
     build_workspace_research_graph,
     build_workspace_research_preview,
+    build_workspace_support_graph,
+    build_workspace_support_preview,
 )
 from app.repositories import task_repository, workspace_repository
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
     validate_research_task_contract,
+)
+from app.services.support_copilot_service import (
+    SupportCopilotContractError,
+    validate_support_task_contract,
 )
 
 
@@ -34,12 +41,15 @@ class AgentExecutionResult:
     final_output: dict[str, object]
 
 
-def run_workspace_research_agent(
+def _run_workspace_agent(
     *,
     task_id: str,
     workspace_id: str,
     user_id: str,
     goal: str,
+    agent_name: str,
+    graph_builder: Callable[[], GraphRunner],
+    validate_contract: Callable[..., None],
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
     task = task_repository.get_task_for_user(task_id, user_id)
@@ -51,16 +61,16 @@ def run_workspace_research_agent(
         raise AgentAccessError("Workspace not found")
 
     try:
-        validate_research_task_contract(
+        validate_contract(
             workspace_module_type=workspace.module_type,
             task_type=task.task_type,
         )
-    except ResearchAssistantContractError as error:
+    except (ResearchAssistantContractError, SupportCopilotContractError) as error:
         raise AgentRuntimeError(str(error)) from error
 
     agent_run = task_repository.create_agent_run(
         task_id=task_id,
-        agent_name=WORKSPACE_RESEARCH_AGENT_NAME,
+        agent_name=agent_name,
     )
 
     try:
@@ -71,7 +81,7 @@ def run_workspace_research_agent(
         if running_run is None:
             raise AgentRuntimeError("Agent run not found", agent_run_id=agent_run.id)
 
-        graph = graph_runner or build_workspace_research_graph()
+        graph = graph_runner or graph_builder()
         final_state = graph.invoke(
             {
                 "agent_run_id": agent_run.id,
@@ -101,7 +111,7 @@ def run_workspace_research_agent(
 
         return AgentExecutionResult(
             agent_run_id=agent_run.id,
-            agent_name=WORKSPACE_RESEARCH_AGENT_NAME,
+            agent_name=agent_name,
             final_output=final_output,
         )
     except AgentRuntimeError as error:
@@ -121,5 +131,53 @@ def run_workspace_research_agent(
         raise AgentRuntimeError(str(error), agent_run_id=agent_run.id) from error
 
 
+
+def run_workspace_research_agent(
+    *,
+    task_id: str,
+    workspace_id: str,
+    user_id: str,
+    goal: str,
+    graph_runner: GraphRunner | None = None,
+) -> AgentExecutionResult:
+    return _run_workspace_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        goal=goal,
+        agent_name=WORKSPACE_RESEARCH_AGENT_NAME,
+        graph_builder=build_workspace_research_graph,
+        validate_contract=validate_research_task_contract,
+        graph_runner=graph_runner,
+    )
+
+
+
+def run_workspace_support_agent(
+    *,
+    task_id: str,
+    workspace_id: str,
+    user_id: str,
+    customer_issue: str,
+    graph_runner: GraphRunner | None = None,
+) -> AgentExecutionResult:
+    return _run_workspace_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        goal=customer_issue,
+        agent_name=WORKSPACE_SUPPORT_AGENT_NAME,
+        graph_builder=build_workspace_support_graph,
+        validate_contract=validate_support_task_contract,
+        graph_runner=graph_runner,
+    )
+
+
+
 def run_agent_preview(goal: str) -> dict[str, object]:
     return build_workspace_research_preview(goal)
+
+
+
+def run_support_agent_preview(goal: str) -> dict[str, object]:
+    return build_workspace_support_preview(goal)
