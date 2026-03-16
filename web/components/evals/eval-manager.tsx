@@ -6,6 +6,7 @@ import {
   createEvalDataset,
   createEvalRun,
   getEvalRun,
+  getWorkspace,
   isApiClientError,
   listEvalDatasets,
   listEvalRunResults,
@@ -15,6 +16,9 @@ import type {
   EvalDatasetRecord,
   EvalResultRecord,
   EvalRunRecord,
+  ModuleType,
+  ScenarioTaskType,
+  Workspace,
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
@@ -26,6 +30,32 @@ type EvalManagerProps = {
 
 const ACTIVE_RUN_STATUSES = new Set<EvalRunRecord["status"]>(["pending", "running"]);
 const STORAGE_KEY_PREFIX = "ai_workflow_eval_runs:";
+const SCENARIO_TASK_OPTIONS: Record<ModuleType, ScenarioTaskType[]> = {
+  research: ["research_summary", "workspace_report"],
+  support: ["ticket_summary", "reply_draft"],
+  job: ["jd_summary", "resume_match"],
+};
+const SCENARIO_TASK_LABELS: Record<ScenarioTaskType, string> = {
+  research_summary: "Research Summary",
+  workspace_report: "Workspace Report",
+  ticket_summary: "Ticket Summary",
+  reply_draft: "Reply Draft",
+  jd_summary: "JD Summary",
+  resume_match: "Resume Match",
+};
+const SCENARIO_INPUT_LABELS: Record<ModuleType, string> = {
+  research: "Questions or goals",
+  support: "Customer issues or ticket prompts",
+  job: "Role prompts or hiring focus lines",
+};
+const SCENARIO_INPUT_PLACEHOLDERS: Record<ScenarioTaskType, string> = {
+  research_summary: "One research goal per line",
+  workspace_report: "One report prompt per line",
+  ticket_summary: "One support issue per line",
+  reply_draft: "One customer issue per line",
+  jd_summary: "One target role or job focus per line",
+  resume_match: "One target role per line",
+};
 
 function getStorageKey(workspaceId: string) {
   return `${STORAGE_KEY_PREFIX}${workspaceId}`;
@@ -115,12 +145,48 @@ function getQuestion(evalCase: EvalCaseRecord | undefined): string | null {
     return null;
   }
 
-  const question = evalCase.input_json.question;
-  return typeof question === "string" && question.length > 0 ? question : null;
+  const candidateKeys = ["question", "goal", "customer_issue", "target_role"] as const;
+  for (const key of candidateKeys) {
+    const value = evalCase.input_json[key];
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function getScenarioTaskTypeOptions(workspace: Workspace | null): ScenarioTaskType[] {
+  if (!workspace) {
+    return SCENARIO_TASK_OPTIONS.research;
+  }
+
+  const entryTaskTypes = workspace.module_config_json.entry_task_types;
+  if (Array.isArray(entryTaskTypes)) {
+    const filteredTaskTypes = entryTaskTypes.filter(
+      (taskType): taskType is ScenarioTaskType =>
+        typeof taskType === "string" && taskType in SCENARIO_TASK_LABELS,
+    );
+    if (filteredTaskTypes.length > 0) {
+      return filteredTaskTypes;
+    }
+  }
+
+  return SCENARIO_TASK_OPTIONS[workspace.module_type] ?? SCENARIO_TASK_OPTIONS.research;
+}
+
+function buildCaseInputJson(moduleType: ModuleType, prompt: string): Record<string, string> {
+  if (moduleType === "support") {
+    return { customer_issue: prompt };
+  }
+  if (moduleType === "job") {
+    return { target_role: prompt };
+  }
+  return { goal: prompt };
 }
 
 export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const { session, isReady } = useAuthSession();
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [datasets, setDatasets] = useState<EvalDatasetRecord[]>([]);
   const [runs, setRuns] = useState<EvalRunRecord[]>([]);
   const [resultsByRunId, setResultsByRunId] = useState<Record<string, EvalResultRecord[]>>({});
@@ -128,10 +194,35 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const [datasetName, setDatasetName] = useState("");
   const [datasetDescription, setDatasetDescription] = useState("");
   const [datasetQuestions, setDatasetQuestions] = useState("");
+  const [scenarioTaskType, setScenarioTaskType] = useState<ScenarioTaskType>("research_summary");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingDataset, setIsCreatingDataset] = useState(false);
   const [isCreatingRunId, setIsCreatingRunId] = useState<string | null>(null);
+
+  const scenarioTaskTypeOptions = useMemo(
+    () => getScenarioTaskTypeOptions(workspace),
+    [workspace],
+  );
+
+  useEffect(() => {
+    if (!scenarioTaskTypeOptions.includes(scenarioTaskType)) {
+      setScenarioTaskType(scenarioTaskTypeOptions[0] ?? "research_summary");
+    }
+  }, [scenarioTaskType, scenarioTaskTypeOptions]);
+
+  const loadWorkspace = useCallback(async () => {
+    if (!session) {
+      setWorkspace(null);
+      return;
+    }
+
+    try {
+      setWorkspace(await getWorkspace(session.accessToken, workspaceId));
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+    }
+  }, [session, workspaceId]);
 
   const loadDatasets = useCallback(async () => {
     if (!session) {
@@ -236,9 +327,10 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   }, [loadRunResults, session, workspaceId]);
 
   useEffect(() => {
+    void loadWorkspace();
     void loadDatasets();
     void loadStoredRuns();
-  }, [loadDatasets, loadStoredRuns]);
+  }, [loadDatasets, loadStoredRuns, loadWorkspace]);
 
   useEffect(() => {
     if (!session) {
@@ -286,16 +378,21 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
     setErrorMessage(null);
 
     try {
+      const moduleType = workspace?.module_type ?? "research";
       const cases = datasetQuestions
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
-        .map((question) => ({ input_json: { question } }));
+        .map((prompt) => ({ input_json: buildCaseInputJson(moduleType, prompt) }));
 
       const createdDataset = await createEvalDataset(session.accessToken, workspaceId, {
         name: datasetName.trim(),
         eval_type: "retrieval_chat",
         description: datasetDescription.trim() || undefined,
+        config_json: {
+          module_type: moduleType,
+          scenario_task_type: scenarioTaskType,
+        },
         cases,
       });
       setDatasets((currentDatasets) => sortDatasets([createdDataset, ...currentDatasets]));
@@ -345,7 +442,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
     <>
       <SectionCard
         title="Eval datasets"
-        description={`Workspace: ${workspaceId}. Create minimal retrieval-chat datasets and launch eval runs.`}
+        description={`Workspace: ${workspace?.name ?? workspaceId}. Create scenario-aware retrieval eval datasets and launch eval runs.`}
       >
         <form onSubmit={handleCreateDataset} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
@@ -366,10 +463,23 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Questions</span>
+            <span>Scenario focus</span>
+            <select
+              onChange={(event) => setScenarioTaskType(event.target.value as ScenarioTaskType)}
+              value={scenarioTaskType}
+            >
+              {scenarioTaskTypeOptions.map((taskType) => (
+                <option key={taskType} value={taskType}>
+                  {SCENARIO_TASK_LABELS[taskType]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>{SCENARIO_INPUT_LABELS[workspace?.module_type ?? "research"]}</span>
             <textarea
               onChange={(event) => setDatasetQuestions(event.target.value)}
-              placeholder="One question per line. Leave empty if you want to create an empty dataset to test failure handling."
+              placeholder={`${SCENARIO_INPUT_PLACEHOLDERS[scenarioTaskType]}. Leave empty if you want to create an empty dataset to test failure handling.`}
               rows={5}
               value={datasetQuestions}
             />
@@ -399,6 +509,11 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                 <div>
                   <strong>{dataset.name}</strong>
                   <div>Type: {dataset.eval_type}</div>
+                  <div>
+                    Module: {String(dataset.config_json.module_type ?? "research")} / Task:{" "}
+                    {String(dataset.config_json.scenario_task_type ?? "research_summary")}
+                  </div>
+                  <div>Baseline: {String(dataset.config_json.quality_baseline ?? "n/a")}</div>
                   <div>Cases: {dataset.cases.length}</div>
                   <div>Created: {new Date(dataset.created_at).toLocaleString()}</div>
                 </div>
@@ -459,6 +574,14 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
             </div>
             <div>
               <strong>Dataset:</strong> {datasetNameById[selectedRun.dataset_id] ?? selectedRun.dataset_id}
+            </div>
+            <div>
+              <strong>Scenario:</strong> {String(selectedRun.summary_json.module_type ?? "research")} /{" "}
+              {String(selectedRun.summary_json.scenario_task_type ?? "research_summary")}
+            </div>
+            <div>
+              <strong>Baseline:</strong> {String(selectedRun.summary_json.quality_baseline ?? "n/a")} (
+              threshold {getSummaryMetric(selectedRun.summary_json, "pass_threshold")})
             </div>
             <div
               style={{

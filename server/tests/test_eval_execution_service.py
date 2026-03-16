@@ -127,7 +127,14 @@ class FailingJudgeScorer:
 
 
 
-def _create_eval_run_fixture(*, questions: list[str]) -> dict[str, str]:
+def _create_eval_run_fixture(
+    *,
+    questions: list[str],
+    workspace_type: str = "research",
+    scenario_task_type: str | None = None,
+    input_key: str = "question",
+    raw_inputs: list[dict[str, object]] | None = None,
+) -> dict[str, str]:
     unique_suffix = uuid4().hex
     user = create_user(
         email=f"eval-run-{unique_suffix}@example.com",
@@ -135,7 +142,7 @@ def _create_eval_run_fixture(*, questions: list[str]) -> dict[str, str]:
         name="Eval Runner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Eval Workspace", type="research"),
+        WorkspaceCreate(name="Eval Workspace", type=workspace_type),
         owner_id=user.id,
     )
     dataset = eval_repository.create_eval_dataset(
@@ -143,12 +150,18 @@ def _create_eval_run_fixture(*, questions: list[str]) -> dict[str, str]:
         name="Grounded Chat Eval",
         eval_type="retrieval_chat",
         created_by=user.id,
+        config_json={
+            "module_type": workspace_type,
+            "scenario_task_type": (
+                scenario_task_type or workspace.module_config_json["entry_task_types"][0]
+            ),
+        },
     )
     for index, question in enumerate(questions):
         eval_repository.create_eval_case(
             dataset_id=dataset.id,
             case_index=index,
-            input_json={"question": question},
+            input_json=raw_inputs[index] if raw_inputs is not None else {input_key: question},
             expected_json={},
         )
     eval_run = eval_repository.create_eval_run(
@@ -225,6 +238,10 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
     assert summary == {
         "eval_run_id": fixture["eval_run_id"],
         "status": "completed",
+        "module_type": "research",
+        "scenario_task_type": "research_summary",
+        "quality_baseline": "grounded_research",
+        "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 2,
         "failed_cases": 0,
@@ -235,6 +252,10 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
     assert persisted_run is not None
     assert persisted_run.status == "completed"
     assert persisted_run.summary_json == {
+        "module_type": "research",
+        "scenario_task_type": "research_summary",
+        "quality_baseline": "grounded_research",
+        "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 2,
         "failed_cases": 0,
@@ -286,6 +307,10 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
     assert summary == {
         "eval_run_id": fixture["eval_run_id"],
         "status": "failed",
+        "module_type": "research",
+        "scenario_task_type": "research_summary",
+        "quality_baseline": "grounded_research",
+        "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 1,
         "failed_cases": 1,
@@ -296,6 +321,10 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
     assert persisted_run is not None
     assert persisted_run.status == "failed"
     assert persisted_run.summary_json == {
+        "module_type": "research",
+        "scenario_task_type": "research_summary",
+        "quality_baseline": "grounded_research",
+        "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 1,
         "failed_cases": 1,
@@ -341,6 +370,104 @@ def test_run_eval_execution_captures_judge_failure_without_losing_result(
     assert persisted_result.score == 1.0
     assert persisted_result.passed is True
     assert persisted_result.metrics_json["judge_error"] == "Judge unavailable"
+
+
+def test_run_eval_execution_support_scenario_uses_support_baseline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _create_eval_run_fixture(
+        questions=["Customer cannot reset their password"],
+        workspace_type="support",
+        scenario_task_type="reply_draft",
+        input_key="customer_issue",
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_retriever",
+        lambda: FakeRetriever(),
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_answer_generator",
+        lambda: FakeAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(),
+    )
+
+    summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+    persisted_result = eval_repository.list_eval_run_results(fixture["eval_run_id"])[0]
+
+    assert summary["module_type"] == "support"
+    assert summary["scenario_task_type"] == "reply_draft"
+    assert summary["quality_baseline"] == "grounded_support"
+    assert summary["pass_threshold"] == 0.75
+    assert persisted_result.metrics_json["module_type"] == "support"
+    assert persisted_result.metrics_json["quality_baseline"] == "grounded_support"
+    assert (
+        persisted_result.output_json["evaluation"]["scenario_context"]["module_type"]
+        == "support"
+    )
+
+
+def test_run_eval_execution_job_scenario_uses_job_baseline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _create_eval_run_fixture(
+        questions=["Platform engineer"],
+        workspace_type="job",
+        scenario_task_type="resume_match",
+        input_key="target_role",
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_retriever",
+        lambda: FakeRetriever(),
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_answer_generator",
+        lambda: FakeAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(),
+    )
+
+    summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+    persisted_result = eval_repository.list_eval_run_results(fixture["eval_run_id"])[0]
+
+    assert summary["module_type"] == "job"
+    assert summary["scenario_task_type"] == "resume_match"
+    assert summary["quality_baseline"] == "grounded_job"
+    assert summary["pass_threshold"] == 0.75
+    assert persisted_result.metrics_json["module_type"] == "job"
+    assert (
+        persisted_result.output_json["evaluation"]["scenario_context"]["scenario_task_type"]
+        == "resume_match"
+    )
+
+
+def test_run_eval_execution_fails_cleanly_on_invalid_scenario_input() -> None:
+    fixture = _create_eval_run_fixture(
+        questions=["unused"],
+        workspace_type="job",
+        scenario_task_type="resume_match",
+        raw_inputs=[{"unsupported": "value"}],
+    )
+    summary = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+    persisted_run = eval_repository.get_eval_run(fixture["eval_run_id"])
+    persisted_result = eval_repository.list_eval_run_results(fixture["eval_run_id"])[0]
+
+    assert summary["status"] == "failed"
+    assert persisted_run is not None
+    assert persisted_run.status == "failed"
+    assert "missing a usable prompt" in (persisted_run.error_message or "")
+    assert persisted_result.status == "failed"
+    assert persisted_result.error_message == "Scenario eval case input is missing a usable prompt"
 
 
 

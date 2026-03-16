@@ -21,6 +21,12 @@ from app.services.retrieval_service import (
     GeneratedAnswer,
     RetrievedChunk,
 )
+from app.services.scenario_eval_service import (
+    ScenarioEvalConfigError,
+    build_scenario_summary_fields,
+    resolve_scenario_eval_config,
+    resolve_scenario_eval_prompt,
+)
 
 EVAL_EXECUTION_JOB_NAME = "run_eval_run"
 
@@ -189,22 +195,39 @@ def _execute_eval_case(
     eval_type: str,
     eval_case_id: str,
     case_index: int,
-    input_json: dict[str, object],
+    question: str,
 ) -> EvalCaseExecutionResult:
     if eval_type != "retrieval_chat":
         raise EvalExecutionError(f"Unsupported eval type: {eval_type}")
-
-    question = input_json.get("question")
-    if not isinstance(question, str) or not question.strip():
-        raise EvalExecutionError("Eval case question is required")
 
     return _execute_retrieval_chat_case(
         workspace_id=workspace_id,
         eval_run_id=eval_run_id,
         eval_case_id=eval_case_id,
         case_index=case_index,
-        question=question.strip(),
+        question=question,
     )
+
+
+def _resolve_eval_case_question(
+    *,
+    input_json: dict[str, object],
+    scenario_config: dict[str, object],
+) -> str:
+    try:
+        return resolve_scenario_eval_prompt(
+            input_json=input_json,
+            scenario_config=scenario_config,
+        )
+    except ScenarioEvalConfigError as error:
+        raise EvalExecutionError(str(error)) from error
+
+
+def _resolve_pass_threshold(scenario_config: dict[str, object]) -> float:
+    pass_threshold = scenario_config.get("pass_threshold")
+    if not isinstance(pass_threshold, int | float):
+        raise EvalExecutionError("Scenario eval config must include a numeric pass_threshold")
+    return float(pass_threshold)
 
 
 async def enqueue_eval_run(eval_run_id: str) -> str:
@@ -228,6 +251,20 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
     if eval_run is None:
         raise EvalExecutionError("Eval run not found")
 
+    dataset = eval_repository.get_eval_dataset(eval_run.dataset_id)
+    if dataset is None:
+        raise EvalExecutionError("Eval dataset not found")
+
+    try:
+        scenario_config = resolve_scenario_eval_config(
+            workspace_module_type=str(dataset.config_json.get("module_type", "research")),
+            config_json=dataset.config_json,
+        )
+    except ScenarioEvalConfigError as error:
+        raise EvalExecutionError(str(error)) from error
+
+    scenario_summary_fields = build_scenario_summary_fields(scenario_config)
+    pass_threshold = _resolve_pass_threshold(scenario_config)
     cases = eval_repository.list_eval_cases(eval_run.dataset_id)
     total_cases = len(cases)
     completed_cases = 0
@@ -241,6 +278,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
             eval_run.id,
             next_status=EVAL_RUN_STATUS_RUNNING,
             summary_json={
+                **scenario_summary_fields,
                 **eval_run.summary_json,
                 "total_cases": total_cases,
                 "completed_cases": 0,
@@ -259,18 +297,24 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 eval_case_id=eval_case.id,
             )
             try:
+                question = _resolve_eval_case_question(
+                    input_json=eval_case.input_json,
+                    scenario_config=scenario_config,
+                )
                 execution_result = _execute_eval_case(
                     eval_run_id=eval_run.id,
                     workspace_id=eval_run.workspace_id,
                     eval_type=eval_run.eval_type,
                     eval_case_id=eval_case.id,
                     case_index=eval_case.case_index,
-                    input_json=eval_case.input_json,
+                    question=question,
                 )
                 evaluation_result = chat_evaluator_service.evaluate_retrieval_chat_output(
-                    question=str(eval_case.input_json.get("question", "")),
+                    question=question,
                     expected_json=eval_case.expected_json,
                     output_json=execution_result.output_json,
+                    pass_threshold=pass_threshold,
+                    scenario_context=scenario_summary_fields,
                 )
                 completed_result = eval_repository.update_eval_result(
                     eval_result.id,
@@ -281,6 +325,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                     },
                     metrics_json={
                         **execution_result.metrics_json,
+                        **scenario_summary_fields,
                         "rule_score": evaluation_result.rule_score,
                         "judge_score": evaluation_result.judge_score,
                         "judge_error": evaluation_result.judge_error,
@@ -311,6 +356,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                     eval_run.id,
                     next_status=EVAL_RUN_STATUS_RUNNING,
                     summary_json={
+                        **scenario_summary_fields,
                         "total_cases": total_cases,
                         "completed_cases": completed_cases,
                         "failed_cases": failed_cases,
@@ -330,6 +376,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
             eval_run.id,
             next_status=EVAL_RUN_STATUS_FAILED,
             summary_json={
+                **scenario_summary_fields,
                 "total_cases": total_cases,
                 "completed_cases": completed_cases,
                 "failed_cases": failed_cases,
@@ -351,6 +398,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
             eval_run.id,
             next_status=EVAL_RUN_STATUS_FAILED,
             summary_json={
+                **scenario_summary_fields,
                 "total_cases": total_cases,
                 "completed_cases": completed_cases,
                 "failed_cases": failed_cases,
@@ -369,6 +417,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
         raise EvalExecutionError(str(error)) from error
 
     final_summary: dict[str, object] = {
+        **scenario_summary_fields,
         "total_cases": total_cases,
         "completed_cases": completed_cases,
         "failed_cases": failed_cases,

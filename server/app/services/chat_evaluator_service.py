@@ -127,6 +127,8 @@ def evaluate_retrieval_chat_output(
     question: str,
     expected_json: dict[str, object],
     output_json: dict[str, object],
+    pass_threshold: float = DEFAULT_PASS_THRESHOLD,
+    scenario_context: dict[str, object] | None = None,
 ) -> ChatEvaluationResult:
     rule_checks = _evaluate_rule_checks(expected_json=expected_json, output_json=output_json)
     applicable_checks = [check for check in rule_checks.values() if check["applicable"] is True]
@@ -153,7 +155,7 @@ def evaluate_retrieval_chat_output(
         else rule_score
     )
     passed = (
-        final_score >= DEFAULT_PASS_THRESHOLD
+        final_score >= max(0.0, min(pass_threshold, 1.0))
         and rule_checks["answer_present"]["passed"] is True
     )
 
@@ -173,6 +175,7 @@ def evaluate_retrieval_chat_output(
                 "reasoning": judge_result.reasoning,
                 "error": judge_result.error,
             },
+            "scenario_context": scenario_context or {},
         },
     )
 

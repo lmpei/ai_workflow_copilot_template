@@ -34,10 +34,16 @@ def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[st
 
 
 
-def _create_workspace(client: TestClient, token: str, *, name: str = "Eval Demo") -> str:
+def _create_workspace(
+    client: TestClient,
+    token: str,
+    *,
+    name: str = "Eval Demo",
+    workspace_type: str = "research",
+) -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": "research"},
+        json={"name": name, "type": workspace_type},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -102,6 +108,10 @@ def test_eval_api_creates_lists_datasets_and_creates_runs(client: TestClient) ->
     assert eval_run["dataset_id"] == dataset["id"]
     assert eval_run["status"] == "pending"
     assert eval_run["summary_json"] == {
+        "module_type": "research",
+        "scenario_task_type": "research_summary",
+        "quality_baseline": "grounded_research",
+        "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 0,
         "failed_cases": 0,
@@ -245,3 +255,60 @@ def test_eval_api_marks_run_failed_when_enqueue_fails(
     assert len(persisted_runs) == 1
     assert persisted_runs[0].status == "failed"
     assert persisted_runs[0].error_message == "Redis unavailable"
+
+
+def test_eval_api_creates_support_scenario_dataset_with_normalized_config(
+    client: TestClient,
+) -> None:
+    auth = _register_and_login(client, email="support-owner@example.com", name="Support Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    create_dataset_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/datasets",
+        json={
+            "name": "Support Quality Dataset",
+            "eval_type": "retrieval_chat",
+            "config_json": {"scenario_task_type": "ticket_summary"},
+            "cases": [
+                {
+                    "input_json": {"customer_issue": "Customer cannot log in"},
+                    "expected_json": {"answer_contains": ["login"]},
+                },
+            ],
+        },
+        headers=headers,
+    )
+
+    assert create_dataset_response.status_code == 201
+    dataset = create_dataset_response.json()
+    assert dataset["config_json"] == {
+        "module_type": "support",
+        "scenario_task_type": "ticket_summary",
+        "quality_baseline": "grounded_support",
+        "pass_threshold": 0.75,
+    }
+    assert dataset["cases"][0]["metadata_json"]["module_type"] == "support"
+    assert dataset["cases"][0]["metadata_json"]["scenario_task_type"] == "ticket_summary"
+
+
+def test_eval_api_rejects_mismatched_scenario_config(
+    client: TestClient,
+) -> None:
+    auth = _register_and_login(client, email="job-owner@example.com", name="Job Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/datasets",
+        json={
+            "name": "Invalid Job Dataset",
+            "eval_type": "retrieval_chat",
+            "config_json": {"module_type": "research"},
+            "cases": [],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "does not match workspace module" in response.json()["detail"]
