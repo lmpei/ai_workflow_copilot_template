@@ -1,4 +1,4 @@
-import TaskManager from "../../../../components/tasks/task-manager";
+import ResearchAssistantPanel from "../../../../components/research/research-assistant-panel";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspacePageProps = {
@@ -12,10 +12,10 @@ export default function WorkspaceTasksPage({ params }: WorkspacePageProps) {
 
   return (
     <main>
-      <h1>Tasks</h1>
+      <h1>Research Assistant</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <p>Phase 3 lets you create platform tasks, watch status transitions, and inspect final agent results.</p>
-      <TaskManager workspaceId={workspaceId} />
+      <p>Phase 5 turns the shared task runtime into a research module surface so you can launch structured summaries, inspect findings, and review linked evidence.</p>
+      <ResearchAssistantPanel workspaceId={workspaceId} />
     </main>
   );
 }

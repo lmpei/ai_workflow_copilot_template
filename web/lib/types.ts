@@ -34,6 +34,38 @@ export type ScenarioTaskResult = {
   metadata: JsonObject;
 };
 
+export type ResearchTaskType = TaskType;
+
+export type ResearchDocumentSummary = {
+  id: string;
+  title: string;
+  status: DocumentRecord["status"];
+  source_type: string;
+  mime_type?: string | null;
+};
+
+export type ResearchMatch = {
+  document_id: string;
+  chunk_id: string;
+  document_title: string;
+  chunk_index: number;
+  snippet: string;
+};
+
+export type ResearchArtifacts = {
+  document_count: number;
+  match_count: number;
+  documents: ResearchDocumentSummary[];
+  matches: ResearchMatch[];
+  tool_call_ids: string[];
+};
+
+export type ResearchTaskResult = ScenarioTaskResult & {
+  module_type: "research";
+  task_type: ResearchTaskType;
+  artifacts: ResearchArtifacts;
+};
+
 export type User = {
   id: string;
   email: string;
