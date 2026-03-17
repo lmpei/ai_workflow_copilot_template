@@ -1,3 +1,4 @@
+﻿import ModuleHub from "../../../components/workspace/module-hub";
 import SectionCard from "../../../components/ui/section-card";
 import WorkspaceNav from "../../../components/workspace/workspace-nav";
 
@@ -25,6 +26,7 @@ export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
           <li>Quality metrics and cost tracking</li>
         </ul>
       </SectionCard>
+      <ModuleHub workspaceId={workspaceId} />
     </main>
   );
 }

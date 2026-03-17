@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -110,11 +110,7 @@ export default function WorkspaceManager() {
           </label>
           <label style={{ display: "grid", gap: 6 }}>
             <span>Description</span>
-            <textarea
-              onChange={(event) => setDescription(event.target.value)}
-              rows={3}
-              value={description}
-            />
+            <textarea onChange={(event) => setDescription(event.target.value)} rows={3} value={description} />
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button disabled={isSubmitting} type="submit">
@@ -123,7 +119,10 @@ export default function WorkspaceManager() {
         </form>
       </SectionCard>
 
-      <SectionCard title="Workspace list" description="Open a workspace to manage documents, chat, and metrics.">
+      <SectionCard
+        title="Workspace list"
+        description="Open a workspace to manage shared platform pages and discover scenario modules."
+      >
         {isLoading ? <p>Loading workspaces...</p> : null}
         {!isLoading && workspaces.length === 0 ? <p>No workspaces yet.</p> : null}
         <ul>
@@ -132,9 +131,12 @@ export default function WorkspaceManager() {
               <div>
                 <Link href={`/workspaces/${workspace.id}`}>{workspace.name}</Link> ({workspace.type})
               </div>
+              <div>Active module: {workspace.module_type}</div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <Link href={`/workspaces/${workspace.id}/modules`}>Modules</Link>
                 <Link href={`/workspaces/${workspace.id}/documents`}>Documents</Link>
                 <Link href={`/workspaces/${workspace.id}/chat`}>Chat</Link>
+                <Link href={`/workspaces/${workspace.id}/tasks`}>Tasks</Link>
                 <Link href={`/workspaces/${workspace.id}/analytics`}>Analytics</Link>
               </div>
             </li>
