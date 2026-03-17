@@ -5,7 +5,7 @@ from app.services import trace_service
 
 def _create_workspace(*, owner_id: str = "user-1") -> str:
     workspace = workspace_repository.create_workspace(
-        WorkspaceCreate(name="Trace Demo", type="research"),
+        WorkspaceCreate(name="Trace Demo", module_type="research"),
         owner_id,
     )
     return workspace.id
@@ -109,3 +109,4 @@ def test_record_chat_trace_preserves_existing_payloads_and_adds_phase_four_metad
     }
     assert trace.response_json["error"] == "judge warning"
     assert trace.error_message == "judge warning"
+

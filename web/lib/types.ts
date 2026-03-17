@@ -1,4 +1,5 @@
-export const workspaceTypes = ["job", "support", "research"] as const;
+﻿export const moduleTypes = ["job", "support", "research"] as const;
+export const workspaceTypes = moduleTypes;
 export const scenarioTaskTypes = [
   "research_summary",
   "workspace_report",
@@ -9,9 +10,9 @@ export const scenarioTaskTypes = [
 ] as const;
 export const taskTypes = scenarioTaskTypes;
 
-export type WorkspaceType = (typeof workspaceTypes)[number];
+export type ModuleType = (typeof moduleTypes)[number];
+export type WorkspaceType = ModuleType;
 export type TaskType = (typeof scenarioTaskTypes)[number];
-export type ModuleType = WorkspaceType;
 export type ScenarioTaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
 
@@ -116,7 +117,7 @@ export type Workspace = {
   id: string;
   owner_id: string;
   name: string;
-  type: WorkspaceType;
+  type?: WorkspaceType;
   module_type: ModuleType;
   description: string | null;
   module_config_json: JsonObject;
@@ -126,7 +127,6 @@ export type Workspace = {
 
 export type WorkspaceCreatePayload = {
   name: string;
-  type?: WorkspaceType;
   module_type?: ModuleType;
   module_config_json?: JsonObject;
   description?: string;
@@ -288,3 +288,8 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
+
+
+
+
+

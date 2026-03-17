@@ -37,7 +37,7 @@ def _create_workspace_fixture() -> tuple[str, str]:
         name="Phase 3 Owner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 3 Workspace", type="research"),
+        WorkspaceCreate(name="Phase 3 Workspace", module_type="research"),
         owner_id=user.id,
     )
     return user.id, workspace.id
@@ -157,3 +157,4 @@ def test_tool_calls_persist_outputs_latency_and_reject_invalid_transitions() -> 
 
     with pytest.raises(ValueError, match="Invalid tool call status transition"):
         update_tool_call_status(tool_call.id, next_status="pending")
+

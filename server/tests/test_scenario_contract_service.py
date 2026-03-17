@@ -29,7 +29,6 @@ def test_resolve_workspace_module_contract_merges_requested_config() -> None:
 
 def test_resolve_workspace_module_contract_resets_defaults_when_module_changes() -> None:
     module_type, module_config_json = resolve_workspace_module_contract(
-        current_type="research",
         current_module_type="research",
         current_module_config_json={"entry_task_types": ["custom_research"], "custom_flag": True},
         requested_module_type="job",

@@ -15,7 +15,7 @@ import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
 
-type ModuleHubProps = {
+type ModuleHubPanelProps = {
   workspaceId: string;
   selectedModuleType?: string;
 };
@@ -39,10 +39,10 @@ function renderTaskTypeList(taskTypes: ScenarioTaskType[]) {
   return taskTypes.map((taskType) => scenarioTaskLabels[taskType]).join(" · ");
 }
 
-export default function ModuleHub({
+export default function ModuleHubPanel({
   workspaceId,
   selectedModuleType,
-}: ModuleHubProps) {
+}: ModuleHubPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -227,3 +227,5 @@ export default function ModuleHub({
     </SectionCard>
   );
 }
+
+

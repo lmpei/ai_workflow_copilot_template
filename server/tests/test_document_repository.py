@@ -31,7 +31,7 @@ def _create_document_fixture() -> str:
         name="Repository Owner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Repository Workspace", type="research"),
+        WorkspaceCreate(name="Repository Workspace", module_type="research"),
         owner_id=user.id,
     )
     document = create_document(
@@ -165,3 +165,4 @@ def test_document_repository_rejects_embedding_mappings_for_foreign_chunks() -> 
                 ),
             ],
         )
+

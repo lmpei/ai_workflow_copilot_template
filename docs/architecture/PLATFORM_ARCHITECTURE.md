@@ -63,11 +63,10 @@ FastAPI REST API
   +--> Redis Queue
   |      |
   |      +--> Workers
-  |            +-- ingest_worker
-  |            +-- report_worker
-  |            +-- classification_worker
+  |            +-- task execution entrypoints
+  |            +-- eval execution entrypoints
   |            |
-  |            +--> parse -> chunk -> embed -> index
+  |            +--> long-running background workflows
   |                                  |
   |                                  +--> Chroma
   |
@@ -135,11 +134,9 @@ FastAPI REST API
 
 ### Worker Layer
 
-- Document parsing
-- Chunking and embedding
-- Vector indexing
-- Long-running report generation
-- Classification and batch processing
+- Runtime worker entrypoints for task execution and eval execution
+- Queue-backed boundaries for future long-running and retryable workflows
+- No placeholder or draft workflow files in the live worker directory
 
 ### Agent Runtime
 
@@ -307,21 +304,21 @@ The shared architecture must support these reusable modules without redesigning 
 
 ### Job Assistant
 
-- JD parsing
-- Resume matching
-- Gap analysis
-- Application workflow support
+- Work object: hiring materials such as job descriptions, resumes, and fit criteria
+- Primary output: structured job summaries, match assessments, and next-step recommendations
+- Core capabilities: structured extraction, resume matching, gap analysis, application workflow support
+- Not responsible for: support-case handling, knowledge-base reply generation, broad research report synthesis
 
 ### Support Copilot
 
-- Knowledge-base retrieval
-- Ticket classification
-- Reply drafting
-- Escalation guidance
+- Work object: support cases, tickets, and knowledge-base context
+- Primary output: grounded case summaries, reply drafts, and escalation guidance
+- Core capabilities: knowledge-base retrieval, ticket classification, reply drafting, escalation guidance
+- Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
 
 ### Research Assistant
 
-- Multi-document retrieval
-- Evidence-backed synthesis
-- Viewpoint comparison
-- Report generation
+- Work object: workspace-scoped document sets, evidence, and open research questions
+- Primary output: evidence-backed synthesis and workspace reports
+- Core capabilities: multi-document retrieval, evidence-backed synthesis, viewpoint comparison, report generation
+- Not responsible for: ticket triage, reply drafting, candidate-to-role matching

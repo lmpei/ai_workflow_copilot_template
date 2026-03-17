@@ -1,4 +1,4 @@
-﻿from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from app.services.task_execution_service import TaskExecutionError
 
@@ -40,7 +40,7 @@ def _create_workspace(
 ) -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": workspace_type},
+        json={"name": name, "module_type": workspace_type},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -378,3 +378,4 @@ def test_create_task_returns_500_and_marks_failed_when_queueing_fails(
     assert len(tasks) == 1
     assert tasks[0]["status"] == "failed"
     assert tasks[0]["error_message"] == "Redis unavailable"
+

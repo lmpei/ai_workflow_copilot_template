@@ -19,26 +19,28 @@ surface.
 
 ## Target Scenario Modules
 
+These are reusable scenario modules on one shared platform core, not three separate platforms.
+
 ### Job Assistant
 
-- JD parsing
-- Resume matching
-- Gap analysis
-- Application tracking
+- Work object: hiring materials such as job descriptions, resumes, and fit criteria
+- Primary output: structured job summaries, match assessments, and next-step recommendations
+- Core capabilities: structured extraction, resume matching, gap analysis, application workflow support
+- Not responsible for: support-case handling, knowledge-base reply generation, broad research report synthesis
 
 ### Support Copilot
 
-- Knowledge-base Q&A
-- Ticket classification
-- Reply drafting
-- Escalation guidance
+- Work object: support cases, tickets, and knowledge-base context
+- Primary output: grounded case summaries, reply drafts, and escalation guidance
+- Core capabilities: knowledge-base Q&A, ticket classification, reply drafting, escalation guidance
+- Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
 
 ### Research Assistant
 
-- Document retrieval
-- Multi-document summarization
-- Viewpoint comparison
-- Report generation
+- Work object: workspace-scoped document sets, evidence, and open research questions
+- Primary output: evidence-backed synthesis and workspace reports
+- Core capabilities: grounded retrieval, multi-document summarization, viewpoint comparison, report generation
+- Not responsible for: ticket triage, reply drafting, candidate-to-role matching
 
 ## Platform Capabilities
 

@@ -83,7 +83,7 @@ class WorkspaceResponse(BaseModel):
             id=workspace.id,
             owner_id=workspace.owner_id,
             name=workspace.name,
-            type=workspace.type,
+            type=workspace.module_type,
             module_type=workspace.module_type,
             description=workspace.description,
             module_config_json=workspace.module_config_json,

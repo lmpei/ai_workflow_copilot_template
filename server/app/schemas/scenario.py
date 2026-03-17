@@ -60,6 +60,57 @@ DEFAULT_MODULE_CONFIGS: dict[str, dict[str, object]] = {
     },
 }
 
+SCENARIO_MODULE_DEFINITIONS: dict[str, dict[str, object]] = {
+    MODULE_TYPE_RESEARCH: {
+        "title": "Research Assistant",
+        "work_object": "Workspace-scoped document sets, evidence, and open research questions.",
+        "primary_output": "Evidence-backed synthesis and workspace reports.",
+        "core_capabilities": [
+            "grounded retrieval",
+            "multi-document summarization",
+            "viewpoint comparison",
+            "report generation",
+        ],
+        "not_responsible_for": [
+            "ticket triage",
+            "reply drafting",
+            "candidate-to-role matching",
+        ],
+    },
+    MODULE_TYPE_SUPPORT: {
+        "title": "Support Copilot",
+        "work_object": "Support cases, tickets, and knowledge-base context.",
+        "primary_output": "Grounded case summaries, reply drafts, and escalation guidance.",
+        "core_capabilities": [
+            "knowledge-base Q&A",
+            "ticket classification",
+            "reply drafting",
+            "escalation guidance",
+        ],
+        "not_responsible_for": [
+            "long-form research synthesis",
+            "multi-document comparison across a broad corpus",
+            "hiring workflow evaluation",
+        ],
+    },
+    MODULE_TYPE_JOB: {
+        "title": "Job Assistant",
+        "work_object": "Hiring materials such as job descriptions, resumes, and fit criteria.",
+        "primary_output": "Structured job summaries, match assessments, and next-step recommendations.",
+        "core_capabilities": [
+            "structured extraction",
+            "resume matching",
+            "gap analysis",
+            "application workflow support",
+        ],
+        "not_responsible_for": [
+            "support-case handling",
+            "knowledge-base reply generation",
+            "broad research report synthesis",
+        ],
+    },
+}
+
 
 class ScenarioEvidenceItem(BaseModel):
     kind: str = "document_chunk"
@@ -88,6 +139,12 @@ def get_default_module_config(module_type: str) -> dict[str, object]:
     if not is_supported_module_type(module_type):
         raise ValueError(f"Unsupported module type: {module_type}")
     return deepcopy(DEFAULT_MODULE_CONFIGS[module_type])
+
+
+def get_scenario_module_definition(module_type: str) -> dict[str, object]:
+    if not is_supported_module_type(module_type):
+        raise ValueError(f"Unsupported module type: {module_type}")
+    return deepcopy(SCENARIO_MODULE_DEFINITIONS[module_type])
 
 
 def get_supported_scenario_task_types(module_type: str) -> tuple[str, ...]:

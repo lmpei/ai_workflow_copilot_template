@@ -76,12 +76,12 @@ def test_workspace_list_is_scoped_to_membership(client: TestClient) -> None:
 
     first_workspace = client.post(
         "/api/v1/workspaces",
-        json={"name": "Research A", "type": "research"},
+        json={"name": "Research A", "module_type": "research"},
         headers=owner_headers,
     )
     second_workspace = client.post(
         "/api/v1/workspaces",
-        json={"name": "Research B", "type": "research"},
+        json={"name": "Research B", "module_type": "research"},
         headers=owner_headers,
     )
     assert first_workspace.status_code == 201
@@ -106,7 +106,7 @@ def test_workspace_access_returns_not_found_for_non_members(client: TestClient) 
 
     create_response = client.post(
         "/api/v1/workspaces",
-        json={"name": "Research Demo", "type": "research"},
+        json={"name": "Research Demo", "module_type": "research"},
         headers=owner_headers,
     )
     assert create_response.status_code == 201
@@ -150,6 +150,31 @@ def test_workspace_module_contract_can_be_switched_with_shared_defaults(client: 
         "reply_draft",
     ]
     assert updated["module_config_json"]["result_type"] == "support_case_summary"
+
+
+def test_workspace_update_accepts_deprecated_type_alias(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    create_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Research Demo", "module_type": "research"},
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    workspace_id = create_response.json()["id"]
+
+    patch_response = client.patch(
+        f"/api/v1/workspaces/{workspace_id}",
+        json={"type": "job"},
+        headers=headers,
+    )
+    assert patch_response.status_code == 200
+
+    updated = patch_response.json()
+    assert updated["type"] == "job"
+    assert updated["module_type"] == "job"
+    assert updated["module_config_json"]["result_type"] == "job_match_summary"
 
 
 def test_workspace_rejects_unsupported_module_type(client: TestClient) -> None:

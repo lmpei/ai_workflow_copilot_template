@@ -1,4 +1,4 @@
-﻿from uuid import uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -38,7 +38,7 @@ def _create_runtime_fixture(
         name="Phase 3 Agent",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 3 Agent Workspace", type=workspace_type),
+        WorkspaceCreate(name="Phase 3 Agent Workspace", module_type=workspace_type),
         owner_id=user.id,
     )
     task = task_repository.create_task(
@@ -398,3 +398,4 @@ def test_workspace_job_agent_rejects_invalid_module_task_combination() -> None:
             user_id=user_id,
             target_role="Platform engineer",
         )
+

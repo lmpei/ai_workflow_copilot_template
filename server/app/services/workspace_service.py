@@ -17,7 +17,6 @@ def get_workspace(workspace_id: str, user_id: str) -> WorkspaceResponse | None:
 
 def create_workspace(payload: WorkspaceCreate, owner_id: str) -> WorkspaceResponse:
     module_type, module_config_json = resolve_workspace_module_contract(
-        requested_type=payload.type,
         requested_module_type=payload.module_type,
         requested_module_config_json=payload.module_config_json,
     )
@@ -47,17 +46,14 @@ def update_workspace(
     has_module_contract_update = any(
         value is not None
         for value in (
-            payload.type,
             payload.module_type,
             payload.module_config_json,
         )
     )
     if has_module_contract_update:
         module_type, module_config_json = resolve_workspace_module_contract(
-            current_type=current_workspace.type,
             current_module_type=current_workspace.module_type,
             current_module_config_json=current_workspace.module_config_json,
-            requested_type=payload.type,
             requested_module_type=payload.module_type,
             requested_module_config_json=payload.module_config_json,
         )

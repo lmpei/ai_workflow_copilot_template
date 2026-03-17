@@ -142,7 +142,7 @@ def _create_eval_run_fixture(
         name="Eval Runner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Eval Workspace", type=workspace_type),
+        WorkspaceCreate(name="Eval Workspace", module_type=workspace_type),
         owner_id=user.id,
     )
     dataset = eval_repository.create_eval_dataset(
@@ -527,3 +527,4 @@ def test_run_eval_run_worker_entrypoint_executes_eval_run(
     assert output["status"] == "completed"
     assert persisted_run is not None
     assert persisted_run.status == "completed"
+

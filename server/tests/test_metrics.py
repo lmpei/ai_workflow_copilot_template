@@ -50,7 +50,7 @@ def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[st
 def _create_workspace(client: TestClient, token: str, *, name: str = "Research Demo") -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": "research"},
+        json={"name": name, "module_type": "research"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -230,3 +230,4 @@ def test_metrics_reject_unauthorized_workspace_access(client: TestClient) -> Non
         headers=other_headers,
     )
     assert traces_forbidden_response.status_code == 404
+

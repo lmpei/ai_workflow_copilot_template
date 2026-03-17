@@ -11,11 +11,11 @@ import ResearchAssistantPanel from "../research/research-assistant-panel";
 import SupportCopilotPanel from "../support/support-copilot-panel";
 import SectionCard from "../ui/section-card";
 
-type TaskModuleSurfaceProps = {
+type TaskModulePanelProps = {
   workspaceId: string;
 };
 
-export default function TaskModuleSurface({ workspaceId }: TaskModuleSurfaceProps) {
+export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,3 +86,5 @@ export default function TaskModuleSurface({ workspaceId }: TaskModuleSurfaceProp
     </SectionCard>
   );
 }
+
+

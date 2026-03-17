@@ -1,4 +1,4 @@
-import TaskModuleSurface from "../../../../components/tasks/task-module-surface";
+﻿import TaskModulePanel from "../../../../components/tasks/task-module-panel";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspacePageProps = {
@@ -18,7 +18,8 @@ export default function WorkspaceTasksPage({ params }: WorkspacePageProps) {
         Phase 5 turns the shared task runtime into module-specific copilots, while keeping tasks,
         agents, evals, and traces on the same platform primitives.
       </p>
-      <TaskModuleSurface workspaceId={workspaceId} />
+      <TaskModulePanel workspaceId={workspaceId} />
     </main>
   );
 }
+

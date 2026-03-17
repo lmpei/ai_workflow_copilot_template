@@ -44,3 +44,4 @@ def test_resolve_scenario_eval_prompt_uses_module_specific_field() -> None:
     )
 
     assert prompt == "Customer cannot log in"
+

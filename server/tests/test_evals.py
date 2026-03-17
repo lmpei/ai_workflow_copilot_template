@@ -43,7 +43,7 @@ def _create_workspace(
 ) -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": workspace_type},
+        json={"name": name, "module_type": workspace_type},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -312,3 +312,4 @@ def test_eval_api_rejects_mismatched_scenario_config(
 
     assert response.status_code == 400
     assert "does not match workspace module" in response.json()["detail"]
+

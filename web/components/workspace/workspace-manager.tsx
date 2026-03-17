@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
 import { clearStoredSession } from "../../lib/auth";
-import { workspaceTypes, type Workspace, type WorkspaceType } from "../../lib/types";
+import { moduleTypes, type ModuleType, type Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -16,7 +16,7 @@ export default function WorkspaceManager() {
   const { session, isReady } = useAuthSession();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [name, setName] = useState("");
-  const [type, setType] = useState<WorkspaceType>("research");
+  const [moduleType, setModuleType] = useState<ModuleType>("research");
   const [description, setDescription] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,12 +56,12 @@ export default function WorkspaceManager() {
     try {
       const workspace = await createWorkspace(session.accessToken, {
         name,
-        type,
+        module_type: moduleType,
         description: description || undefined,
       });
       setWorkspaces((currentWorkspaces) => [workspace, ...currentWorkspaces]);
       setName("");
-      setType("research");
+      setModuleType("research");
       setDescription("");
       router.push(`/workspaces/${workspace.id}`);
     } catch (error) {
@@ -99,11 +99,11 @@ export default function WorkspaceManager() {
             <input onChange={(event) => setName(event.target.value)} required type="text" value={name} />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Type</span>
-            <select onChange={(event) => setType(event.target.value as WorkspaceType)} value={type}>
-              {workspaceTypes.map((workspaceType) => (
-                <option key={workspaceType} value={workspaceType}>
-                  {workspaceType}
+            <span>Module</span>
+            <select onChange={(event) => setModuleType(event.target.value as ModuleType)} value={moduleType}>
+              {moduleTypes.map((value) => (
+                <option key={value} value={value}>
+                  {value}
                 </option>
               ))}
             </select>
@@ -129,7 +129,7 @@ export default function WorkspaceManager() {
           {workspaces.map((workspace) => (
             <li key={workspace.id} style={{ marginBottom: 10 }}>
               <div>
-                <Link href={`/workspaces/${workspace.id}`}>{workspace.name}</Link> ({workspace.type})
+                <Link href={`/workspaces/${workspace.id}`}>{workspace.name}</Link>
               </div>
               <div>Active module: {workspace.module_type}</div>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -146,3 +146,5 @@ export default function WorkspaceManager() {
     </>
   );
 }
+
+

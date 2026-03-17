@@ -1,4 +1,4 @@
-﻿import ModuleHub from "../../../../components/workspace/module-hub";
+﻿import ModuleHubPanel from "../../../../components/workspace/module-hub-panel";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspaceModulesPageProps = {
@@ -14,7 +14,9 @@ export default function WorkspaceModulesPage({ params }: WorkspaceModulesPagePro
     <main>
       <h1>Workspace Modules</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <ModuleHub workspaceId={workspaceId} />
+      <ModuleHubPanel workspaceId={workspaceId} />
     </main>
   );
 }
+
+

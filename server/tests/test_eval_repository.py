@@ -40,7 +40,7 @@ def _create_workspace_fixture() -> tuple[str, str]:
         name="Phase 4 Owner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 4 Workspace", type="research"),
+        WorkspaceCreate(name="Phase 4 Workspace", module_type="research"),
         owner_id=user.id,
     )
     return user.id, workspace.id
@@ -174,4 +174,5 @@ def test_eval_results_reject_invalid_status_transitions() -> None:
 
     with pytest.raises(ValueError, match="Unsupported eval result status"):
         update_eval_result(eval_result.id, next_status="running")
+
 

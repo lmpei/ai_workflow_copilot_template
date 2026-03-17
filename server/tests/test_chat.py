@@ -111,7 +111,7 @@ def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[st
 def _create_workspace(client: TestClient, token: str, *, name: str = "Research Demo") -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": "research"},
+        json={"name": name, "module_type": "research"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -358,3 +358,4 @@ def test_chat_rejects_foreign_conversation_id(client: TestClient, monkeypatch: M
         headers=headers,
     )
     assert response.status_code == 404
+

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 from uuid import uuid4
 
 import pytest
@@ -60,7 +60,7 @@ def _create_task_fixture(
         name="Phase 3 Worker",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Phase 3 Worker Workspace", type=workspace_type),
+        WorkspaceCreate(name="Phase 3 Worker Workspace", module_type=workspace_type),
         owner_id=user.id,
     )
     if with_document:
@@ -388,6 +388,103 @@ def test_run_task_execution_rejects_invalid_job_module_task_combination() -> Non
 
 
 
+def test_run_task_execution_short_circuits_running_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?")
+    running_task = task_repository.update_task_status(task_id, next_status="running")
+
+    assert running_task is not None
+    monkeypatch.setattr(
+        task_execution_service,
+        "_execute_task_agent",
+        lambda _task: pytest.fail("running tasks should not execute again"),
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output == {
+        "task_id": task_id,
+        "task_type": "research_summary",
+        "worker": "arq",
+        "status": "running",
+        "skipped": True,
+    }
+    assert persisted_task is not None
+    assert persisted_task.status == "running"
+    assert task_repository.list_task_agent_runs(task_id) == []
+
+
+def test_run_task_execution_returns_existing_output_for_completed_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?")
+    running_task = task_repository.update_task_status(task_id, next_status="running")
+
+    assert running_task is not None
+    expected_output = {
+        "task_id": task_id,
+        "task_type": "research_summary",
+        "worker": "arq",
+        "status": "completed",
+        "agent_name": "workspace_research_agent",
+        "agent_run_id": "agent-run-1",
+        "result": {"module_type": "research"},
+    }
+    completed_task = task_repository.update_task_status(
+        task_id,
+        next_status="done",
+        output_json=expected_output,
+    )
+
+    assert completed_task is not None
+    monkeypatch.setattr(
+        task_execution_service,
+        "_execute_task_agent",
+        lambda _task: pytest.fail("completed tasks should not execute again"),
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+
+    assert output == expected_output
+    assert task_repository.list_task_agent_runs(task_id) == []
+
+
+def test_run_task_execution_short_circuits_failed_task(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?")
+    failed_task = task_repository.update_task_status(
+        task_id,
+        next_status="failed",
+        error_message="Previous worker failure",
+    )
+
+    assert failed_task is not None
+    monkeypatch.setattr(
+        task_execution_service,
+        "_execute_task_agent",
+        lambda _task: pytest.fail("failed tasks should not execute again"),
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output == {
+        "task_id": task_id,
+        "task_type": "research_summary",
+        "worker": "arq",
+        "status": "failed",
+        "skipped": True,
+        "error_message": "Previous worker failure",
+    }
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+    assert persisted_task.error_message == "Previous worker failure"
+    assert task_repository.list_task_agent_runs(task_id) == []
+
+
 def test_run_platform_task_worker_entrypoint_executes_task(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -416,3 +513,4 @@ def test_run_platform_task_worker_entrypoint_executes_task(
     assert output["result"]["module_type"] == "research"
     assert persisted_task is not None
     assert persisted_task.status == "done"
+

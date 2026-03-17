@@ -73,7 +73,7 @@ def _create_chunked_document_fixture() -> tuple[str, str]:
         name="Index Owner",
     )
     workspace = create_workspace(
-        WorkspaceCreate(name="Index Workspace", type="research"),
+        WorkspaceCreate(name="Index Workspace", module_type="research"),
         owner_id=user.id,
     )
     document = create_document(
@@ -219,3 +219,4 @@ def test_index_document_embeddings_cleans_up_upserted_vectors_when_mapping_write
     assert len(vector_store.upserts) == 1
     assert vector_store.deleted[-1]["ids"] == vector_store.upserts[0]["ids"]
     assert list_document_embeddings(document_id) == []
+

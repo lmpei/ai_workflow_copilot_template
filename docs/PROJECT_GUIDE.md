@@ -86,7 +86,7 @@ implementation aligned with the original platform vision.
 - `server/app/repositories/`
   - Persistence boundary between services and storage.
 - `server/app/workers/`
-  - Async and long-running job entry points.
+  - Real async and long-running job entry points only; placeholder helpers or draft workflows should not live here.
 - `server/app/agents/`
   - Agent runtime, tools, prompts, and orchestration logic.
 - `server/tests/`
@@ -100,6 +100,15 @@ implementation aligned with the original platform vision.
   - Reusable UI building blocks and page sections; new frontend work should default to TypeScript.
 - `web/lib/`
   - Frontend integration helpers, navigation constants, and shared client logic; new frontend work should default to TypeScript.
+
+### Frontend Naming Defaults
+
+- `*Manager`
+  - CRUD and state-orchestration containers.
+- `*Panel`
+  - Route-facing business panels rendered directly by page shells.
+- `*Placeholder`
+  - Draft or reserved UI that is not yet part of the live runtime path.
 
 ## Current Development Status
 
@@ -147,6 +156,33 @@ The repository is currently in `Phase 5: Scenario Modules`.
 - Scenario-specific eval baselines and quality summaries for research, support, and job
 - Cross-module workspace navigation and shared module entry surfaces
 - A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation/judging and `text-embedding-v4` embeddings
+
+### Scenario Module Boundaries
+
+The repository hosts one shared platform core plus three scenario modules. These modules are not separate platforms.
+They exist to exercise different AI-workflow shapes on top of the same workspace, document, task, eval, and trace
+primitives.
+
+#### Research Assistant
+
+- Work object: workspace-scoped document sets, evidence, and open research questions
+- Primary output: evidence-backed synthesis and workspace reports
+- Core capabilities: grounded retrieval, multi-document summarization, viewpoint comparison, report generation
+- Not responsible for: ticket triage, reply drafting, candidate-to-role matching
+
+#### Support Copilot
+
+- Work object: support cases, tickets, and knowledge-base context
+- Primary output: grounded case summaries, reply drafts, and escalation guidance
+- Core capabilities: knowledge-base Q&A, ticket classification, reply drafting, escalation guidance
+- Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
+
+#### Job Assistant
+
+- Work object: hiring materials such as job descriptions, resumes, and fit criteria
+- Primary output: structured job summaries, match assessments, and next-step recommendations
+- Core capabilities: structured extraction, resume matching, gap analysis, application workflow support
+- Not responsible for: support-case handling, knowledge-base reply generation, broad research report synthesis
 
 ### Not Yet Complete
 

@@ -6,23 +6,19 @@ from app.schemas.scenario import (
 
 def resolve_workspace_module_contract(
     *,
-    current_type: str | None = None,
     current_module_type: str | None = None,
     current_module_config_json: dict[str, object] | None = None,
-    requested_type: str | None = None,
     requested_module_type: str | None = None,
     requested_module_config_json: dict[str, object] | None = None,
     default_module_type: str = MODULE_TYPE_RESEARCH,
 ) -> tuple[str, dict[str, object]]:
     resolved_module_type = (
         requested_module_type
-        or requested_type
         or current_module_type
-        or current_type
         or default_module_type
     )
 
-    module_type_changed = resolved_module_type != (current_module_type or current_type)
+    module_type_changed = resolved_module_type != current_module_type
 
     if requested_module_config_json is not None:
         resolved_module_config_json = merge_module_config(

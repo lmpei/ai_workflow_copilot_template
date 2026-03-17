@@ -38,7 +38,6 @@ def get_workspace(workspace_id: str, user_id: str) -> Workspace | None:
 def create_workspace(payload: WorkspaceCreate, owner_id: str) -> Workspace:
     now = datetime.now(UTC)
     module_type, module_config_json = resolve_workspace_module_contract(
-        requested_type=payload.type,
         requested_module_type=payload.module_type,
         requested_module_config_json=payload.module_config_json,
     )
@@ -85,17 +84,14 @@ def update_workspace(workspace_id: str, user_id: str, payload: WorkspaceUpdate) 
         has_module_contract_update = any(
             value is not None
             for value in (
-                payload.type,
                 payload.module_type,
                 payload.module_config_json,
             )
         )
         if has_module_contract_update:
             module_type, module_config_json = resolve_workspace_module_contract(
-                current_type=workspace.type,
                 current_module_type=workspace.module_type,
                 current_module_config_json=workspace.module_config_json,
-                requested_type=payload.type,
                 requested_module_type=payload.module_type,
                 requested_module_config_json=payload.module_config_json,
             )
@@ -126,3 +122,5 @@ def update_workspace(workspace_id: str, user_id: str, payload: WorkspaceUpdate) 
         session.flush()
         session.refresh(workspace)
         return workspace
+
+
