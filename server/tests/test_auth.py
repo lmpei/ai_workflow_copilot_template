@@ -1,4 +1,8 @@
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
+
+from app.core.config import Settings
 
 
 def test_register_login_and_me(client: TestClient) -> None:
@@ -80,3 +84,13 @@ def test_me_rejects_invalid_or_missing_token(client: TestClient) -> None:
         headers={"Authorization": "Bearer invalid-token"},
     )
     assert invalid_token_response.status_code == 401
+
+
+@pytest.mark.parametrize("secret", ["phase1-dev-secret", "replace_me", "   "])
+def test_settings_rejects_insecure_auth_secret_key(secret: str) -> None:
+    with pytest.raises(
+        ValidationError,
+        match="AUTH_SECRET_KEY must be set to a unique non-default value",
+    ):
+        Settings(auth_secret_key=secret, _env_file=None)
+

@@ -17,6 +17,8 @@ from app.models.workspace_member import WorkspaceMember
 
 
 @dataclass(slots=True)
+
+
 class DocumentChunkCreate:
     chunk_index: int
     content: str
@@ -25,6 +27,19 @@ class DocumentChunkCreate:
 
 
 @dataclass(slots=True)
+
+
+class DocumentChunkReplace:
+    id: str
+    chunk_index: int
+    content: str
+    token_count: int = 0
+    metadata_json: dict[str, object] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+
+
 class EmbeddingMappingCreate:
     document_chunk_id: str
     vector_store_id: str
@@ -232,6 +247,82 @@ def replace_document_embeddings(
         for embedding in created_embeddings:
             session.refresh(embedding)
         return created_embeddings
+
+
+def replace_document_index(
+    document_id: str,
+    *,
+    chunks: list[DocumentChunkReplace],
+    embeddings: list[EmbeddingMappingCreate],
+    next_status: str = "indexed",
+) -> Document | None:
+    if not is_valid_document_status(next_status):
+        raise ValueError(f"Unsupported document status: {next_status}")
+
+    with session_scope() as session:
+        document = session.get(Document, document_id)
+        if document is None:
+            return None
+
+        if not can_transition_document_status(document.status, next_status):
+            raise ValueError(
+                f"Invalid document status transition: {document.status} -> {next_status}",
+            )
+
+        existing_chunk_ids = list(
+            session.scalars(
+                select(DocumentChunk.id).where(DocumentChunk.document_id == document_id),
+            ),
+        )
+        if existing_chunk_ids:
+            session.execute(
+                delete(Embedding).where(Embedding.document_chunk_id.in_(existing_chunk_ids)),
+            )
+        session.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+
+        created_chunks = [
+            DocumentChunk(
+                id=chunk.id,
+                document_id=document_id,
+                chunk_index=chunk.chunk_index,
+                content=chunk.content,
+                token_count=chunk.token_count,
+                metadata_json=chunk.metadata_json,
+            )
+            for chunk in chunks
+        ]
+        session.add_all(created_chunks)
+        session.flush()
+
+        chunk_id_set = {chunk.id for chunk in created_chunks}
+        invalid_chunk_ids = [
+            embedding.document_chunk_id
+            for embedding in embeddings
+            if embedding.document_chunk_id not in chunk_id_set
+        ]
+        if invalid_chunk_ids:
+            raise ValueError(
+                "Embedding mappings must reference replacement chunks for the document"
+            )
+
+        created_embeddings = [
+            Embedding(
+                id=str(uuid4()),
+                document_chunk_id=embedding.document_chunk_id,
+                vector_store_id=embedding.vector_store_id,
+                collection_name=embedding.collection_name,
+                embedding_model=embedding.embedding_model,
+            )
+            for embedding in embeddings
+        ]
+        session.add_all(created_embeddings)
+
+        document.status = next_status
+        document.updated_at = datetime.now(UTC)
+        session.add(document)
+        session.flush()
+        session.refresh(document)
+        return document
 
 
 def update_document_status(document_id: str, next_status: str) -> Document | None:

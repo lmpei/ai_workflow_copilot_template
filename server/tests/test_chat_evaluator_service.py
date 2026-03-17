@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from app.services import chat_evaluator_service
@@ -78,7 +80,7 @@ def test_evaluate_retrieval_chat_output_reflects_missing_sources(
     monkeypatch.setattr(
         chat_evaluator_service,
         "get_judge_scorer",
-        lambda: FakeJudgeScorer(score=0.5, reasoning="Missing citations."),
+        lambda: FakeJudgeScorer(score=0.9, reasoning="Answer is plausible but uncited."),
     )
 
     evaluation = chat_evaluator_service.evaluate_retrieval_chat_output(
@@ -128,3 +130,26 @@ def test_evaluate_retrieval_chat_output_captures_judge_failure(
     assert evaluation.judge_error == "Judge unavailable"
     assert evaluation.score == 1.0
     assert evaluation.passed is True
+
+
+def test_get_judge_scorer_uses_openai_api_key_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_settings",
+        lambda: SimpleNamespace(
+            eval_provider="openai",
+            eval_api_key="replace_me",
+            openai_api_key="openai-test-key",
+            eval_model="gpt-4o-mini",
+            eval_base_url="https://api.openai.com/v1",
+        ),
+    )
+
+    scorer = chat_evaluator_service.get_judge_scorer()
+
+    assert isinstance(scorer, chat_evaluator_service.OpenAICompatibleJudgeScorer)
+    assert scorer.api_key == "openai-test-key"
+    assert scorer.provider_name == "openai"
+

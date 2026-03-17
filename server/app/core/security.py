@@ -2,19 +2,22 @@ import base64
 import hashlib
 import hmac
 import json
-import os
 import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
+from app.core.config import get_settings
 from app.repositories import user_repository
 
 AUTH_TOKEN_URL = "/api/v1/auth/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_TOKEN_URL, auto_error=False)
-AUTH_SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "phase1-dev-secret")
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+
+
+def _get_auth_secret_key() -> str:
+    return get_settings().auth_secret_key
 
 
 def _b64url_encode(raw_bytes: bytes) -> str:
@@ -36,7 +39,7 @@ def _encode_token(payload: dict[str, str | int]) -> str:
     )
     signing_input = f"{header_segment}.{payload_segment}".encode("utf-8")
     signature = hmac.new(
-        AUTH_SECRET_KEY.encode("utf-8"),
+        _get_auth_secret_key().encode("utf-8"),
         signing_input,
         hashlib.sha256,
     ).digest()
@@ -52,7 +55,7 @@ def _decode_token(token: str) -> dict[str, str | int]:
 
     signing_input = f"{header_segment}.{payload_segment}".encode("utf-8")
     expected_signature = hmac.new(
-        AUTH_SECRET_KEY.encode("utf-8"),
+        _get_auth_secret_key().encode("utf-8"),
         signing_input,
         hashlib.sha256,
     ).digest()

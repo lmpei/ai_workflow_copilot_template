@@ -22,6 +22,13 @@ From the repository root:
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+Then edit `.env` and replace `AUTH_SECRET_KEY=replace_me` with your own unique secret.
+
+After that, start the stack:
+
+```powershell
 docker compose up --build
 ```
 

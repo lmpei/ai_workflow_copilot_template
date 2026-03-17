@@ -14,6 +14,8 @@ class ChatEvaluatorError(Exception):
 
 
 @dataclass(slots=True)
+
+
 class JudgeScoreResult:
     score: float | None
     reasoning: str | None = None
@@ -21,6 +23,8 @@ class JudgeScoreResult:
 
 
 @dataclass(slots=True)
+
+
 class ChatEvaluationResult:
     score: float
     passed: bool
@@ -41,6 +45,8 @@ class JudgeScorer(Protocol):
 
 
 @dataclass(slots=True)
+
+
 class OpenAICompatibleJudgeScorer:
     api_key: str
     model: str
@@ -114,8 +120,11 @@ def get_judge_scorer() -> JudgeScorer:
     settings = get_settings()
     if settings.eval_provider not in {"openai", "qwen"}:
         raise ChatEvaluatorError(f"Unsupported eval provider: {settings.eval_provider}")
+    api_key = settings.eval_api_key
+    if api_key == "replace_me" and settings.eval_provider == "openai":
+        api_key = settings.openai_api_key
     return OpenAICompatibleJudgeScorer(
-        api_key=settings.eval_api_key,
+        api_key=api_key,
         model=settings.eval_model,
         base_url=settings.eval_base_url,
         provider_name=settings.eval_provider,
@@ -157,6 +166,7 @@ def evaluate_retrieval_chat_output(
     passed = (
         final_score >= max(0.0, min(pass_threshold, 1.0))
         and rule_checks["answer_present"]["passed"] is True
+        and rule_checks["source_present"]["passed"] is True
     )
 
     return ChatEvaluationResult(

@@ -1,5 +1,7 @@
+import os
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +14,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/ai_workflow"
     redis_url: str = "redis://redis:6379/0"
     task_queue_name: str = "platform_tasks"
+    auth_secret_key: str
     openai_api_key: str = "replace_me"
     chat_provider: str = "qwen"
     chat_api_key: str = "replace_me"
@@ -32,6 +35,23 @@ class Settings(BaseSettings):
     default_workspace_type: str = "research"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
+
+    @field_validator("auth_secret_key")
+    @classmethod
+    def validate_auth_secret_key(cls, value: str) -> str:
+        normalized = value.strip()
+        if normalized in {"", "replace_me", "phase1-dev-secret"}:
+            raise ValueError("AUTH_SECRET_KEY must be set to a unique non-default value")
+        return normalized
+
+
+def get_database_url_from_env(*, default: str | None = None) -> str:
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return database_url
+    if default is not None:
+        return default
+    return str(Settings.model_fields["database_url"].default)
 
 
 @lru_cache

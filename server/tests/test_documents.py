@@ -23,6 +23,20 @@ class FakeEmbeddingProvider:
         return [[float(index), float(index + 1)] for index, _ in enumerate(texts)]
 
 
+class FlakyEmbeddingProvider(FakeEmbeddingProvider):
+    def __init__(self, *, fail_on_calls: set[int]) -> None:
+        super().__init__()
+        self.fail_on_calls = set(fail_on_calls)
+        self.call_count = 0
+
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        self.call_count += 1
+        self.calls.append(list(texts))
+        if self.call_count in self.fail_on_calls:
+            raise DocumentIndexingError("Failed to generate embeddings")
+        return [[float(index), float(index + 1)] for index, _ in enumerate(texts)]
+
+
 class FakeVectorStore:
     def __init__(self) -> None:
         self.deleted: list[dict[str, object]] = []
@@ -91,7 +105,7 @@ def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[st
 def _create_workspace(client: TestClient, token: str, *, name: str = "Research Demo") -> str:
     response = client.post(
         "/api/v1/workspaces",
-        json={"name": name, "type": "research"},
+        json={"name": name, "module_type": "research"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 201
@@ -163,6 +177,47 @@ def test_document_upload_list_get_and_reindex(
     assert refreshed_chunk_ids != previous_chunk_ids
     assert refreshed_vector_ids == refreshed_chunk_ids
     assert previous_vector_ids in [entry["ids"] for entry in vector_store.deleted]
+
+
+def test_reindex_failure_preserves_existing_indexed_document(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+    provider = FlakyEmbeddingProvider(fail_on_calls={2})
+    vector_store = FakeVectorStore()
+    _patch_ingest_dependencies(monkeypatch, provider=provider, vector_store=vector_store)
+
+    upload_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/documents/upload",
+        headers=headers,
+        files={"file": ("report.txt", b"phase 1 document body", "text/plain")},
+    )
+    assert upload_response.status_code == 201
+    uploaded = upload_response.json()
+
+    previous_chunk_ids = [chunk.id for chunk in list_document_chunks(uploaded["id"])]
+    previous_vector_ids = [
+        embedding.vector_store_id for embedding in list_document_embeddings(uploaded["id"])
+    ]
+    document_path = Path("storage") / uploaded["file_path"]
+    document_path.write_text("phase 2 document body", encoding="utf-8")
+
+    reindex_response = client.post(f"/api/v1/documents/{uploaded['id']}/reindex", headers=headers)
+    assert reindex_response.status_code == 500
+    assert reindex_response.json()["detail"] == "Failed to generate embeddings"
+
+    detail_response = client.get(f"/api/v1/documents/{uploaded['id']}", headers=headers)
+    assert detail_response.status_code == 200
+    assert detail_response.json()["status"] == "indexed"
+
+    assert [chunk.id for chunk in list_document_chunks(uploaded["id"])] == previous_chunk_ids
+    assert [
+        embedding.vector_store_id for embedding in list_document_embeddings(uploaded["id"])
+    ] == previous_vector_ids
+    assert previous_vector_ids not in [entry["ids"] for entry in vector_store.deleted]
 
 
 def test_document_uploads_with_same_filename_do_not_collide(
@@ -257,3 +312,4 @@ def test_document_upload_failure_marks_failed_and_returns_error(
 
     document_id = documents[0]["id"]
     assert len(list_document_embeddings(document_id)) == 0
+

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from threading import Lock
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, inspect
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
@@ -16,6 +16,8 @@ _LOCK = Lock()
 
 
 @dataclass(slots=True)
+
+
 class DatabaseConfig:
     url: str
     driver: str
@@ -59,6 +61,34 @@ def get_session_factory() -> sessionmaker[Session]:
     return _SESSION_FACTORY
 
 
+def _validate_database_schema() -> None:
+    inspector = inspect(get_engine())
+    expected_tables = set(Base.metadata.tables)
+    existing_tables = set(inspector.get_table_names())
+    missing_tables = sorted(expected_tables - existing_tables)
+    if missing_tables:
+        raise RuntimeError(
+            "Database schema is missing tables after initialization: "
+            f"{', '.join(missing_tables)}. Run `alembic upgrade head` before starting the app."
+        )
+
+    missing_columns_by_table: list[str] = []
+    for table_name, table in Base.metadata.tables.items():
+        existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
+        missing_columns = sorted(set(table.columns.keys()) - existing_columns)
+        if missing_columns:
+            missing_columns_by_table.append(
+                f"{table_name} ({', '.join(missing_columns)})"
+            )
+
+    if missing_columns_by_table:
+        raise RuntimeError(
+            "Database schema is out of date; run `alembic upgrade head` before starting the app. "
+            "Missing columns: "
+            f"{'; '.join(missing_columns_by_table)}"
+        )
+
+
 def ensure_database_ready() -> None:
     url = get_database_config().url
     if url in _INITIALIZED_URLS:
@@ -68,6 +98,7 @@ def ensure_database_ready() -> None:
         if url in _INITIALIZED_URLS:
             return
         Base.metadata.create_all(bind=get_engine())
+        _validate_database_schema()
         _INITIALIZED_URLS.add(url)
 
 

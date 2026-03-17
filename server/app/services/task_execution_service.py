@@ -2,7 +2,13 @@
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
-from app.models.task import TASK_STATUS_DONE, TASK_STATUS_FAILED, TASK_STATUS_RUNNING, Task
+from app.models.task import (
+    TASK_STATUS_DONE,
+    TASK_STATUS_FAILED,
+    TASK_STATUS_PENDING,
+    TASK_STATUS_RUNNING,
+    Task,
+)
 from app.repositories import task_repository, workspace_repository
 from app.services.agent_service import (
     AgentAccessError,
@@ -153,6 +159,22 @@ def _build_task_output(*, task: Task, execution_result: AgentExecutionResult) ->
     }
 
 
+def _build_task_state_snapshot(task: Task) -> dict[str, object]:
+    if task.status == TASK_STATUS_DONE and task.output_json:
+        return dict(task.output_json)
+
+    snapshot: dict[str, object] = {
+        "task_id": task.id,
+        "task_type": task.task_type,
+        "worker": "arq",
+        "status": task.status,
+        "skipped": True,
+    }
+    if task.error_message:
+        snapshot["error_message"] = task.error_message
+    return snapshot
+
+
 async def enqueue_task_execution(task_id: str) -> str:
     redis = await create_pool(build_redis_settings())
     job = await redis.enqueue_job(
@@ -173,6 +195,9 @@ def run_task_execution(task_id: str) -> dict[str, object]:
     task = task_repository.get_task(task_id)
     if task is None:
         raise TaskExecutionError("Task not found")
+
+    if task.status != TASK_STATUS_PENDING:
+        return _build_task_state_snapshot(task)
 
     running_task = task_repository.update_task_status(task.id, next_status=TASK_STATUS_RUNNING)
     if running_task is None:

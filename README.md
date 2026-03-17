@@ -47,17 +47,25 @@ document ownership, folder responsibilities, and current project stage.
 
 Recommended startup path for all platforms:
 
+1. Copy the example environment file.
+
 PowerShell on Windows:
 
 ```powershell
 Copy-Item .env.example .env
-docker compose up --build
 ```
 
 Unix shell:
 
 ```bash
 cp .env.example .env
+```
+
+2. Edit `.env` and replace `AUTH_SECRET_KEY=replace_me` with your own unique secret.
+
+3. Start the stack:
+
+```bash
 docker compose up --build
 ```
 
