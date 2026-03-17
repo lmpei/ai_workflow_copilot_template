@@ -87,9 +87,9 @@ see `docs/development/WINDOWS_SETUP.md`.
 
 ## Current Phase
 
-The repository is currently in `Phase 4: Evaluation + Observability`.
+The repository is currently in `Phase 5: Scenario Modules`.
 
-Phase 4 is now implemented with:
+Phase 5 is now implemented with:
 
 - Auth boundary and browser session flow
 - PostgreSQL-backed workspace persistence
@@ -101,7 +101,12 @@ Phase 4 is now implemented with:
 - PostgreSQL-backed task, agent run, tool call, eval dataset, eval run, and eval result persistence
 - A LangGraph-powered `workspace_research_agent` with a static Python tool registry
 - A chat evaluator framework with rule checks and an independently configured LLM judge path
-- Frontend support for task creation, task status polling, eval dataset creation, eval run inspection, recent trace review, and analytics summaries
+- Research Assistant backend + frontend MVP on top of the shared platform primitives
+- Support Copilot skeleton on top of the shared platform primitives
+- Job Assistant skeleton on top of the shared platform primitives
+- Scenario-aware eval datasets, eval runs, and quality baselines for research, support, and job
+- Cross-module workspace navigation that keeps module discovery inside shared workspace scope
+- Frontend support for task creation, task status polling, eval dataset creation, eval run inspection, recent trace review, analytics summaries, and scenario module entry surfaces
 - A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and judge flows and `text-embedding-v4` for embeddings
 
 ## Current Demo Path
@@ -114,20 +119,21 @@ You can now demo the current platform in this order:
 4. Confirm the document reaches `indexed` status
 5. Open the workspace chat page and submit a prompt against indexed content
 6. Review grounded citations and trace identifiers in chat responses
-7. Open the workspace tasks page and create a `research_summary` or `workspace_report` task
-8. Watch the task move through `pending -> running -> done/failed` and inspect the final result
-9. Open the workspace analytics page and create an eval dataset with one or more retrieval-chat questions
-10. Launch an eval run, wait for the run to complete, and inspect per-case scores and pass/fail outcomes
-11. Review recent traces and workspace analytics summaries for latency, cost, retrieval, task, and eval signals
+7. Open the new workspace `Modules` page and inspect the available Research, Support, and Job module entry points
+8. In a research workspace, open the tasks page and create a `research_summary` or `workspace_report` task
+9. Watch the task move through `pending -> running -> done/failed` and inspect the structured research result
+10. Open the workspace analytics page and create an eval dataset with one or more scenario-specific retrieval prompts
+11. Launch an eval run, wait for the run to complete, and inspect per-case scores, pass/fail outcomes, and scenario baselines
+12. Review recent traces and workspace analytics summaries for latency, cost, retrieval, task, and eval signals
 
 ## Not Implemented Yet
 
-The following capabilities remain out of scope for Phase 4:
+The following capabilities remain out of scope for Phase 5:
 
 - Durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - Human-in-the-loop approvals, retries, and advanced job scheduling
 - External observability stacks, alerting, and complex BI-style dashboards
-- Scenario-specific job, support, and research modules
+- Deeper module-specific product workflows beyond the current Research MVP and Support/Job skeletons
 
 ## Verification
 

@@ -105,7 +105,7 @@ surface.
 
 ## Current Status
 
-The repository is currently in `Phase 4: Evaluation + Observability`.
+The repository is currently in `Phase 5: Scenario Modules`.
 
 The current implemented platform increment includes:
 
@@ -119,7 +119,12 @@ The current implemented platform increment includes:
 - persisted tasks, agent runs, tool calls, eval datasets, eval runs, and eval results
 - a LangGraph-powered `workspace_research_agent` and static tool registry
 - a chat evaluator framework that combines rule checks with an independently configured LLM judge path
-- a frontend demo path that connects auth -> workspace -> indexed documents -> grounded chat -> tasks -> eval runs -> observability review
+- workspace module contracts for research, support, and job
+- a Research Assistant MVP that produces structured scenario results through the shared task / agent / tool runtime
+- Support Copilot and Job Assistant skeletons on the same shared platform primitives
+- scenario-specific eval baselines and quality summaries for research, support, and job
+- cross-module workspace navigation and entry surfaces
+- a frontend demo path that connects auth -> workspace -> indexed documents -> module discovery -> grounded chat -> scenario tasks -> scenario evals -> observability review
 - a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` for chat/judge flows and `text-embedding-v4` for embeddings
 
 The repository does not yet implement:
@@ -127,4 +132,4 @@ The repository does not yet implement:
 - durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
-- scenario-specific job, support, or research modules
+- deeper scenario-specific product workflows beyond the current Research MVP and Support/Job skeletons

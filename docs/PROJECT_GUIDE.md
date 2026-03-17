@@ -103,16 +103,17 @@ implementation aligned with the original platform vision.
 
 ## Current Development Status
 
-The repository is currently in `Phase 4: Evaluation + Observability`.
+The repository is currently in `Phase 5: Scenario Modules`.
 
-### Phase 4 Requirements
+### Phase 5 Requirements
 
 - Auth, workspaces, documents, chat, tasks, evals, and analytics continue to operate as one shared platform core
 - Redis-backed queueing and worker execution are real platform capabilities for both tasks and eval runs
 - Trace, cost, latency, and quality signals are persisted alongside operational state in PostgreSQL
 - Evaluation datasets, eval runs, and eval results are platform primitives rather than scenario-specific add-ons
+- Scenario modules reuse the same shared platform primitives rather than bypassing them
+- At least one scenario module reaches a real MVP while the remaining modules stay visible as lighter skeletons
 - Local run, local verification, and CI paths remain documented and usable
-- Phase 5 scenario-module work stays clearly marked as future work
 
 ### Already Established
 
@@ -138,6 +139,13 @@ The repository is currently in `Phase 4: Evaluation + Observability`.
 - Chat evaluator framework with rule checks plus an independently configured LLM judge path
 - Analytics and observability APIs for traces, eval results, and workspace summaries
 - Frontend Phase 4 flow for auth -> workspace -> indexed documents -> grounded chat -> tasks -> eval runs -> observability review
+- Workspace module contracts for research, support, and job
+- Research Assistant backend MVP with structured results on shared task / agent / tool primitives
+- Research Assistant frontend surface for module-scoped task creation and result review
+- Support Copilot skeleton on shared task / agent / tool primitives
+- Job Assistant skeleton on shared task / agent / tool primitives
+- Scenario-specific eval baselines and quality summaries for research, support, and job
+- Cross-module workspace navigation and shared module entry surfaces
 - A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation/judging and `text-embedding-v4` embeddings
 
 ### Not Yet Complete
@@ -145,7 +153,7 @@ The repository is currently in `Phase 4: Evaluation + Observability`.
 - Durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - Human approval flows, retries, and advanced scheduling
 - External observability stacks, alerting, and richer BI-style analysis beyond current in-product summaries
-- Scenario-module business logic for job, support, and research
+- Deeper productization of job, support, and research beyond the current Research MVP plus Support/Job skeletons
 
 ## Alignment Rules
 
