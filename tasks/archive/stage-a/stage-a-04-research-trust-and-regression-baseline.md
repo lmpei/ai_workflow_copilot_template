@@ -101,5 +101,22 @@ Disallowed files:
 
 ## Execution Status
 
-- Status: planned
-- Notes: this is the required Platform Reliability companion task for the first Stage A Research wave
+- Status: completed
+- Notes:
+  - added deterministic Stage A trust metadata to Research task results, including baseline version, checks, gaps, and regression pass state
+  - added `research_task` traces for successful and failed Research task executions
+  - added structured failed-task output snapshots for Research execution failures
+
+## Result
+
+- Research task results now expose a minimum trust baseline that distinguishes grounded matches, document-only context,
+  and missing-document cases without hiding gaps.
+- Research task traces now capture the request, trust summary, and failure shape so Stage A output quality is easier to
+  inspect after execution.
+- Failed Research tasks now persist structured error snapshots instead of relying only on a plain `error_message`.
+
+## Verification Result
+
+- `python -m compileall server/app server/tests`
+- `cd server`
+- `..\.venv\Scripts\python.exe -m pytest tests`

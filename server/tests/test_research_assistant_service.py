@@ -88,6 +88,10 @@ def test_build_research_task_result_includes_structured_contract_and_sections() 
     assert result["sections"]["evidence_overview"][0].startswith("apollo.md:")
     assert result["sections"]["open_questions"] == ["What evidence is strongest?"]
     assert result["metadata"]["focus_area_count"] == 1
+    assert result["metadata"]["evidence_status"] == "grounded_matches"
+    assert result["metadata"]["regression_passed"] is True
+    assert result["metadata"]["trust"]["baseline_version"] == "stage_a_research_v1"
+    assert result["metadata"]["trust"]["checks"]["grounded_findings_when_matches_exist"] is True
 
 
 def test_build_research_task_result_builds_formal_report_for_workspace_report() -> None:
@@ -134,6 +138,8 @@ def test_build_research_task_result_builds_formal_report_for_workspace_report() 
     assert report["evidence_ref_ids"] == ["chunk-1"]
     assert report["open_questions"] == ["Which risk needs more support?"]
     assert result["metadata"]["report_ready"] is True
+    assert result["metadata"]["trust"]["report_requested"] is True
+    assert result["metadata"]["trust"]["report_section_count"] == 4
 
 
 def test_build_research_task_result_keeps_report_coherent_when_matches_are_missing() -> None:
@@ -170,3 +176,6 @@ def test_build_research_task_result_keeps_report_coherent_when_matches_are_missi
     ]
     assert report["recommended_next_steps"][0].startswith("Add a clearer research goal")
     assert result["metadata"]["report_ready"] is True
+    assert result["metadata"]["evidence_status"] == "documents_only"
+    assert result["metadata"]["trust_gaps"] == ["no_grounded_matches"]
+    assert result["metadata"]["trust"]["regression_passed"] is True

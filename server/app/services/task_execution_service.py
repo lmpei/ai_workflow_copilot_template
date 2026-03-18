@@ -1,5 +1,7 @@
 ﻿from arq import create_pool
 
+from datetime import UTC, datetime
+
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
 from app.models.task import (
@@ -10,6 +12,7 @@ from app.models.task import (
     Task,
 )
 from app.repositories import task_repository, workspace_repository
+from app.services import trace_service
 from app.services.agent_service import (
     AgentAccessError,
     AgentExecutionResult,
@@ -48,6 +51,7 @@ JOB_TASK_TYPES = {
     "jd_summary",
     "resume_match",
 }
+RESEARCH_TASK_TRACE_TYPE = "research_task"
 SUPPORTED_EXECUTION_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_TASK_TYPES
 
 
@@ -171,8 +175,11 @@ def _build_task_output(*, task: Task, execution_result: AgentExecutionResult) ->
 
 
 def _build_task_state_snapshot(task: Task) -> dict[str, object]:
-    if task.status == TASK_STATUS_DONE and task.output_json:
-        return dict(task.output_json)
+    if task.output_json:
+        snapshot = dict(task.output_json)
+        if task.error_message and "error_message" not in snapshot:
+            snapshot["error_message"] = task.error_message
+        return snapshot
 
     snapshot: dict[str, object] = {
         "task_id": task.id,
@@ -184,6 +191,161 @@ def _build_task_state_snapshot(task: Task) -> dict[str, object]:
     if task.error_message:
         snapshot["error_message"] = task.error_message
     return snapshot
+
+
+def _build_research_trace_request(task: Task) -> dict[str, object]:
+    request_json: dict[str, object] = {
+        "task_type": task.task_type,
+        "input": dict(task.input_json),
+    }
+    try:
+        research_input = resolve_research_task_input(
+            task_type=task.task_type,
+            input_json=task.input_json,
+        )
+    except ResearchAssistantContractError:
+        return request_json
+
+    request_json["normalized_input"] = research_input.model_dump(exclude_none=True)
+    request_json["prompt"] = build_research_task_search_query(
+        task_type=task.task_type,
+        research_input=research_input,
+    )
+    return request_json
+
+
+def _classify_task_failure(error: Exception) -> dict[str, object]:
+    if isinstance(error, (ResearchAssistantContractError, SupportCopilotContractError, JobAssistantContractError)):
+        return {
+            "type": "contract_error",
+            "stage": "validation",
+            "retryable": False,
+        }
+    if isinstance(error, AgentAccessError):
+        return {
+            "type": "agent_access_error",
+            "stage": "agent_access",
+            "retryable": False,
+        }
+    if isinstance(error, AgentRuntimeError):
+        return {
+            "type": "agent_runtime_error",
+            "stage": "agent_execution",
+            "retryable": False,
+        }
+    if isinstance(error, TaskExecutionError):
+        if isinstance(
+            error.__cause__,
+            (ResearchAssistantContractError, SupportCopilotContractError, JobAssistantContractError),
+        ):
+            return {
+                "type": "contract_error",
+                "stage": "validation",
+                "retryable": False,
+            }
+        return {
+            "type": "task_execution_error",
+            "stage": "task_execution",
+            "retryable": False,
+        }
+    return {
+        "type": "unexpected_error",
+        "stage": "unexpected",
+        "retryable": False,
+    }
+
+
+def _record_research_task_trace(
+    *,
+    task: Task,
+    request_json: dict[str, object],
+    response_json: dict[str, object],
+    metadata_json: dict[str, object],
+    latency_ms: int,
+    error_message: str | None = None,
+    agent_run_id: str | None = None,
+) -> str | None:
+    try:
+        return trace_service.record_trace(
+            workspace_id=task.workspace_id,
+            task_id=task.id,
+            agent_run_id=agent_run_id,
+            trace_type=RESEARCH_TASK_TRACE_TYPE,
+            request_json=request_json,
+            response_json=response_json,
+            metadata_json=metadata_json,
+            error_message=error_message,
+            latency_ms=latency_ms,
+        )
+    except Exception:
+        return None
+
+
+def _build_failed_task_output(
+    *,
+    task: Task,
+    error_message: str,
+    failure: dict[str, object],
+    trace_id: str | None,
+) -> dict[str, object]:
+    output: dict[str, object] = {
+        "task_id": task.id,
+        "task_type": task.task_type,
+        "worker": "arq",
+        "status": "failed",
+        "error": {
+            "message": error_message,
+            **failure,
+        },
+    }
+    if trace_id:
+        output["trace_id"] = trace_id
+    return output
+
+
+def _mark_task_failed(
+    *,
+    task: Task,
+    error: Exception,
+    research_trace_request: dict[str, object] | None,
+    started_at: datetime,
+) -> Task | None:
+    failure = _classify_task_failure(error)
+    trace_id: str | None = None
+    output_json: dict[str, object] | None = None
+
+    if research_trace_request is not None:
+        latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
+        trace_id = _record_research_task_trace(
+            task=task,
+            request_json=research_trace_request,
+            response_json={
+                "status": "failed",
+                "error": str(error),
+                "failure": failure,
+            },
+            metadata_json={
+                "module_type": "research",
+                "task_type": task.task_type,
+                "failure": failure,
+            },
+            latency_ms=latency_ms,
+            error_message=str(error),
+            agent_run_id=getattr(error, "agent_run_id", None),
+        )
+        output_json = _build_failed_task_output(
+            task=task,
+            error_message=str(error),
+            failure=failure,
+            trace_id=trace_id,
+        )
+
+    return task_repository.update_task_status(
+        task.id,
+        next_status=TASK_STATUS_FAILED,
+        error_message=str(error),
+        output_json=output_json,
+    )
 
 
 async def enqueue_task_execution(task_id: str) -> str:
@@ -214,9 +376,52 @@ def run_task_execution(task_id: str) -> dict[str, object]:
     if running_task is None:
         raise TaskExecutionError("Task not found")
 
+    started_at = datetime.now(UTC)
+    research_trace_request = (
+        _build_research_trace_request(running_task)
+        if running_task.task_type in RESEARCH_TASK_TYPES
+        else None
+    )
+
     try:
         execution_result = _execute_task_agent(running_task)
         output = _build_task_output(task=running_task, execution_result=execution_result)
+        if research_trace_request is not None:
+            latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
+            result_metadata = execution_result.final_output.get("metadata", {})
+            if not isinstance(result_metadata, dict):
+                result_metadata = {}
+            trust_metadata = result_metadata.get("trust", {})
+            if not isinstance(trust_metadata, dict):
+                trust_metadata = {}
+
+            trace_id = _record_research_task_trace(
+                task=running_task,
+                request_json=research_trace_request,
+                response_json={
+                    "status": "completed",
+                    "title": execution_result.final_output.get("title"),
+                    "summary": execution_result.final_output.get("summary"),
+                    "report_ready": result_metadata.get("report_ready"),
+                    "evidence_status": result_metadata.get("evidence_status"),
+                    "trust": trust_metadata,
+                    "error": None,
+                },
+                metadata_json={
+                    "module_type": execution_result.final_output.get("module_type", "research"),
+                    "task_type": execution_result.final_output.get("task_type", running_task.task_type),
+                    "deliverable": result_metadata.get("deliverable"),
+                    "requested_sections": result_metadata.get("requested_sections", []),
+                    "report_ready": result_metadata.get("report_ready"),
+                    "evidence_status": result_metadata.get("evidence_status"),
+                    "trust": trust_metadata,
+                },
+                latency_ms=latency_ms,
+                agent_run_id=execution_result.agent_run_id,
+            )
+            if trace_id is not None:
+                output["trace_id"] = trace_id
+
         completed_task = task_repository.update_task_status(
             task.id,
             next_status=TASK_STATUS_DONE,
@@ -226,10 +431,11 @@ def run_task_execution(task_id: str) -> dict[str, object]:
             raise TaskExecutionError("Task not found")
         return output
     except TaskExecutionError as error:
-        failed_task = task_repository.update_task_status(
-            task.id,
-            next_status=TASK_STATUS_FAILED,
-            error_message=str(error),
+        failed_task = _mark_task_failed(
+            task=running_task,
+            error=error,
+            research_trace_request=research_trace_request,
+            started_at=started_at,
         )
         if failed_task is None:
             raise TaskExecutionError("Task not found") from error
@@ -241,19 +447,21 @@ def run_task_execution(task_id: str) -> dict[str, object]:
         SupportCopilotContractError,
         JobAssistantContractError,
     ) as error:
-        failed_task = task_repository.update_task_status(
-            task.id,
-            next_status=TASK_STATUS_FAILED,
-            error_message=str(error),
+        failed_task = _mark_task_failed(
+            task=running_task,
+            error=error,
+            research_trace_request=research_trace_request,
+            started_at=started_at,
         )
         if failed_task is None:
             raise TaskExecutionError("Task not found") from error
         raise TaskExecutionError("Task execution failed") from error
     except Exception as error:
-        failed_task = task_repository.update_task_status(
-            task.id,
-            next_status=TASK_STATUS_FAILED,
-            error_message=str(error),
+        failed_task = _mark_task_failed(
+            task=running_task,
+            error=error,
+            research_trace_request=research_trace_request,
+            started_at=started_at,
         )
         if failed_task is None:
             raise TaskExecutionError("Task not found") from error

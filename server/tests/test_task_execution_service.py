@@ -5,7 +5,7 @@ import pytest
 
 from app.core.database import reset_database_for_tests
 from app.models.document import DOCUMENT_STATUS_INDEXED
-from app.repositories import document_repository, task_repository
+from app.repositories import document_repository, task_repository, trace_repository
 from app.repositories.user_repository import create_user
 from app.repositories.workspace_repository import create_workspace
 from app.schemas.workspace import WorkspaceCreate
@@ -146,6 +146,7 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert output["result"]["sections"]["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
     assert output["result"]["artifacts"]["matches"][0]["document_title"] == "demo.txt"
     assert output["result"]["evidence"][0]["metadata"]["document_id"] == "doc-1"
+    assert output["trace_id"]
     assert persisted_task is not None
     assert persisted_task.status == "done"
     assert persisted_task.output_json == output
@@ -160,6 +161,13 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
         "search_documents",
     ]
     assert all(tool_call.status == "completed" for tool_call in tool_calls)
+
+    traces = trace_repository.list_traces_for_task(task_id)
+    assert len(traces) == 1
+    assert traces[0].trace_type == "research_task"
+    assert traces[0].request_json["prompt"] == "Who owns the project?"
+    assert traces[0].response_json["status"] == "completed"
+    assert traces[0].metadata_json["trust"]["regression_passed"] is True
 
 
 
@@ -184,6 +192,7 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["summary"] == "No workspace documents are available for analysis."
+    assert output["trace_id"]
     assert persisted_task is not None
     assert persisted_task.status == "done"
 
@@ -191,6 +200,11 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     assert len(agent_runs) == 1
     tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
     assert [tool_call.tool_name for tool_call in tool_calls] == ["list_workspace_documents"]
+
+    traces = trace_repository.list_traces_for_task(task_id)
+    assert len(traces) == 1
+    assert traces[0].response_json["evidence_status"] == "no_documents"
+    assert traces[0].metadata_json["trust"]["gaps"] == ["no_documents_available"]
 
 
 
@@ -398,10 +412,18 @@ def test_run_task_execution_marks_task_failed_when_agent_execution_raises(
     assert persisted_task is not None
     assert persisted_task.status == "failed"
     assert persisted_task.error_message == "Chroma unavailable"
+    assert persisted_task.output_json["error"]["type"] == "agent_runtime_error"
+    assert persisted_task.output_json["trace_id"]
 
     agent_runs = task_repository.list_task_agent_runs(task_id)
     assert len(agent_runs) == 1
     assert agent_runs[0].status == "failed"
+
+    traces = trace_repository.list_traces_for_task(task_id)
+    assert len(traces) == 1
+    assert traces[0].trace_type == "research_task"
+    assert traces[0].error_message == "Chroma unavailable"
+    assert traces[0].metadata_json["failure"]["type"] == "agent_runtime_error"
 
 
 
@@ -414,6 +436,7 @@ def test_run_task_execution_rejects_invalid_module_task_combination() -> None:
     persisted_task = task_repository.get_task(task_id)
     assert persisted_task is not None
     assert persisted_task.status == "failed"
+    assert persisted_task.output_json["error"]["type"] == "contract_error"
 
 
 

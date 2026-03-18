@@ -146,6 +146,14 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `evidence_ref_ids`
 - the formal report surface is evidence-led; report sections should preserve evidence reference IDs so findings stay
   grounded in workspace context
+- canonical Research result metadata now also carries a Stage A trust baseline with:
+  - `baseline_version`
+  - `evidence_status`
+  - deterministic `checks`
+  - explicit `gaps`
+  - `regression_passed`
+- Research task execution now records `research_task` traces for successful and failed runs so trust signals and failure
+  shapes remain inspectable after the task completes
 
 ## Scenario Module Boundaries
 

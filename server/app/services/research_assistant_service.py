@@ -36,6 +36,7 @@ _DEFAULT_RESEARCH_REQUESTED_SECTIONS: dict[ResearchTaskType, list[ResearchReques
     "research_summary": ["summary", "findings", "evidence", "next_steps"],
     "workspace_report": ["summary", "findings", "evidence", "open_questions", "next_steps"],
 }
+RESEARCH_TRUST_BASELINE_VERSION = "stage_a_research_v1"
 
 
 class ResearchAssistantContractError(ValueError):
@@ -429,6 +430,64 @@ def _build_formal_research_report(
     )
 
 
+def _build_research_trust_metadata(
+    *,
+    task_type: ResearchTaskType,
+    research_input: ResearchTaskInput,
+    sections: ResearchResultSections,
+    report: ResearchFormalReport | None,
+    document_models: list[ToolDocumentSummary],
+    match_models: list[SearchDocumentMatch],
+    evidence: list[ScenarioEvidenceItem],
+) -> dict[str, object]:
+    report_requested = _should_build_formal_report(
+        task_type=task_type,
+        research_input=research_input,
+    )
+    grounded_finding_count = sum(1 for finding in sections.findings if finding.evidence_ref_ids)
+
+    if match_models:
+        evidence_status = "grounded_matches"
+    elif document_models:
+        evidence_status = "documents_only"
+    else:
+        evidence_status = "no_documents"
+
+    gaps: list[str] = []
+    if not document_models:
+        gaps.append("no_documents_available")
+    elif not match_models:
+        gaps.append("no_grounded_matches")
+
+    checks = {
+        "summary_present": bool(sections.summary.strip()),
+        "findings_or_gap_documented": bool(sections.findings) or bool(gaps),
+        "evidence_or_gap_documented": bool(evidence) or bool(gaps),
+        "grounded_findings_when_matches_exist": (len(match_models) == 0) or grounded_finding_count > 0,
+        "report_present_if_requested": (not report_requested) or report is not None,
+        "report_summary_present_if_requested": (
+            (not report_requested)
+            or (report is not None and bool(report.executive_summary.strip()))
+        ),
+        "next_steps_present": len(sections.next_steps) > 0,
+    }
+
+    return {
+        "baseline_version": RESEARCH_TRUST_BASELINE_VERSION,
+        "evidence_status": evidence_status,
+        "document_count": len(document_models),
+        "match_count": len(match_models),
+        "evidence_count": len(evidence),
+        "finding_count": len(sections.findings),
+        "grounded_finding_count": grounded_finding_count,
+        "report_requested": report_requested,
+        "report_section_count": len(report.sections) if report is not None else 0,
+        "checks": checks,
+        "gaps": gaps,
+        "regression_passed": all(checks.values()),
+    }
+
+
 def build_research_task_result(
     *,
     task_type: ResearchTaskType,
@@ -466,6 +525,15 @@ def build_research_task_result(
         sections=sections,
         evidence=evidence,
     )
+    trust_metadata = _build_research_trust_metadata(
+        task_type=task_type,
+        research_input=resolved_input,
+        sections=sections,
+        report=report,
+        document_models=document_models,
+        match_models=match_models,
+        evidence=evidence,
+    )
 
     artifacts = ResearchArtifacts(
         document_count=len(document_models),
@@ -492,7 +560,11 @@ def build_research_task_result(
             "key_question_count": len(resolved_input.key_questions),
             "document_count": len(document_models),
             "match_count": len(match_models),
+            "evidence_status": trust_metadata["evidence_status"],
             "report_ready": report is not None,
+            "regression_passed": trust_metadata["regression_passed"],
+            "trust_gaps": list(trust_metadata["gaps"]),
+            "trust": trust_metadata,
         },
     )
     return result.model_dump(exclude_none=True)

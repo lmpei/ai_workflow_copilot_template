@@ -24,12 +24,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- File: `tasks/stage-a-04-research-trust-and-regression-baseline.md`
+- File: `tasks/stage-a-05-delivery-and-operations-baseline.md`
 - Status: ready to start
 
 ## Verification Status
 
-- Summary: Stage A task wave one is active, `stage-a-02` and `stage-a-03` are complete and archived, the Research workflow now includes a formal report surface, and the next task is `stage-a-04`
+- Summary: Stage A task wave one is active, `stage-a-02`, `stage-a-03`, and `stage-a-04` are complete and archived, Research now emits trust metadata and task traces, and the next task is `stage-a-05`
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -49,9 +49,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. start `tasks/stage-a-04-research-trust-and-regression-baseline.md`
-2. execute the required parallel baseline task `stage-a-05-delivery-and-operations-baseline.md`
-3. define the second Stage A wave after the first wave completes
+1. start `tasks/stage-a-05-delivery-and-operations-baseline.md`
+2. define the second Stage A wave after the first wave completes
+3. decide whether the next Research-focused work should deepen report iteration or broaden Stage A eval coverage
 
 ## Parked / Later
 
@@ -60,7 +60,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
+- `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
 
 ## Recent Decisions
 

@@ -130,7 +130,7 @@ Stage A is successful when:
 
 ## Next Step
 
-Continue the first Stage A task wave with `tasks/stage-a-04-research-trust-and-regression-baseline.md`.
+Continue the first Stage A task wave with `tasks/stage-a-05-delivery-and-operations-baseline.md`.
 
 ## Initial Task Wave
 
@@ -138,7 +138,7 @@ The first executable Stage A wave is:
 
 - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
 - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
-- `tasks/stage-a-04-research-trust-and-regression-baseline.md`
+- `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
 - `tasks/stage-a-05-delivery-and-operations-baseline.md`
 
 This wave keeps `Research` as the primary track while ensuring the first parallel work exists for `Platform Reliability`

@@ -125,7 +125,7 @@ Append-only log. Add new entries at the bottom.
 - Choice: define the first Stage A wave as:
   - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
   - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
-  - `tasks/stage-a-04-research-trust-and-regression-baseline.md`
+  - `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
   - `tasks/stage-a-05-delivery-and-operations-baseline.md`
 - Why: the first wave should deepen Research while also advancing minimum reliability and delivery work in parallel
 - Impact: Stage A execution can now begin from a concrete, ordered task set rather than from planning text alone
