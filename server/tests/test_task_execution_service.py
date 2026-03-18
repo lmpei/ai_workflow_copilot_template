@@ -5,11 +5,12 @@ import pytest
 
 from app.core.database import reset_database_for_tests
 from app.models.document import DOCUMENT_STATUS_INDEXED
-from app.repositories import document_repository, task_repository, trace_repository
+from app.repositories import document_repository, research_asset_repository, task_repository, trace_repository
 from app.repositories.user_repository import create_user
 from app.repositories.workspace_repository import create_workspace
+from app.schemas.research_asset import ResearchAssetCreate
 from app.schemas.workspace import WorkspaceCreate
-from app.services import task_execution_service
+from app.services import research_asset_service, task_execution_service
 from app.services.retrieval_service import RetrievedChunk
 from app.services.task_execution_service import TaskExecutionError
 from app.workers.task_worker import run_platform_task
@@ -378,6 +379,125 @@ def test_run_task_execution_carries_follow_up_research_lineage(
     assert traces[0].metadata_json["regression_baseline"]["signals"]["is_follow_up"] is True
 
 
+def test_run_task_execution_appends_research_asset_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert "Continue the prior research run" in question
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-2",
+                    document_title="demo.txt",
+                    chunk_index=1,
+                    snippet="Ownership evidence is still missing from the escalation notes.",
+                    content="Ownership evidence is still missing from the escalation notes.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    unique_suffix = uuid4().hex
+    user = create_user(
+        email=f"research-asset-worker-{unique_suffix}@example.com",
+        password_hash="not-used-in-this-test",
+        name="Research Asset Worker",
+    )
+    workspace = create_workspace(
+        WorkspaceCreate(name="Research Asset Workspace", module_type="research"),
+        owner_id=user.id,
+    )
+    document_repository.create_document(
+        document_id=str(uuid4()),
+        workspace_id=workspace.id,
+        title="demo.txt",
+        file_path="uploads/demo.txt",
+        mime_type="text/plain",
+        created_by=user.id,
+        status=DOCUMENT_STATUS_INDEXED,
+    )
+    parent_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="workspace_report",
+        created_by=user.id,
+        input_json={
+            "goal": "Build a grounded workspace report",
+            "deliverable": "report",
+        },
+    )
+    running_parent = task_repository.update_task_status(parent_task.id, next_status="running")
+    assert running_parent is not None
+    completed_parent = task_repository.update_task_status(
+        parent_task.id,
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "research",
+                "task_type": "workspace_report",
+                "title": "Workspace Report",
+                "summary": "Delayed sign-off is the strongest current risk.",
+                "input": {"goal": "Build a grounded workspace report", "deliverable": "report"},
+                "report": {"headline": "Research Report: Build a grounded workspace report"},
+                "sections": {
+                    "summary": "Delayed sign-off is the strongest current risk.",
+                    "findings": [],
+                    "evidence_overview": [],
+                    "open_questions": ["Who owns the unresolved sign-off gap?"],
+                    "next_steps": [],
+                },
+                "highlights": [],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 1,
+                    "match_count": 1,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                },
+                "metadata": {},
+            },
+        },
+    )
+    assert completed_parent is not None
+
+    asset = research_asset_service.create_research_asset_from_task(
+        workspace_id=workspace.id,
+        user_id=user.id,
+        payload=ResearchAssetCreate(task_id=parent_task.id),
+    )
+
+    follow_up_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="workspace_report",
+        created_by=user.id,
+        input_json={
+            "goal": "Refine the strongest risk",
+            "deliverable": "report",
+            "research_asset_id": asset.id,
+            "parent_task_id": parent_task.id,
+            "continuation_notes": "Confirm who owns the sign-off gap.",
+        },
+    )
+
+    output = task_execution_service.run_task_execution(follow_up_task.id)
+    persisted_task = task_repository.get_task(follow_up_task.id)
+    persisted_asset = research_asset_repository.get_research_asset(asset.id)
+    revisions = research_asset_repository.list_research_asset_revisions(asset.id)
+
+    assert output["result"]["metadata"]["research_asset"]["asset_id"] == asset.id
+    assert output["result"]["metadata"]["research_asset"]["revision_number"] == 2
+    assert persisted_task is not None
+    assert persisted_task.output_json == output
+    assert persisted_asset is not None
+    assert persisted_asset.latest_task_id == follow_up_task.id
+    assert persisted_asset.latest_revision_number == 2
+    assert revisions[0].task_id == follow_up_task.id
+    assert revisions[0].revision_number == 2
+    assert revisions[1].task_id == parent_task.id
+
+
 def test_run_task_execution_executes_support_reply_draft_and_persists_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -715,4 +835,3 @@ def test_run_platform_task_worker_entrypoint_executes_task(
     assert output["result"]["module_type"] == "research"
     assert persisted_task is not None
     assert persisted_task.status == "done"
-

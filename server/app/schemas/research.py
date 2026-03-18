@@ -29,6 +29,7 @@ class ResearchTaskInput(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     deliverable: ResearchDeliverable | None = None
     requested_sections: list[ResearchRequestedSection] = Field(default_factory=list)
+    research_asset_id: str | None = None
     parent_task_id: str | None = None
     continuation_notes: str | None = None
 

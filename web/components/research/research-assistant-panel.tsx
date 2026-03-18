@@ -4,14 +4,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  createWorkspaceResearchAsset,
   createWorkspaceTask,
+  getResearchAsset,
   getWorkspace,
   isApiClientError,
+  listWorkspaceResearchAssets,
   listWorkspaceTasks,
 } from "../../lib/api";
 import type {
   JsonObject,
   ResearchArtifacts,
+  ResearchAssetLink,
+  ResearchAssetRecord,
+  ResearchAssetRevisionRecord,
+  ResearchAssetSummaryRecord,
   ResearchDeliverable,
   ResearchFormalReport,
   ResearchLineage,
@@ -26,6 +33,7 @@ import type {
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
+import ResearchWorkbenchSection from "./research-workbench-section";
 
 type ResearchAssistantPanelProps = {
   workspaceId: string;
@@ -117,6 +125,10 @@ function parseResearchTaskInput(value: unknown): ResearchTaskInput {
         item === "open_questions" ||
         item === "next_steps",
     ),
+    research_asset_id:
+      typeof value.research_asset_id === "string" && value.research_asset_id.length > 0
+        ? value.research_asset_id
+        : undefined,
     parent_task_id:
       typeof value.parent_task_id === "string" && value.parent_task_id.length > 0 ? value.parent_task_id : undefined,
     continuation_notes:
@@ -225,32 +237,66 @@ function parseResearchReport(value: unknown): ResearchFormalReport | undefined {
   };
 }
 
-function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
-  const result = task.output_json.result;
-  if (!isJsonObject(result)) {
+function parseResearchAssetLink(value: unknown): ResearchAssetLink | undefined {
+  if (!isJsonObject(value)) {
+    return undefined;
+  }
+
+  if (
+    typeof value.asset_id !== "string" ||
+    typeof value.revision_id !== "string" ||
+    typeof value.revision_number !== "number"
+  ) {
+    return undefined;
+  }
+
+  return {
+    asset_id: value.asset_id,
+    revision_id: value.revision_id,
+    revision_number: value.revision_number,
+  };
+}
+
+function parseResearchTaskResultValue(value: unknown): ResearchTaskResult | null {
+  if (!isJsonObject(value)) {
     return null;
   }
 
   if (
-    result.module_type !== "research" ||
-    typeof result.task_type !== "string" ||
-    typeof result.title !== "string" ||
-    typeof result.summary !== "string" ||
-    !Array.isArray(result.highlights) ||
-    !Array.isArray(result.evidence) ||
-    !isJsonObject(result.artifacts) ||
-    !isJsonObject(result.metadata)
+    value.module_type !== "research" ||
+    typeof value.task_type !== "string" ||
+    typeof value.title !== "string" ||
+    typeof value.summary !== "string" ||
+    !Array.isArray(value.highlights) ||
+    !Array.isArray(value.evidence) ||
+    !isJsonObject(value.artifacts) ||
+    !isJsonObject(value.metadata)
   ) {
     return null;
   }
 
   return {
-    ...(result as unknown as ResearchTaskResult),
-    input: parseResearchTaskInput(result.input),
-    lineage: parseResearchLineage(result.lineage),
-    sections: parseResearchSections(result.sections, result),
-    report: parseResearchReport(result.report),
+    ...(value as unknown as ResearchTaskResult),
+    task_type: value.task_type === "workspace_report" ? "workspace_report" : "research_summary",
+    input: parseResearchTaskInput(value.input),
+    lineage: parseResearchLineage(value.lineage),
+    sections: parseResearchSections(value.sections, value),
+    report: parseResearchReport(value.report),
   };
+}
+
+function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
+  return parseResearchTaskResultValue(task.output_json.result);
+}
+
+function parseResearchAssetLatestResult(
+  asset: ResearchAssetSummaryRecord | ResearchAssetRecord,
+): ResearchTaskResult | null {
+  return parseResearchTaskResultValue(asset.latest_result_json);
+}
+
+function parseResearchAssetRevisionResult(revision: ResearchAssetRevisionRecord): ResearchTaskResult | null {
+  return parseResearchTaskResultValue(revision.result_json);
 }
 
 function parseEntryTaskTypes(workspace: Workspace | null): ResearchTaskType[] {
@@ -384,7 +430,10 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [researchAssets, setResearchAssets] = useState<ResearchAssetSummaryRecord[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<ResearchAssetRecord | null>(null);
   const [taskType, setTaskType] = useState<ResearchTaskType>("research_summary");
   const [goal, setGoal] = useState("");
   const [focusAreasText, setFocusAreasText] = useState("");
@@ -394,12 +443,16 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const [requestedSections, setRequestedSections] = useState<ResearchRequestedSection[]>(
     DEFAULT_REQUESTED_SECTIONS.research_summary,
   );
+  const [researchAssetId, setResearchAssetId] = useState<string | null>(null);
   const [parentTaskId, setParentTaskId] = useState<string | null>(null);
   const [continuationNotes, setContinuationNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [isLoadingSelectedAsset, setIsLoadingSelectedAsset] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isSavingAsset, setIsSavingAsset] = useState(false);
 
   const availableTaskTypes = useMemo(() => parseEntryTaskTypes(workspace), [workspace]);
 
@@ -462,10 +515,69 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     [session, workspaceId],
   );
 
+  const loadSelectedAsset = useCallback(
+    async (assetId: string, silent = false) => {
+      if (!session) {
+        setSelectedAsset(null);
+        return;
+      }
+
+      if (!silent) {
+        setIsLoadingSelectedAsset(true);
+      }
+
+      try {
+        setSelectedAsset(await getResearchAsset(session.accessToken, assetId));
+      } catch (error) {
+        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research asset");
+      } finally {
+        if (!silent) {
+          setIsLoadingSelectedAsset(false);
+        }
+      }
+    },
+    [session],
+  );
+
+  const loadResearchAssets = useCallback(
+    async (silent = false) => {
+      if (!session) {
+        setResearchAssets([]);
+        setSelectedAssetId(null);
+        setSelectedAsset(null);
+        return;
+      }
+
+      if (!silent) {
+        setIsLoadingAssets(true);
+      }
+
+      try {
+        const loadedAssets = await listWorkspaceResearchAssets(session.accessToken, workspaceId);
+        const sortedAssets = [...loadedAssets].sort((left, right) => right.updated_at.localeCompare(left.updated_at));
+        setResearchAssets(sortedAssets);
+        setSelectedAssetId((currentSelectedAssetId) => {
+          if (currentSelectedAssetId && sortedAssets.some((asset) => asset.id === currentSelectedAssetId)) {
+            return currentSelectedAssetId;
+          }
+          return sortedAssets[0]?.id ?? null;
+        });
+      } catch (error) {
+        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research workbench");
+      } finally {
+        if (!silent) {
+          setIsLoadingAssets(false);
+        }
+      }
+    },
+    [session, workspaceId],
+  );
+
   useEffect(() => {
     void loadWorkspace();
     void loadTasks();
-  }, [loadTasks, loadWorkspace]);
+    void loadResearchAssets();
+  }, [loadResearchAssets, loadTasks, loadWorkspace]);
 
   useEffect(() => {
     if (!session) {
@@ -474,12 +586,25 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
     const intervalId = window.setInterval(() => {
       void loadTasks(true);
+      void loadResearchAssets(true);
+      if (selectedAssetId) {
+        void loadSelectedAsset(selectedAssetId, true);
+      }
     }, 2000);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadTasks, session]);
+  }, [loadResearchAssets, loadSelectedAsset, loadTasks, selectedAssetId, session]);
+
+  useEffect(() => {
+    if (!selectedAssetId) {
+      setSelectedAsset(null);
+      return;
+    }
+
+    void loadSelectedAsset(selectedAssetId);
+  }, [loadSelectedAsset, selectedAssetId]);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? null,
@@ -489,6 +614,10 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     () => (selectedTask ? parseResearchTaskResult(selectedTask) : null),
     [selectedTask],
   );
+  const selectedTaskAssetLink = useMemo(
+    () => (selectedResult ? parseResearchAssetLink(selectedResult.metadata.research_asset) : undefined),
+    [selectedResult],
+  );
   const continuationParentTask = useMemo(
     () => tasks.find((task) => task.id === parentTaskId) ?? null,
     [parentTaskId, tasks],
@@ -496,6 +625,10 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const continuationParentResult = useMemo(
     () => (continuationParentTask ? parseResearchTaskResult(continuationParentTask) : null),
     [continuationParentTask],
+  );
+  const continuationAssetSummary = useMemo(
+    () => researchAssets.find((asset) => asset.id === researchAssetId) ?? null,
+    [researchAssetId, researchAssets],
   );
   const evidenceLookup = useMemo(
     () =>
@@ -514,22 +647,100 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     });
   };
 
-  const startFollowUpFromTask = (task: TaskRecord, result: ResearchTaskResult) => {
-    const followUpTaskType = result.task_type;
-    setTaskType(followUpTaskType);
-    setGoal(result.input.goal ?? "");
-    setFocusAreasText(result.input.focus_areas.join("\n"));
-    setKeyQuestionsText(result.input.key_questions.join("\n"));
-    setConstraintsText(result.input.constraints.join("\n"));
-    setDeliverable(result.input.deliverable ?? (followUpTaskType === "workspace_report" ? "report" : "brief"));
+  const populateResearchForm = (
+    nextTaskType: ResearchTaskType,
+    input: ResearchTaskInput,
+    options?: {
+      assetId?: string | null;
+      parentId?: string | null;
+      continuation?: string;
+      openTaskId?: string | null;
+      openAssetId?: string | null;
+    },
+  ) => {
+    setTaskType(nextTaskType);
+    setGoal(input.goal ?? "");
+    setFocusAreasText(input.focus_areas.join("\n"));
+    setKeyQuestionsText(input.key_questions.join("\n"));
+    setConstraintsText(input.constraints.join("\n"));
+    setDeliverable(input.deliverable ?? (nextTaskType === "workspace_report" ? "report" : "brief"));
     setRequestedSections(
-      result.input.requested_sections.length > 0
-        ? result.input.requested_sections
-        : DEFAULT_REQUESTED_SECTIONS[followUpTaskType],
+      input.requested_sections.length > 0 ? input.requested_sections : DEFAULT_REQUESTED_SECTIONS[nextTaskType],
     );
-    setParentTaskId(task.id);
-    setContinuationNotes(result.sections.open_questions[0] ?? "");
+    setResearchAssetId(options?.assetId ?? input.research_asset_id ?? null);
+    setParentTaskId(options?.parentId ?? input.parent_task_id ?? null);
+    setContinuationNotes(options?.continuation ?? input.continuation_notes ?? "");
+    if (options?.openTaskId) {
+      setSelectedTaskId(options.openTaskId);
+    }
+    if (options?.openAssetId) {
+      setSelectedAssetId(options.openAssetId);
+    }
     setErrorMessage(null);
+  };
+
+  const clearWorkbenchLinkage = () => {
+    setResearchAssetId(null);
+    setParentTaskId(null);
+    setContinuationNotes("");
+  };
+
+  const startFollowUpFromTask = (task: TaskRecord, result: ResearchTaskResult) => {
+    populateResearchForm(result.task_type, result.input, {
+      assetId: parseResearchAssetLink(result.metadata.research_asset)?.asset_id ?? null,
+      parentId: task.id,
+      continuation: result.sections.open_questions[0] ?? result.input.continuation_notes ?? "",
+      openTaskId: task.id,
+      openAssetId: parseResearchAssetLink(result.metadata.research_asset)?.asset_id ?? null,
+    });
+  };
+
+  const startResearchFromAsset = (asset: ResearchAssetSummaryRecord | ResearchAssetRecord) => {
+    const latestResult = parseResearchAssetLatestResult(asset);
+    const latestInput = latestResult?.input ?? parseResearchTaskInput(asset.latest_input_json);
+    populateResearchForm(latestResult?.task_type ?? asset.latest_task_type, latestInput, {
+      assetId: asset.id,
+      parentId: asset.latest_task_id ?? null,
+      continuation: latestResult?.sections.open_questions[0] ?? latestInput.continuation_notes ?? "",
+      openTaskId: asset.latest_task_id ?? null,
+      openAssetId: asset.id,
+    });
+  };
+
+  const startResearchFromRevision = (asset: ResearchAssetRecord, revision: ResearchAssetRevisionRecord) => {
+    const revisionResult = parseResearchAssetRevisionResult(revision);
+    const revisionInput = revisionResult?.input ?? parseResearchTaskInput(revision.input_json);
+    populateResearchForm(revision.task_type, revisionInput, {
+      assetId: asset.id,
+      parentId: revision.task_id,
+      continuation: revisionResult?.sections.open_questions[0] ?? revisionInput.continuation_notes ?? "",
+      openTaskId: revision.task_id,
+      openAssetId: asset.id,
+    });
+  };
+
+  const handleSaveTaskToWorkbench = async (task: TaskRecord) => {
+    if (!session) {
+      return;
+    }
+
+    setIsSavingAsset(true);
+    setErrorMessage(null);
+
+    try {
+      const asset = await createWorkspaceResearchAsset(session.accessToken, workspaceId, {
+        task_id: task.id,
+      });
+      await loadTasks(true);
+      await loadResearchAssets(true);
+      setSelectedAssetId(asset.id);
+      setSelectedAsset(asset);
+      setSelectedTaskId(task.id);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to save research asset");
+    } finally {
+      setIsSavingAsset(false);
+    }
   };
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -571,6 +782,10 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       payloadInput.requested_sections = requestedSections;
     }
 
+    if (researchAssetId) {
+      payloadInput.research_asset_id = researchAssetId;
+    }
+
     if (parentTaskId) {
       payloadInput.parent_task_id = parentTaskId;
     }
@@ -592,6 +807,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setKeyQuestionsText("");
       setConstraintsText("");
       setRequestedSections(DEFAULT_REQUESTED_SECTIONS[taskType]);
+      setResearchAssetId(null);
       setParentTaskId(null);
       setContinuationNotes("");
     } catch (error) {
@@ -639,9 +855,21 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
         ) : null}
       </SectionCard>
 
+      <ResearchWorkbenchSection
+        researchAssets={researchAssets}
+        selectedAssetId={selectedAssetId}
+        selectedAsset={selectedAsset}
+        isLoadingAssets={isLoadingAssets}
+        isLoadingSelectedAsset={isLoadingSelectedAsset}
+        onSelectAsset={setSelectedAssetId}
+        onContinueAsset={startResearchFromAsset}
+        onContinueRevision={startResearchFromRevision}
+        onOpenTask={setSelectedTaskId}
+      />
+
       <SectionCard
         title="Launch research task"
-        description="Define the research goal, scope, and output expectations for a structured Stage A research run."
+        description="Define the research goal, scope, and output expectations for a reusable Stage B research run."
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
@@ -659,6 +887,37 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             </select>
           </label>
           <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
+          {continuationAssetSummary ? (
+            <div
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #cbd5e1",
+                borderRadius: 12,
+                display: "grid",
+                gap: 8,
+                padding: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700 }}>Workbench context</div>
+              <div>
+                <strong>Asset:</strong> {continuationAssetSummary.title}
+              </div>
+              <div>
+                <strong>Latest revision:</strong> v{continuationAssetSummary.latest_revision_number}
+              </div>
+              <div>
+                <strong>Latest summary:</strong> {continuationAssetSummary.latest_summary}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => setSelectedAssetId(continuationAssetSummary.id)} type="button">
+                  Open asset
+                </button>
+                <button onClick={clearWorkbenchLinkage} type="button">
+                  Clear workbench link
+                </button>
+              </div>
+            </div>
+          ) : null}
           {continuationParentTask && continuationParentResult ? (
             <div
               style={{
@@ -684,13 +943,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <button onClick={() => setSelectedTaskId(continuationParentTask.id)} type="button">
                   Open parent result
                 </button>
-                <button
-                  onClick={() => {
-                    setParentTaskId(null);
-                    setContinuationNotes("");
-                  }}
-                  type="button"
-                >
+                <button onClick={clearWorkbenchLinkage} type="button">
                   Clear follow-up
                 </button>
               </div>
@@ -799,6 +1052,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {tasks.map((task) => {
             const result = parseResearchTaskResult(task);
+            const assetLink = result ? parseResearchAssetLink(result.metadata.research_asset) : undefined;
             return (
               <li
                 key={task.id}
@@ -812,6 +1066,20 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 6 }}>
                   <strong>{TASK_OPTIONS[task.task_type as ResearchTaskType].label}</strong>
                   {renderStatus(task.status)}
+                  {assetLink ? (
+                    <span
+                      style={{
+                        backgroundColor: "#dbeafe",
+                        borderRadius: 999,
+                        color: "#1d4ed8",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: "4px 10px",
+                      }}
+                    >
+                      Workbench v{assetLink.revision_number}
+                    </span>
+                  ) : null}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
                   {result?.summary ?? extractGoal(task, result) ?? "No custom goal provided."}
@@ -826,6 +1094,16 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     {task.status === "done" && result ? (
                       <button onClick={() => startFollowUpFromTask(task, result)} type="button">
                         Continue research
+                      </button>
+                    ) : null}
+                    {task.status === "done" && result ? (
+                      <button disabled={isSavingAsset} onClick={() => void handleSaveTaskToWorkbench(task)} type="button">
+                        {assetLink ? "Refresh asset" : isSavingAsset ? "Saving..." : "Save to workbench"}
+                      </button>
+                    ) : null}
+                    {assetLink ? (
+                      <button onClick={() => setSelectedAssetId(assetLink.asset_id)} type="button">
+                        Open asset
                       </button>
                     ) : null}
                   </div>
@@ -859,10 +1137,18 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 </div>
               ) : null}
               {selectedTask.status === "done" && selectedResult ? (
-                <div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => startFollowUpFromTask(selectedTask, selectedResult)} type="button">
                     Continue from this result
                   </button>
+                  <button disabled={isSavingAsset} onClick={() => void handleSaveTaskToWorkbench(selectedTask)} type="button">
+                    {selectedTaskAssetLink ? "Refresh asset" : isSavingAsset ? "Saving..." : "Save to workbench"}
+                  </button>
+                  {selectedTaskAssetLink ? (
+                    <button onClick={() => setSelectedAssetId(selectedTaskAssetLink.asset_id)} type="button">
+                      Open linked asset
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -881,6 +1167,34 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   <p style={{ margin: 0 }}>{selectedResult.summary}</p>
                 </div>
 
+                {selectedTaskAssetLink ? (
+                  <div
+                    style={{
+                      backgroundColor: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 16,
+                      display: "grid",
+                      gap: 8,
+                      padding: 16,
+                    }}
+                  >
+                    <div style={{ color: "#1d4ed8", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
+                      Linked workbench asset
+                    </div>
+                    <div>
+                      <strong>Asset:</strong> {selectedTaskAssetLink.asset_id}
+                    </div>
+                    <div>
+                      <strong>Revision:</strong> v{selectedTaskAssetLink.revision_number}
+                    </div>
+                    <div>
+                      <button onClick={() => setSelectedAssetId(selectedTaskAssetLink.asset_id)} type="button">
+                        Open workbench asset
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
                 {renderArtifactStats(selectedResult.artifacts)}
 
                 <div style={{ display: "grid", gap: 6 }}>
@@ -893,6 +1207,9 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     {selectedResult.input.requested_sections.length > 0
                       ? selectedResult.input.requested_sections.join(", ")
                       : "task default"}
+                  </div>
+                  <div>
+                    <strong>Workbench asset:</strong> {selectedResult.input.research_asset_id ?? "none"}
                   </div>
                   <div>
                     <strong>Focus areas</strong>

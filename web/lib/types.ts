@@ -50,8 +50,14 @@ export type ResearchTaskInput = {
   constraints: string[];
   deliverable?: ResearchDeliverable;
   requested_sections: ResearchRequestedSection[];
+  research_asset_id?: string;
   parent_task_id?: string;
   continuation_notes?: string;
+};
+export type ResearchAssetLink = {
+  asset_id: string;
+  revision_id: string;
+  revision_number: number;
 };
 export type ResearchLineage = {
   parent_task_id: string;
@@ -127,6 +133,38 @@ export type ResearchTaskResult = ScenarioTaskResult & {
   sections: ResearchResultSections;
   report?: ResearchFormalReport;
   artifacts: ResearchArtifacts;
+};
+
+export type ResearchAssetRevisionRecord = {
+  id: string;
+  research_asset_id: string;
+  task_id: string;
+  task_type: ResearchTaskType;
+  revision_number: number;
+  title: string;
+  input_json: JsonObject;
+  result_json: JsonObject;
+  summary: string;
+  report_headline?: string | null;
+  created_at: string;
+};
+export type ResearchAssetSummaryRecord = {
+  id: string;
+  workspace_id: string;
+  created_by: string;
+  title: string;
+  latest_task_id?: string | null;
+  latest_task_type: ResearchTaskType;
+  latest_revision_number: number;
+  latest_input_json: JsonObject;
+  latest_result_json: JsonObject;
+  latest_summary: string;
+  latest_report_headline?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type ResearchAssetRecord = ResearchAssetSummaryRecord & {
+  revisions: ResearchAssetRevisionRecord[];
 };
 
 export type SupportDocumentSummary = ResearchDocumentSummary;

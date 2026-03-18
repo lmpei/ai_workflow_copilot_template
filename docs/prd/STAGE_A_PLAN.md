@@ -4,6 +4,12 @@
 
 `Stage A: Research Deepening With Trust Baseline`
 
+## Status
+
+- Status: complete
+- Opened At: 2026-03-18
+- Closed At: 2026-03-18
+
 ## Position In The Project
 
 Stage A begins after the Phase 5 baseline. Phase 5 established the shared platform core plus visible scenario modules.
@@ -130,7 +136,8 @@ Stage A is successful when:
 
 ## Next Step
 
-Review whether Stage A is complete or needs another planning wave now that the second execution wave has landed.
+Stage A is complete. The next formal planning unit is `Stage B: Research Workflow Productization With Recoverable Runtime`,
+documented in `docs/prd/STAGE_B_PLAN.md`.
 
 ## Initial Task Wave
 
@@ -157,3 +164,18 @@ The second executable Stage A wave is:
 
 This wave keeps `Research` as the primary track, but shifts the work from baseline establishment toward iterative
 Research workflow depth, explicit Research regression coverage, and a more concrete staging path.
+
+## Closeout
+
+Stage A closed after both execution waves completed:
+
+- `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
+- `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
+- `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
+- `tasks/archive/stage-a/stage-a-05-delivery-and-operations-baseline.md`
+- `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
+- `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
+- `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
+
+These tasks satisfied the Stage A goal of deepening Research while establishing a trust baseline and a minimum staging
+delivery path.

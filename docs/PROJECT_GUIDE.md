@@ -31,7 +31,9 @@ Use these files for detailed reference material:
 - `docs/prd/PLATFORM_PRD.md`
   - product scope, module responsibilities, success criteria, and phase roadmap
 - `docs/prd/STAGE_A_PLAN.md`
-  - formal Stage A planning document derived from the post-Phase-5 roadmap model
+  - closed Stage A planning document derived from the post-Phase-5 roadmap model
+- `docs/prd/STAGE_B_PLAN.md`
+  - active Stage B planning document for research workflow productization and recoverable runtime
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
 - `docs/development/DELIVERY_BASELINE.md`
@@ -58,7 +60,9 @@ Use these files for execution and history:
 - `tasks/archive/`
   - completed tasks and execution history
 
-Stage A work should use `stage-a-*` task naming.
+Stage A work should use `stage-a-*` task naming and remain archived under `tasks/archive/stage-a/`.
+Stage B work should use `stage-b-*` task naming while active under `tasks/`, then archive under
+`tasks/archive/stage-b/`.
 Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 
 ### Workflow and Prompting
@@ -174,6 +178,21 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   runs
 - the Research surface now lets a user continue from a completed Research result, reusing its input shape while linking
   the new task to the parent task through Stage A follow-up lineage
+
+## Stage B Research Workbench
+
+- Research work can now be promoted from a completed task run into a persistent `research_asset`
+- a `research_asset` keeps the latest snapshot plus ordered `research_asset_revision` history
+- follow-up Research tasks can carry both:
+  - `parent_task_id`
+  - `research_asset_id`
+- linking a completed Research task to an asset now updates the workbench lifecycle instead of leaving the work only in
+  one-off task output history
+- the Research surface now exposes a workbench section where a user can:
+  - reopen a saved asset
+  - inspect revision history
+  - continue from the latest revision or any prior revision
+- task history remains the execution log; Research assets are the reusable work product layer for Stage B
 
 ## Scenario Module Boundaries
 

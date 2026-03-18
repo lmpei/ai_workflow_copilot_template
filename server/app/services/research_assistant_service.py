@@ -115,6 +115,10 @@ def normalize_research_task_input(input_json: dict[str, object] | None) -> dict[
     if normalized_parent_task_id:
         normalized_payload["parent_task_id"] = normalized_parent_task_id
 
+    normalized_research_asset_id = _normalize_optional_string(payload.research_asset_id)
+    if normalized_research_asset_id:
+        normalized_payload["research_asset_id"] = normalized_research_asset_id
+
     normalized_continuation_notes = _normalize_optional_string(payload.continuation_notes)
     if normalized_continuation_notes:
         normalized_payload["continuation_notes"] = normalized_continuation_notes
@@ -142,6 +146,7 @@ def resolve_research_task_input(
         deliverable=payload.deliverable or _DEFAULT_RESEARCH_DELIVERABLES[task_type],
         requested_sections=payload.requested_sections
         or list(_DEFAULT_RESEARCH_REQUESTED_SECTIONS[task_type]),
+        research_asset_id=payload.research_asset_id,
         parent_task_id=payload.parent_task_id,
         continuation_notes=payload.continuation_notes,
     )

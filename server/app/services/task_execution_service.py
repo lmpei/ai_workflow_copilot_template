@@ -12,7 +12,7 @@ from app.models.task import (
     Task,
 )
 from app.repositories import task_repository, workspace_repository
-from app.services import trace_service
+from app.services import research_asset_service, trace_service
 from app.services.agent_service import (
     AgentAccessError,
     AgentExecutionResult,
@@ -452,6 +452,19 @@ def run_task_execution(task_id: str) -> dict[str, object]:
 
     try:
         execution_result = _execute_task_agent(running_task)
+        if running_task.task_type in RESEARCH_TASK_TYPES:
+            research_asset_id = running_task.input_json.get("research_asset_id")
+            if isinstance(research_asset_id, str) and research_asset_id:
+                asset_metadata = research_asset_service.sync_research_asset_from_task(
+                    research_asset_id=research_asset_id,
+                    task=running_task,
+                    result_json=execution_result.final_output,
+                )
+                result_metadata = execution_result.final_output.get("metadata")
+                if not isinstance(result_metadata, dict):
+                    result_metadata = {}
+                    execution_result.final_output["metadata"] = result_metadata
+                result_metadata.update(asset_metadata)
         output = _build_task_output(task=running_task, execution_result=execution_result)
         if research_trace_request is not None:
             latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)

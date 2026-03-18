@@ -13,20 +13,21 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Current Phase
 
 - Phase 5 baseline complete
-- Stage A second task wave complete
+- Stage A complete and closed
+- Stage B first task wave active
 
 ## Current Objective
 
-- review Stage A completion and decide whether to create another Stage A planning task or move to the next formal planning unit
+- continue the first Stage B wave after completing the Research workbench and asset-lifecycle task
 
 ## Active Task
 
-- File: none currently
-- Status: `stage-a-09` is complete and archived; the next planning task has not been created yet
+- File: `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
+- Status: `stage-b-02` is complete and archived; `stage-b-03` is the next active task
 
 ## Verification Status
 
-- Summary: `stage-a-09` is complete, including a concrete staging rehearsal path, env-file-aware Compose behavior, and staging smoke helpers. Stage A wave two is now fully complete.
+- Summary: Stage B now has a persistent Research workbench and asset lifecycle, and the next focus shifts to recoverable runtime behavior.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -36,20 +37,20 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Assumptions
 
 - module product names remain unchanged for now
-- `Research` is the Stage A primary track
-- `Platform Reliability` and `Delivery and Operations` are Stage A required parallel tracks
+- `Research` is the Stage B primary track
+- `Platform Reliability` and `Delivery and Operations` are Stage B required parallel tracks
 
 ## Information Gaps
 
-- whether Stage A now needs a third task wave or a closeout review
-- what the first formal planning unit after Stage A should be called
-- whether Research needs another product-depth task before broader roadmap movement
+- which cancel, retry, and resume controls should be mandatory for long-running tasks and evals in the first Stage B runtime pass
+- how much runtime-state detail is enough before Stage B risks overfitting recovery UX too early
+- how much Stage B delivery automation is enough before planning beyond staging rehearsals
 
 ## Ready Now
 
-1. review whether Stage A is complete enough to close
-2. if more Stage A work is needed, create a new planning task for the next task wave
-3. if Stage A is ready to close, define the next formal planning unit and its task stack
+1. execute `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
+2. then execute `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+3. after the first Stage B wave, decide whether to close the wave or define a second Stage B wave
 
 ## Parked / Later
 
@@ -58,14 +59,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
+- `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md`
 
 ## Recent Decisions
 
-- `DEC-2026-03-17-005` keep current module product names for now
 - `DEC-2026-03-18-001` adopt a three-track roadmap model
-- `DEC-2026-03-18-002` formalize Stage A as the next planning unit
-- `DEC-2026-03-18-003` use `stage-a-*` naming for Stage A tasks
-- `DEC-2026-03-18-004` define the first Stage A task wave
-- `DEC-2026-03-18-005` archive historical Phase 5 task specs and activate Stage A task execution
-- `DEC-2026-03-18-006` define the second Stage A task wave
+- `DEC-2026-03-18-007` close Stage A as complete
+- `DEC-2026-03-18-008` define Stage B as the next formal planning unit
+- `DEC-2026-03-18-009` use `stage-b-*` naming for Stage B tasks
+- `DEC-2026-03-18-010` define the first Stage B task wave
+- `DEC-2026-03-18-011` introduce the Stage B Research workbench and asset lifecycle

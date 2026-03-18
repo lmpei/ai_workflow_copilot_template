@@ -9,6 +9,8 @@ from app.models.eval_dataset import EvalDataset
 from app.models.eval_result import EvalResult
 from app.models.eval_run import EvalRun
 from app.models.message import Message
+from app.models.research_asset import ResearchAsset
+from app.models.research_asset_revision import ResearchAssetRevision
 from app.models.task import Task
 from app.models.tool_call import ToolCall
 from app.models.trace import Trace
@@ -28,6 +30,8 @@ __all__ = [
     "EvalResult",
     "EvalRun",
     "Message",
+    "ResearchAsset",
+    "ResearchAssetRevision",
     "Task",
     "Trace",
     "ToolCall",

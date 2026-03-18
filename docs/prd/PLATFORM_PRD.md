@@ -113,11 +113,13 @@ After the Phase 5 baseline, roadmap planning shifts from a purely phase-based bu
 - `Platform Reliability`
 - `Delivery and Operations`
 
-The first formal planning unit under that model is documented in `docs/prd/STAGE_A_PLAN.md`.
+The first formal planning unit under that model was `Stage A`, documented in `docs/prd/STAGE_A_PLAN.md`.
+The active formal planning unit is now `Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`.
 
 ## Current Status
 
-The repository is currently in `Phase 5: Scenario Modules`.
+The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, and is now executing the
+first `Stage B` wave.
 
 The current implemented platform increment includes:
 
@@ -146,8 +148,9 @@ The repository does not yet implement:
 - external observability stacks, alerting, or advanced BI-style dashboards
 - deeper scenario-specific product workflows beyond the current Research MVP and Support/Job skeletons
 
-The next formal planning unit is `Stage A: Research Deepening With Trust Baseline`, documented in
-`docs/prd/STAGE_A_PLAN.md`.
+`Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
+The active formal planning unit is `Stage B: Research Workflow Productization With Recoverable Runtime`, documented in
+`docs/prd/STAGE_B_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and
@@ -160,3 +163,9 @@ The second execution wave is now archived as:
 - `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
 - `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
 - `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
+
+The first executable Stage B wave is now active as:
+
+- `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md` (complete)
+- `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
+- `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`

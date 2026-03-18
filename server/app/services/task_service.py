@@ -101,6 +101,14 @@ async def create_task(
         raise TaskValidationError(str(error)) from error
 
     if payload.task_type in RESEARCH_TASK_TYPES:
+        research_asset_id = normalized_input.get("research_asset_id")
+        if isinstance(research_asset_id, str) and research_asset_id:
+            from app.repositories import research_asset_repository
+
+            asset = research_asset_repository.get_research_asset_for_user(research_asset_id, user_id)
+            if asset is None or asset.workspace_id != workspace_id:
+                raise TaskValidationError("Research asset not found in this workspace")
+
         parent_task_id = normalized_input.get("parent_task_id")
         if isinstance(parent_task_id, str) and parent_task_id:
             parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
@@ -113,6 +121,13 @@ async def create_task(
             result = parent_task.output_json.get("result")
             if not isinstance(result, dict) or result.get("module_type") != "research":
                 raise TaskValidationError("Parent research task does not contain a structured Research result")
+
+            if isinstance(research_asset_id, str) and research_asset_id:
+                from app.repositories import research_asset_repository
+
+                asset_revision = research_asset_repository.get_research_asset_revision_by_task_id(parent_task_id)
+                if asset_revision is not None and asset_revision.research_asset_id != research_asset_id:
+                    raise TaskValidationError("Parent research task is linked to a different Research asset")
 
     task = task_repository.create_task(
         workspace_id=workspace_id,

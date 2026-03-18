@@ -16,13 +16,13 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A second task wave complete; next planning step pending
+- Current stage: Stage A complete and Stage B first task wave in progress
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
-forking the architecture. The next stage should be executed through the three-track roadmap model, with Research as the
-primary track and reliability plus delivery work treated as required parallel investment.
+forking the architecture. The active stage should be executed through the three-track roadmap model, with Research as
+the primary track and reliability plus delivery work treated as required parallel investment.
 
 ## Technology Stack
 
@@ -40,11 +40,13 @@ primary track and reliability plus delivery work treated as required parallel in
 - `docs/`
   - long-form product, architecture, review, and development docs
 - `docs/prd/STAGE_A_PLAN.md`
-  - formal Stage A planning document
+  - closed Stage A planning document
+- `docs/prd/STAGE_B_PLAN.md`
+  - active Stage B planning document
 - `tasks/`
   - active and archived task specs
-- Stage A task naming
-  - active Stage A work uses `stage-a-*`
+- Stage task naming
+  - active Stage B work uses `stage-b-*`
 - Phase 5 task history
   - archived under `tasks/archive/phase5/`
 - root control-plane docs

@@ -1,4 +1,4 @@
-﻿# Tasks
+# Tasks
 
 This directory holds execution-ready task specs.
 
@@ -21,6 +21,8 @@ current state of the project.
 - Historical Phase 5 task specs live under `tasks/archive/phase5/`.
 - Use `stage-a-*` naming for Stage A work.
 - Archive completed Stage A tasks under `tasks/archive/stage-a/`.
+- Use `stage-b-*` naming for Stage B work.
+- Archive completed Stage B tasks under `tasks/archive/stage-b/`.
 - If the planning model changes again in a later stage, record that choice in `DECISIONS.md` before changing naming.
 
 ## Relationship to Other Docs

@@ -162,3 +162,76 @@ Append-only log. Add new entries at the bottom.
 - Impact: `stage-a-07` becomes the next active execution task, while `stage-a-08` and `stage-a-09` form the queued parallel follow-on work for the rest of Stage A
 - Related Task: `tasks/archive/stage-a/stage-a-06-wave-two-planning.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-007
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: Stage A closeout
+- Context: both Stage A execution waves are complete across the Research, Platform Reliability, and Delivery and Operations tracks
+- Choice: close Stage A as complete instead of adding a default third Stage A wave
+- Why: the Stage A success criteria are now satisfied, and future work should move into a new planning unit rather than extending Stage A without a fresh boundary
+- Impact: `STATUS.md`, the PRD docs, and task planning move forward under Stage B
+- Related Task: `tasks/archive/stage-b/stage-b-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-008
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: next formal planning unit after Stage A
+- Context: the project needs a post-Stage-A planning unit that keeps Research primary while advancing runtime recovery and more operator-ready delivery
+- Choice: create `docs/prd/STAGE_B_PLAN.md` for `Stage B: Research Workflow Productization With Recoverable Runtime`
+- Why: the next work is broader than a single task and needs a formal planning document that bridges product workflow depth, recoverable runtime behavior, and more repeatable staging operations
+- Impact: Stage B becomes the active planning document and reference point for the next task wave
+- Related Task: `tasks/archive/stage-b/stage-b-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-009
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: Stage B task naming
+- Context: Stage B begins after Stage A closeout and should be clearly distinguishable from both the older phase tasks and the Stage A archive
+- Choice: use `stage-b-*` naming for Stage B tasks
+- Why: the repository should preserve a visible planning boundary between Stage A and Stage B execution work
+- Impact: new Stage B task specs now live under `tasks/` as `stage-b-*`, while completed work archives under `tasks/archive/stage-b/`
+- Related Task: `tasks/archive/stage-b/stage-b-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-010
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: first Stage B task wave
+- Context: Stage B has been fixed in text and now needs an initial executable wave that matches the three-track model
+- Choice: define the first Stage B wave as:
+  - `tasks/stage-b-02-research-workbench-and-asset-lifecycle.md`
+  - `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
+  - `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- Why: this keeps Research as the primary Stage B track while pairing it with the first recovery-oriented runtime and operator-oriented staging improvements
+- Impact: `stage-b-02` becomes the next active execution task and the Stage B wave now has an explicit, ordered task set
+- Related Task: `tasks/archive/stage-b/stage-b-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-011
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B Research workbench lifecycle
+- Context: Stage B needed a reusable Research workflow layer so work could persist beyond isolated task outputs while preserving task lineage and revision history
+- Choice: introduce persistent `research_asset` and `research_asset_revision` primitives, expose Research asset endpoints, and connect the Research surface to a workbench flow for saving, reopening, and continuing assets
+- Why: Stage B Research should behave like reusable workspace work rather than a sequence of disconnected reports
+- Impact: completed Research tasks can now be promoted into reusable assets, follow-up task runs can append revisions, and the UI now exposes a Stage B workbench alongside task history
+- Related Task: `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md`
+- Supersedes:

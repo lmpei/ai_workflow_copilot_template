@@ -11,6 +11,8 @@ import type {
   LoginRequestPayload,
   LoginResponsePayload,
   RegisterRequestPayload,
+  ResearchAssetRecord,
+  ResearchAssetSummaryRecord,
   TaskCreatePayload,
   TaskRecord,
   TraceRecord,
@@ -342,4 +344,37 @@ export async function listWorkspaceTasks(
 
 export async function getTask(accessToken: string, taskId: string): Promise<TaskRecord> {
   return fetchBrowserApiJson<TaskRecord>(`/tasks/${taskId}`, {}, accessToken);
+}
+
+export async function createWorkspaceResearchAsset(
+  accessToken: string,
+  workspaceId: string,
+  payload: { task_id: string; title?: string },
+): Promise<ResearchAssetRecord> {
+  return fetchBrowserApiJson<ResearchAssetRecord>(
+    `/workspaces/${workspaceId}/research-assets`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function listWorkspaceResearchAssets(
+  accessToken: string,
+  workspaceId: string,
+): Promise<ResearchAssetSummaryRecord[]> {
+  return fetchBrowserApiJson<ResearchAssetSummaryRecord[]>(
+    `/workspaces/${workspaceId}/research-assets`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getResearchAsset(
+  accessToken: string,
+  assetId: string,
+): Promise<ResearchAssetRecord> {
+  return fetchBrowserApiJson<ResearchAssetRecord>(`/research-assets/${assetId}`, {}, accessToken);
 }
