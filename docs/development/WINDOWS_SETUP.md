@@ -3,7 +3,7 @@
 This document is a Windows-specific supplement to `README.md`.
 Use `README.md` as the primary project startup guide.
 Use this file only for Windows shell differences, optional local dependency setup, and verification helpers.
-For the Stage A release baseline, also read `docs/development/DELIVERY_BASELINE.md`.
+For the Stage B release baseline, also read `docs/development/DELIVERY_BASELINE.md`.
 For the concrete staging rehearsal path, read `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Recommended tools
@@ -49,7 +49,7 @@ Useful local URLs after startup:
 - `dev`
   - a shared validation environment with non-placeholder secrets and environment-specific URLs
 - `staging`
-  - a release-like environment that must follow migration and smoke-check discipline
+  - a release-like environment that must follow migration, smoke-check, and handoff discipline
 
 ## Optional local dependency setup
 
@@ -90,8 +90,9 @@ cd ..
 - `scripts\migrate-windows.cmd`
 - `scripts\release-check-windows.cmd`
 - `scripts\staging-smoke-windows.cmd`
+- `scripts\staging-rehearse-windows.cmd`
 
-These are local development helpers, not project startup commands.
+These are local development and release rehearsal helpers, not project startup commands.
 
 - `setup-windows.cmd`
   - prepares a local Windows development environment
@@ -100,9 +101,11 @@ These are local development helpers, not project startup commands.
 - `migrate-windows.cmd`
   - applies Alembic migrations using `DATABASE_URL` from the provided env file and runs inside the `server` container when the URL targets the local Compose `db` hostname
 - `release-check-windows.cmd`
-  - fails if the provided env file still contains `replace_me` and then runs the verification baseline
+  - validates env-file alignment, rejects placeholder secrets, and then runs the verification baseline
 - `staging-smoke-windows.cmd`
   - checks the health endpoint and web root derived from the provided env file
+- `staging-rehearse-windows.cmd`
+  - runs the Stage B staging preflight, compose validation, startup, migration, force-recreate, smoke checks, and writes a handoff note
 
 Run them from PowerShell with:
 
@@ -112,18 +115,18 @@ cmd /c scripts\verify-windows.cmd
 cmd /c scripts\migrate-windows.cmd .env
 cmd /c scripts\release-check-windows.cmd .env
 cmd /c scripts\staging-smoke-windows.cmd .env
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
 ```
 
-## Stage A staging rehearsal
+## Stage B staging rehearsal
 
 Recommended Windows rehearsal flow:
 
 1. copy `.env.example` to `.env.staging`
 2. set `APP_ENV_FILE=.env.staging` inside `.env.staging`
 3. replace all placeholder secrets and update the environment URLs
-4. run `cmd /c scripts\release-check-windows.cmd .env.staging`
-5. run `docker compose --env-file .env.staging up -d --build server worker web`
-6. run `cmd /c scripts\migrate-windows.cmd .env.staging`
-7. run `cmd /c scripts\staging-smoke-windows.cmd .env.staging`
+4. pick a rollback target before you start the rehearsal
+5. run `cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>`
+6. keep the generated handoff note or fill `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git if you used the manual path
 
-Use `docs/development/STAGING_RELEASE_PATH.md` for the full checklist, restart guidance, and rollback expectations.
+If you need the manual step-by-step version instead of the helper, use `docs/development/STAGING_RELEASE_PATH.md`.

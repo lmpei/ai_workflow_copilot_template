@@ -37,9 +37,9 @@ Use these files for detailed reference material:
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
 - `docs/development/DELIVERY_BASELINE.md`
-  - Stage A delivery, migration, release, rollback, and runbook baseline
+  - Stage B delivery, migration, release, rollback, rehearsal, and runbook baseline
 - `docs/development/STAGING_RELEASE_PATH.md`
-  - concrete Stage A staging rehearsal sequence and smoke expectations
+  - concrete Stage B staging rehearsal sequence, smoke expectations, and handoff path
 - `docs/development/WINDOWS_SETUP.md`
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
@@ -232,19 +232,23 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
 4. update the control-plane docs when a durable project truth changes
 5. prefer additive doc refactors over destructive replacement of existing history
 
-## Stage A Delivery Baseline
+## Stage B Delivery Baseline
 
-- `local`, `dev`, and `staging` now have explicit intent in the docs
+- `local`, `dev`, and `staging` have explicit intent in the docs
 - `.env.example` remains a scaffold only; no shared environment should keep `replace_me`
-- `APP_ENV_FILE` now lets Docker Compose pass `.env`, `.env.dev`, or `.env.staging` into the application containers
+- `APP_ENV_FILE` now acts as both Compose input selection and release-check alignment signal
 - `scripts/migrate-windows.cmd`
   - applies Alembic migrations using `DATABASE_URL` from the selected env file
 - `scripts/release-check-windows.cmd`
-  - validates the selected env file and runs the repository verification baseline
+  - validates the selected env file, checks `APP_ENV_FILE` alignment, rejects placeholder secrets, and runs the repository verification baseline
 - `scripts/staging-smoke-windows.cmd`
   - checks the health endpoint and web root for the selected staging env file
+- `scripts/staging-rehearse-windows.cmd`
+  - runs the Stage B Windows rehearsal routine and writes a handoff note with the change ref and rollback target
 - `docs/development/STAGING_RELEASE_PATH.md`
-  - defines the concrete Stage A staging rehearsal path, including release order, smoke checks, and rollback decisions
+  - defines the concrete Stage B staging rehearsal path, including restart order, smoke checks, rollback expectations, and handoff recording
+- `docs/development/STAGING_HANDOFF_TEMPLATE.md`
+  - provides the fallback handoff shape when the helper-generated note is not used
 
 ## Stage B Recoverable Runtime
 

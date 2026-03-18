@@ -45,7 +45,7 @@ API base: `http://localhost:8000/api/v1`
 Health check: `http://localhost:8000/api/v1/health`
 
 For Windows-specific setup notes, see `docs/development/WINDOWS_SETUP.md`.
-For the concrete Stage A staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
+For the concrete Stage B staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Common Commands
 
@@ -87,6 +87,7 @@ Use these when you need deeper reference material:
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
+- `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
 - `tasks/README.md`
@@ -149,14 +150,20 @@ Migration baseline:
 cmd /c scripts\migrate-windows.cmd .env
 ```
 
-Release preflight baseline:
+Stage B release preflight baseline:
 
 ```powershell
 cmd /c scripts\release-check-windows.cmd .env
 ```
 
-Stage A staging smoke baseline:
+Stage B staging smoke baseline:
 
 ```powershell
 cmd /c scripts\staging-smoke-windows.cmd .env.staging
+```
+
+Stage B rehearsal helper:
+
+```powershell
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
 ```

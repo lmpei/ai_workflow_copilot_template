@@ -249,3 +249,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: task and eval responses now expose recovery intent explicitly, retry attempts are linked to their source run, and operator cancellation survives worker re-entry and execution-boundary checks
 - Related Task: `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-013
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B staging rehearsal and handoff routine
+- Context: Stage B needed a more repeatable staging rehearsal path so release-like validation could be handed off without hidden knowledge or ambiguous rollback posture.
+- Choice: standardize the Stage B Windows release routine around env-file-aligned preflight, a single rehearsal helper, and a handoff note that records what changed, what was checked, and which rollback target applies.
+- Why: delivery work should become more repeatable and operator-friendly without overstating production guarantees or requiring a heavy deployment stack.
+- Impact: `release-check-windows.cmd` now validates `APP_ENV_FILE` alignment, `staging-rehearse-windows.cmd` can execute the full Stage B rehearsal path, and the staging docs now expect an explicit handoff artifact.
+- Related Task: `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- Supersedes:

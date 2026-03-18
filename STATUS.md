@@ -8,26 +8,25 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Project Mode
 
-- Execution
+- Planning
 
 ## Current Phase
 
 - Phase 5 baseline complete
 - Stage A complete and closed
-- Stage B first task wave active
+- Stage B first task wave complete
 
 ## Current Objective
 
-- continue the first Stage B wave after landing recoverable runtime and control actions for tasks and evals
+- review the completed first Stage B wave and decide whether to close the wave or define a second Stage B wave
 
 ## Active Task
 
-- File: `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
-- Status: `stage-b-03` is complete and archived; `stage-b-04` is the next active task
+- none currently; `stage-b-04` is complete and archived
 
 ## Verification Status
 
-- Summary: Stage B now has a persistent Research workbench plus recoverable cancel/retry control semantics for tasks and eval runs; the next focus shifts to staging handoff and rehearsal automation.
+- Summary: Stage B now has a persistent Research workbench, recoverable cancel/retry control semantics for tasks and eval runs, and a more repeatable staging rehearsal plus handoff routine.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -42,15 +41,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which cancel, retry, and resume controls should be mandatory for long-running tasks and evals in the first Stage B runtime pass
-- how much runtime-state detail is enough before Stage B risks overfitting recovery UX too early
-- how much Stage B delivery automation is enough before planning beyond staging rehearsals
+- whether the first Stage B wave is sufficient to close the stage or only the wave
+- which Research workflow step should lead the next planning unit if Stage B continues
+- how much additional delivery automation is useful before it starts implying unsupported production guarantees
 
 ## Ready Now
 
-1. execute `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
-2. after the first Stage B wave, decide whether to close the wave or define a second Stage B wave
-3. if Stage B continues, define the next Research and runtime-reliability wave
+1. decide whether to close the first Stage B wave or define a second Stage B wave
+2. if Stage B continues, define the next Research and runtime-reliability wave
+3. if Stage B closes, define the next formal planning unit and task stack
 
 ## Parked / Later
 
@@ -59,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md`
+- `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md`
 
 ## Recent Decisions
 
@@ -70,3 +69,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-010` define the first Stage B task wave
 - `DEC-2026-03-18-011` introduce the Stage B Research workbench and asset lifecycle
 - `DEC-2026-03-18-012` add Stage B recoverable runtime control actions for tasks and eval runs
+- `DEC-2026-03-18-013` standardize the Stage B staging rehearsal and handoff path

@@ -164,8 +164,8 @@ The second execution wave is now archived as:
 - `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
 - `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
 
-The first executable Stage B wave is now active as:
+The first executable Stage B wave is now complete as:
 
 - `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md` (complete)
 - `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md` (complete)
-- `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md` (complete)

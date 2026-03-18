@@ -1,11 +1,11 @@
-# Stage A Delivery Baseline
+# Stage B Delivery Baseline
 
-This document defines the minimum delivery and operations baseline for Stage A.
+This document defines the minimum delivery and operations baseline for Stage B.
 
 It does not describe a full production platform. It defines the smallest repeatable path from local development toward
-shared `dev` or `staging` delivery.
+shared `dev` or `staging` delivery, plus the first operator-friendly rehearsal routine and handoff expectations.
 
-For the concrete Stage A staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
+For the concrete Stage B staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Environment Intent
 
@@ -35,6 +35,7 @@ Use `staging` for release-like validation before any stronger deployment target.
 - must follow the release checklist
 - must have an explicit migration step
 - must support a documented rollback decision, even if rollback is manual
+- must leave a rehearsal handoff record describing what changed and what rollback target is expected
 
 ## Configuration and Secret Rules
 
@@ -76,40 +77,31 @@ When `DATABASE_URL` uses the local Compose hostname `db`, the helper runs Alembi
 database is reachable from the same network. When `DATABASE_URL` points at a host-accessible database, it falls back
 to the local Python environment.
 
-Direct command:
-
-```powershell
-cd server
-set DATABASE_URL=<target database url>
-..\.venv\Scripts\python.exe -m alembic upgrade head
-cd ..
-```
-
 ## Release Preflight
 
-Use the Windows helper for the minimum Stage A release preflight:
+Use the Windows helper for the minimum Stage B release preflight:
 
 ```powershell
 cmd /c scripts\release-check-windows.cmd .env.staging
 ```
 
-This helper:
+This helper now confirms:
 
-- verifies the selected env file exists
-- fails if the selected env file still contains `replace_me`
-- runs the repository verification baseline
-
-It does not run migrations automatically.
+- the env file exists
+- `APP_ENV_FILE` matches the selected env file
+- no placeholder secrets remain
+- backend and frontend verification still pass locally
 
 ## Minimum Release Flow
 
-For a Stage A `local`, `dev`, or `staging` release candidate:
+For a Stage B `local`, `dev`, or `staging` release candidate:
 
-1. ensure the chosen env file is present and all live secrets are set
+1. ensure the chosen env file is present, current, and aligned with `APP_ENV_FILE`
 2. run `cmd /c scripts\release-check-windows.cmd <env-file>`
 3. run `cmd /c scripts\migrate-windows.cmd <env-file>`
 4. restart or recreate the application services
 5. run a smoke check
+6. record the rollback target and release handoff note
 
 Minimum smoke check:
 
@@ -120,19 +112,42 @@ Minimum smoke check:
 - Research tasks can run
 - the Research report path can complete
 
-## Staging-Specific Rehearsal Path
+## Stage B Rehearsal Helper
 
-Use `docs/development/STAGING_RELEASE_PATH.md` when you need:
+Use the Stage B helper when you want a single repeatable Windows rehearsal routine:
 
-- a concrete `.env.staging` convention
-- `docker compose --env-file` examples
-- a staging-specific release sequence
-- explicit manual and automated smoke expectations
-- a Stage A rollback decision path
+```powershell
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+```
+
+This helper:
+
+- runs release preflight
+- validates `docker compose --env-file <env-file> config`
+- starts or refreshes the chosen service shape
+- applies migrations
+- force-recreates the application tier
+- runs the minimum smoke helper
+- writes a handoff note with the env file, change ref, rollback target, and completed automated steps
+
+It is intentionally lightweight. It does not replace manual smoke, production orchestration, or full incident handling.
+
+## Handoff Baseline
+
+Each Stage B staging rehearsal should capture:
+
+- which env file was used
+- which change ref was rehearsed
+- which rollback target should be used if the release is unhealthy
+- which automated checks completed
+- which manual smoke checks are still required or already performed
+- anything unusual that the next operator should know
+
+Use `docs/development/STAGING_HANDOFF_TEMPLATE.md` as the human-readable fallback shape when the helper is not used.
 
 ## Rollback and Recovery
 
-Stage A rollback is intentionally lightweight.
+Stage B rollback is still intentionally lightweight.
 
 If preflight fails:
 
@@ -150,12 +165,12 @@ If the app restarts but the release is unhealthy:
 - if the schema change is incompatible, restore the database from backup or use a known safe downgrade path before
   retrying
 
-Stage A does not assume automated rollback orchestration. The minimum requirement is that the release owner has a
-documented manual decision path.
+Stage B still does not assume automated rollback orchestration. The minimum requirement is that the release owner has a
+documented manual decision path and an explicit rollback target.
 
 ## Minimum Runbook
 
-The minimum operational runbook for Stage A is:
+The minimum operational runbook for Stage B is:
 
 - startup:
   - `docker compose up --build` for local
@@ -166,5 +181,9 @@ The minimum operational runbook for Stage A is:
   - `cmd /c scripts\migrate-windows.cmd <env-file>`
 - smoke:
   - `cmd /c scripts\staging-smoke-windows.cmd <env-file>` plus manual validation
+- rehearse:
+  - `cmd /c scripts\staging-rehearse-windows.cmd <env-file> <rollback-target>` when you want the full Stage B routine
+- handoff:
+  - keep the generated note or copy `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
 - rollback:
   - restore the previous code/image version and reconcile schema state before retrying

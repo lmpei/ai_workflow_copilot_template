@@ -8,6 +8,7 @@
 
 - Status: active
 - Opened At: 2026-03-18
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -128,15 +129,15 @@ Stage B is successful when:
 
 ## Next Step
 
-Continue the first Stage B wave with `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`.
+Review the completed first Stage B wave and decide whether to close the wave or define a second Stage B wave.
 
 ## First Task Wave
 
-The first executable Stage B wave is:
+The first executable Stage B wave is complete:
 
 - `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md` (complete)
 - `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md` (complete)
-- `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md` (complete)
 
-This wave keeps `Research` as the primary Stage B track while pairing it with the first recovery-oriented runtime and
+This wave kept `Research` as the primary Stage B track while pairing it with the first recovery-oriented runtime and
 operator-oriented staging improvements.

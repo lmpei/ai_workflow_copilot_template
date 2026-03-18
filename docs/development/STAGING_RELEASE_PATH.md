@@ -1,18 +1,19 @@
-# Stage A Staging Release Path
+# Stage B Staging Release Path
 
-This document turns the Stage A delivery baseline into a concrete staging rehearsal path.
+This document turns the Stage B delivery baseline into a concrete staging rehearsal path.
 
 It does not define a production deployment system. It defines the smallest repeatable path that a collaborator can use
 to rehearse a release-like validation routine with explicit environment selection, migration sequencing, smoke checks,
-and rollback decisions.
+rollback decisions, and a handoff artifact.
 
-## Supported Stage A Shape
+## Supported Stage B Shape
 
-Stage A supports a lightweight staging path built from three inputs:
+Stage B supports a lightweight staging path built from four inputs:
 
 - an environment-specific env file such as `.env.staging`
 - Docker Compose startup for the application services
-- Windows helper scripts for preflight, migration, and smoke checks
+- Windows helper scripts for preflight, migration, smoke, and full rehearsal
+- a handoff note that records what changed, what was checked, and what rollback target applies
 
 This path is intentionally limited:
 
@@ -34,8 +35,8 @@ Recommended pattern:
 - `.env.staging`
   - release-like staging validation
 
-The Compose file now honors `APP_ENV_FILE`, so the selected env file can also be passed into the `server`, `worker`,
-and `web` containers.
+The Compose file honors `APP_ENV_FILE`, so the selected env file can also be passed into the `server`, `worker`, and
+`web` containers. Stage B now expects the selected env file and `APP_ENV_FILE` value to match.
 
 A staging env file should include:
 
@@ -51,11 +52,12 @@ Before a staging rehearsal starts, confirm:
 
 1. the target env file exists and is not committed to git
 2. the target env file contains no `replace_me` placeholders
-3. the target environment URLs and secrets are current
-4. the release owner knows which prior image or code revision is the rollback target
-5. a database backup or a known-safe recovery path exists for incompatible schema failures
+3. `APP_ENV_FILE` matches the env file being rehearsed
+4. the target environment URLs and secrets are current
+5. the release owner knows which prior image or code revision is the rollback target
+6. a database backup or a known-safe recovery path exists for incompatible schema failures
 
-## Stage A Staging Release Sequence
+## Stage B Staging Release Sequence
 
 ### 1. Preflight
 
@@ -68,6 +70,7 @@ cmd /c scripts\release-check-windows.cmd .env.staging
 This confirms:
 
 - the env file exists
+- `APP_ENV_FILE` is aligned
 - no placeholder secrets remain
 - backend and frontend verification still pass locally before the release rehearsal continues
 
@@ -96,18 +99,16 @@ Run migrations against the same env file:
 cmd /c scripts\migrate-windows.cmd .env.staging
 ```
 
-The helper reads `DATABASE_URL` from the provided env file and applies `alembic upgrade head`. If the URL uses the local Compose hostname `db`, it runs inside the `server` container so the database is reachable on the Compose network.
+The helper reads `DATABASE_URL` from the provided env file and applies `alembic upgrade head`. If the URL uses the
+local Compose hostname `db`, it runs inside the `server` container so the database is reachable on the Compose network.
 
-### 4. Recreate the Application Tier If Needed
+### 4. Recreate the Application Tier
 
-If the application containers must pick up new code, image, or env changes after migration, recreate them explicitly:
+After migration, force-recreate the application tier so code and env changes are definitely applied:
 
 ```powershell
 docker compose --env-file .env.staging up -d --build --force-recreate server worker web
 ```
-
-Stage A does not automate this step because the exact restart sequence depends on whether the rehearsal is local,
-shared, image-based, or bind-mounted.
 
 ### 5. Automated Smoke
 
@@ -133,6 +134,24 @@ The release is not considered rehearsed until a human completes these checks:
 - the formal Research report path can complete
 - traces and task history remain visible after the run
 
+### 7. Handoff Record
+
+Record the rehearsal outcome before handing off the release candidate.
+
+Preferred helper:
+
+```powershell
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+```
+
+This helper runs the Stage B routine end to end and writes a handoff note to `%TEMP%\ai_workflow_copilot_staging_handoff.md`
+by default, or to a custom path when one is provided.
+
+Fallback path:
+
+- copy `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
+- fill in the env file, change ref, rollback target, automated steps completed, and any operator notes
+
 ## Failure Handling
 
 ### Preflight Failure
@@ -154,7 +173,7 @@ The release is not considered rehearsed until a human completes these checks:
 
 ## Minimum Rollback Decision Path
 
-The Stage A rollback decision path is:
+The Stage B rollback decision path is:
 
 1. identify whether failure happened before migration, during migration, or after app restart
 2. stop the release if migration did not complete cleanly
@@ -165,6 +184,7 @@ The Stage A rollback decision path is:
 ## Related Docs
 
 - `docs/development/DELIVERY_BASELINE.md`
+- `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/development/WINDOWS_SETUP.md`
 - `README.md`
 - `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
