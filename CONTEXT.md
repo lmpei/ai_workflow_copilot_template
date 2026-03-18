@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A first task wave ready for execution
+- Current stage: Stage A second task wave defined
 
 ## Success Criteria
 
@@ -56,6 +56,15 @@ primary track and reliability plus delivery work treated as required parallel in
 - Frontend: `http://localhost:3000`
 - API base: `http://localhost:8000/api/v1`
 - Health: `http://localhost:8000/api/v1/health`
+
+## Environment Intent
+
+- `local`
+  - Docker Compose on one machine with local `.env` and bundled `db` / `redis` / `chroma`
+- `dev`
+  - shared internal validation with environment-specific secrets and service URLs
+- `staging`
+  - release-like validation with explicit migration, smoke, and rollback discipline
 
 ## Verification
 

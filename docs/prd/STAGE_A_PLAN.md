@@ -130,7 +130,7 @@ Stage A is successful when:
 
 ## Next Step
 
-Continue the first Stage A task wave with `tasks/stage-a-05-delivery-and-operations-baseline.md`.
+Execute the second Stage A wave, starting with `tasks/stage-a-07-research-iteration-workflow.md`.
 
 ## Initial Task Wave
 
@@ -139,10 +139,21 @@ The first executable Stage A wave is:
 - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
 - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
 - `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
-- `tasks/stage-a-05-delivery-and-operations-baseline.md`
+- `tasks/archive/stage-a/stage-a-05-delivery-and-operations-baseline.md`
 
 This wave keeps `Research` as the primary track while ensuring the first parallel work exists for `Platform Reliability`
 and `Delivery and Operations`.
 
 Completed planning and historical Phase 5 task specs should be archived so the root `tasks/` directory stays focused on
 active Stage A execution work.
+
+## Second Task Wave
+
+The second executable Stage A wave is:
+
+- `tasks/stage-a-07-research-iteration-workflow.md`
+- `tasks/stage-a-08-research-eval-baseline.md`
+- `tasks/stage-a-09-staging-delivery-path.md`
+
+This wave keeps `Research` as the primary track, but shifts the work from baseline establishment toward iterative
+Research workflow depth, explicit Research regression coverage, and a more concrete staging path.

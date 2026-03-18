@@ -34,6 +34,8 @@ Use these files for detailed reference material:
   - formal Stage A planning document derived from the post-Phase-5 roadmap model
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
+- `docs/development/DELIVERY_BASELINE.md`
+  - Stage A delivery, migration, release, rollback, and runbook baseline
 - `docs/development/WINDOWS_SETUP.md`
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
@@ -192,3 +194,12 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
 3. do not let archived tasks become the current-state source
 4. update the control-plane docs when a durable project truth changes
 5. prefer additive doc refactors over destructive replacement of existing history
+
+## Stage A Delivery Baseline
+
+- `local`, `dev`, and `staging` now have explicit intent in the docs
+- `.env.example` remains a scaffold only; no shared environment should keep `replace_me`
+- `scripts/migrate-windows.cmd`
+  - applies Alembic migrations against the active `DATABASE_URL`
+- `scripts/release-check-windows.cmd`
+  - validates `.env` placeholder removal and runs the repository verification baseline

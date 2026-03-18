@@ -126,7 +126,7 @@ Append-only log. Add new entries at the bottom.
   - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
   - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
   - `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
-  - `tasks/stage-a-05-delivery-and-operations-baseline.md`
+  - `tasks/archive/stage-a/stage-a-05-delivery-and-operations-baseline.md`
 - Why: the first wave should deepen Research while also advancing minimum reliability and delivery work in parallel
 - Impact: Stage A execution can now begin from a concrete, ordered task set rather than from planning text alone
 - Related Task: `tasks/archive/stage-a/stage-a-01-task-stack-planning.md`
@@ -144,4 +144,21 @@ Append-only log. Add new entries at the bottom.
 - Why: the root task directory should stay execution-ready and should not mix historical phase work with the current Stage A task stack
 - Impact: Stage A execution moved into the first Research task wave while the completed `stage-a-02`, `stage-a-03`, and Phase 5 history remain preserved in archive
 - Related Task: `tasks/archive/stage-a/stage-a-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-006
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: second Stage A task wave
+- Context: the first Stage A wave is complete, but Stage A success criteria still require deeper Research workflow capability plus a stronger regression and staging path
+- Choice: define the second Stage A wave as:
+  - `tasks/stage-a-07-research-iteration-workflow.md`
+  - `tasks/stage-a-08-research-eval-baseline.md`
+  - `tasks/stage-a-09-staging-delivery-path.md`
+- Why: this keeps Research as the primary Stage A track while explicitly pairing it with the next reliability and delivery work instead of treating those tracks as optional follow-up
+- Impact: `stage-a-07` becomes the next active execution task, while `stage-a-08` and `stage-a-09` form the queued parallel follow-on work for the rest of Stage A
+- Related Task: `tasks/archive/stage-a/stage-a-06-wave-two-planning.md`
 - Supersedes:

@@ -149,8 +149,14 @@ The repository does not yet implement:
 The next formal planning unit is `Stage A: Research Deepening With Trust Baseline`, documented in
 `docs/prd/STAGE_A_PLAN.md`.
 
-The first execution wave under that model is now tracked through `tasks/stage-a-*`, with
+The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and
 `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md` and
-`tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md` completed, and
-`tasks/stage-a-05-delivery-and-operations-baseline.md` as the next active task.
+`tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md` and
+`tasks/archive/stage-a/stage-a-05-delivery-and-operations-baseline.md` completed.
+
+The second execution wave is now defined as:
+
+- `tasks/stage-a-07-research-iteration-workflow.md`
+- `tasks/stage-a-08-research-eval-baseline.md`
+- `tasks/stage-a-09-staging-delivery-path.md`

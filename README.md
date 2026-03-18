@@ -83,6 +83,7 @@ Use these when you need deeper reference material:
 - `docs/prd/PLATFORM_PRD.md`
 - `docs/prd/STAGE_A_PLAN.md`
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
+- `docs/development/DELIVERY_BASELINE.md`
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
 - `tasks/README.md`
@@ -91,8 +92,8 @@ Use these when you need deeper reference material:
 
 The latest live state is maintained in `STATUS.md`.
 
-At a high level, the repository has a Phase 5 baseline implemented and now has the first executable `Stage A` task wave
-defined under `tasks/stage-a-*`, guided by the three-track roadmap model in `docs/prd/STAGE_A_PLAN.md`.
+At a high level, the repository has a Phase 5 baseline implemented, has completed the first `Stage A` task wave, and
+has defined the second Stage A wave under the three-track roadmap model in `docs/prd/STAGE_A_PLAN.md`.
 
 ## Runtime Services
 
@@ -137,4 +138,16 @@ Frontend baseline:
 
 ```powershell
 npm --prefix web run verify
+```
+
+Migration baseline:
+
+```powershell
+cmd /c scripts\migrate-windows.cmd
+```
+
+Release preflight baseline:
+
+```powershell
+cmd /c scripts\release-check-windows.cmd
 ```

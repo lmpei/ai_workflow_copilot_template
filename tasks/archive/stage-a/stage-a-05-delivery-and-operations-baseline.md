@@ -104,5 +104,24 @@ Disallowed files:
 
 ## Execution Status
 
-- Status: planned
-- Notes: this is the minimum Delivery and Operations companion task for the first Stage A wave
+- Status: completed
+- Notes:
+  - added a Stage A delivery baseline document that defines environment intent, migration rules, release flow, rollback guidance, and a minimum runbook
+  - added Windows helper scripts for migration and release preflight
+  - updated the root and development docs so the delivery baseline is discoverable from the normal project entry points
+
+## Result
+
+- Stage A now has an explicit `local` / `dev` / `staging` intent model instead of only local startup instructions.
+- The repository now has a documented minimum migration and release path.
+- Windows collaborators now have dedicated helper scripts for migration and release preflight.
+
+## Verification Result
+
+- manual doc consistency review across `README.md`, `CONTEXT.md`, `docs/development/WINDOWS_SETUP.md`,
+  `docs/development/DELIVERY_BASELINE.md`, and `docs/PROJECT_GUIDE.md`
+- `cmd /c scripts\\release-check-windows.cmd`
+  - script executed successfully through placeholder validation and repository verification dispatch
+  - verification failed on pre-existing repository lint/style debt outside the scope of this task
+- `scripts/migrate-windows.cmd`
+  - command shape reviewed directly; not executed here because it mutates the configured database state

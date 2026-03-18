@@ -13,23 +13,20 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Current Phase
 
 - Phase 5 baseline complete
-- Stage A first task wave in progress
+- Stage A second task wave defined
 
 ## Current Objective
 
-- continue execution of the first Stage A task wave across:
-  - `Research`
-  - `Platform Reliability`
-  - `Delivery and Operations`
+- execute the second Stage A wave, starting with the Research iteration workflow
 
 ## Active Task
 
-- File: `tasks/stage-a-05-delivery-and-operations-baseline.md`
-- Status: ready to start
+- File: `tasks/stage-a-07-research-iteration-workflow.md`
+- Status: Stage A wave two is defined; `stage-a-07` is ready to execute next
 
 ## Verification Status
 
-- Summary: Stage A task wave one is active, `stage-a-02`, `stage-a-03`, and `stage-a-04` are complete and archived, Research now emits trust metadata and task traces, and the next task is `stage-a-05`
+- Summary: Stage A task wave one is complete, and the second Stage A wave is now fixed in text. `stage-a-07`, `stage-a-08`, and `stage-a-09` are the next execution-ready tasks.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -44,14 +41,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which implementation order inside the first Stage A wave will minimize rework
-- which additional Stage A tasks should follow after the first wave completes
+- how much prior report context a follow-up Research task should carry by default
+- how much Research regression coverage Stage A should require before broadening module scope
+- what the lightest useful staging rehearsal should include before Stage B is considered
 
 ## Ready Now
 
-1. start `tasks/stage-a-05-delivery-and-operations-baseline.md`
-2. define the second Stage A wave after the first wave completes
-3. decide whether the next Research-focused work should deepen report iteration or broaden Stage A eval coverage
+1. execute `tasks/stage-a-07-research-iteration-workflow.md`
+2. follow with `tasks/stage-a-08-research-eval-baseline.md`
+3. then execute `tasks/stage-a-09-staging-delivery-path.md`
 
 ## Parked / Later
 
@@ -60,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md`
+- `tasks/archive/stage-a/stage-a-06-wave-two-planning.md`
 
 ## Recent Decisions
 
@@ -70,3 +68,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-003` use `stage-a-*` naming for Stage A tasks
 - `DEC-2026-03-18-004` define the first Stage A task wave
 - `DEC-2026-03-18-005` archive historical Phase 5 task specs and activate Stage A task execution
+- `DEC-2026-03-18-006` define the second Stage A task wave

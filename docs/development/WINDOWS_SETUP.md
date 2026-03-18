@@ -1,8 +1,9 @@
-# Windows Development
+﻿# Windows Development
 
 This document is a Windows-specific supplement to `README.md`.
 Use `README.md` as the primary project startup guide.
 Use this file only for Windows shell differences, optional local dependency setup, and verification helpers.
+For the Stage A release baseline, also read `docs/development/DELIVERY_BASELINE.md`.
 
 ## Recommended tools
 
@@ -40,6 +41,15 @@ Useful local URLs after startup:
 - API base: `http://localhost:8000/api/v1`
 - Health check: `http://localhost:8000/api/v1/health`
 
+## Environment intent
+
+- `local`
+  - your normal Docker Compose development environment
+- `dev`
+  - a shared validation environment with non-placeholder secrets and environment-specific URLs
+- `staging`
+  - a release-like environment that must follow migration and smoke-check discipline
+
 ## Optional local dependency setup
 
 Use this only if you want local Python/Node development outside the Docker-only startup path.
@@ -76,6 +86,8 @@ cd ..
 
 - `scripts\setup-windows.cmd`
 - `scripts\verify-windows.cmd`
+- `scripts\migrate-windows.cmd`
+- `scripts\release-check-windows.cmd`
 
 These are local development helpers, not project startup commands.
 
@@ -83,10 +95,16 @@ These are local development helpers, not project startup commands.
   - prepares a local Windows development environment
 - `verify-windows.cmd`
   - runs local backend and frontend verification
+- `migrate-windows.cmd`
+  - applies Alembic migrations against the current `DATABASE_URL`
+- `release-check-windows.cmd`
+  - fails if `.env` still contains `replace_me` and then runs the verification baseline
 
 Run them from PowerShell with:
 
 ```powershell
 cmd /c scripts\setup-windows.cmd
 cmd /c scripts\verify-windows.cmd
+cmd /c scripts\migrate-windows.cmd
+cmd /c scripts\release-check-windows.cmd
 ```
