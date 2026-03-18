@@ -13,20 +13,20 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Current Phase
 
 - Phase 5 baseline complete
-- Stage A second task wave in progress
+- Stage A second task wave complete
 
 ## Current Objective
 
-- execute the second Stage A wave, with the staging delivery path as the next active task
+- review Stage A completion and decide whether to create another Stage A planning task or move to the next formal planning unit
 
 ## Active Task
 
-- File: `tasks/stage-a-09-staging-delivery-path.md`
-- Status: `stage-a-08` is complete and ready to archive; `stage-a-09` is the next active task
+- File: none currently
+- Status: `stage-a-09` is complete and archived; the next planning task has not been created yet
 
 ## Verification Status
 
-- Summary: `stage-a-08` is complete, including a stricter Research regression baseline plus trace coverage. `stage-a-09` is the remaining execution-ready task in Stage A wave two.
+- Summary: `stage-a-09` is complete, including a concrete staging rehearsal path, env-file-aware Compose behavior, and staging smoke helpers. Stage A wave two is now fully complete.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -41,15 +41,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how much prior report context a follow-up Research task should carry by default
-- how much Research regression coverage Stage A should require before broadening module scope
-- what the lightest useful staging rehearsal should include before Stage B is considered
+- whether Stage A now needs a third task wave or a closeout review
+- what the first formal planning unit after Stage A should be called
+- whether Research needs another product-depth task before broader roadmap movement
 
 ## Ready Now
 
-1. execute `tasks/stage-a-09-staging-delivery-path.md`
-2. review whether Stage A needs another Research-focused follow-up task after the eval baseline lands
-3. decide whether Stage A is complete or needs a third task wave
+1. review whether Stage A is complete enough to close
+2. if more Stage A work is needed, create a new planning task for the next task wave
+3. if Stage A is ready to close, define the next formal planning unit and its task stack
 
 ## Parked / Later
 
@@ -58,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
+- `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
 
 ## Recent Decisions
 

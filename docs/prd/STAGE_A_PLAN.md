@@ -130,8 +130,7 @@ Stage A is successful when:
 
 ## Next Step
 
-Execute the second Stage A wave, with `tasks/stage-a-09-staging-delivery-path.md` as the next active task after the
-Research eval baseline.
+Review whether Stage A is complete or needs another planning wave now that the second execution wave has landed.
 
 ## Initial Task Wave
 
@@ -154,7 +153,7 @@ The second executable Stage A wave is:
 
 - `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
 - `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
-- `tasks/stage-a-09-staging-delivery-path.md`
+- `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
 
 This wave keeps `Research` as the primary track, but shifts the work from baseline establishment toward iterative
 Research workflow depth, explicit Research regression coverage, and a more concrete staging path.

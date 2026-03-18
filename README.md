@@ -1,4 +1,4 @@
-﻿# AI Workflow Copilot Platform
+# AI Workflow Copilot Platform
 
 AI Workflow Copilot is a shared platform core for AI knowledge-work workflows. It combines workspaces, document ingest,
 grounded chat, async tasks, agent execution, evaluation, and observability so reusable scenario modules can run on the
@@ -45,6 +45,7 @@ API base: `http://localhost:8000/api/v1`
 Health check: `http://localhost:8000/api/v1/health`
 
 For Windows-specific setup notes, see `docs/development/WINDOWS_SETUP.md`.
+For the concrete Stage A staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Common Commands
 
@@ -84,6 +85,7 @@ Use these when you need deeper reference material:
 - `docs/prd/STAGE_A_PLAN.md`
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
 - `docs/development/DELIVERY_BASELINE.md`
+- `docs/development/STAGING_RELEASE_PATH.md`
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
 - `tasks/README.md`
@@ -143,11 +145,17 @@ npm --prefix web run verify
 Migration baseline:
 
 ```powershell
-cmd /c scripts\migrate-windows.cmd
+cmd /c scripts\migrate-windows.cmd .env
 ```
 
 Release preflight baseline:
 
 ```powershell
-cmd /c scripts\release-check-windows.cmd
+cmd /c scripts\release-check-windows.cmd .env
+```
+
+Stage A staging smoke baseline:
+
+```powershell
+cmd /c scripts\staging-smoke-windows.cmd .env.staging
 ```

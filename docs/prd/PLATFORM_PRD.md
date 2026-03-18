@@ -155,8 +155,8 @@ The first execution wave under that model is now archived under `tasks/archive/s
 `tasks/archive/stage-a/stage-a-04-research-trust-and-regression-baseline.md` and
 `tasks/archive/stage-a/stage-a-05-delivery-and-operations-baseline.md` completed.
 
-The second execution wave is now defined as:
+The second execution wave is now archived as:
 
 - `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
 - `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
-- `tasks/stage-a-09-staging-delivery-path.md`
+- `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`

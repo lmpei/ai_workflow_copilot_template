@@ -22,6 +22,7 @@ Relevant documents:
 - `docs/prd/STAGE_A_PLAN.md`
 - `docs/prd/PLATFORM_PRD.md`
 - `docs/development/DELIVERY_BASELINE.md`
+- `docs/development/STAGING_RELEASE_PATH.md`
 - `docs/development/WINDOWS_SETUP.md`
 - `README.md`
 
@@ -102,3 +103,24 @@ Disallowed files:
 ## Rollback Plan
 
 - revert the staging-path docs or helper changes while preserving the more general Stage A delivery baseline
+
+## Results
+
+- added env-file-aware Compose support for `server`, `worker`, and `web` through `APP_ENV_FILE`
+- taught the migration and release preflight helpers to accept an explicit env file path
+- added a minimal staging smoke helper for API health and web-root checks
+- documented the concrete Stage A staging rehearsal path, including release sequencing, smoke expectations, and rollback decisions
+
+## Execution Status
+
+- Status: completed
+- Completed At: 2026-03-18
+- Notes: Stage A now has a repeatable `.env.staging`-style release rehearsal path without claiming unsupported production guarantees
+
+## Verification Result
+
+- manual doc consistency review
+- `cmd /c scripts\migrate-windows.cmd --help`
+- `cmd /c scripts\release-check-windows.cmd --help`
+- `cmd /c scripts\staging-smoke-windows.cmd --help`
+- `docker compose config` with `APP_ENV_FILE` override

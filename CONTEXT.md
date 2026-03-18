@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A second task wave in progress
+- Current stage: Stage A second task wave complete; next planning step pending
 
 ## Success Criteria
 

@@ -1,9 +1,10 @@
-﻿# Windows Development
+# Windows Development
 
 This document is a Windows-specific supplement to `README.md`.
 Use `README.md` as the primary project startup guide.
 Use this file only for Windows shell differences, optional local dependency setup, and verification helpers.
 For the Stage A release baseline, also read `docs/development/DELIVERY_BASELINE.md`.
+For the concrete staging rehearsal path, read `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Recommended tools
 
@@ -88,6 +89,7 @@ cd ..
 - `scripts\verify-windows.cmd`
 - `scripts\migrate-windows.cmd`
 - `scripts\release-check-windows.cmd`
+- `scripts\staging-smoke-windows.cmd`
 
 These are local development helpers, not project startup commands.
 
@@ -96,15 +98,32 @@ These are local development helpers, not project startup commands.
 - `verify-windows.cmd`
   - runs local backend and frontend verification
 - `migrate-windows.cmd`
-  - applies Alembic migrations against the current `DATABASE_URL`
+  - applies Alembic migrations using `DATABASE_URL` from the provided env file
 - `release-check-windows.cmd`
-  - fails if `.env` still contains `replace_me` and then runs the verification baseline
+  - fails if the provided env file still contains `replace_me` and then runs the verification baseline
+- `staging-smoke-windows.cmd`
+  - checks the health endpoint and web root derived from the provided env file
 
 Run them from PowerShell with:
 
 ```powershell
 cmd /c scripts\setup-windows.cmd
 cmd /c scripts\verify-windows.cmd
-cmd /c scripts\migrate-windows.cmd
-cmd /c scripts\release-check-windows.cmd
+cmd /c scripts\migrate-windows.cmd .env
+cmd /c scripts\release-check-windows.cmd .env
+cmd /c scripts\staging-smoke-windows.cmd .env
 ```
+
+## Stage A staging rehearsal
+
+Recommended Windows rehearsal flow:
+
+1. copy `.env.example` to `.env.staging`
+2. set `APP_ENV_FILE=.env.staging` inside `.env.staging`
+3. replace all placeholder secrets and update the environment URLs
+4. run `cmd /c scripts\release-check-windows.cmd .env.staging`
+5. run `docker compose --env-file .env.staging up -d --build server worker web`
+6. run `cmd /c scripts\migrate-windows.cmd .env.staging`
+7. run `cmd /c scripts\staging-smoke-windows.cmd .env.staging`
+
+Use `docs/development/STAGING_RELEASE_PATH.md` for the full checklist, restart guidance, and rollback expectations.

@@ -1,9 +1,11 @@
-﻿# Stage A Delivery Baseline
+# Stage A Delivery Baseline
 
 This document defines the minimum delivery and operations baseline for Stage A.
 
 It does not describe a full production platform. It defines the smallest repeatable path from local development toward
 shared `dev` or `staging` delivery.
+
+For the concrete Stage A staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Environment Intent
 
@@ -45,6 +47,8 @@ Rules:
 - local Compose database defaults are for `local` only
 - `dev` and `staging` should override `DATABASE_URL`, `REDIS_URL`, and `CHROMA_URL` for the target environment
 - `NEXT_PUBLIC_API_BASE_URL` and `INTERNAL_API_BASE_URL` should match the environment being released
+- environment-specific env files should set `APP_ENV_FILE` to their own path so Compose can pass the same file into the
+  application containers
 
 Recommended practice:
 
@@ -65,13 +69,14 @@ Minimum migration rule:
 Windows helper:
 
 ```powershell
-cmd /c scripts\migrate-windows.cmd
+cmd /c scripts\migrate-windows.cmd .env.staging
 ```
 
 Direct command:
 
 ```powershell
 cd server
+set DATABASE_URL=<target database url>
 ..\.venv\Scripts\python.exe -m alembic upgrade head
 cd ..
 ```
@@ -81,13 +86,13 @@ cd ..
 Use the Windows helper for the minimum Stage A release preflight:
 
 ```powershell
-cmd /c scripts\release-check-windows.cmd
+cmd /c scripts\release-check-windows.cmd .env.staging
 ```
 
 This helper:
 
-- verifies `.env` exists
-- fails if `.env` still contains `replace_me`
+- verifies the selected env file exists
+- fails if the selected env file still contains `replace_me`
 - runs the repository verification baseline
 
 It does not run migrations automatically.
@@ -96,20 +101,30 @@ It does not run migrations automatically.
 
 For a Stage A `local`, `dev`, or `staging` release candidate:
 
-1. ensure `.env` is present and all live secrets are set
-2. run `cmd /c scripts\release-check-windows.cmd`
-3. run `cmd /c scripts\migrate-windows.cmd`
+1. ensure the chosen env file is present and all live secrets are set
+2. run `cmd /c scripts\release-check-windows.cmd <env-file>`
+3. run `cmd /c scripts\migrate-windows.cmd <env-file>`
 4. restart or recreate the application services
 5. run a smoke check
 
 Minimum smoke check:
 
-- `/api/v1/health` responds successfully
+- `cmd /c scripts\staging-smoke-windows.cmd <env-file>` passes
 - login works
 - a workspace can load
 - documents view loads
 - Research tasks can run
 - the Research report path can complete
+
+## Staging-Specific Rehearsal Path
+
+Use `docs/development/STAGING_RELEASE_PATH.md` when you need:
+
+- a concrete `.env.staging` convention
+- `docker compose --env-file` examples
+- a staging-specific release sequence
+- explicit manual and automated smoke expectations
+- a Stage A rollback decision path
 
 ## Rollback and Recovery
 
@@ -142,10 +157,10 @@ The minimum operational runbook for Stage A is:
   - `docker compose up --build` for local
   - environment-specific startup command for `dev` or `staging`
 - verify:
-  - `cmd /c scripts\release-check-windows.cmd`
+  - `cmd /c scripts\release-check-windows.cmd <env-file>`
 - migrate:
-  - `cmd /c scripts\migrate-windows.cmd`
+  - `cmd /c scripts\migrate-windows.cmd <env-file>`
 - smoke:
-  - health, login, workspace load, Research task, Research report
+  - `cmd /c scripts\staging-smoke-windows.cmd <env-file>` plus manual validation
 - rollback:
   - restore the previous code/image version and reconcile schema state before retrying
