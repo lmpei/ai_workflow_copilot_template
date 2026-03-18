@@ -159,8 +159,17 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - deterministic `checks`
   - explicit `gaps`
   - `regression_passed`
+- canonical Research result metadata also carries a stricter Stage A regression baseline with:
+  - `baseline_version`
+  - `passed`
+  - `checks`
+  - `issues`
+  - `signals`
+- the regression baseline should fail weak-context Research outputs such as `documents_only` or `no_documents`; those
+  runs remain valid task results, but they are no longer treated as clean regression passes
 - Research task execution now records `research_task` traces for successful and failed runs so trust signals and failure
-  shapes remain inspectable after the task completes
+  shapes remain inspectable after the task completes, including regression-baseline summaries on successful Research
+  runs
 - the Research surface now lets a user continue from a completed Research result, reusing its input shape while linking
   the new task to the parent task through Stage A follow-up lineage
 

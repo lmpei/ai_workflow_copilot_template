@@ -461,6 +461,9 @@ def run_task_execution(task_id: str) -> dict[str, object]:
             trust_metadata = result_metadata.get("trust", {})
             if not isinstance(trust_metadata, dict):
                 trust_metadata = {}
+            regression_baseline = result_metadata.get("regression_baseline", {})
+            if not isinstance(regression_baseline, dict):
+                regression_baseline = {}
 
             trace_id = _record_research_task_trace(
                 task=running_task,
@@ -471,6 +474,8 @@ def run_task_execution(task_id: str) -> dict[str, object]:
                     "summary": execution_result.final_output.get("summary"),
                     "report_ready": result_metadata.get("report_ready"),
                     "evidence_status": result_metadata.get("evidence_status"),
+                    "regression_passed": result_metadata.get("regression_passed"),
+                    "regression_baseline": regression_baseline,
                     "trust": trust_metadata,
                     "error": None,
                 },
@@ -483,6 +488,8 @@ def run_task_execution(task_id: str) -> dict[str, object]:
                     "parent_task_id": result_metadata.get("parent_task_id"),
                     "report_ready": result_metadata.get("report_ready"),
                     "evidence_status": result_metadata.get("evidence_status"),
+                    "regression_passed": result_metadata.get("regression_passed"),
+                    "regression_baseline": regression_baseline,
                     "trust": trust_metadata,
                 },
                 latency_ms=latency_ms,

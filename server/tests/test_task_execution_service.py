@@ -167,6 +167,9 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert traces[0].trace_type == "research_task"
     assert traces[0].request_json["prompt"] == "Who owns the project?"
     assert traces[0].response_json["status"] == "completed"
+    assert traces[0].response_json["regression_passed"] is True
+    assert traces[0].metadata_json["regression_passed"] is True
+    assert traces[0].metadata_json["regression_baseline"]["baseline_version"] == "stage_a_research_regression_v1"
     assert traces[0].metadata_json["trust"]["regression_passed"] is True
 
 
@@ -192,6 +195,7 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["summary"] == "No workspace documents are available for analysis."
+    assert output["result"]["metadata"]["regression_passed"] is False
     assert output["trace_id"]
     assert persisted_task is not None
     assert persisted_task.status == "done"
@@ -204,6 +208,8 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     traces = trace_repository.list_traces_for_task(task_id)
     assert len(traces) == 1
     assert traces[0].response_json["evidence_status"] == "no_documents"
+    assert traces[0].response_json["regression_passed"] is False
+    assert "no_documents_available" in traces[0].metadata_json["regression_baseline"]["issues"]
     assert traces[0].metadata_json["trust"]["gaps"] == ["no_documents_available"]
 
 
@@ -369,6 +375,7 @@ def test_run_task_execution_carries_follow_up_research_lineage(
     assert output["result"]["report"]["headline"] == "Research Follow-up Report: Refine the strongest risk"
     assert traces[0].request_json["lineage"]["parent_task_id"] == parent_task.id
     assert traces[0].metadata_json["is_follow_up"] is True
+    assert traces[0].metadata_json["regression_baseline"]["signals"]["is_follow_up"] is True
 
 
 def test_run_task_execution_executes_support_reply_draft_and_persists_output(

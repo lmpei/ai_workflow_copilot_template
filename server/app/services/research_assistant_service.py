@@ -38,6 +38,7 @@ _DEFAULT_RESEARCH_REQUESTED_SECTIONS: dict[ResearchTaskType, list[ResearchReques
     "workspace_report": ["summary", "findings", "evidence", "open_questions", "next_steps"],
 }
 RESEARCH_TRUST_BASELINE_VERSION = "stage_a_research_v1"
+RESEARCH_REGRESSION_BASELINE_VERSION = "stage_a_research_regression_v1"
 
 
 class ResearchAssistantContractError(ValueError):
@@ -528,6 +529,130 @@ def _build_research_trust_metadata(
     }
 
 
+def evaluate_research_result_regression(
+    result_json: dict[str, object],
+) -> dict[str, object]:
+    metadata = result_json.get("metadata")
+    metadata_json = metadata if isinstance(metadata, dict) else {}
+    trust = metadata_json.get("trust")
+    trust_json = trust if isinstance(trust, dict) else {}
+    input_json = result_json.get("input")
+    input_payload = input_json if isinstance(input_json, dict) else {}
+    sections_json = result_json.get("sections")
+    sections_payload = sections_json if isinstance(sections_json, dict) else {}
+    artifacts_json = result_json.get("artifacts")
+    artifacts_payload = artifacts_json if isinstance(artifacts_json, dict) else {}
+    report_json = result_json.get("report")
+    report_payload = report_json if isinstance(report_json, dict) else None
+    lineage_json = result_json.get("lineage")
+
+    task_type = result_json.get("task_type")
+    summary = result_json.get("summary")
+    evidence_status = metadata_json.get("evidence_status")
+    trust_gaps = metadata_json.get("trust_gaps")
+    if not isinstance(trust_gaps, list):
+        trust_gaps = trust_json.get("gaps", [])
+    trust_gap_values = [
+        str(item).strip()
+        for item in trust_gaps
+        if isinstance(item, str) and item.strip()
+    ]
+
+    findings = sections_payload.get("findings")
+    finding_list = findings if isinstance(findings, list) else []
+    grounded_finding_count = sum(
+        1
+        for finding in finding_list
+        if isinstance(finding, dict)
+        and isinstance(finding.get("evidence_ref_ids"), list)
+        and len(finding["evidence_ref_ids"]) > 0
+    )
+
+    match_count_raw = artifacts_payload.get("match_count")
+    match_count = match_count_raw if isinstance(match_count_raw, int) else 0
+    deliverable = input_payload.get("deliverable")
+    report_expected = task_type == "workspace_report" or deliverable == "report"
+    report_sections = (
+        report_payload.get("sections")
+        if isinstance(report_payload, dict)
+        else None
+    )
+    report_section_list = report_sections if isinstance(report_sections, list) else []
+    is_follow_up = metadata_json.get("is_follow_up") is True or input_payload.get("parent_task_id") is not None
+
+    checks = {
+        "module_type_valid": result_json.get("module_type") == "research",
+        "task_type_valid": task_type in SUPPORTED_RESEARCH_TASK_TYPES,
+        "summary_present": isinstance(summary, str) and bool(summary.strip()),
+        "sections_present": isinstance(sections_json, dict)
+        and isinstance(sections_payload.get("summary"), str)
+        and bool(str(sections_payload.get("summary")).strip()),
+        "artifacts_present": isinstance(artifacts_json, dict),
+        "trust_present": isinstance(trust, dict),
+        "trust_baseline_present": trust_json.get("baseline_version") == RESEARCH_TRUST_BASELINE_VERSION,
+        "evidence_status_known": evidence_status in {"grounded_matches", "documents_only", "no_documents"},
+        "grounded_evidence_required": evidence_status == "grounded_matches",
+        "grounded_findings_present_when_matches_exist": match_count == 0 or grounded_finding_count > 0,
+        "report_present_when_expected": (not report_expected) or isinstance(report_json, dict),
+        "report_shape_valid_when_expected": (not report_expected)
+        or (
+            isinstance(report_json, dict)
+            and isinstance(report_payload.get("executive_summary"), str)
+            and bool(str(report_payload.get("executive_summary")).strip())
+            and len(report_section_list) > 0
+        ),
+        "weak_context_flagged": (evidence_status == "grounded_matches") or len(trust_gap_values) > 0,
+        "lineage_present_for_follow_up": (not is_follow_up) or isinstance(lineage_json, dict),
+    }
+
+    issues: list[str] = []
+    if checks["grounded_evidence_required"] is False:
+        if evidence_status == "documents_only":
+            issues.append("weak_evidence_documents_only")
+        elif evidence_status == "no_documents":
+            issues.append("no_documents_available")
+        else:
+            issues.append("grounded_evidence_missing")
+    if checks["grounded_findings_present_when_matches_exist"] is False:
+        issues.append("grounded_findings_missing")
+    if checks["report_present_when_expected"] is False:
+        issues.append("missing_report")
+    if checks["report_shape_valid_when_expected"] is False:
+        issues.append("invalid_report_shape")
+    if checks["trust_present"] is False:
+        issues.append("missing_trust_metadata")
+    if checks["trust_baseline_present"] is False:
+        issues.append("unexpected_trust_baseline")
+    if checks["summary_present"] is False:
+        issues.append("missing_summary")
+    if checks["sections_present"] is False:
+        issues.append("missing_sections_summary")
+    if checks["weak_context_flagged"] is False:
+        issues.append("weak_context_not_flagged")
+    if checks["lineage_present_for_follow_up"] is False:
+        issues.append("missing_follow_up_lineage")
+
+    passed = all(checks.values())
+
+    return {
+        "baseline_version": RESEARCH_REGRESSION_BASELINE_VERSION,
+        "passed": passed,
+        "checks": checks,
+        "issues": issues,
+        "signals": {
+            "task_type": task_type,
+            "deliverable": deliverable,
+            "evidence_status": evidence_status,
+            "match_count": match_count,
+            "grounded_finding_count": grounded_finding_count,
+            "report_expected": report_expected,
+            "report_section_count": len(report_section_list),
+            "trust_gap_count": len(trust_gap_values),
+            "is_follow_up": is_follow_up,
+        },
+    }
+
+
 def build_research_task_result(
     *,
     task_type: ResearchTaskType,
@@ -615,4 +740,13 @@ def build_research_task_result(
             "trust": trust_metadata,
         },
     )
-    return result.model_dump(exclude_none=True)
+    result_json = result.model_dump(exclude_none=True)
+    regression_baseline = evaluate_research_result_regression(result_json)
+    result_metadata = result_json.get("metadata")
+    if isinstance(result_metadata, dict):
+        result_metadata["regression_passed"] = regression_baseline["passed"]
+        result_metadata["regression_baseline"] = regression_baseline
+        trust_json = result_metadata.get("trust")
+        if isinstance(trust_json, dict):
+            trust_json["regression_passed"] = regression_baseline["passed"]
+    return result_json

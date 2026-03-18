@@ -157,6 +157,6 @@ The first execution wave under that model is now archived under `tasks/archive/s
 
 The second execution wave is now defined as:
 
-- `tasks/stage-a-07-research-iteration-workflow.md`
-- `tasks/stage-a-08-research-eval-baseline.md`
+- `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
+- `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
 - `tasks/stage-a-09-staging-delivery-path.md`

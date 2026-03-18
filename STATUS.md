@@ -17,16 +17,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the second Stage A wave, with the Research eval baseline as the next active task
+- execute the second Stage A wave, with the staging delivery path as the next active task
 
 ## Active Task
 
-- File: `tasks/stage-a-08-research-eval-baseline.md`
-- Status: `stage-a-07` is complete and archived; `stage-a-08` is the next active task
+- File: `tasks/stage-a-09-staging-delivery-path.md`
+- Status: `stage-a-08` is complete and ready to archive; `stage-a-09` is the next active task
 
 ## Verification Status
 
-- Summary: `stage-a-07` is complete, including follow-up Research lineage and surface support. `stage-a-08` and `stage-a-09` remain the next execution-ready tasks in Stage A wave two.
+- Summary: `stage-a-08` is complete, including a stricter Research regression baseline plus trace coverage. `stage-a-09` is the remaining execution-ready task in Stage A wave two.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -47,9 +47,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `tasks/stage-a-08-research-eval-baseline.md`
-2. follow with `tasks/stage-a-09-staging-delivery-path.md`
-3. review whether Stage A needs another Research-focused follow-up task after the eval baseline lands
+1. execute `tasks/stage-a-09-staging-delivery-path.md`
+2. review whether Stage A needs another Research-focused follow-up task after the eval baseline lands
+3. decide whether Stage A is complete or needs a third task wave
 
 ## Parked / Later
 
@@ -58,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
+- `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
 
 ## Recent Decisions
 

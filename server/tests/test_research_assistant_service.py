@@ -3,6 +3,7 @@ import pytest
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
     build_research_task_result,
+    evaluate_research_result_regression,
     normalize_research_task_input,
     resolve_research_task_input,
 )
@@ -95,6 +96,8 @@ def test_build_research_task_result_includes_structured_contract_and_sections() 
     assert result["metadata"]["focus_area_count"] == 1
     assert result["metadata"]["evidence_status"] == "grounded_matches"
     assert result["metadata"]["regression_passed"] is True
+    assert result["metadata"]["regression_baseline"]["baseline_version"] == "stage_a_research_regression_v1"
+    assert result["metadata"]["regression_baseline"]["signals"]["evidence_status"] == "grounded_matches"
     assert result["metadata"]["trust"]["baseline_version"] == "stage_a_research_v1"
     assert result["metadata"]["trust"]["checks"]["grounded_findings_when_matches_exist"] is True
 
@@ -194,6 +197,7 @@ def test_build_research_task_result_carries_follow_up_lineage() -> None:
     assert result["metadata"]["is_follow_up"] is True
     assert result["metadata"]["parent_task_id"] == "task-parent"
     assert result["metadata"]["trust"]["is_follow_up"] is True
+    assert result["metadata"]["regression_baseline"]["checks"]["lineage_present_for_follow_up"] is True
 
 
 def test_build_research_task_result_keeps_report_coherent_when_matches_are_missing() -> None:
@@ -231,5 +235,43 @@ def test_build_research_task_result_keeps_report_coherent_when_matches_are_missi
     assert report["recommended_next_steps"][0].startswith("Add a clearer research goal")
     assert result["metadata"]["report_ready"] is True
     assert result["metadata"]["evidence_status"] == "documents_only"
+    assert result["metadata"]["regression_passed"] is False
+    assert result["metadata"]["regression_baseline"]["issues"] == ["weak_evidence_documents_only"]
     assert result["metadata"]["trust_gaps"] == ["no_grounded_matches"]
-    assert result["metadata"]["trust"]["regression_passed"] is True
+    assert result["metadata"]["trust"]["regression_passed"] is False
+
+
+def test_evaluate_research_result_regression_flags_incomplete_report_shape() -> None:
+    baseline = evaluate_research_result_regression(
+        {
+            "module_type": "research",
+            "task_type": "workspace_report",
+            "summary": "A draft summary exists.",
+            "input": {"deliverable": "report"},
+            "sections": {
+                "summary": "A draft summary exists.",
+                "findings": [],
+                "evidence_overview": [],
+                "open_questions": [],
+                "next_steps": [],
+            },
+            "artifacts": {
+                "document_count": 1,
+                "match_count": 0,
+                "documents": [],
+                "matches": [],
+                "tool_call_ids": [],
+            },
+            "metadata": {
+                "evidence_status": "documents_only",
+                "trust_gaps": ["no_grounded_matches"],
+            },
+        },
+    )
+
+    assert baseline["baseline_version"] == "stage_a_research_regression_v1"
+    assert baseline["passed"] is False
+    assert "missing_trust_metadata" in baseline["issues"]
+    assert "unexpected_trust_baseline" in baseline["issues"]
+    assert "missing_report" in baseline["issues"]
+    assert "invalid_report_shape" in baseline["issues"]

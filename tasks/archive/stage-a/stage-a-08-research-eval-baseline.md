@@ -95,3 +95,25 @@ Disallowed files:
 ## Rollback Plan
 
 - revert the Research eval-baseline changes while keeping the trust metadata and report flow already implemented
+
+## Results
+
+- added a stricter Stage A Research regression baseline for structured results, trust metadata, reports, and follow-up
+  lineage
+- wired regression baseline summaries into successful `research_task` traces so trust and regression outcomes remain
+  inspectable together
+- updated Research regression tests for grounded, weak-context, follow-up, and incomplete-result cases
+- documented the distinction between the trust baseline and the stricter regression baseline in the project guide
+
+## Execution Status
+
+- Status: completed
+- Completed At: 2026-03-18
+- Notes: weak-context Research runs still return structured results, but they now fail the stricter regression baseline
+  explicitly instead of being treated as clean passes
+
+## Verification Result
+
+- `python -m compileall server/app server/tests`
+- `cd server`
+- `..\.venv\Scripts\python.exe -m pytest tests/test_research_assistant_service.py tests/test_chat_evaluator_service.py tests/test_eval_execution_service.py tests/test_task_execution_service.py`

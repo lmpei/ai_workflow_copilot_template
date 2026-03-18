@@ -130,7 +130,8 @@ Stage A is successful when:
 
 ## Next Step
 
-Execute the second Stage A wave, with `tasks/stage-a-08-research-eval-baseline.md` as the next active task after `stage-a-07`.
+Execute the second Stage A wave, with `tasks/stage-a-09-staging-delivery-path.md` as the next active task after the
+Research eval baseline.
 
 ## Initial Task Wave
 
@@ -151,8 +152,8 @@ active Stage A execution work.
 
 The second executable Stage A wave is:
 
-- `tasks/stage-a-07-research-iteration-workflow.md`
-- `tasks/stage-a-08-research-eval-baseline.md`
+- `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
+- `tasks/archive/stage-a/stage-a-08-research-eval-baseline.md`
 - `tasks/stage-a-09-staging-delivery-path.md`
 
 This wave keeps `Research` as the primary track, but shifts the work from baseline establishment toward iterative
