@@ -98,7 +98,7 @@ These are local development helpers, not project startup commands.
 - `verify-windows.cmd`
   - runs local backend and frontend verification
 - `migrate-windows.cmd`
-  - applies Alembic migrations using `DATABASE_URL` from the provided env file
+  - applies Alembic migrations using `DATABASE_URL` from the provided env file and runs inside the `server` container when the URL targets the local Compose `db` hostname
 - `release-check-windows.cmd`
   - fails if the provided env file still contains `replace_me` and then runs the verification baseline
 - `staging-smoke-windows.cmd`

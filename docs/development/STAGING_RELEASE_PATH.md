@@ -96,7 +96,7 @@ Run migrations against the same env file:
 cmd /c scripts\migrate-windows.cmd .env.staging
 ```
 
-The helper reads `DATABASE_URL` from the provided env file and applies `alembic upgrade head`.
+The helper reads `DATABASE_URL` from the provided env file and applies `alembic upgrade head`. If the URL uses the local Compose hostname `db`, it runs inside the `server` container so the database is reachable on the Compose network.
 
 ### 4. Recreate the Application Tier If Needed
 

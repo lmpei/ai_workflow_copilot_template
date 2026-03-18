@@ -72,6 +72,10 @@ Windows helper:
 cmd /c scripts\migrate-windows.cmd .env.staging
 ```
 
+When `DATABASE_URL` uses the local Compose hostname `db`, the helper runs Alembic inside the `server` container so the
+database is reachable from the same network. When `DATABASE_URL` points at a host-accessible database, it falls back
+to the local Python environment.
+
 Direct command:
 
 ```powershell
