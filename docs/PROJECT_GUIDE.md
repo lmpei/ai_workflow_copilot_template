@@ -136,6 +136,16 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 - the shared task primitives remain generic; the structured Research contract is resolved in the Research module layer
 - canonical Research results now carry both the normalized `input` and structured `sections` alongside the existing
   `summary`, `highlights`, `evidence`, and `artifacts` fields
+- `workspace_report` and any Research run that requests `deliverable=report` can also emit a formal `report` object
+  with:
+  - `headline`
+  - `executive_summary`
+  - `sections`
+  - `open_questions`
+  - `recommended_next_steps`
+  - `evidence_ref_ids`
+- the formal report surface is evidence-led; report sections should preserve evidence reference IDs so findings stay
+  grounded in workspace context
 
 ## Scenario Module Boundaries
 

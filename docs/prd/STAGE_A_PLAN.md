@@ -130,14 +130,14 @@ Stage A is successful when:
 
 ## Next Step
 
-Continue the first Stage A task wave with `tasks/stage-a-03-research-report-assembly-and-surface.md`.
+Continue the first Stage A task wave with `tasks/stage-a-04-research-trust-and-regression-baseline.md`.
 
 ## Initial Task Wave
 
 The first executable Stage A wave is:
 
 - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
-- `tasks/stage-a-03-research-report-assembly-and-surface.md`
+- `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
 - `tasks/stage-a-04-research-trust-and-regression-baseline.md`
 - `tasks/stage-a-05-delivery-and-operations-baseline.md`
 

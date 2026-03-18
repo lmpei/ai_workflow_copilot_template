@@ -177,6 +177,10 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     assert output["result"]["title"] == "Workspace Report"
     assert output["result"]["input"]["deliverable"] == "report"
     assert "open_questions" in output["result"]["sections"]
+    assert output["result"]["report"]["headline"] == "Research Report: Workspace research report"
+    assert output["result"]["report"]["sections"][0]["slug"] == "findings"
+    assert output["result"]["report"]["open_questions"][0].startswith("What source documents")
+    assert output["result"]["metadata"]["report_ready"] is True
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["summary"] == "No workspace documents are available for analysis."
@@ -188,6 +192,57 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
     tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
     assert [tool_call.tool_name for tool_call in tool_calls] == ["list_workspace_documents"]
 
+
+
+def test_run_task_execution_persists_formal_workspace_report_with_evidence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Build a grounded workspace report"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="Delayed sign-off is the strongest grounded delivery risk.",
+                    content="Delayed sign-off is the strongest grounded delivery risk.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    task_id = _create_task_fixture(
+        task_type="workspace_report",
+        input_json={
+            "goal": "Build a grounded workspace report",
+            "deliverable": "report",
+            "key_questions": ["What slipped?", "What needs more support?"],
+        },
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["task_type"] == "workspace_report"
+    assert output["result"]["report"]["headline"] == "Research Report: Build a grounded workspace report"
+    assert output["result"]["report"]["sections"][0]["slug"] == "findings"
+    assert output["result"]["report"]["sections"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert output["result"]["report"]["evidence_ref_ids"] == ["chunk-1"]
+    assert output["result"]["metadata"]["report_ready"] is True
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+    assert persisted_task.output_json == output
+
+    agent_runs = task_repository.list_task_agent_runs(task_id)
+    assert len(agent_runs) == 1
+    tool_calls = task_repository.list_agent_run_tool_calls(agent_runs[0].id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == [
+        "list_workspace_documents",
+        "search_documents",
+    ]
 
 
 def test_run_task_execution_executes_support_reply_draft_and_persists_output(

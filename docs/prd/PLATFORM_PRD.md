@@ -150,5 +150,6 @@ The next formal planning unit is `Stage A: Research Deepening With Trust Baselin
 `docs/prd/STAGE_A_PLAN.md`.
 
 The first execution wave under that model is now tracked through `tasks/stage-a-*`, with
-`tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` completed and
-`tasks/stage-a-03-research-report-assembly-and-surface.md` as the next active task.
+`tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and
+`tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md` completed, and
+`tasks/stage-a-04-research-trust-and-regression-baseline.md` as the next active task.

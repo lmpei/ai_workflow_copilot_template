@@ -83,6 +83,23 @@ export type ResearchFinding = {
   evidence_ref_ids: string[];
 };
 
+export type ResearchReportSection = {
+  slug: string;
+  title: string;
+  summary: string;
+  bullets: string[];
+  evidence_ref_ids: string[];
+};
+
+export type ResearchFormalReport = {
+  headline: string;
+  executive_summary: string;
+  sections: ResearchReportSection[];
+  open_questions: string[];
+  recommended_next_steps: string[];
+  evidence_ref_ids: string[];
+};
+
 export type ResearchResultSections = {
   summary: string;
   findings: ResearchFinding[];
@@ -96,6 +113,7 @@ export type ResearchTaskResult = ScenarioTaskResult & {
   task_type: ResearchTaskType;
   input: ResearchTaskInput;
   sections: ResearchResultSections;
+  report?: ResearchFormalReport;
   artifacts: ResearchArtifacts;
 };
 
@@ -319,9 +337,3 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
-
-
-
-
-
-

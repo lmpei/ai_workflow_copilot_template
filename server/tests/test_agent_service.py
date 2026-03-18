@@ -146,6 +146,57 @@ def test_workspace_research_agent_completes_with_minimal_available_context() -> 
 
 
 
+def test_workspace_research_agent_builds_formal_report_for_workspace_report(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == "Build a grounded workspace report"
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="The strongest delivery risk is delayed stakeholder sign-off.",
+                    content="The strongest delivery risk is delayed stakeholder sign-off.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    research_input = {
+        "goal": "Build a grounded workspace report",
+        "deliverable": "report",
+        "key_questions": ["What slipped?", "What needs more evidence?"],
+    }
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        task_type="workspace_report",
+        input_json=research_input,
+    )
+
+    result = run_workspace_research_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        goal="Build a grounded workspace report",
+        research_input=research_input,
+    )
+
+    assert result.final_output["task_type"] == "workspace_report"
+    assert result.final_output["report"]["headline"] == "Research Report: Build a grounded workspace report"
+    assert result.final_output["report"]["sections"][0]["slug"] == "findings"
+    assert result.final_output["report"]["sections"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert result.final_output["metadata"]["report_ready"] is True
+
+    tool_calls = task_repository.list_agent_run_tool_calls(result.agent_run_id)
+    assert [tool_call.tool_name for tool_call in tool_calls] == [
+        "list_workspace_documents",
+        "search_documents",
+    ]
+
+
 def test_workspace_support_agent_completes_grounded_reply_draft(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

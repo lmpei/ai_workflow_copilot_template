@@ -106,5 +106,22 @@ Disallowed files:
 
 ## Execution Status
 
-- Status: planned
-- Notes: this task deepens the Research workflow after the structured contracts are in place
+- Status: completed
+- Notes:
+  - added a formal Research report assembly path for `workspace_report` and `deliverable=report`
+  - surfaced evidence-linked report sections in the Research frontend panel
+  - verified normal and limited-context report behavior through backend tests and frontend verification
+
+## Result
+
+- Research results now support an optional formal `report` object with evidence-linked sections, report-level open
+  questions, recommended next steps, and stable report metadata.
+- The Research frontend now renders the formal report as the primary Stage A surface while preserving the underlying
+  structured result and evidence details for inspection.
+
+## Verification Result
+
+- `python -m compileall server/app server/tests`
+- `cd server`
+- `..\.venv\Scripts\python.exe -m pytest tests`
+- `npm --prefix web run verify`

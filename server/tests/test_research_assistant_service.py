@@ -88,3 +88,85 @@ def test_build_research_task_result_includes_structured_contract_and_sections() 
     assert result["sections"]["evidence_overview"][0].startswith("apollo.md:")
     assert result["sections"]["open_questions"] == ["What evidence is strongest?"]
     assert result["metadata"]["focus_area_count"] == 1
+
+
+def test_build_research_task_result_builds_formal_report_for_workspace_report() -> None:
+    result = build_research_task_result(
+        task_type="workspace_report",
+        research_input={
+            "goal": "Build a grounded project report",
+            "deliverable": "report",
+            "requested_sections": ["findings", "evidence", "open_questions", "next_steps"],
+            "key_questions": ["What slipped?", "Which risk needs more support?"],
+        },
+        documents=[
+            {
+                "id": "doc-1",
+                "title": "apollo.md",
+                "status": "indexed",
+                "source_type": "upload",
+                "mime_type": "text/markdown",
+            },
+        ],
+        matches=[
+            {
+                "document_id": "doc-1",
+                "chunk_id": "chunk-1",
+                "document_title": "apollo.md",
+                "chunk_index": 0,
+                "snippet": "Delivery slipped by two weeks because sign-off moved.",
+            },
+        ],
+        tool_call_ids=["tool-1"],
+    )
+
+    report = result["report"]
+
+    assert report["headline"] == "Research Report: Build a grounded project report"
+    assert report["executive_summary"] == result["sections"]["summary"]
+    assert [section["slug"] for section in report["sections"]] == [
+        "findings",
+        "evidence",
+        "open-questions",
+        "next-steps",
+    ]
+    assert report["sections"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert report["evidence_ref_ids"] == ["chunk-1"]
+    assert report["open_questions"] == ["Which risk needs more support?"]
+    assert result["metadata"]["report_ready"] is True
+
+
+def test_build_research_task_result_keeps_report_coherent_when_matches_are_missing() -> None:
+    result = build_research_task_result(
+        task_type="workspace_report",
+        research_input={
+            "goal": "Build a report from limited context",
+            "deliverable": "report",
+        },
+        documents=[
+            {
+                "id": "doc-1",
+                "title": "apollo.md",
+                "status": "indexed",
+                "source_type": "upload",
+                "mime_type": "text/markdown",
+            },
+        ],
+        matches=[],
+        tool_call_ids=["tool-1"],
+    )
+
+    report = result["report"]
+
+    assert report["headline"] == "Research Report: Build a report from limited context"
+    assert report["sections"][0]["slug"] == "findings"
+    assert report["sections"][0]["bullets"] == [
+        "apollo.md: Document is available with status indexed.",
+    ]
+    assert report["sections"][1]["slug"] == "evidence"
+    assert report["sections"][1]["evidence_ref_ids"] == ["doc-1"]
+    assert report["open_questions"] == [
+        "Which query or focus area would narrow the search toward stronger evidence?",
+    ]
+    assert report["recommended_next_steps"][0].startswith("Add a clearer research goal")
+    assert result["metadata"]["report_ready"] is True

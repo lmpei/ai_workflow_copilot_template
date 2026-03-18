@@ -5,6 +5,8 @@ from app.schemas.research import (
     ResearchAssistantResult,
     ResearchDeliverable,
     ResearchFinding,
+    ResearchFormalReport,
+    ResearchReportSection,
     ResearchResultSections,
     ResearchTaskInput,
     ResearchRequestedSection,
@@ -288,6 +290,145 @@ def _build_research_sections(
     )
 
 
+def _flatten_evidence_ref_ids(sections: ResearchResultSections) -> list[str]:
+    ref_ids: list[str] = []
+    seen: set[str] = set()
+    for finding in sections.findings:
+        for ref_id in finding.evidence_ref_ids:
+            if ref_id in seen:
+                continue
+            seen.add(ref_id)
+            ref_ids.append(ref_id)
+    return ref_ids
+
+
+def _build_report_section(
+    *,
+    slug: str,
+    title: str,
+    summary: str,
+    bullets: list[str],
+    evidence_ref_ids: list[str],
+) -> ResearchReportSection:
+    unique_ref_ids: list[str] = []
+    seen: set[str] = set()
+    for ref_id in evidence_ref_ids:
+        if ref_id in seen:
+            continue
+        seen.add(ref_id)
+        unique_ref_ids.append(ref_id)
+
+    return ResearchReportSection(
+        slug=slug,
+        title=title,
+        summary=summary,
+        bullets=bullets,
+        evidence_ref_ids=unique_ref_ids,
+    )
+
+
+def _should_build_formal_report(
+    *,
+    task_type: ResearchTaskType,
+    research_input: ResearchTaskInput,
+) -> bool:
+    return task_type == "workspace_report" or research_input.deliverable == "report"
+
+
+def _build_formal_research_report(
+    *,
+    task_type: ResearchTaskType,
+    research_input: ResearchTaskInput,
+    sections: ResearchResultSections,
+    evidence: list[ScenarioEvidenceItem],
+) -> ResearchFormalReport | None:
+    if not _should_build_formal_report(task_type=task_type, research_input=research_input):
+        return None
+
+    headline_source = research_input.goal or "Workspace research report"
+    headline = f"Research Report: {headline_source}"
+    section_items: list[ResearchReportSection] = []
+    evidence_ref_ids = _flatten_evidence_ref_ids(sections)
+
+    requested_sections = set(research_input.requested_sections)
+
+    if "findings" in requested_sections:
+        finding_bullets = [
+            f"{finding.title}: {finding.summary}"
+            for finding in sections.findings
+        ]
+        if not finding_bullets:
+            finding_bullets = [
+                "No grounded findings were available; review the evidence coverage and refine the request.",
+            ]
+        section_items.append(
+            _build_report_section(
+                slug="findings",
+                title="Key Findings",
+                summary="Top findings synthesized from the currently available workspace evidence.",
+                bullets=finding_bullets,
+                evidence_ref_ids=evidence_ref_ids,
+            ),
+        )
+
+    if "evidence" in requested_sections:
+        evidence_bullets = list(sections.evidence_overview)
+        if not evidence_bullets:
+            evidence_bullets = [
+                "The current run did not identify strong grounded evidence for the requested topic.",
+            ]
+        section_items.append(
+            _build_report_section(
+                slug="evidence",
+                title="Evidence Base",
+                summary="Evidence references that most strongly support the current report draft.",
+                bullets=evidence_bullets,
+                evidence_ref_ids=[item.ref_id for item in evidence],
+            ),
+        )
+
+    if "open_questions" in requested_sections:
+        open_question_bullets = list(sections.open_questions)
+        if not open_question_bullets:
+            open_question_bullets = [
+                "No additional open questions were surfaced in this run.",
+            ]
+        section_items.append(
+            _build_report_section(
+                slug="open-questions",
+                title="Open Questions",
+                summary="Remaining gaps or follow-up questions that should shape the next research pass.",
+                bullets=open_question_bullets,
+                evidence_ref_ids=[],
+            ),
+        )
+
+    if "next_steps" in requested_sections:
+        next_step_bullets = list(sections.next_steps)
+        if not next_step_bullets:
+            next_step_bullets = [
+                "No explicit next steps were generated for this run.",
+            ]
+        section_items.append(
+            _build_report_section(
+                slug="next-steps",
+                title="Recommended Next Steps",
+                summary="Suggested follow-up actions to deepen or validate the report.",
+                bullets=next_step_bullets,
+                evidence_ref_ids=[],
+            ),
+        )
+
+    return ResearchFormalReport(
+        headline=headline,
+        executive_summary=sections.summary,
+        sections=section_items,
+        open_questions=sections.open_questions,
+        recommended_next_steps=sections.next_steps,
+        evidence_ref_ids=[item.ref_id for item in evidence],
+    )
+
+
 def build_research_task_result(
     *,
     task_type: ResearchTaskType,
@@ -319,6 +460,12 @@ def build_research_task_result(
         match_models=match_models,
         evidence=evidence,
     )
+    report = _build_formal_research_report(
+        task_type=task_type,
+        research_input=resolved_input,
+        sections=sections,
+        evidence=evidence,
+    )
 
     artifacts = ResearchArtifacts(
         document_count=len(document_models),
@@ -333,6 +480,7 @@ def build_research_task_result(
         input=resolved_input,
         summary=summary,
         sections=sections,
+        report=report,
         highlights=highlights,
         evidence=evidence,
         artifacts=artifacts,
@@ -344,6 +492,7 @@ def build_research_task_result(
             "key_question_count": len(resolved_input.key_questions),
             "document_count": len(document_models),
             "match_count": len(match_models),
+            "report_ready": report is not None,
         },
     )
     return result.model_dump(exclude_none=True)

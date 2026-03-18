@@ -37,6 +37,23 @@ class ResearchFinding(BaseModel):
     evidence_ref_ids: list[str] = Field(default_factory=list)
 
 
+class ResearchReportSection(BaseModel):
+    slug: str
+    title: str
+    summary: str
+    bullets: list[str] = Field(default_factory=list)
+    evidence_ref_ids: list[str] = Field(default_factory=list)
+
+
+class ResearchFormalReport(BaseModel):
+    headline: str
+    executive_summary: str
+    sections: list[ResearchReportSection] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    recommended_next_steps: list[str] = Field(default_factory=list)
+    evidence_ref_ids: list[str] = Field(default_factory=list)
+
+
 class ResearchResultSections(BaseModel):
     summary: str
     findings: list[ResearchFinding] = Field(default_factory=list)
@@ -60,6 +77,7 @@ class ResearchAssistantResult(BaseModel):
     input: ResearchTaskInput = Field(default_factory=ResearchTaskInput)
     summary: str
     sections: ResearchResultSections
+    report: ResearchFormalReport | None = None
     highlights: list[str] = Field(default_factory=list)
     evidence: list[ScenarioEvidenceItem] = Field(default_factory=list)
     artifacts: ResearchArtifacts

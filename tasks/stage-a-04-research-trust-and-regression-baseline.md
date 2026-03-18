@@ -40,7 +40,7 @@ Relevant runtime areas:
 
 - Prior task:
   - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
-  - `tasks/stage-a-03-research-report-assembly-and-surface.md`
+  - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
 - Blockers: none
 
 ## Scope

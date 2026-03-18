@@ -124,7 +124,7 @@ Append-only log. Add new entries at the bottom.
 - Context: Stage A has been fixed in text and now needs a first executable wave that respects the three-track model
 - Choice: define the first Stage A wave as:
   - `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md`
-  - `tasks/stage-a-03-research-report-assembly-and-surface.md`
+  - `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md`
   - `tasks/stage-a-04-research-trust-and-regression-baseline.md`
   - `tasks/stage-a-05-delivery-and-operations-baseline.md`
 - Why: the first wave should deepen Research while also advancing minimum reliability and delivery work in parallel
@@ -142,6 +142,6 @@ Append-only log. Add new entries at the bottom.
 - Context: the first Stage A wave is now fixed, but the root `tasks/` directory still contains legacy Phase 5 task specs and the completed Stage A planning task
 - Choice: archive the remaining `phase5-*` task specs under `tasks/archive/phase5/` and move `stage-a-01-task-stack-planning.md` under `tasks/archive/stage-a/`, leaving `tasks/` focused on active Stage A execution tasks
 - Why: the root task directory should stay execution-ready and should not mix historical phase work with the current Stage A task stack
-- Impact: Stage A execution now continues from `tasks/stage-a-03-research-report-assembly-and-surface.md`, while the completed `stage-a-02` and Phase 5 history remain preserved in archive
+- Impact: Stage A execution moved into the first Research task wave while the completed `stage-a-02`, `stage-a-03`, and Phase 5 history remain preserved in archive
 - Related Task: `tasks/archive/stage-a/stage-a-01-task-stack-planning.md`
 - Supersedes:

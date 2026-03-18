@@ -13,6 +13,7 @@ import type {
   JsonObject,
   ResearchArtifacts,
   ResearchDeliverable,
+  ResearchFormalReport,
   ResearchRequestedSection,
   ResearchResultSections,
   ResearchTaskInput,
@@ -156,6 +157,33 @@ function parseResearchSections(value: unknown, result: JsonObject): ResearchResu
   };
 }
 
+function parseResearchReport(value: unknown): ResearchFormalReport | undefined {
+  if (!isJsonObject(value)) {
+    return undefined;
+  }
+
+  const sections = Array.isArray(value.sections)
+    ? value.sections
+        .filter((section): section is JsonObject => isJsonObject(section))
+        .map((section, index) => ({
+          slug: typeof section.slug === "string" ? section.slug : `section-${index + 1}`,
+          title: typeof section.title === "string" ? section.title : `Section ${index + 1}`,
+          summary: typeof section.summary === "string" ? section.summary : "",
+          bullets: parseStringArray(section.bullets),
+          evidence_ref_ids: parseStringArray(section.evidence_ref_ids),
+        }))
+    : [];
+
+  return {
+    headline: typeof value.headline === "string" ? value.headline : "Research Report",
+    executive_summary: typeof value.executive_summary === "string" ? value.executive_summary : "",
+    sections,
+    open_questions: parseStringArray(value.open_questions),
+    recommended_next_steps: parseStringArray(value.recommended_next_steps),
+    evidence_ref_ids: parseStringArray(value.evidence_ref_ids),
+  };
+}
+
 function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
   const result = task.output_json.result;
   if (!isJsonObject(result)) {
@@ -179,6 +207,7 @@ function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
     ...(result as unknown as ResearchTaskResult),
     input: parseResearchTaskInput(result.input),
     sections: parseResearchSections(result.sections, result),
+    report: parseResearchReport(result.report),
   };
 }
 
@@ -273,6 +302,39 @@ function renderStringList(items: string[], emptyText: string) {
         <li key={item}>{item}</li>
       ))}
     </ul>
+  );
+}
+
+function renderEvidenceReferenceBadges(
+  evidenceRefIds: string[],
+  evidenceLookup: Map<string, { title?: string | null }>,
+) {
+  if (evidenceRefIds.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+      {evidenceRefIds.map((refId) => {
+        const evidence = evidenceLookup.get(refId);
+        const label = evidence?.title ? `${evidence.title} (${refId})` : refId;
+        return (
+          <span
+            key={refId}
+            style={{
+              backgroundColor: "#e2e8f0",
+              borderRadius: 999,
+              color: "#0f172a",
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "4px 10px",
+            }}
+          >
+            {label}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -382,6 +444,13 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const selectedResult = useMemo(
     () => (selectedTask ? parseResearchTaskResult(selectedTask) : null),
     [selectedTask],
+  );
+  const evidenceLookup = useMemo(
+    () =>
+      new Map(
+        (selectedResult?.evidence ?? []).map((item) => [item.ref_id, { title: item.title }]),
+      ),
+    [selectedResult],
   );
 
   const toggleRequestedSection = (section: ResearchRequestedSection) => {
@@ -697,8 +766,72 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   </div>
                 </div>
 
+                {selectedResult.report ? (
+                  <div
+                    style={{
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: 16,
+                      display: "grid",
+                      gap: 16,
+                      padding: 16,
+                    }}
+                  >
+                    <div style={{ display: "grid", gap: 8 }}>
+                      <div style={{ color: "#475569", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
+                        Formal report
+                      </div>
+                      <h3 style={{ margin: 0 }}>{selectedResult.report.headline}</h3>
+                      <p style={{ margin: 0 }}>{selectedResult.report.executive_summary}</p>
+                      {renderEvidenceReferenceBadges(selectedResult.report.evidence_ref_ids, evidenceLookup)}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 12 }}>
+                      {selectedResult.report.sections.map((section) => (
+                        <div
+                          key={section.slug}
+                          style={{
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 14,
+                            padding: 14,
+                          }}
+                        >
+                          <div style={{ fontWeight: 700 }}>{section.title}</div>
+                          <p style={{ marginBottom: 0, marginTop: 8 }}>{section.summary}</p>
+                          {section.bullets.length > 0 ? (
+                            <ul style={{ marginBottom: 0, marginTop: 10 }}>
+                              {section.bullets.map((bullet) => (
+                                <li key={bullet}>{bullet}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          {renderEvidenceReferenceBadges(section.evidence_ref_ids, evidenceLookup)}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: "grid", gap: 12 }}>
+                      <div>
+                        <strong>Report open questions</strong>
+                        {renderStringList(
+                          selectedResult.report.open_questions,
+                          "The report did not identify additional open questions.",
+                        )}
+                      </div>
+                      <div>
+                        <strong>Recommended next steps</strong>
+                        {renderStringList(
+                          selectedResult.report.recommended_next_steps,
+                          "The report did not recommend follow-up work.",
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div>
-                  <strong>Section summary</strong>
+                  <strong>{selectedResult.report ? "Underlying structured sections" : "Section summary"}</strong>
                   <p style={{ marginBottom: 0, marginTop: 8 }}>{selectedResult.sections.summary}</p>
                 </div>
 
@@ -717,11 +850,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                         >
                           <div style={{ fontWeight: 600 }}>{finding.title}</div>
                           <p style={{ marginBottom: 0, marginTop: 8 }}>{finding.summary}</p>
-                          {finding.evidence_ref_ids.length > 0 ? (
-                            <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
-                              Evidence refs: {finding.evidence_ref_ids.join(", ")}
-                            </div>
-                          ) : null}
+                          {renderEvidenceReferenceBadges(finding.evidence_ref_ids, evidenceLookup)}
                         </li>
                       ))}
                     </ul>
