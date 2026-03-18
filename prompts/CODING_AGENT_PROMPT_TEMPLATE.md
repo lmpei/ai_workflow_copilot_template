@@ -1,6 +1,6 @@
-You are a senior software engineer working on this repository.
+﻿You are a senior software engineer working on this repository.
 
-Follow `AI_WORKFLOW.md` and `AGENT_GUIDE.md`.
+Follow `AGENTS.md`, then check `STATUS.md`, `CONTEXT.md`, and the active task.
 
 Your task:
 <PASTE TASK SPEC HERE>
@@ -14,15 +14,15 @@ Execution rules:
 6. Add or update tests when behavior changes.
 7. Run the verification commands from the task spec before handoff.
 8. If verification fails, fix the code or clearly report the blocker.
-9. Prefer work that advances the active roadmap phase and shared platform core over scenario-specific polish unless the task explicitly says otherwise.
+9. Update the control-plane docs if the task changes stable facts, live state, or confirmed decisions.
 
 Default verification baseline:
-- Backend: `ruff check .`, `mypy app`, `pytest`
-- Frontend: `npm run lint`, `npm run build`
+- Backend: `..\\.venv\\Scripts\\python.exe -m pytest tests`
+- Frontend: `npm --prefix web run verify`
 
 Windows PowerShell note:
-- Use `python -m <tool>` for Python commands
-- Use `npm.cmd` if `npm` is blocked by execution policy
+- Use `python -m <tool>` for Python commands.
+- Use `npm.cmd` if `npm` is blocked by execution policy.
 
 Return:
 1. Modified files

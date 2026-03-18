@@ -1,76 +1,73 @@
-# AI Workflow
+﻿# AI Workflow
 
 ## AI-Native Development Workflow
 
-This repository follows an AI-native workflow designed for human + AI agent collaboration.
+This repository follows an AI-native workflow designed for human plus AI collaboration.
 
 ## Core Principles
 
-1. Spec-driven development
-2. Agentic execution
-3. AI-friendly repository design
-4. Automated verification
-5. Human review
+1. spec-driven development
+2. agentic execution
+3. current-state visibility
+4. automated verification
+5. human review
 
 ## Development Flow
 
-Idea -> PRD -> Architecture -> Task Planning -> Agent Implementation -> Verification -> Human Review -> Pull Request
+Idea -> Status and Context Alignment -> Decisions -> PRD -> Architecture -> Task Planning -> Agent Implementation -> Verification -> Human Review
 
 ## Step 1 - Idea
 
-Define the feature goal.
-
-Example:
-
-Add RAG chat for uploaded documents.
+Define the feature or direction change.
 
 Executed by: Human
 
-## Step 2 - PRD
+## Step 2 - Status and Context Alignment
+
+Locations:
+
+- `STATUS.md`
+- `CONTEXT.md`
+- `DECISIONS.md`
+
+Purpose:
+
+Make the current objective, stable facts, and already-confirmed decisions explicit before planning implementation.
+
+## Step 3 - PRD
 
 Location:
 
-`docs/prd/`
+- `docs/prd/`
 
 Purpose:
 
 Describe the feature, user, and expected outcome.
 
-## Step 3 - Architecture
+## Step 4 - Architecture
 
-Location:
+Locations:
 
-`docs/architecture/`
+- `ARCHITECTURE.md`
+- `docs/architecture/`
 
 Purpose:
 
-Define system modules and data flow.
+Define system boundaries, modules, and data flow.
 
-Example pipeline:
-
-Document -> Chunk -> Embedding -> Vector DB -> Retrieval -> LLM
-
-## Step 4 - Task Planning
+## Step 5 - Task Planning
 
 Location:
 
-`tasks/`
+- `tasks/`
 
 Purpose:
 
 Break a feature into small executable tasks with clear scope and verification commands.
 
-Example:
+## Step 6 - Agent Implementation
 
-- `TASK-001` document upload API
-- `TASK-002` document chunking
-- `TASK-003` embedding pipeline
-- `TASK-004` vector search
-- `TASK-005` chat endpoint
-
-## Step 5 - Agent Implementation
-
-AI coding agents execute scoped tasks.
+Agents execute scoped tasks.
 
 Agents may:
 
@@ -78,59 +75,44 @@ Agents may:
 - edit code
 - run commands
 - create tests
+- update the control-plane docs when the change is durable
 
-Typical tools:
-
-- filesystem
-- git
-- pytest
-- docker
-
-When documenting local commands, match the active shell. For Windows PowerShell, prefer `Copy-Item`,
-`python -m <tool>`, and `npm.cmd` where needed.
-
-## Step 6 - Verification
+## Step 7 - Verification
 
 Run automated validation before handoff.
 
-Typical commands:
+Typical checks:
 
-- `pytest`
-- `lint`
-- `type check`
-- `build`
+- backend tests
+- frontend verify
+- docs consistency review for docs-only tasks
 
-If verification fails, the agent should keep iterating until the task passes or clearly document the blocker.
+If verification fails, the agent should keep iterating or clearly document the blocker.
 
-## Step 7 - Human Review
+## Step 8 - Human Review
 
 Humans review:
 
 - architecture decisions
 - security risks
 - edge cases
-- performance implications
-
-## Step 8 - Pull Request
-
-Final result is submitted as a PR including:
-
-- code
-- tests
-- documentation
-
-CI runs validation pipelines automatically.
+- sequencing choices
+- whether confirmed decisions should be added to `DECISIONS.md`
 
 ## Summary
 
 AI-native development workflow:
 
-Spec -> Tasks -> Agents -> Verification -> Review -> PR
+Status and Context -> Decisions -> Specs -> Tasks -> Agents -> Verification -> Review
 
 Human role:
 
-Architect + reviewer
+- direction setter
+- reviewer
+- decision confirmer
 
 AI role:
 
-Task executor
+- scoped executor
+- repository maintainer
+- documentation updater for confirmed work

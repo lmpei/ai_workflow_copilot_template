@@ -95,7 +95,11 @@ def test_workspace_research_agent_completes_tool_using_workflow(
     assert result.final_output["task_type"] == "research_summary"
     assert result.final_output["title"] == "Research Summary"
     assert result.final_output["summary"].startswith("Reviewed 1 workspace document")
+    assert result.final_output["input"]["goal"] == "Who owns the project?"
+    assert result.final_output["input"]["deliverable"] == "brief"
     assert result.final_output["highlights"] == ["demo.txt: The owner is Alice."]
+    assert result.final_output["sections"]["findings"][0]["title"] == "demo.txt"
+    assert result.final_output["sections"]["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
     assert result.final_output["artifacts"]["document_count"] == 1
     assert result.final_output["artifacts"]["match_count"] == 1
     assert result.final_output["artifacts"]["matches"][0]["document_title"] == "demo.txt"
@@ -127,10 +131,13 @@ def test_workspace_research_agent_completes_with_minimal_available_context() -> 
     )
 
     assert result.final_output["module_type"] == "research"
+    assert result.final_output["input"]["deliverable"] == "brief"
     assert result.final_output["artifacts"]["document_count"] == 0
     assert result.final_output["artifacts"]["match_count"] == 0
     assert result.final_output["artifacts"]["matches"] == []
     assert result.final_output["evidence"] == []
+    assert result.final_output["sections"]["findings"] == []
+    assert result.final_output["sections"]["next_steps"][0].startswith("Upload or index")
     assert result.final_output["summary"] == "No workspace documents are available for analysis."
 
     tool_calls = task_repository.list_agent_run_tool_calls(result.agent_run_id)

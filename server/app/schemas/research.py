@@ -9,10 +9,40 @@ ResearchTaskType = Literal[
     "research_summary",
     "workspace_report",
 ]
+ResearchDeliverable = Literal[
+    "brief",
+    "report",
+]
+ResearchRequestedSection = Literal[
+    "summary",
+    "findings",
+    "evidence",
+    "open_questions",
+    "next_steps",
+]
 
 
 class ResearchTaskInput(BaseModel):
     goal: str | None = None
+    focus_areas: list[str] = Field(default_factory=list)
+    key_questions: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    deliverable: ResearchDeliverable | None = None
+    requested_sections: list[ResearchRequestedSection] = Field(default_factory=list)
+
+
+class ResearchFinding(BaseModel):
+    title: str
+    summary: str
+    evidence_ref_ids: list[str] = Field(default_factory=list)
+
+
+class ResearchResultSections(BaseModel):
+    summary: str
+    findings: list[ResearchFinding] = Field(default_factory=list)
+    evidence_overview: list[str] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
 
 
 class ResearchArtifacts(BaseModel):
@@ -27,7 +57,9 @@ class ResearchAssistantResult(BaseModel):
     module_type: Literal["research"] = "research"
     task_type: ResearchTaskType
     title: str
+    input: ResearchTaskInput = Field(default_factory=ResearchTaskInput)
     summary: str
+    sections: ResearchResultSections
     highlights: list[str] = Field(default_factory=list)
     evidence: list[ScenarioEvidenceItem] = Field(default_factory=list)
     artifacts: ResearchArtifacts

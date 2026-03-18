@@ -36,6 +36,21 @@ export type ScenarioTaskResult = {
 };
 
 export type ResearchTaskType = Extract<TaskType, "research_summary" | "workspace_report">;
+export type ResearchDeliverable = "brief" | "report";
+export type ResearchRequestedSection =
+  | "summary"
+  | "findings"
+  | "evidence"
+  | "open_questions"
+  | "next_steps";
+export type ResearchTaskInput = {
+  goal?: string;
+  focus_areas: string[];
+  key_questions: string[];
+  constraints: string[];
+  deliverable?: ResearchDeliverable;
+  requested_sections: ResearchRequestedSection[];
+};
 export type SupportTaskType = Extract<TaskType, "ticket_summary" | "reply_draft">;
 
 export type ResearchDocumentSummary = {
@@ -62,9 +77,25 @@ export type ResearchArtifacts = {
   tool_call_ids: string[];
 };
 
+export type ResearchFinding = {
+  title: string;
+  summary: string;
+  evidence_ref_ids: string[];
+};
+
+export type ResearchResultSections = {
+  summary: string;
+  findings: ResearchFinding[];
+  evidence_overview: string[];
+  open_questions: string[];
+  next_steps: string[];
+};
+
 export type ResearchTaskResult = ScenarioTaskResult & {
   module_type: "research";
   task_type: ResearchTaskType;
+  input: ResearchTaskInput;
+  sections: ResearchResultSections;
   artifacts: ResearchArtifacts;
 };
 
@@ -288,6 +319,7 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
+
 
 
 

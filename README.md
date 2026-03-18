@@ -1,55 +1,26 @@
-# AI Workflow Copilot Platform
+﻿# AI Workflow Copilot Platform
 
-This repository is the scaffold for an AI workflow platform with:
+AI Workflow Copilot is a shared platform core for AI knowledge-work workflows. It combines workspaces, document ingest,
+grounded chat, async tasks, agent execution, evaluation, and observability so reusable scenario modules can run on the
+same system.
 
-- Next.js App Router frontend with a TypeScript-first standard
-- FastAPI backend
-- PostgreSQL + Redis via Docker Compose
-- RAG, task, and agent scaffolding
-- automated verification in CI
-- project docs for product, architecture, and agent workflows
+## Overview
 
-## Product direction
+The platform currently supports three scenario modules on one shared core:
 
-The target product is a platform core plus reusable scenario modules:
+- Research Assistant
+- Support Copilot
+- Job Assistant
 
-- Platform core: auth, workspaces, documents, chat, tasks, metrics
-- Scenario modules: Job Assistant, Support Copilot, Research Assistant
-- AI capabilities: retrieval, agents, async tasks, evaluation, observability
+The codebase is designed for spec-driven human plus AI collaboration. The repository keeps long-form product and
+architecture docs under `docs/`, task execution history under `tasks/archive/`, and live control-plane docs at the
+repository root.
 
-Project-level docs:
-
-- `docs/prd/PLATFORM_PRD.md`
-- `docs/architecture/PLATFORM_ARCHITECTURE.md`
-- `docs/PROJECT_GUIDE.md`
-- `AI_WORKFLOW.md`
-- `AGENT_GUIDE.md`
-
-The frontend scaffold is now TypeScript-based. The migration record is archived in
-`docs/archive/FRONTEND_TYPESCRIPT_MIGRATION.md` and `tasks/archive/frontend-typescript-migration.md`.
-
-## AI-native workflow
-
-This repository is designed for spec-driven human + AI collaboration.
-
-1. Write the feature PRD in `docs/prd/`
-2. Define architecture in `docs/architecture/`
-3. Break work into scoped tasks in `tasks/`
-4. Execute tasks with a coding agent using `prompts/CODING_AGENT_PROMPT_TEMPLATE.md`
-5. Run verification before handoff
-6. Review with a human before merging
-
-See `AI_WORKFLOW.md` for the full workflow, `AGENT_GUIDE.md` for repository rules, and
-`docs/review/HUMAN_REVIEW_CHECKLIST.md` for pre-merge review. Use `docs/PROJECT_GUIDE.md` as the map of
-document ownership, folder responsibilities, and current project stage.
-
-## Quick start
-
-Recommended startup path for all platforms:
+## Quick Start
 
 1. Copy the example environment file.
 
-PowerShell on Windows:
+Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
@@ -63,130 +34,107 @@ cp .env.example .env
 
 2. Edit `.env` and replace `AUTH_SECRET_KEY=replace_me` with your own unique secret.
 
-3. Start the stack:
+3. Start the stack.
 
 ```bash
 docker compose up --build
 ```
 
-Make sure Docker Desktop or the local Docker engine is running before `docker compose up --build`.
-
-Frontend: `http://localhost:3000`  
-API base: `http://localhost:8000/api/v1`  
+Frontend: `http://localhost:3000`
+API base: `http://localhost:8000/api/v1`
 Health check: `http://localhost:8000/api/v1/health`
 
-This is the primary project startup path. For Windows-specific shell notes, local dependency setup, and verification helpers,
-see `docs/development/WINDOWS_SETUP.md`.
+For Windows-specific setup notes, see `docs/development/WINDOWS_SETUP.md`.
+
+## Common Commands
+
+Backend:
+
+```powershell
+cd server
+..\.venv\Scripts\python.exe -m pytest tests
+```
+
+Frontend:
+
+```powershell
+npm --prefix web run verify
+```
+
+## Project Control Docs
+
+Start here when you need to understand the project quickly:
+
+- `AGENTS.md`
+  - AI collaboration rules and execution contract
+- `STATUS.md`
+  - current state, current objective, blockers, and active task
+- `CONTEXT.md`
+  - stable project facts, stack, and boundaries
+- `DECISIONS.md`
+  - confirmed decisions and sequencing choices
+- `ARCHITECTURE.md`
+  - short architecture summary
+
+## Detailed Docs of Record
+
+Use these when you need deeper reference material:
+
+- `docs/prd/PLATFORM_PRD.md`
+- `docs/prd/STAGE_A_PLAN.md`
+- `docs/architecture/PLATFORM_ARCHITECTURE.md`
+- `docs/PROJECT_GUIDE.md`
+- `AI_WORKFLOW.md`
+- `tasks/README.md`
+
+## Current State
+
+The latest live state is maintained in `STATUS.md`.
+
+At a high level, the repository has a Phase 5 baseline implemented and now has the first executable `Stage A` task wave
+defined under `tasks/stage-a-*`, guided by the three-track roadmap model in `docs/prd/STAGE_A_PLAN.md`.
 
 ## Runtime Services
 
-`docker compose up` starts the platform and its backing services together:
+`docker compose up` starts:
 
 - `web`
   - Next.js frontend for auth, workspaces, documents, chat, tasks, evaluations, and analytics
 - `server`
   - FastAPI API for platform logic, orchestration, evaluation runs, and observability surfaces
 - `db`
-  - PostgreSQL system of record for users, workspaces, documents, messages, traces, tasks, agent runs, tool calls, eval datasets, eval runs, and eval results
+  - PostgreSQL system of record
 - `chroma`
-  - Vector store used by ingest, retrieval-backed chat, document search tools, and retrieval-focused evaluation runs
+  - vector store for retrieval-backed features
 - `redis`
-  - Queue service used by ARQ workers for Phase 3 task execution and Phase 4 eval execution
+  - queue backend for ARQ workers
 
-## Current Phase
+## Repository Structure
 
-The repository is currently in `Phase 5: Scenario Modules`.
-
-Phase 5 is now implemented with:
-
-- Auth boundary and browser session flow
-- PostgreSQL-backed workspace persistence
-- Document upload, parsing, chunking, embedding, and Chroma indexing
-- Reindex support through the same synchronous ingest path
-- Retrieval-backed chat with grounded source citations
-- Workspace analytics driven by persisted traces, latency, token, cost, task, and eval signals
-- Redis-backed ARQ worker execution for both platform tasks and eval runs
-- PostgreSQL-backed task, agent run, tool call, eval dataset, eval run, and eval result persistence
-- A LangGraph-powered `workspace_research_agent` with a static Python tool registry
-- A chat evaluator framework with rule checks and an independently configured LLM judge path
-- Research Assistant backend + frontend MVP on top of the shared platform primitives
-- Support Copilot skeleton on top of the shared platform primitives
-- Job Assistant skeleton on top of the shared platform primitives
-- Scenario-aware eval datasets, eval runs, and quality baselines for research, support, and job
-- Cross-module workspace navigation that keeps module discovery inside shared workspace scope
-- Frontend support for task creation, task status polling, eval dataset creation, eval run inspection, recent trace review, analytics summaries, and scenario module entry surfaces
-- A live provider path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs using `qwen-plus` for chat and judge flows and `text-embedding-v4` for embeddings
-
-## Current Demo Path
-
-You can now demo the current platform in this order:
-
-1. Register or log in from `http://localhost:3000/register` or `http://localhost:3000/login`
-2. Create a workspace from `http://localhost:3000/workspaces`
-3. Open the workspace documents page and upload a supported text, markdown, or PDF file
-4. Confirm the document reaches `indexed` status
-5. Open the workspace chat page and submit a prompt against indexed content
-6. Review grounded citations and trace identifiers in chat responses
-7. Open the new workspace `Modules` page and inspect the available Research, Support, and Job module entry points
-8. In a research workspace, open the tasks page and create a `research_summary` or `workspace_report` task
-9. Watch the task move through `pending -> running -> done/failed` and inspect the structured research result
-10. Open the workspace analytics page and create an eval dataset with one or more scenario-specific retrieval prompts
-11. Launch an eval run, wait for the run to complete, and inspect per-case scores, pass/fail outcomes, and scenario baselines
-12. Review recent traces and workspace analytics summaries for latency, cost, retrieval, task, and eval signals
-
-## Not Implemented Yet
-
-The following capabilities remain out of scope for Phase 5:
-
-- Durable or multi-agent orchestration beyond the minimal LangGraph workflow
-- Human-in-the-loop approvals, retries, and advanced job scheduling
-- External observability stacks, alerting, and complex BI-style dashboards
-- Deeper module-specific product workflows beyond the current Research MVP and Support/Job skeletons
+- `server/`
+  - backend application, workers, agents, and tests
+- `web/`
+  - frontend application, shared components, and client helpers
+- `docs/`
+  - long-form product, architecture, development, and review docs
+- `tasks/`
+  - active and archived task specs
+- `prompts/`
+  - coding-agent prompt templates
+- `scripts/`
+  - local helper scripts
 
 ## Verification
 
-Backend:
-
-```bash
-cd server
-ruff check .
-mypy app
-pytest
-```
-
-Windows PowerShell:
+Backend baseline:
 
 ```powershell
 cd server
-..\.venv\Scripts\python -m ruff check .
-..\.venv\Scripts\python -m mypy app
-..\.venv\Scripts\python -m pytest
+..\.venv\Scripts\python.exe -m pytest tests
 ```
 
-Frontend:
-
-```bash
-cd web
-npm ci
-npm run lint
-npm run build
-```
-
-Windows PowerShell:
+Frontend baseline:
 
 ```powershell
-cd web
-npm.cmd ci
-npm.cmd run verify
+npm --prefix web run verify
 ```
-
-## Structure
-
-- `AI_WORKFLOW.md` workflow contract for human + agent collaboration
-- `server/` FastAPI backend
-- `web/` Next.js frontend
-- `docs/` PRD and architecture specs
-- `scripts/` local helper scripts, including Windows setup and verification
-- `tasks/` executable task specs
-- `prompts/` coding agent prompt templates
-- `.github/` CI and pull request templates

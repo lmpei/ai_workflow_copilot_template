@@ -58,6 +58,7 @@ def _run_workspace_agent(
     graph_builder: Callable[[], GraphRunner],
     validate_contract: Callable[..., None],
     graph_runner: GraphRunner | None = None,
+    extra_state: dict[str, object] | None = None,
 ) -> AgentExecutionResult:
     task = task_repository.get_task_for_user(task_id, user_id)
     if task is None or task.workspace_id != workspace_id:
@@ -93,18 +94,20 @@ def _run_workspace_agent(
             raise AgentRuntimeError("Agent run not found", agent_run_id=agent_run.id)
 
         graph = graph_runner or graph_builder()
-        final_state = graph.invoke(
-            {
-                "agent_run_id": agent_run.id,
-                "workspace_id": workspace_id,
-                "user_id": user_id,
-                "task_type": task.task_type,
-                "goal": goal,
-                "tool_call_ids": [],
-                "documents": [],
-                "matches": [],
-            },
-        )
+        initial_state: dict[str, object] = {
+            "agent_run_id": agent_run.id,
+            "workspace_id": workspace_id,
+            "user_id": user_id,
+            "task_type": task.task_type,
+            "goal": goal,
+            "tool_call_ids": [],
+            "documents": [],
+            "matches": [],
+        }
+        if extra_state:
+            initial_state.update(extra_state)
+
+        final_state = graph.invoke(initial_state)
         final_output = final_state.get("final_output")
         if not isinstance(final_output, dict):
             raise AgentRuntimeError(
@@ -149,6 +152,7 @@ def run_workspace_research_agent(
     workspace_id: str,
     user_id: str,
     goal: str,
+    research_input: dict[str, object] | None = None,
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
     return _run_workspace_agent(
@@ -160,6 +164,7 @@ def run_workspace_research_agent(
         graph_builder=build_workspace_research_graph,
         validate_contract=validate_research_task_contract,
         graph_runner=graph_runner,
+        extra_state={"research_input": research_input or {"goal": goal}},
     )
 
 

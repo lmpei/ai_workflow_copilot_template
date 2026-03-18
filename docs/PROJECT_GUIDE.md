@@ -1,258 +1,176 @@
-# Project Guide
+﻿# Project Guide
 
 ## Purpose
 
-This document explains the role of each major document and folder, records the current development stage, and keeps
-implementation aligned with the original platform vision.
+This document explains the role of each major document and folder, and how the repository now separates live control
+state from deep reference docs and task history.
 
-## Source of Truth
+## Documentation Layers
 
-### Product and Architecture
+### Root Control Plane
 
-- `docs/prd/PLATFORM_PRD.md`
-  - Defines the product boundary, target modules, platform capabilities, and phase roadmap.
-- `docs/architecture/PLATFORM_ARCHITECTURE.md`
-  - Defines the target system architecture and the intended responsibilities of each layer.
-
-### Archive and Decision Records
-
-- `docs/archive/FRONTEND_TYPESCRIPT_MIGRATION.md`
-  - Records the completed feasibility assessment and migration boundary for moving the frontend scaffold to TypeScript.
-
-### Process and Execution
-
-- `AI_WORKFLOW.md`
-  - Defines the development workflow: PRD -> architecture -> tasks -> implementation -> verification -> review.
-- `AGENT_GUIDE.md`
-  - Defines coding-agent behavior, build order, repository boundaries, and verification expectations.
-- `tasks/TASK_TEMPLATE.md`
-  - Defines how individual implementation tasks are scoped and verified.
-- `prompts/CODING_AGENT_PROMPT_TEMPLATE.md`
-  - Defines how a coding agent should be prompted to execute a scoped task.
-
-### Templates and Reviews
-
-- `docs/prd/PRD_TEMPLATE.md`
-  - Template for feature-level PRDs.
-- `docs/architecture/ARCHITECTURE_TEMPLATE.md`
-  - Template for feature-level architecture docs.
-- `docs/review/HUMAN_REVIEW_CHECKLIST.md`
-  - Checklist for human review before merge.
-- `.github/pull_request_template.md`
-  - Pull request handoff template including spec references and verification.
-
-### Local Development
+Use these files for live coordination and orientation:
 
 - `README.md`
-  - Entry point for project orientation, quick start, and verification.
+  - human entry point, quick start, common commands, and doc navigation
+- `AGENTS.md`
+  - canonical AI rules and execution contract
+- `CONTEXT.md`
+  - stable project facts and boundaries
+- `STATUS.md`
+  - current phase, objective, blockers, and active task
+- `DECISIONS.md`
+  - append-only confirmed decisions
+- `ARCHITECTURE.md`
+  - short architecture summary
+
+### Long-Form Docs of Record
+
+Use these files for detailed reference material:
+
+- `docs/prd/PLATFORM_PRD.md`
+  - product scope, module responsibilities, success criteria, and phase roadmap
+- `docs/prd/STAGE_A_PLAN.md`
+  - formal Stage A planning document derived from the post-Phase-5 roadmap model
+- `docs/architecture/PLATFORM_ARCHITECTURE.md`
+  - detailed system architecture and target boundaries
 - `docs/development/WINDOWS_SETUP.md`
-  - Windows-specific setup and verification guide.
-- `scripts/setup-windows.cmd`
-  - Windows dependency/bootstrap helper.
-- `scripts/verify-windows.cmd`
-  - Windows local verification helper.
+  - Windows-specific setup and local verification notes
+- `docs/review/HUMAN_REVIEW_CHECKLIST.md`
+  - human review checklist before merge
+- `docs/archive/`
+  - completed or superseded long-form docs
+
+### Task Layer
+
+Use these files for execution and history:
+
+- `tasks/README.md`
+  - explains active-task and archive rules
+- `tasks/TASK_TEMPLATE.md`
+  - task structure template
+- `tasks/`
+  - active execution-ready tasks
+- `tasks/archive/`
+  - completed tasks and execution history
+
+Stage A work should use `stage-a-*` task naming.
+Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
+
+### Workflow and Prompting
+
+- `AI_WORKFLOW.md`
+  - overall human plus AI development flow
+- `prompts/CODING_AGENT_PROMPT_TEMPLATE.md`
+  - reusable task-execution prompt template
 
 ## Folder Responsibilities
 
 ### Repository Root
 
 - `server/`
-  - Backend application, API, services, workers, tests, and Python runtime config.
+  - backend application, workers, agents, and tests
 - `web/`
-  - Frontend application, shared UI components, and frontend integration helpers.
+  - frontend application, route shells, shared components, and client helpers
 - `docs/`
-  - Product, architecture, review, and development reference docs.
+  - long-form product, architecture, development, and review docs
 - `tasks/`
-  - Execution-ready task specs.
+  - active and archived task specs
 - `prompts/`
-  - Templates for coding-agent prompts.
+  - coding-agent prompt templates
 - `scripts/`
-  - Local helper scripts.
+  - local helper scripts
 - `.github/`
-  - CI and PR workflow metadata.
+  - CI and pull request workflow metadata
 
 ### Backend Folders
 
 - `server/app/core/`
-  - Cross-cutting runtime concerns: config, logging, security, database boundaries.
+  - configuration and cross-cutting runtime concerns
 - `server/app/api/routes/`
-  - REST endpoint definitions only; route handlers should stay thin.
+  - typed REST entry points
 - `server/app/models/`
-  - Domain entities and persistence-oriented data structures.
+  - persistence-oriented domain entities
 - `server/app/schemas/`
-  - Request and response contracts.
+  - request and response contracts
 - `server/app/services/`
-  - Business logic and orchestration.
+  - orchestration and business logic
 - `server/app/repositories/`
-  - Persistence boundary between services and storage.
+  - persistence boundary
 - `server/app/workers/`
-  - Real async and long-running job entry points only; placeholder helpers or draft workflows should not live here.
+  - real async job entry points only
 - `server/app/agents/`
-  - Agent runtime, tools, prompts, and orchestration logic.
+  - agent runtime, tools, and workflow logic
 - `server/tests/`
-  - Backend verification and API-contract tests.
+  - backend verification and API-contract tests
 
 ### Frontend Folders
 
 - `web/app/`
-  - Route-level UI organized by App Router structure; new frontend work should default to TypeScript.
+  - route-level UI organized by App Router structure
 - `web/components/`
-  - Reusable UI building blocks and page sections; new frontend work should default to TypeScript.
+  - reusable UI building blocks and page sections
 - `web/lib/`
-  - Frontend integration helpers, navigation constants, and shared client logic; new frontend work should default to TypeScript.
+  - client helpers, navigation constants, and shared logic
 
-### Frontend Naming Defaults
+## Frontend Naming Defaults
 
 - `*Manager`
-  - CRUD and state-orchestration containers.
+  - CRUD and state-orchestration containers
 - `*Panel`
-  - Route-facing business panels rendered directly by page shells.
+  - route-facing business panels rendered directly by page shells
 - `*Placeholder`
-  - Draft or reserved UI that is not yet part of the live runtime path.
+  - draft or reserved UI not yet on the live path
 
-## Current Development Status
+## Stage A Research Contract
 
-The repository is currently in `Phase 5: Scenario Modules`.
+- `research_summary` and `workspace_report` now use a Research-specific module-layer input contract instead of only a
+  freeform `goal`
+- canonical Research input fields are:
+  - `goal`
+  - `focus_areas`
+  - `key_questions`
+  - `constraints`
+  - `deliverable`
+  - `requested_sections`
+- the shared task primitives remain generic; the structured Research contract is resolved in the Research module layer
+- canonical Research results now carry both the normalized `input` and structured `sections` alongside the existing
+  `summary`, `highlights`, `evidence`, and `artifacts` fields
 
-### Phase 5 Requirements
+## Scenario Module Boundaries
 
-- Auth, workspaces, documents, chat, tasks, evals, and analytics continue to operate as one shared platform core
-- Redis-backed queueing and worker execution are real platform capabilities for both tasks and eval runs
-- Trace, cost, latency, and quality signals are persisted alongside operational state in PostgreSQL
-- Evaluation datasets, eval runs, and eval results are platform primitives rather than scenario-specific add-ons
-- Scenario modules reuse the same shared platform primitives rather than bypassing them
-- At least one scenario module reaches a real MVP while the remaining modules stay visible as lighter skeletons
-- Local run, local verification, and CI paths remain documented and usable
+The repository hosts one shared platform core plus three scenario modules.
 
-### Already Established
-
-- Development workflow and spec-driven process
-- Docker-based runnable environment
-- CI with lint, type check, tests, and frontend build
-- Backend layer structure for core, routes, schemas, services, repositories, workers, and agents
-- Frontend route structure for auth, dashboard, workspaces, documents, chat, tasks, and analytics
-- Frontend scaffold migrated to TypeScript
-- Auth register/login/me flow
-- Workspace persistence and workspace membership scoping
-- Document upload, parsing, chunking, embeddings, and Chroma indexing
-- Reindex orchestration that refreshes derived chunks and vector mappings
-- Chat requests with persisted conversations, messages, traces, grounded retrieval, and citations
-- Workspace analytics aggregated from traces
-- Task, agent run, and tool call persistence with minimal state models
-- Redis-backed ARQ worker foundation and task enqueue path
-- Task API surface for `research_summary` and `workspace_report`
-- Static Python tool registry for workspace document access and search
-- LangGraph-powered `workspace_research_agent`
-- Eval dataset, eval case, eval run, and eval result persistence with minimal state models
-- Eval API surface and ARQ-backed eval worker execution
-- Chat evaluator framework with rule checks plus an independently configured LLM judge path
-- Analytics and observability APIs for traces, eval results, and workspace summaries
-- Frontend Phase 4 flow for auth -> workspace -> indexed documents -> grounded chat -> tasks -> eval runs -> observability review
-- Workspace module contracts for research, support, and job
-- Research Assistant backend MVP with structured results on shared task / agent / tool primitives
-- Research Assistant frontend surface for module-scoped task creation and result review
-- Support Copilot skeleton on shared task / agent / tool primitives
-- Job Assistant skeleton on shared task / agent / tool primitives
-- Scenario-specific eval baselines and quality summaries for research, support, and job
-- Cross-module workspace navigation and shared module entry surfaces
-- A live integration path validated against Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` chat generation/judging and `text-embedding-v4` embeddings
-
-### Scenario Module Boundaries
-
-The repository hosts one shared platform core plus three scenario modules. These modules are not separate platforms.
-They exist to exercise different AI-workflow shapes on top of the same workspace, document, task, eval, and trace
-primitives.
-
-#### Research Assistant
+### Research Assistant
 
 - Work object: workspace-scoped document sets, evidence, and open research questions
 - Primary output: evidence-backed synthesis and workspace reports
 - Core capabilities: grounded retrieval, multi-document summarization, viewpoint comparison, report generation
 - Not responsible for: ticket triage, reply drafting, candidate-to-role matching
 
-#### Support Copilot
+### Support Copilot
 
 - Work object: support cases, tickets, and knowledge-base context
 - Primary output: grounded case summaries, reply drafts, and escalation guidance
 - Core capabilities: knowledge-base Q&A, ticket classification, reply drafting, escalation guidance
 - Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
 
-#### Job Assistant
+### Job Assistant
 
 - Work object: hiring materials such as job descriptions, resumes, and fit criteria
 - Primary output: structured job summaries, match assessments, and next-step recommendations
 - Core capabilities: structured extraction, resume matching, gap analysis, application workflow support
 - Not responsible for: support-case handling, knowledge-base reply generation, broad research report synthesis
 
-### Not Yet Complete
+## Live-State Rule
 
-- Durable or multi-agent orchestration beyond the minimal LangGraph workflow
-- Human approval flows, retries, and advanced scheduling
-- External observability stacks, alerting, and richer BI-style analysis beyond current in-product summaries
-- Deeper productization of job, support, and research beyond the current Research MVP plus Support/Job skeletons
+Do not use this guide as the live source of current project status. Use `STATUS.md` for the current objective and active
+task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable facts.
 
 ## Alignment Rules
 
-To stay aligned with the original project vision:
-
-1. Do not treat the project as a single chatbot app.
-2. Do not skip platform primitives in order to rush to scenario-specific UI.
-3. Do not implement scenario agents before document, task, and trace primitives exist.
-4. Keep product, architecture, and task specs updated when the plan changes.
-5. Prefer reusable platform contracts over one-off prompt flows.
-
-## Recommended Build Order
-
-### Phase 0: Scaffold & Alignment
-
-- Shared roadmap and docs of record
-- Local development and verification baseline
-- Backend and frontend platform skeleton
-- Placeholder APIs and UI shells for planned platform surfaces
-
-### Phase 1: Platform MVP
-
-- Auth boundary
-- Workspace persistence
-- Document API surface
-- Chat contract
-- Trace and metrics minimal loop
-- Frontend MVP integration
-
-### Phase 2: Document Ingest + RAG
-
-- Upload and metadata persistence
-- Parsing and chunking
-- Embeddings and Chroma indexing
-- Reindex orchestration
-- Source-backed chat
-
-### Phase 3: Tasks + Agents
-
-- Redis-backed jobs
-- Task lifecycle
-- Tool registry
-- LangGraph runs
-
-### Phase 4: Evaluation + Observability
-
-- Trace persistence
-- Cost and latency tracking
-- Quality evaluation
-- Analytics dashboards
-
-### Phase 5: Scenario Modules
-
-- Job Assistant
-- Support Copilot
-- Research Assistant
-
-## Definition of "On Track"
-
-Development is on track when:
-
-- New work clearly maps to the PRD phase roadmap.
-- New routes, services, and UI pages reinforce the shared platform core.
-- Retrieval, tasks, traces, and metrics evolve as shared primitives.
-- Scenario-specific work reuses the same platform contracts instead of bypassing them.
-- Frontend changes follow the TypeScript-first standard captured in the architecture and agent guide.
+1. do not treat the project as a single chatbot app
+2. do not bypass platform primitives for scenario-specific shortcuts
+3. do not let archived tasks become the current-state source
+4. update the control-plane docs when a durable project truth changes
+5. prefer additive doc refactors over destructive replacement of existing history

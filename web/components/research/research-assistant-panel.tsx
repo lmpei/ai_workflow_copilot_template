@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -9,7 +9,18 @@ import {
   isApiClientError,
   listWorkspaceTasks,
 } from "../../lib/api";
-import type { JsonObject, ResearchArtifacts, ResearchTaskResult, ResearchTaskType, TaskRecord, Workspace } from "../../lib/types";
+import type {
+  JsonObject,
+  ResearchArtifacts,
+  ResearchDeliverable,
+  ResearchRequestedSection,
+  ResearchResultSections,
+  ResearchTaskInput,
+  ResearchTaskResult,
+  ResearchTaskType,
+  TaskRecord,
+  Workspace,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -38,8 +49,111 @@ const TASK_OPTIONS: Record<
   },
 };
 
+const DEFAULT_REQUESTED_SECTIONS: Record<ResearchTaskType, ResearchRequestedSection[]> = {
+  research_summary: ["summary", "findings", "evidence", "next_steps"],
+  workspace_report: ["summary", "findings", "evidence", "open_questions", "next_steps"],
+};
+
+const REQUESTED_SECTION_OPTIONS: Array<{ value: ResearchRequestedSection; label: string }> = [
+  { value: "summary", label: "Summary" },
+  { value: "findings", label: "Findings" },
+  { value: "evidence", label: "Evidence" },
+  { value: "open_questions", label: "Open questions" },
+  { value: "next_steps", label: "Next steps" },
+];
+
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+function splitLines(value: string): string[] {
+  const seen = new Set<string>();
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter((item) => {
+      if (!item || seen.has(item)) {
+        return false;
+      }
+      seen.add(item);
+      return true;
+    });
+}
+
+function parseResearchTaskInput(value: unknown): ResearchTaskInput {
+  if (!isJsonObject(value)) {
+    return {
+      focus_areas: [],
+      key_questions: [],
+      constraints: [],
+      requested_sections: [],
+    };
+  }
+
+  const deliverable = value.deliverable === "brief" || value.deliverable === "report" ? value.deliverable : undefined;
+  const goal = typeof value.goal === "string" && value.goal.length > 0 ? value.goal : undefined;
+
+  return {
+    goal,
+    focus_areas: parseStringArray(value.focus_areas),
+    key_questions: parseStringArray(value.key_questions),
+    constraints: parseStringArray(value.constraints),
+    deliverable,
+    requested_sections: parseStringArray(value.requested_sections).filter(
+      (item): item is ResearchRequestedSection =>
+        item === "summary" ||
+        item === "findings" ||
+        item === "evidence" ||
+        item === "open_questions" ||
+        item === "next_steps",
+    ),
+  };
+}
+
+function parseResearchSections(value: unknown, result: JsonObject): ResearchResultSections {
+  if (!isJsonObject(value)) {
+    return {
+      summary: typeof result.summary === "string" ? result.summary : "",
+      findings: Array.isArray(result.highlights)
+        ? result.highlights
+            .filter((highlight): highlight is string => typeof highlight === "string")
+            .map((highlight, index) => ({
+              title: `Finding ${index + 1}`,
+              summary: highlight,
+              evidence_ref_ids: [],
+            }))
+        : [],
+      evidence_overview: [],
+      open_questions: [],
+      next_steps: [],
+    };
+  }
+
+  const findings = Array.isArray(value.findings)
+    ? value.findings
+        .filter((finding): finding is JsonObject => isJsonObject(finding))
+        .map((finding, index) => ({
+          title: typeof finding.title === "string" ? finding.title : `Finding ${index + 1}`,
+          summary: typeof finding.summary === "string" ? finding.summary : "",
+          evidence_ref_ids: parseStringArray(finding.evidence_ref_ids),
+        }))
+    : [];
+
+  return {
+    summary: typeof value.summary === "string" ? value.summary : typeof result.summary === "string" ? result.summary : "",
+    findings,
+    evidence_overview: parseStringArray(value.evidence_overview),
+    open_questions: parseStringArray(value.open_questions),
+    next_steps: parseStringArray(value.next_steps),
+  };
 }
 
 function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
@@ -61,7 +175,11 @@ function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
     return null;
   }
 
-  return result as unknown as ResearchTaskResult;
+  return {
+    ...(result as unknown as ResearchTaskResult),
+    input: parseResearchTaskInput(result.input),
+    sections: parseResearchSections(result.sections, result),
+  };
 }
 
 function parseEntryTaskTypes(workspace: Workspace | null): ResearchTaskType[] {
@@ -135,9 +253,27 @@ function renderArtifactStats(artifacts: ResearchArtifacts) {
   );
 }
 
-function extractGoal(task: TaskRecord): string | null {
-  const goal = task.input_json.goal;
-  return typeof goal === "string" && goal.length > 0 ? goal : null;
+function extractGoal(task: TaskRecord, result: ResearchTaskResult | null): string | null {
+  if (result?.input.goal) {
+    return result.input.goal;
+  }
+
+  const input = parseResearchTaskInput(task.input_json);
+  return input.goal ?? null;
+}
+
+function renderStringList(items: string[], emptyText: string) {
+  if (items.length === 0) {
+    return <p>{emptyText}</p>;
+  }
+
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
 }
 
 export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistantPanelProps) {
@@ -147,6 +283,13 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [taskType, setTaskType] = useState<ResearchTaskType>("research_summary");
   const [goal, setGoal] = useState("");
+  const [focusAreasText, setFocusAreasText] = useState("");
+  const [keyQuestionsText, setKeyQuestionsText] = useState("");
+  const [constraintsText, setConstraintsText] = useState("");
+  const [deliverable, setDeliverable] = useState<ResearchDeliverable | "">("");
+  const [requestedSections, setRequestedSections] = useState<ResearchRequestedSection[]>(
+    DEFAULT_REQUESTED_SECTIONS.research_summary,
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -159,6 +302,11 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setTaskType(availableTaskTypes[0] ?? "research_summary");
     }
   }, [availableTaskTypes, taskType]);
+
+  useEffect(() => {
+    setRequestedSections(DEFAULT_REQUESTED_SECTIONS[taskType]);
+    setDeliverable(taskType === "workspace_report" ? "report" : "brief");
+  }, [taskType]);
 
   const loadWorkspace = useCallback(async () => {
     if (!session) {
@@ -236,6 +384,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     [selectedTask],
   );
 
+  const toggleRequestedSection = (section: ResearchRequestedSection) => {
+    setRequestedSections((currentSections) => {
+      if (currentSections.includes(section)) {
+        return currentSections.filter((item) => item !== section);
+      }
+      return [...currentSections, section];
+    });
+  };
+
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -246,14 +403,47 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     setIsCreating(true);
     setErrorMessage(null);
 
+    const payloadInput: JsonObject = {};
+    const trimmedGoal = goal.trim();
+    if (trimmedGoal.length > 0) {
+      payloadInput.goal = trimmedGoal;
+    }
+
+    const focusAreas = splitLines(focusAreasText);
+    if (focusAreas.length > 0) {
+      payloadInput.focus_areas = focusAreas;
+    }
+
+    const keyQuestions = splitLines(keyQuestionsText);
+    if (keyQuestions.length > 0) {
+      payloadInput.key_questions = keyQuestions;
+    }
+
+    const constraints = splitLines(constraintsText);
+    if (constraints.length > 0) {
+      payloadInput.constraints = constraints;
+    }
+
+    if (deliverable) {
+      payloadInput.deliverable = deliverable;
+    }
+
+    if (requestedSections.length > 0) {
+      payloadInput.requested_sections = requestedSections;
+    }
+
     try {
       const createdTask = await createWorkspaceTask(session.accessToken, workspaceId, {
         task_type: taskType,
-        input: goal.trim().length > 0 ? { goal: goal.trim() } : {},
+        input: payloadInput,
       });
       setTasks((currentTasks) => sortTasks([createdTask, ...currentTasks]));
       setSelectedTaskId(createdTask.id);
       setGoal("");
+      setFocusAreasText("");
+      setKeyQuestionsText("");
+      setConstraintsText("");
+      setRequestedSections(DEFAULT_REQUESTED_SECTIONS[taskType]);
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch research task");
     } finally {
@@ -301,7 +491,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
       <SectionCard
         title="Launch research task"
-        description="Use a focused goal for a targeted answer, or leave it blank to let the default research flow summarize the current workspace."
+        description="Define the research goal, scope, and output expectations for a structured Stage A research run."
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
@@ -329,11 +519,73 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               value={goal}
             />
           </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Focus areas</span>
+            <textarea
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+              onChange={(event) => setFocusAreasText(event.target.value)}
+              placeholder="Optional. One focus area per line. Example: Risks, timeline, stakeholder concerns."
+              rows={3}
+              value={focusAreasText}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Key questions</span>
+            <textarea
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+              onChange={(event) => setKeyQuestionsText(event.target.value)}
+              placeholder="Optional. One question per line. Example: What evidence supports the deadline risk?"
+              rows={3}
+              value={keyQuestionsText}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Constraints</span>
+            <textarea
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+              onChange={(event) => setConstraintsText(event.target.value)}
+              placeholder="Optional. One constraint per line. Example: Use only indexed workspace documents."
+              rows={3}
+              value={constraintsText}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Deliverable</span>
+            <select
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+              onChange={(event) => setDeliverable(event.target.value as ResearchDeliverable | "")}
+              value={deliverable}
+            >
+              <option value="">Use task default</option>
+              <option value="brief">Brief</option>
+              <option value="report">Report</option>
+            </select>
+          </label>
+          <fieldset
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              display: "grid",
+              gap: 10,
+              padding: 12,
+            }}
+          >
+            <legend>Requested sections</legend>
+            {REQUESTED_SECTION_OPTIONS.map((option) => (
+              <label key={option.value} style={{ alignItems: "center", display: "flex", gap: 8 }}>
+                <input
+                  checked={requestedSections.includes(option.value)}
+                  disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+                  onChange={() => toggleRequestedSection(option.value)}
+                  type="checkbox"
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button
-            disabled={
-              isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "research")
-            }
+            disabled={isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "research")}
             type="submit"
           >
             {isCreating ? "Launching..." : "Launch research task"}
@@ -365,7 +617,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   {renderStatus(task.status)}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
-                  {result?.summary ?? extractGoal(task) ?? "No custom goal provided."}
+                  {result?.summary ?? extractGoal(task, result) ?? "No custom goal provided."}
                 </div>
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
@@ -382,7 +634,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
       <SectionCard
         title="Structured result"
-        description="Inspect the research output, evidence trail, and source artifacts from the selected task."
+        description="Inspect the research output, input contract, evidence trail, and source artifacts from the selected task."
       >
         {!selectedTask ? <p>Select a research task to inspect its output.</p> : null}
         {selectedTask ? (
@@ -397,9 +649,9 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               <div>
                 <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as ResearchTaskType].label}
               </div>
-              {extractGoal(selectedTask) ? (
+              {extractGoal(selectedTask, selectedResult) ? (
                 <div>
-                  <strong>Goal:</strong> {extractGoal(selectedTask)}
+                  <strong>Goal:</strong> {extractGoal(selectedTask, selectedResult)}
                 </div>
               ) : null}
             </div>
@@ -420,8 +672,84 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
                 {renderArtifactStats(selectedResult.artifacts)}
 
+                <div style={{ display: "grid", gap: 6 }}>
+                  <strong>Structured input</strong>
+                  <div>
+                    <strong>Deliverable:</strong> {selectedResult.input.deliverable ?? "not specified"}
+                  </div>
+                  <div>
+                    <strong>Requested sections:</strong>{" "}
+                    {selectedResult.input.requested_sections.length > 0
+                      ? selectedResult.input.requested_sections.join(", ")
+                      : "task default"}
+                  </div>
+                  <div>
+                    <strong>Focus areas</strong>
+                    {renderStringList(selectedResult.input.focus_areas, "No focus areas were provided.")}
+                  </div>
+                  <div>
+                    <strong>Key questions</strong>
+                    {renderStringList(selectedResult.input.key_questions, "No key questions were provided.")}
+                  </div>
+                  <div>
+                    <strong>Constraints</strong>
+                    {renderStringList(selectedResult.input.constraints, "No explicit constraints were provided.")}
+                  </div>
+                </div>
+
                 <div>
-                  <strong>Highlights</strong>
+                  <strong>Section summary</strong>
+                  <p style={{ marginBottom: 0, marginTop: 8 }}>{selectedResult.sections.summary}</p>
+                </div>
+
+                <div>
+                  <strong>Key findings</strong>
+                  {selectedResult.sections.findings.length > 0 ? (
+                    <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+                      {selectedResult.sections.findings.map((finding) => (
+                        <li
+                          key={`${finding.title}-${finding.summary}`}
+                          style={{
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 12,
+                            padding: 12,
+                          }}
+                        >
+                          <div style={{ fontWeight: 600 }}>{finding.title}</div>
+                          <p style={{ marginBottom: 0, marginTop: 8 }}>{finding.summary}</p>
+                          {finding.evidence_ref_ids.length > 0 ? (
+                            <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
+                              Evidence refs: {finding.evidence_ref_ids.join(", ")}
+                            </div>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No structured findings were produced for this run.</p>
+                  )}
+                </div>
+
+                <div>
+                  <strong>Evidence overview</strong>
+                  {renderStringList(
+                    selectedResult.sections.evidence_overview,
+                    "No evidence overview items were produced for this run.",
+                  )}
+                </div>
+
+                <div>
+                  <strong>Open questions</strong>
+                  {renderStringList(selectedResult.sections.open_questions, "No open questions were recorded.")}
+                </div>
+
+                <div>
+                  <strong>Next steps</strong>
+                  {renderStringList(selectedResult.sections.next_steps, "No next steps were suggested.")}
+                </div>
+
+                <div>
+                  <strong>Highlight bullets</strong>
                   {selectedResult.highlights.length > 0 ? (
                     <ul>
                       {selectedResult.highlights.map((highlight) => (
@@ -446,22 +774,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                             padding: 12,
                           }}
                         >
-                          <div style={{ fontWeight: 600 }}>
-                            {evidence.title ?? evidence.kind}
-                          </div>
+                          <div style={{ fontWeight: 600 }}>{evidence.title ?? evidence.kind}</div>
                           {evidence.snippet ? (
-                            <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>
-                              {evidence.snippet}
-                            </p>
+                            <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>{evidence.snippet}</p>
                           ) : null}
-                          <div style={{ color: "#475569", fontSize: 14 }}>
-                            Ref ID: {evidence.ref_id}
-                          </div>
+                          <div style={{ color: "#475569", fontSize: 14 }}>Ref ID: {evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>
-                                Open document context
-                              </Link>
+                              <Link href={`/workspaces/${workspaceId}/documents`}>Open document context</Link>
                             </div>
                           ) : null}
                         </li>
@@ -486,9 +806,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                           }}
                         >
                           <div style={{ fontWeight: 600 }}>{match.document_title}</div>
-                          <div style={{ color: "#475569", fontSize: 14, marginTop: 4 }}>
-                            Chunk {match.chunk_index}
-                          </div>
+                          <div style={{ color: "#475569", fontSize: 14, marginTop: 4 }}>Chunk {match.chunk_index}</div>
                           <p style={{ marginBottom: 0, marginTop: 8 }}>{match.snippet}</p>
                         </li>
                       ))}
@@ -504,7 +822,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     <ul>
                       {selectedResult.artifacts.documents.map((document) => (
                         <li key={document.id}>
-                          {document.title} 鈥?{document.status} ({document.source_type})
+                          {document.title} - {document.status} ({document.source_type})
                         </li>
                       ))}
                     </ul>
@@ -515,8 +833,8 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               </>
             ) : (
               <p>
-                This task does not have a completed structured research payload yet. If it is still running,
-                wait for the next refresh cycle.
+                This task does not have a completed structured research payload yet. If it is still running, wait for the
+                next refresh cycle.
               </p>
             )}
           </div>
@@ -525,4 +843,3 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     </>
   );
 }
-

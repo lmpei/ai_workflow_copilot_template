@@ -141,6 +141,9 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert output["agent_name"] == "workspace_research_agent"
     assert output["result"]["module_type"] == "research"
     assert output["result"]["task_type"] == "research_summary"
+    assert output["result"]["input"]["goal"] == "Who owns the project?"
+    assert output["result"]["input"]["deliverable"] == "brief"
+    assert output["result"]["sections"]["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
     assert output["result"]["artifacts"]["matches"][0]["document_title"] == "demo.txt"
     assert output["result"]["evidence"][0]["metadata"]["document_id"] == "doc-1"
     assert persisted_task is not None
@@ -172,6 +175,8 @@ def test_run_task_execution_completes_workspace_report_with_limited_context() ->
 
     assert output["task_type"] == "workspace_report"
     assert output["result"]["title"] == "Workspace Report"
+    assert output["result"]["input"]["deliverable"] == "report"
+    assert "open_questions" in output["result"]["sections"]
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["summary"] == "No workspace documents are available for analysis."

@@ -105,6 +105,16 @@ These are reusable scenario modules on one shared platform core, not three separ
 - Support Copilot
 - Research Assistant
 
+## Post-Phase-5 Planning Model
+
+After the Phase 5 baseline, roadmap planning shifts from a purely phase-based build order to a three-track model:
+
+- `Research`
+- `Platform Reliability`
+- `Delivery and Operations`
+
+The first formal planning unit under that model is documented in `docs/prd/STAGE_A_PLAN.md`.
+
 ## Current Status
 
 The repository is currently in `Phase 5: Scenario Modules`.
@@ -135,3 +145,10 @@ The repository does not yet implement:
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
 - deeper scenario-specific product workflows beyond the current Research MVP and Support/Job skeletons
+
+The next formal planning unit is `Stage A: Research Deepening With Trust Baseline`, documented in
+`docs/prd/STAGE_A_PLAN.md`.
+
+The first execution wave under that model is now tracked through `tasks/stage-a-*`, with
+`tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` completed and
+`tasks/stage-a-03-research-report-assembly-and-surface.md` as the next active task.

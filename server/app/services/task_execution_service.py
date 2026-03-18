@@ -25,7 +25,8 @@ from app.services.job_assistant_service import (
 )
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
-    normalize_research_task_input,
+    build_research_task_search_query,
+    resolve_research_task_input,
     validate_research_task_contract,
 )
 from app.services.support_copilot_service import (
@@ -56,14 +57,14 @@ class TaskExecutionError(Exception):
 
 def _resolve_task_prompt(task: Task) -> str:
     if task.task_type in RESEARCH_TASK_TYPES:
-        normalized_input = normalize_research_task_input(task.input_json)
-        input_goal = normalized_input.get("goal")
-        if isinstance(input_goal, str) and input_goal.strip():
-            return input_goal.strip()
-
-        if task.task_type == "workspace_report":
-            return "Create a concise report for the current workspace."
-        return "Summarize the most relevant findings in this workspace."
+        research_input = resolve_research_task_input(
+            task_type=task.task_type,
+            input_json=task.input_json,
+        )
+        return build_research_task_search_query(
+            task_type=task.task_type,
+            research_input=research_input,
+        )
 
     if task.task_type in SUPPORT_TASK_TYPES:
         normalized_input = normalize_support_task_input(task.input_json)
@@ -96,8 +97,6 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
     if workspace is None:
         raise TaskExecutionError("Workspace not found")
 
-    prompt = _resolve_task_prompt(task)
-
     if task.task_type in RESEARCH_TASK_TYPES:
         try:
             validate_research_task_contract(
@@ -107,14 +106,25 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
         except ResearchAssistantContractError as error:
             raise TaskExecutionError(str(error)) from error
 
+        research_input = resolve_research_task_input(
+            task_type=task.task_type,
+            input_json=task.input_json,
+        )
+        prompt = build_research_task_search_query(
+            task_type=task.task_type,
+            research_input=research_input,
+        )
+
         return run_workspace_research_agent(
             task_id=task.id,
             workspace_id=task.workspace_id,
             user_id=task.created_by,
             goal=prompt,
+            research_input=research_input.model_dump(exclude_none=True),
         )
 
     if task.task_type in SUPPORT_TASK_TYPES:
+        prompt = _resolve_task_prompt(task)
         try:
             validate_support_task_contract(
                 workspace_module_type=workspace.module_type,
@@ -130,6 +140,7 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             customer_issue=prompt,
         )
 
+    prompt = _resolve_task_prompt(task)
     try:
         validate_job_task_contract(
             workspace_module_type=workspace.module_type,
