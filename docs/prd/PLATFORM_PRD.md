@@ -167,5 +167,5 @@ The second execution wave is now archived as:
 The first executable Stage B wave is now active as:
 
 - `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md` (complete)
-- `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
+- `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md` (complete)
 - `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`

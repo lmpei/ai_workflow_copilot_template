@@ -126,6 +126,7 @@ def create_eval_run(
     eval_type: str,
     created_by: str,
     summary_json: dict[str, object] | None = None,
+    control_json: dict[str, object] | None = None,
     status: str = EVAL_RUN_STATUS_PENDING,
 ) -> EvalRun:
     if not is_valid_eval_run_status(status):
@@ -140,6 +141,7 @@ def create_eval_run(
         status=status,
         created_by=created_by,
         summary_json=summary_json or {},
+        control_json=control_json or {},
         error_message=None,
         created_at=now,
         started_at=now if status == EVAL_RUN_STATUS_RUNNING else None,
@@ -189,6 +191,7 @@ def update_eval_run_status(
     *,
     next_status: str,
     summary_json: dict[str, object] | None = None,
+    control_json: dict[str, object] | None = None,
     error_message: str | None = None,
 ) -> EvalRun | None:
     if not is_valid_eval_run_status(next_status):
@@ -219,6 +222,8 @@ def update_eval_run_status(
             eval_run.ended_at = now
         if summary_json is not None:
             eval_run.summary_json = summary_json
+        if control_json is not None:
+            eval_run.control_json = control_json
         if error_message is not None:
             eval_run.error_message = error_message
         elif next_status != "failed":

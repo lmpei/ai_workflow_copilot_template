@@ -1,7 +1,16 @@
-﻿from pydantic import ValidationError
+from copy import deepcopy
 
+from pydantic import ValidationError
+
+from app.core.runtime_control import (
+    CONTROL_STATE_CANCELLED,
+    build_cancel_requested_control,
+    build_cancelled_control,
+    build_retry_attempt_control,
+    build_retry_created_control,
+)
 from app.repositories import task_repository, workspace_repository
-from app.schemas.task import TaskCreate, TaskResponse
+from app.schemas.task import TaskControlRequest, TaskCreate, TaskResponse
 from app.services.job_assistant_service import (
     JobAssistantContractError,
     normalize_job_task_input,
@@ -32,6 +41,7 @@ JOB_TASK_TYPES = {
     "resume_match",
 }
 SUPPORTED_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_TASK_TYPES
+TASK_CANCELLED_ERROR_MESSAGE = "Task cancelled by operator"
 
 
 class TaskAccessError(Exception):
@@ -43,6 +53,10 @@ class TaskValidationError(Exception):
 
 
 class TaskQueueError(Exception):
+    pass
+
+
+class TaskControlError(Exception):
     pass
 
 
@@ -73,15 +87,62 @@ def _normalize_task_input(
     raise TaskValidationError(f"Unsupported task type: {task_type}")
 
 
+def _validate_research_task_lineage(
+    *,
+    workspace_id: str,
+    user_id: str,
+    normalized_input: dict[str, object],
+) -> None:
+    research_asset_id = normalized_input.get("research_asset_id")
+    if isinstance(research_asset_id, str) and research_asset_id:
+        from app.repositories import research_asset_repository
+
+        asset = research_asset_repository.get_research_asset_for_user(research_asset_id, user_id)
+        if asset is None or asset.workspace_id != workspace_id:
+            raise TaskValidationError("Research asset not found in this workspace")
+
+    parent_task_id = normalized_input.get("parent_task_id")
+    if isinstance(parent_task_id, str) and parent_task_id:
+        parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
+        if parent_task is None or parent_task.workspace_id != workspace_id:
+            raise TaskValidationError("Parent research task not found in this workspace")
+        if parent_task.task_type not in RESEARCH_TASK_TYPES:
+            raise TaskValidationError("Parent task must be a completed Research task")
+        if parent_task.status != "done":
+            raise TaskValidationError("Parent research task must be completed before follow-up")
+        result = parent_task.output_json.get("result")
+        if not isinstance(result, dict) or result.get("module_type") != "research":
+            raise TaskValidationError("Parent research task does not contain a structured Research result")
+
+        if isinstance(research_asset_id, str) and research_asset_id:
+            from app.repositories import research_asset_repository
+
+            asset_revision = research_asset_repository.get_research_asset_revision_by_task_id(parent_task_id)
+            if asset_revision is not None and asset_revision.research_asset_id != research_asset_id:
+                raise TaskValidationError("Parent research task is linked to a different Research asset")
+
+
+def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
+    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
+    if workspace is None:
+        raise TaskAccessError("Workspace not found")
+    return workspace
+
+
+def _get_task_or_raise(*, task_id: str, user_id: str):
+    task = task_repository.get_task_for_user(task_id, user_id)
+    if task is None:
+        raise TaskAccessError("Task not found")
+    return task
+
+
 async def create_task(
     *,
     workspace_id: str,
     user_id: str,
     payload: TaskCreate,
 ) -> TaskResponse:
-    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
-    if workspace is None:
-        raise TaskAccessError("Workspace not found")
+    workspace = _get_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
 
     if payload.task_type not in SUPPORTED_TASK_TYPES:
         raise TaskValidationError(f"Unsupported task type: {payload.task_type}")
@@ -101,33 +162,11 @@ async def create_task(
         raise TaskValidationError(str(error)) from error
 
     if payload.task_type in RESEARCH_TASK_TYPES:
-        research_asset_id = normalized_input.get("research_asset_id")
-        if isinstance(research_asset_id, str) and research_asset_id:
-            from app.repositories import research_asset_repository
-
-            asset = research_asset_repository.get_research_asset_for_user(research_asset_id, user_id)
-            if asset is None or asset.workspace_id != workspace_id:
-                raise TaskValidationError("Research asset not found in this workspace")
-
-        parent_task_id = normalized_input.get("parent_task_id")
-        if isinstance(parent_task_id, str) and parent_task_id:
-            parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
-            if parent_task is None or parent_task.workspace_id != workspace_id:
-                raise TaskValidationError("Parent research task not found in this workspace")
-            if parent_task.task_type not in RESEARCH_TASK_TYPES:
-                raise TaskValidationError("Parent task must be a completed Research task")
-            if parent_task.status != "done":
-                raise TaskValidationError("Parent research task must be completed before follow-up")
-            result = parent_task.output_json.get("result")
-            if not isinstance(result, dict) or result.get("module_type") != "research":
-                raise TaskValidationError("Parent research task does not contain a structured Research result")
-
-            if isinstance(research_asset_id, str) and research_asset_id:
-                from app.repositories import research_asset_repository
-
-                asset_revision = research_asset_repository.get_research_asset_revision_by_task_id(parent_task_id)
-                if asset_revision is not None and asset_revision.research_asset_id != research_asset_id:
-                    raise TaskValidationError("Parent research task is linked to a different Research asset")
+        _validate_research_task_lineage(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            normalized_input=normalized_input,
+        )
 
     task = task_repository.create_task(
         workspace_id=workspace_id,
@@ -151,7 +190,6 @@ async def create_task(
     return TaskResponse.from_model(task)
 
 
-
 def get_task(*, task_id: str, user_id: str) -> TaskResponse | None:
     task = task_repository.get_task_for_user(task_id, user_id)
     if task is None:
@@ -159,11 +197,118 @@ def get_task(*, task_id: str, user_id: str) -> TaskResponse | None:
     return TaskResponse.from_model(task)
 
 
-
 def list_workspace_tasks(*, workspace_id: str, user_id: str) -> list[TaskResponse]:
-    workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
-    if workspace is None:
-        raise TaskAccessError("Workspace not found")
-
+    _get_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
     tasks = task_repository.list_workspace_tasks(workspace_id, user_id)
     return [TaskResponse.from_model(task) for task in tasks]
+
+
+def cancel_task(
+    *,
+    task_id: str,
+    user_id: str,
+    payload: TaskControlRequest | None = None,
+) -> TaskResponse:
+    task = _get_task_or_raise(task_id=task_id, user_id=user_id)
+    reason = payload.reason if payload is not None else None
+    control_state = task.control_json.get("state") if isinstance(task.control_json, dict) else None
+
+    if control_state in {"cancel_requested", CONTROL_STATE_CANCELLED}:
+        return TaskResponse.from_model(task)
+
+    if task.status == "pending":
+        updated_task = task_repository.update_task_status(
+            task.id,
+            next_status="failed",
+            control_json=build_cancelled_control(
+                current_control_json=task.control_json,
+                user_id=user_id,
+                reason=reason,
+                extra_json={"cancelled_from_status": "pending"},
+            ),
+            error_message=TASK_CANCELLED_ERROR_MESSAGE,
+        )
+    elif task.status == "running":
+        updated_task = task_repository.update_task_status(
+            task.id,
+            next_status="running",
+            control_json=build_cancel_requested_control(
+                current_control_json=task.control_json,
+                user_id=user_id,
+                reason=reason,
+                extra_json={"cancel_requested_from_status": "running"},
+            ),
+        )
+    else:
+        raise TaskControlError("Only pending or running tasks can be cancelled")
+
+    if updated_task is None:
+        raise TaskAccessError("Task not found")
+    return TaskResponse.from_model(updated_task)
+
+
+async def retry_task(
+    *,
+    task_id: str,
+    user_id: str,
+    payload: TaskControlRequest | None = None,
+) -> TaskResponse:
+    task = _get_task_or_raise(task_id=task_id, user_id=user_id)
+    reason = payload.reason if payload is not None else None
+
+    if task.status != "failed":
+        raise TaskControlError("Only failed tasks can be retried")
+
+    existing_retry_task_id = task.control_json.get("target_task_id") if isinstance(task.control_json, dict) else None
+    if isinstance(existing_retry_task_id, str) and existing_retry_task_id:
+        existing_retry_task = task_repository.get_task_for_user(existing_retry_task_id, user_id)
+        if existing_retry_task is not None:
+            return TaskResponse.from_model(existing_retry_task)
+
+    retry_task_record = task_repository.create_task(
+        workspace_id=task.workspace_id,
+        task_type=task.task_type,
+        created_by=user_id,
+        input_json=deepcopy(task.input_json),
+        control_json=build_retry_attempt_control(
+            user_id=user_id,
+            source_id_key="source_task_id",
+            source_id=task.id,
+            reason=reason,
+        ),
+    )
+
+    try:
+        await enqueue_task_execution(retry_task_record.id)
+    except TaskExecutionError as error:
+        failed_retry_task = task_repository.update_task_status(
+            retry_task_record.id,
+            next_status="failed",
+            control_json=build_retry_attempt_control(
+                user_id=user_id,
+                source_id_key="source_task_id",
+                source_id=task.id,
+                reason=reason,
+                extra_json={"retry_enqueue_failed": True},
+            ),
+            error_message=str(error),
+        )
+        if failed_retry_task is None:
+            raise TaskQueueError("Failed to enqueue retry task execution") from error
+        raise TaskQueueError(str(error)) from error
+
+    updated_original = task_repository.update_task_status(
+        task.id,
+        next_status=task.status,
+        control_json=build_retry_created_control(
+            current_control_json=task.control_json,
+            user_id=user_id,
+            target_id_key="target_task_id",
+            target_id=retry_task_record.id,
+            reason=reason,
+        ),
+    )
+    if updated_original is None:
+        raise TaskAccessError("Task not found")
+
+    return TaskResponse.from_model(retry_task_record)

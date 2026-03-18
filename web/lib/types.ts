@@ -328,8 +328,10 @@ export type EvalRunRecord = {
   dataset_id: string;
   eval_type: EvalType;
   status: "pending" | "running" | "completed" | "failed";
+  recovery_state: string;
   created_by: string;
   summary_json: JsonObject;
+  control_json: JsonObject;
   error_message: string | null;
   created_at: string;
   started_at: string | null;
@@ -380,9 +382,11 @@ export type TaskRecord = {
   workspace_id: string;
   task_type: TaskType;
   status: "pending" | "running" | "done" | "failed";
+  recovery_state: string;
   created_by: string;
   input_json: JsonObject;
   output_json: JsonObject;
+  control_json: JsonObject;
   error_message: string | null;
   created_at: string;
   updated_at: string;

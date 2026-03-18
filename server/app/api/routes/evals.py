@@ -6,11 +6,17 @@ from app.schemas.eval import (
     EvalDatasetCreate,
     EvalDatasetResponse,
     EvalResultResponse,
+    EvalRunControlRequest,
     EvalRunCreate,
     EvalRunResponse,
 )
 from app.services import eval_service
-from app.services.eval_service import EvalAccessError, EvalQueueError, EvalValidationError
+from app.services.eval_service import (
+    EvalAccessError,
+    EvalControlError,
+    EvalQueueError,
+    EvalValidationError,
+)
 
 router = APIRouter()
 
@@ -74,6 +80,47 @@ async def create_eval_run(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except EvalValidationError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except EvalQueueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
+
+
+@router.post("/evals/runs/{eval_run_id}/cancel", response_model=EvalRunResponse)
+async def cancel_eval_run(
+    eval_run_id: str,
+    payload: EvalRunControlRequest | None = None,
+    current_user: User = Depends(get_current_user),
+) -> EvalRunResponse:
+    try:
+        return eval_service.cancel_eval_run(
+            eval_run_id=eval_run_id,
+            user_id=current_user.id,
+            payload=payload,
+        )
+    except EvalAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except EvalControlError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+
+
+@router.post("/evals/runs/{eval_run_id}/retry", response_model=EvalRunResponse)
+async def retry_eval_run(
+    eval_run_id: str,
+    payload: EvalRunControlRequest | None = None,
+    current_user: User = Depends(get_current_user),
+) -> EvalRunResponse:
+    try:
+        return await eval_service.retry_eval_run(
+            eval_run_id=eval_run_id,
+            user_id=current_user.id,
+            payload=payload,
+        )
+    except EvalAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except EvalControlError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except EvalQueueError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

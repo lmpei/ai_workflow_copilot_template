@@ -57,6 +57,7 @@ class EvalRun(Base):
     status: Mapped[str] = mapped_column(String(50), default=EVAL_RUN_STATUS_PENDING, index=True)
     created_by: Mapped[str] = mapped_column(String(36), index=True)
     summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    control_json: Mapped[dict] = mapped_column(JSON, default=dict)
     error_message: Mapped[str | None] = mapped_column(Text(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -313,3 +313,98 @@ def test_eval_api_rejects_mismatched_scenario_config(
     assert response.status_code == 400
     assert "does not match workspace module" in response.json()["detail"]
 
+
+def test_cancel_pending_eval_run_marks_it_failed_with_control_state(client: TestClient) -> None:
+    auth = _register_and_login(client, email="cancel-eval-owner@example.com", name="Cancel Eval Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    dataset_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/datasets",
+        json={
+            "name": "Cancelable Dataset",
+            "eval_type": "retrieval_chat",
+            "cases": [{"input_json": {"question": "Who owns Apollo?"}}],
+        },
+        headers=headers,
+    )
+    assert dataset_response.status_code == 201
+    dataset_id = dataset_response.json()["id"]
+
+    create_run_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/runs",
+        json={"dataset_id": dataset_id},
+        headers=headers,
+    )
+    assert create_run_response.status_code == 201
+    eval_run_id = create_run_response.json()["id"]
+
+    cancel_response = client.post(
+        f"/api/v1/evals/runs/{eval_run_id}/cancel",
+        json={"reason": "Do not run this staging eval."},
+        headers=headers,
+    )
+    assert cancel_response.status_code == 200
+    cancelled_eval_run = cancel_response.json()
+    assert cancelled_eval_run["status"] == "failed"
+    assert cancelled_eval_run["recovery_state"] == "cancelled"
+    assert cancelled_eval_run["control_json"]["last_action"] == "cancel"
+    assert cancelled_eval_run["control_json"]["state"] == "cancelled"
+
+
+def test_retry_failed_eval_run_creates_linked_retry_attempt(client: TestClient) -> None:
+    auth = _register_and_login(client, email="retry-eval-owner@example.com", name="Retry Eval Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    dataset_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/datasets",
+        json={
+            "name": "Retry Dataset",
+            "eval_type": "retrieval_chat",
+            "cases": [{"input_json": {"question": "Who owns Apollo?"}}],
+        },
+        headers=headers,
+    )
+    assert dataset_response.status_code == 201
+    dataset_id = dataset_response.json()["id"]
+
+    create_run_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/evals/runs",
+        json={"dataset_id": dataset_id},
+        headers=headers,
+    )
+    assert create_run_response.status_code == 201
+    eval_run_id = create_run_response.json()["id"]
+
+    failed_eval_run = eval_repository.update_eval_run_status(
+        eval_run_id,
+        next_status="failed",
+        summary_json={"total_cases": 1, "completed_cases": 0, "failed_cases": 1},
+        error_message="Judge unavailable",
+    )
+    assert failed_eval_run is not None
+
+    retry_response = client.post(
+        f"/api/v1/evals/runs/{eval_run_id}/retry",
+        json={"reason": "Retry after temporary judge outage."},
+        headers=headers,
+    )
+    assert retry_response.status_code == 200
+    retry_eval_run = retry_response.json()
+    assert retry_eval_run["status"] == "pending"
+    assert retry_eval_run["recovery_state"] == "retry_attempt"
+    assert retry_eval_run["control_json"]["source_eval_run_id"] == eval_run_id
+
+    original_eval_run = eval_repository.get_eval_run(eval_run_id)
+    assert original_eval_run is not None
+    assert original_eval_run.control_json["state"] == "retry_created"
+    assert original_eval_run.control_json["target_eval_run_id"] == retry_eval_run["id"]
+
+    second_retry_response = client.post(
+        f"/api/v1/evals/runs/{eval_run_id}/retry",
+        json={"reason": "Retry after temporary judge outage."},
+        headers=headers,
+    )
+    assert second_retry_response.status_code == 200
+    assert second_retry_response.json()["id"] == retry_eval_run["id"]

@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.database import reset_database_for_tests
+from app.core.runtime_control import build_cancel_requested_control
 from app.repositories import eval_repository, trace_repository
 from app.repositories.user_repository import create_user
 from app.repositories.workspace_repository import create_workspace
@@ -248,6 +249,8 @@ def test_run_eval_execution_completes_dataset_and_persists_results(
         "passed_cases": 2,
         "avg_score": 0.9,
         "pass_rate": 1.0,
+        "control_json": {},
+        "recovery_state": "completed",
     }
     assert persisted_run is not None
     assert persisted_run.status == "completed"
@@ -317,6 +320,9 @@ def test_run_eval_execution_marks_run_failed_and_preserves_partial_results(
         "passed_cases": 1,
         "avg_score": 0.9,
         "pass_rate": 0.5,
+        "control_json": {},
+        "recovery_state": "retryable_failed",
+        "error_message": "Judge unavailable",
     }
     assert persisted_run is not None
     assert persisted_run.status == "failed"
@@ -527,4 +533,87 @@ def test_run_eval_run_worker_entrypoint_executes_eval_run(
     assert output["status"] == "completed"
     assert persisted_run is not None
     assert persisted_run.status == "completed"
+
+
+def test_run_eval_execution_cancels_running_run_with_cancel_request() -> None:
+    fixture = _create_eval_run_fixture(questions=["Who owns Apollo?"])
+    running_eval_run = eval_repository.update_eval_run_status(
+        fixture["eval_run_id"],
+        next_status="running",
+        summary_json={"total_cases": 1, "completed_cases": 0, "failed_cases": 0},
+        control_json=build_cancel_requested_control(
+            current_control_json={},
+            user_id=fixture["user_id"],
+            reason="Stop the stuck eval run.",
+        ),
+    )
+    assert running_eval_run is not None
+
+    output = eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+    persisted_eval_run = eval_repository.get_eval_run(fixture["eval_run_id"])
+
+    assert output["status"] == "failed"
+    assert output["recovery_state"] == "cancelled"
+    assert output["control_json"]["state"] == "cancelled"
+    assert persisted_eval_run is not None
+    assert persisted_eval_run.status == "failed"
+    assert persisted_eval_run.error_message == "Eval run cancelled by operator"
+
+
+def test_run_eval_execution_honors_cancel_request_between_cases(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _create_eval_run_fixture(
+        questions=["Who owns Apollo?", "How many milestones are there?"],
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_retriever",
+        lambda: FakeRetriever(),
+    )
+    monkeypatch.setattr(
+        eval_execution_service.retrieval_service,
+        "get_answer_generator",
+        lambda: FakeAnswerGenerator(),
+    )
+    monkeypatch.setattr(
+        eval_execution_service.chat_evaluator_service,
+        "get_judge_scorer",
+        lambda *args, **kwargs: FakeJudgeScorer(),
+    )
+
+    original_execute_eval_case = eval_execution_service.execute_eval_case
+    call_count = {"count": 0}
+
+    def cancel_after_first_case(*args, **kwargs):
+        call_count["count"] += 1
+        result = original_execute_eval_case(*args, **kwargs)
+        if call_count["count"] == 1:
+            current_eval_run = eval_repository.get_eval_run(fixture["eval_run_id"])
+            assert current_eval_run is not None
+            updated_eval_run = eval_repository.update_eval_run_status(
+                fixture["eval_run_id"],
+                next_status="running",
+                summary_json=current_eval_run.summary_json,
+                control_json=build_cancel_requested_control(
+                    current_control_json=current_eval_run.control_json,
+                    user_id=fixture["user_id"],
+                    reason="Cancel after the first case.",
+                ),
+            )
+            assert updated_eval_run is not None
+        return result
+
+    monkeypatch.setattr(eval_execution_service, "execute_eval_case", cancel_after_first_case)
+
+    with pytest.raises(eval_execution_service.EvalControlActionError, match="Eval run cancelled by operator"):
+        eval_execution_service.run_eval_execution(fixture["eval_run_id"])
+
+    persisted_eval_run = eval_repository.get_eval_run(fixture["eval_run_id"])
+    results = eval_repository.list_eval_run_results(fixture["eval_run_id"])
+
+    assert persisted_eval_run is not None
+    assert persisted_eval_run.status == "failed"
+    assert persisted_eval_run.control_json["state"] == "cancelled"
+    assert len(results) == 1
 

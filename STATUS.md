@@ -18,16 +18,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the first Stage B wave after completing the Research workbench and asset-lifecycle task
+- continue the first Stage B wave after landing recoverable runtime and control actions for tasks and evals
 
 ## Active Task
 
-- File: `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
-- Status: `stage-b-02` is complete and archived; `stage-b-03` is the next active task
+- File: `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- Status: `stage-b-03` is complete and archived; `stage-b-04` is the next active task
 
 ## Verification Status
 
-- Summary: Stage B now has a persistent Research workbench and asset lifecycle, and the next focus shifts to recoverable runtime behavior.
+- Summary: Stage B now has a persistent Research workbench plus recoverable cancel/retry control semantics for tasks and eval runs; the next focus shifts to staging handoff and rehearsal automation.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -48,9 +48,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `tasks/stage-b-03-recoverable-runtime-and-control-actions.md`
-2. then execute `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
-3. after the first Stage B wave, decide whether to close the wave or define a second Stage B wave
+1. execute `tasks/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+2. after the first Stage B wave, decide whether to close the wave or define a second Stage B wave
+3. if Stage B continues, define the next Research and runtime-reliability wave
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md`
+- `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md`
 
 ## Recent Decisions
 
@@ -69,3 +69,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-009` use `stage-b-*` naming for Stage B tasks
 - `DEC-2026-03-18-010` define the first Stage B task wave
 - `DEC-2026-03-18-011` introduce the Stage B Research workbench and asset lifecycle
+- `DEC-2026-03-18-012` add Stage B recoverable runtime control actions for tasks and eval runs

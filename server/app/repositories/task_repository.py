@@ -32,6 +32,7 @@ def create_task(
     task_type: str,
     created_by: str,
     input_json: dict[str, object] | None = None,
+    control_json: dict[str, object] | None = None,
     status: str = TASK_STATUS_PENDING,
 ) -> Task:
     if not is_valid_task_status(status):
@@ -46,6 +47,7 @@ def create_task(
         created_by=created_by,
         input_json=input_json or {},
         output_json={},
+        control_json=control_json or {},
         error_message=None,
         created_at=now,
         updated_at=now,
@@ -94,6 +96,7 @@ def update_task_status(
     *,
     next_status: str,
     output_json: dict[str, object] | None = None,
+    control_json: dict[str, object] | None = None,
     error_message: str | None = None,
 ) -> Task | None:
     if not is_valid_task_status(next_status):
@@ -111,6 +114,8 @@ def update_task_status(
         task.updated_at = datetime.now(UTC)
         if output_json is not None:
             task.output_json = output_json
+        if control_json is not None:
+            task.control_json = control_json
         if error_message is not None:
             task.error_message = error_message
         elif next_status != "failed":

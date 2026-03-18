@@ -1,9 +1,10 @@
-﻿from arq import create_pool
+from arq import create_pool
 
 from datetime import UTC, datetime
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
+from app.core.runtime_control import build_cancelled_control, derive_recovery_state, is_cancel_requested
 from app.models.task import (
     TASK_STATUS_DONE,
     TASK_STATUS_FAILED,
@@ -58,6 +59,12 @@ SUPPORTED_EXECUTION_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_
 
 class TaskExecutionError(Exception):
     pass
+
+
+class TaskControlActionError(TaskExecutionError):
+    def __init__(self, *, action: str, message: str) -> None:
+        super().__init__(message)
+        self.action = action
 
 
 def _resolve_task_prompt(task: Task) -> str:
@@ -186,17 +193,22 @@ def _build_task_state_snapshot(task: Task) -> dict[str, object]:
         snapshot = dict(task.output_json)
         if task.error_message and "error_message" not in snapshot:
             snapshot["error_message"] = task.error_message
-        return snapshot
+    else:
+        snapshot = {
+            "task_id": task.id,
+            "task_type": task.task_type,
+            "worker": "arq",
+            "status": task.status,
+            "skipped": True,
+        }
+        if task.error_message:
+            snapshot["error_message"] = task.error_message
 
-    snapshot: dict[str, object] = {
-        "task_id": task.id,
-        "task_type": task.task_type,
-        "worker": "arq",
-        "status": task.status,
-        "skipped": True,
-    }
-    if task.error_message:
-        snapshot["error_message"] = task.error_message
+    snapshot["control_json"] = task.control_json
+    snapshot["recovery_state"] = derive_recovery_state(
+        status=task.status,
+        control_json=task.control_json,
+    )
     return snapshot
 
 
@@ -282,6 +294,13 @@ def _resolve_research_lineage(
 
 
 def _classify_task_failure(error: Exception) -> dict[str, object]:
+    if isinstance(error, TaskControlActionError):
+        return {
+            "type": "control_action",
+            "stage": "operator_control",
+            "retryable": True,
+            "action": error.action,
+        }
     if isinstance(error, (ResearchAssistantContractError, SupportCopilotContractError, JobAssistantContractError)):
         return {
             "type": "contract_error",
@@ -376,6 +395,7 @@ def _mark_task_failed(
     error: Exception,
     research_trace_request: dict[str, object] | None,
     started_at: datetime,
+    control_json: dict[str, object] | None = None,
 ) -> Task | None:
     failure = _classify_task_failure(error)
     trace_id: str | None = None
@@ -412,6 +432,27 @@ def _mark_task_failed(
         next_status=TASK_STATUS_FAILED,
         error_message=str(error),
         output_json=output_json,
+        control_json=control_json,
+    )
+
+
+def _cancel_task_from_control_request(task: Task) -> Task | None:
+    return task_repository.update_task_status(
+        task.id,
+        next_status=TASK_STATUS_FAILED,
+        error_message="Task cancelled by operator",
+        control_json=build_cancelled_control(
+            current_control_json=task.control_json,
+            user_id=str(task.control_json.get("requested_by", task.created_by)),
+            reason=(
+                str(task.control_json.get("reason"))
+                if isinstance(task.control_json.get("reason"), str)
+                else None
+            ),
+            extra_json={
+                "cancelled_from_status": task.status,
+            },
+        ),
     )
 
 
@@ -436,6 +477,12 @@ def run_task_execution(task_id: str) -> dict[str, object]:
     if task is None:
         raise TaskExecutionError("Task not found")
 
+    if is_cancel_requested(task.control_json):
+        cancelled_task = _cancel_task_from_control_request(task)
+        if cancelled_task is None:
+            raise TaskExecutionError("Task not found")
+        return _build_task_state_snapshot(cancelled_task)
+
     if task.status != TASK_STATUS_PENDING:
         return _build_task_state_snapshot(task)
 
@@ -452,6 +499,34 @@ def run_task_execution(task_id: str) -> dict[str, object]:
 
     try:
         execution_result = _execute_task_agent(running_task)
+        refreshed_running_task = task_repository.get_task(task.id)
+        if refreshed_running_task is None:
+            raise TaskExecutionError("Task not found")
+        if is_cancel_requested(refreshed_running_task.control_json):
+            cancelled_error = TaskControlActionError(
+                action="cancel",
+                message="Task cancelled by operator",
+            )
+            failed_task = _mark_task_failed(
+                task=refreshed_running_task,
+                error=cancelled_error,
+                research_trace_request=research_trace_request,
+                started_at=started_at,
+                control_json=build_cancelled_control(
+                    current_control_json=refreshed_running_task.control_json,
+                    user_id=str(refreshed_running_task.control_json.get("requested_by", refreshed_running_task.created_by)),
+                    reason=(
+                        str(refreshed_running_task.control_json.get("reason"))
+                        if isinstance(refreshed_running_task.control_json.get("reason"), str)
+                        else None
+                    ),
+                    extra_json={"cancelled_from_status": refreshed_running_task.status},
+                ),
+            )
+            if failed_task is None:
+                raise TaskExecutionError("Task not found")
+            return _build_task_state_snapshot(failed_task)
+
         if running_task.task_type in RESEARCH_TASK_TYPES:
             research_asset_id = running_task.input_json.get("research_asset_id")
             if isinstance(research_asset_id, str) and research_asset_id:
@@ -518,7 +593,7 @@ def run_task_execution(task_id: str) -> dict[str, object]:
         )
         if completed_task is None:
             raise TaskExecutionError("Task not found")
-        return output
+        return _build_task_state_snapshot(completed_task)
     except TaskExecutionError as error:
         failed_task = _mark_task_failed(
             task=running_task,

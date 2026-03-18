@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.database import reset_database_for_tests
+from app.core.runtime_control import build_cancel_requested_control
 from app.models.document import DOCUMENT_STATUS_INDEXED
 from app.repositories import document_repository, research_asset_repository, task_repository, trace_repository
 from app.repositories.user_repository import create_user
@@ -11,6 +12,7 @@ from app.repositories.workspace_repository import create_workspace
 from app.schemas.research_asset import ResearchAssetCreate
 from app.schemas.workspace import WorkspaceCreate
 from app.services import research_asset_service, task_execution_service
+from app.services.agent_service import AgentExecutionResult
 from app.services.retrieval_service import RetrievedChunk
 from app.services.task_execution_service import TaskExecutionError
 from app.workers.task_worker import run_platform_task
@@ -150,7 +152,7 @@ def test_run_task_execution_executes_research_summary_and_persists_output(
     assert output["trace_id"]
     assert persisted_task is not None
     assert persisted_task.status == "done"
-    assert persisted_task.output_json == output
+    assert persisted_task.output_json == {key: value for key, value in output.items() if key not in {"control_json", "recovery_state"}}
 
     agent_runs = task_repository.list_task_agent_runs(task_id)
     assert len(agent_runs) == 1
@@ -255,7 +257,7 @@ def test_run_task_execution_persists_formal_workspace_report_with_evidence(
     assert output["result"]["metadata"]["report_ready"] is True
     assert persisted_task is not None
     assert persisted_task.status == "done"
-    assert persisted_task.output_json == output
+    assert persisted_task.output_json == {key: value for key, value in output.items() if key not in {"control_json", "recovery_state"}}
 
     agent_runs = task_repository.list_task_agent_runs(task_id)
     assert len(agent_runs) == 1
@@ -489,7 +491,7 @@ def test_run_task_execution_appends_research_asset_revision(
     assert output["result"]["metadata"]["research_asset"]["asset_id"] == asset.id
     assert output["result"]["metadata"]["research_asset"]["revision_number"] == 2
     assert persisted_task is not None
-    assert persisted_task.output_json == output
+    assert persisted_task.output_json == {key: value for key, value in output.items() if key not in {"control_json", "recovery_state"}}
     assert persisted_asset is not None
     assert persisted_asset.latest_task_id == follow_up_task.id
     assert persisted_asset.latest_revision_number == 2
@@ -732,6 +734,8 @@ def test_run_task_execution_short_circuits_running_task(
         "worker": "arq",
         "status": "running",
         "skipped": True,
+        "control_json": {},
+        "recovery_state": "running",
     }
     assert persisted_task is not None
     assert persisted_task.status == "running"
@@ -769,7 +773,11 @@ def test_run_task_execution_returns_existing_output_for_completed_task(
 
     output = task_execution_service.run_task_execution(task_id)
 
-    assert output == expected_output
+    assert output == {
+        **expected_output,
+        "control_json": {},
+        "recovery_state": "done",
+    }
     assert task_repository.list_task_agent_runs(task_id) == []
 
 
@@ -800,6 +808,8 @@ def test_run_task_execution_short_circuits_failed_task(
         "status": "failed",
         "skipped": True,
         "error_message": "Previous worker failure",
+        "control_json": {},
+        "recovery_state": "retryable_failed",
     }
     assert persisted_task is not None
     assert persisted_task.status == "failed"
@@ -835,3 +845,92 @@ def test_run_platform_task_worker_entrypoint_executes_task(
     assert output["result"]["module_type"] == "research"
     assert persisted_task is not None
     assert persisted_task.status == "done"
+
+def test_run_task_execution_cancels_running_task_with_cancel_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?")
+    running_task = task_repository.update_task_status(
+        task_id,
+        next_status="running",
+        control_json=build_cancel_requested_control(
+            current_control_json={},
+            user_id="operator-1",
+            reason="Stop the stale retry.",
+        ),
+    )
+
+    assert running_task is not None
+    monkeypatch.setattr(
+        task_execution_service,
+        "_execute_task_agent",
+        lambda _task: pytest.fail("cancel-requested running tasks should not execute again"),
+    )
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["status"] == "failed"
+    assert output["control_json"]["state"] == "cancelled"
+    assert output["recovery_state"] == "cancelled"
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+    assert persisted_task.error_message == "Task cancelled by operator"
+    assert persisted_task.control_json["state"] == "cancelled"
+
+
+def test_run_task_execution_honors_cancel_request_recorded_during_agent_execution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    task_id = _create_task_fixture(goal="Who owns the project?")
+    task = task_repository.get_task(task_id)
+    assert task is not None
+
+    def fake_execute(_task):
+        task_repository.update_task_status(
+            task_id,
+            next_status="running",
+            control_json=build_cancel_requested_control(
+                current_control_json={},
+                user_id=task.created_by,
+                reason="Cancel after operator review.",
+            ),
+        )
+        return AgentExecutionResult(
+            agent_run_id="agent-run-cancelled",
+            agent_name="workspace_research_agent",
+            final_output={
+                "module_type": "research",
+                "task_type": "research_summary",
+                "title": "Research Summary",
+                "summary": "This result should not persist because the task was cancelled.",
+                "sections": {
+                    "summary": "This result should not persist because the task was cancelled.",
+                    "findings": [],
+                    "evidence_overview": [],
+                    "open_questions": [],
+                    "next_steps": [],
+                },
+                "highlights": [],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 0,
+                    "match_count": 0,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                },
+                "metadata": {},
+            },
+        )
+
+    monkeypatch.setattr(task_execution_service, "_execute_task_agent", fake_execute)
+
+    output = task_execution_service.run_task_execution(task_id)
+    persisted_task = task_repository.get_task(task_id)
+
+    assert output["recovery_state"] == "cancelled"
+    assert output["error_message"] == "Task cancelled by operator"
+    assert persisted_task is not None
+    assert persisted_task.status == "failed"
+    assert persisted_task.control_json["state"] == "cancelled"

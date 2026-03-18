@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
+from app.repositories import task_repository
 from app.services.task_execution_service import TaskExecutionError
-
 
 def _register_and_login(client: TestClient, *, email: str, name: str) -> dict[str, str]:
     register_response = client.post(
@@ -587,3 +587,95 @@ def test_create_task_returns_500_and_marks_failed_when_queueing_fails(
     assert tasks[0]["status"] == "failed"
     assert tasks[0]["error_message"] == "Redis unavailable"
 
+
+def test_cancel_pending_task_marks_it_failed_with_control_state(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="cancel-owner@example.com", name="Cancel Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={"task_type": "research_summary", "input": {"goal": "Cancel this task"}},
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    task_id = create_response.json()["id"]
+
+    cancel_response = client.post(
+        f"/api/v1/tasks/{task_id}/cancel",
+        json={"reason": "Duplicate request."},
+        headers=headers,
+    )
+    assert cancel_response.status_code == 200
+    cancelled_task = cancel_response.json()
+    assert cancelled_task["status"] == "failed"
+    assert cancelled_task["recovery_state"] == "cancelled"
+    assert cancelled_task["control_json"]["last_action"] == "cancel"
+    assert cancelled_task["control_json"]["state"] == "cancelled"
+
+
+def test_retry_failed_task_creates_linked_retry_attempt(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="retry-owner@example.com", name="Retry Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={"task_type": "research_summary", "input": {"goal": "Retry this task"}},
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    task_id = create_response.json()["id"]
+
+    failed_task = task_repository.update_task_status(
+        task_id,
+        next_status="failed",
+        error_message="Vector store unavailable",
+    )
+    assert failed_task is not None
+
+    retry_response = client.post(
+        f"/api/v1/tasks/{task_id}/retry",
+        json={"reason": "Retry after transient failure."},
+        headers=headers,
+    )
+    assert retry_response.status_code == 200
+    retry_task = retry_response.json()
+    assert retry_task["status"] == "pending"
+    assert retry_task["recovery_state"] == "retry_attempt"
+    assert retry_task["control_json"]["source_task_id"] == task_id
+
+    original_task = task_repository.get_task(task_id)
+    assert original_task is not None
+    assert original_task.control_json["state"] == "retry_created"
+    assert original_task.control_json["target_task_id"] == retry_task["id"]
+
+    second_retry_response = client.post(
+        f"/api/v1/tasks/{task_id}/retry",
+        json={"reason": "Retry after transient failure."},
+        headers=headers,
+    )
+    assert second_retry_response.status_code == 200
+    assert second_retry_response.json()["id"] == retry_task["id"]

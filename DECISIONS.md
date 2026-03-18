@@ -235,3 +235,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: completed Research tasks can now be promoted into reusable assets, follow-up task runs can append revisions, and the UI now exposes a Stage B workbench alongside task history
 - Related Task: `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-012
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B recoverable runtime controls
+- Context: Stage B needed clearer operator-safe recovery semantics for long-running work so failed or interrupted tasks and eval runs could be cancelled, retried, and diagnosed without relying on ambiguous status-only behavior
+- Choice: add persisted `control_json` and derived `recovery_state` fields to tasks and eval runs, expose `cancel` and `retry` control endpoints, and make task/eval executors honor cancel requests at safe execution boundaries
+- Why: Stage B runtime work should be easier to understand and recover without pretending to support full checkpoint/resume behavior before that foundation exists
+- Impact: task and eval responses now expose recovery intent explicitly, retry attempts are linked to their source run, and operator cancellation survives worker re-entry and execution-boundary checks
+- Related Task: `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md`
+- Supersedes:

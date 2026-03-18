@@ -245,3 +245,16 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
   - checks the health endpoint and web root for the selected staging env file
 - `docs/development/STAGING_RELEASE_PATH.md`
   - defines the concrete Stage A staging rehearsal path, including release order, smoke checks, and rollback decisions
+
+## Stage B Recoverable Runtime
+
+- tasks and eval runs now persist a `control_json` object plus a derived `recovery_state`
+- operator-safe control actions in the first Stage B runtime pass are:
+  - `cancel`
+  - `retry`
+- `cancel` semantics are intentionally boundary-based:
+  - pending work can be cancelled immediately
+  - running work records a cancel request and applies it at the next safe runtime boundary
+- `retry` semantics create a new task or eval run instead of mutating the old record into a fresh attempt
+- the original failed record keeps a link to the retry target, and the retry attempt keeps a link back to the source record
+- Stage B does not claim full checkpoint/resume support yet; the first pass focuses on explicit recovery intent, safe retry lineage, and trustworthy persisted runtime state

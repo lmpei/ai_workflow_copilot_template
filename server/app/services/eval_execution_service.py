@@ -2,6 +2,7 @@ from arq import create_pool
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
+from app.core.runtime_control import build_cancelled_control, derive_recovery_state, is_cancel_requested
 from app.models.eval_result import (
     EVAL_RESULT_STATUS_COMPLETED,
     EVAL_RESULT_STATUS_FAILED,
@@ -9,6 +10,7 @@ from app.models.eval_result import (
 from app.models.eval_run import (
     EVAL_RUN_STATUS_COMPLETED,
     EVAL_RUN_STATUS_FAILED,
+    EVAL_RUN_STATUS_PENDING,
     EVAL_RUN_STATUS_RUNNING,
 )
 from app.repositories import eval_repository
@@ -29,6 +31,12 @@ from app.services.scenario_eval_service import (
 EVAL_EXECUTION_JOB_NAME = "run_eval_run"
 
 
+class EvalControlActionError(EvalExecutionError):
+    def __init__(self, *, action: str, message: str) -> None:
+        super().__init__(message)
+        self.action = action
+
+
 async def enqueue_eval_run(eval_run_id: str) -> str:
     redis = await create_pool(build_redis_settings())
     job = await redis.enqueue_job(
@@ -44,10 +52,54 @@ async def enqueue_eval_run(eval_run_id: str) -> str:
     return str(job.job_id)
 
 
+def _build_eval_run_snapshot(eval_run) -> dict[str, object]:
+    snapshot: dict[str, object] = {
+        "eval_run_id": eval_run.id,
+        "status": eval_run.status,
+        **eval_run.summary_json,
+        "control_json": eval_run.control_json,
+        "recovery_state": derive_recovery_state(
+            status=eval_run.status,
+            control_json=eval_run.control_json,
+        ),
+    }
+    if eval_run.error_message:
+        snapshot["error_message"] = eval_run.error_message
+    return snapshot
+
+
+def _cancel_eval_run_from_control_request(eval_run):
+    return eval_repository.update_eval_run_status(
+        eval_run.id,
+        next_status=EVAL_RUN_STATUS_FAILED,
+        summary_json=eval_run.summary_json,
+        control_json=build_cancelled_control(
+            current_control_json=eval_run.control_json,
+            user_id=str(eval_run.control_json.get("requested_by", eval_run.created_by)),
+            reason=(
+                str(eval_run.control_json.get("reason"))
+                if isinstance(eval_run.control_json.get("reason"), str)
+                else None
+            ),
+            extra_json={"cancelled_from_status": eval_run.status},
+        ),
+        error_message="Eval run cancelled by operator",
+    )
+
+
 def run_eval_execution(eval_run_id: str) -> dict[str, object]:
     eval_run = eval_repository.get_eval_run(eval_run_id)
     if eval_run is None:
         raise EvalExecutionError("Eval run not found")
+
+    if is_cancel_requested(eval_run.control_json):
+        cancelled_eval_run = _cancel_eval_run_from_control_request(eval_run)
+        if cancelled_eval_run is None:
+            raise EvalExecutionError("Eval run not found")
+        return _build_eval_run_snapshot(cancelled_eval_run)
+
+    if eval_run.status != EVAL_RUN_STATUS_PENDING:
+        return _build_eval_run_snapshot(eval_run)
 
     dataset = eval_repository.get_eval_dataset(eval_run.dataset_id)
     if dataset is None:
@@ -82,6 +134,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 "completed_cases": 0,
                 "failed_cases": 0,
             },
+            control_json=eval_run.control_json,
         )
         if running_eval_run is None:
             raise EvalExecutionError("Eval run not found")
@@ -90,6 +143,12 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
             raise EvalExecutionError("Eval dataset has no cases")
 
         for eval_case in cases:
+            refreshed_eval_run = eval_repository.get_eval_run(eval_run.id)
+            if refreshed_eval_run is None:
+                raise EvalExecutionError("Eval run not found")
+            if is_cancel_requested(refreshed_eval_run.control_json):
+                raise EvalControlActionError(action="cancel", message="Eval run cancelled by operator")
+
             eval_result = eval_repository.create_eval_result(
                 eval_run_id=eval_run.id,
                 eval_case_id=eval_case.id,
@@ -165,27 +224,61 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                         passed_cases=passed_cases,
                         score_total=score_total,
                     ),
+                    control_json=eval_repository.get_eval_run(eval_run.id).control_json,
                 )
                 if refreshed is None:
                     raise EvalExecutionError("Eval run not found")
     except EvalExecutionError as error:
-        failed_eval_run = eval_repository.update_eval_run_status(
-            eval_run.id,
-            next_status=EVAL_RUN_STATUS_FAILED,
-            summary_json=build_eval_run_summary(
-                scenario_summary_fields=scenario_summary_fields,
-                total_cases=total_cases,
-                completed_cases=completed_cases,
-                failed_cases=failed_cases,
-                passed_cases=passed_cases,
-                score_total=score_total,
-            ),
-            error_message=str(error),
-        )
+        current_eval_run = eval_repository.get_eval_run(eval_run.id)
+        if current_eval_run is None:
+            raise EvalExecutionError("Eval run not found") from error
+
+        if isinstance(error, EvalControlActionError):
+            failed_eval_run = eval_repository.update_eval_run_status(
+                eval_run.id,
+                next_status=EVAL_RUN_STATUS_FAILED,
+                summary_json=build_eval_run_summary(
+                    scenario_summary_fields=scenario_summary_fields,
+                    total_cases=total_cases,
+                    completed_cases=completed_cases,
+                    failed_cases=failed_cases,
+                    passed_cases=passed_cases,
+                    score_total=score_total,
+                ),
+                control_json=build_cancelled_control(
+                    current_control_json=current_eval_run.control_json,
+                    user_id=str(current_eval_run.control_json.get("requested_by", current_eval_run.created_by)),
+                    reason=(
+                        str(current_eval_run.control_json.get("reason"))
+                        if isinstance(current_eval_run.control_json.get("reason"), str)
+                        else None
+                    ),
+                    extra_json={"cancelled_from_status": current_eval_run.status},
+                ),
+                error_message=str(error),
+            )
+        else:
+            failed_eval_run = eval_repository.update_eval_run_status(
+                eval_run.id,
+                next_status=EVAL_RUN_STATUS_FAILED,
+                summary_json=build_eval_run_summary(
+                    scenario_summary_fields=scenario_summary_fields,
+                    total_cases=total_cases,
+                    completed_cases=completed_cases,
+                    failed_cases=failed_cases,
+                    passed_cases=passed_cases,
+                    score_total=score_total,
+                ),
+                control_json=current_eval_run.control_json,
+                error_message=str(error),
+            )
         if failed_eval_run is None:
             raise EvalExecutionError("Eval run not found") from error
         raise
     except Exception as error:
+        current_eval_run = eval_repository.get_eval_run(eval_run.id)
+        if current_eval_run is None:
+            raise EvalExecutionError("Eval run not found") from error
         failed_eval_run = eval_repository.update_eval_run_status(
             eval_run.id,
             next_status=EVAL_RUN_STATUS_FAILED,
@@ -197,6 +290,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 passed_cases=passed_cases,
                 score_total=score_total,
             ),
+            control_json=current_eval_run.control_json,
             error_message=str(error),
         )
         if failed_eval_run is None:
@@ -211,30 +305,27 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
         passed_cases=passed_cases,
         score_total=score_total,
     )
+    final_eval_run = eval_repository.get_eval_run(eval_run.id)
+    if final_eval_run is None:
+        raise EvalExecutionError("Eval run not found")
     if failed_cases > 0:
         failed_eval_run = eval_repository.update_eval_run_status(
             eval_run.id,
             next_status=EVAL_RUN_STATUS_FAILED,
             summary_json=final_summary,
+            control_json=final_eval_run.control_json,
             error_message="; ".join(error_messages),
         )
         if failed_eval_run is None:
             raise EvalExecutionError("Eval run not found")
-        return {
-            "eval_run_id": eval_run.id,
-            "status": EVAL_RUN_STATUS_FAILED,
-            **final_summary,
-        }
+        return _build_eval_run_snapshot(failed_eval_run)
 
     completed_eval_run = eval_repository.update_eval_run_status(
         eval_run.id,
         next_status=EVAL_RUN_STATUS_COMPLETED,
         summary_json=final_summary,
+        control_json=final_eval_run.control_json,
     )
     if completed_eval_run is None:
         raise EvalExecutionError("Eval run not found")
-    return {
-        "eval_run_id": eval_run.id,
-        "status": EVAL_RUN_STATUS_COMPLETED,
-        **final_summary,
-    }
+    return _build_eval_run_snapshot(completed_eval_run)
