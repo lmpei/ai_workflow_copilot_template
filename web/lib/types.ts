@@ -1,4 +1,4 @@
-﻿export const moduleTypes = ["job", "support", "research"] as const;
+export const moduleTypes = ["job", "support", "research"] as const;
 export const workspaceTypes = moduleTypes;
 export const scenarioTaskTypes = [
   "research_summary",
@@ -50,6 +50,17 @@ export type ResearchTaskInput = {
   constraints: string[];
   deliverable?: ResearchDeliverable;
   requested_sections: ResearchRequestedSection[];
+  parent_task_id?: string;
+  continuation_notes?: string;
+};
+export type ResearchLineage = {
+  parent_task_id: string;
+  parent_task_type: ResearchTaskType;
+  parent_title: string;
+  parent_goal?: string;
+  parent_summary: string;
+  parent_report_headline?: string;
+  continuation_notes?: string;
 };
 export type SupportTaskType = Extract<TaskType, "ticket_summary" | "reply_draft">;
 
@@ -112,6 +123,7 @@ export type ResearchTaskResult = ScenarioTaskResult & {
   module_type: "research";
   task_type: ResearchTaskType;
   input: ResearchTaskInput;
+  lineage?: ResearchLineage;
   sections: ResearchResultSections;
   report?: ResearchFormalReport;
   artifacts: ResearchArtifacts;

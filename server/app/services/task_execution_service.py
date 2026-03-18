@@ -28,6 +28,7 @@ from app.services.job_assistant_service import (
 )
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
+    ResearchLineage,
     build_research_task_search_query,
     resolve_research_task_input,
     validate_research_task_contract,
@@ -114,9 +115,14 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             task_type=task.task_type,
             input_json=task.input_json,
         )
+        research_lineage = _resolve_research_lineage(
+            task=task,
+            research_input=research_input,
+        )
         prompt = build_research_task_search_query(
             task_type=task.task_type,
             research_input=research_input,
+            lineage=research_lineage,
         )
 
         return run_workspace_research_agent(
@@ -125,6 +131,7 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             user_id=task.created_by,
             goal=prompt,
             research_input=research_input.model_dump(exclude_none=True),
+            research_lineage=research_lineage.model_dump(exclude_none=True) if research_lineage is not None else None,
         )
 
     if task.task_type in SUPPORT_TASK_TYPES:
@@ -206,12 +213,72 @@ def _build_research_trace_request(task: Task) -> dict[str, object]:
     except ResearchAssistantContractError:
         return request_json
 
+    research_lineage = _resolve_research_lineage(
+        task=task,
+        research_input=research_input,
+    )
+
     request_json["normalized_input"] = research_input.model_dump(exclude_none=True)
+    if research_lineage is not None:
+        request_json["lineage"] = research_lineage.model_dump(exclude_none=True)
     request_json["prompt"] = build_research_task_search_query(
         task_type=task.task_type,
         research_input=research_input,
+        lineage=research_lineage,
     )
     return request_json
+
+
+def _resolve_research_lineage(
+    *,
+    task: Task,
+    research_input,
+) -> ResearchLineage | None:
+    if not research_input.parent_task_id:
+        return None
+
+    parent_task = task_repository.get_task(research_input.parent_task_id)
+    if parent_task is None or parent_task.workspace_id != task.workspace_id:
+        raise TaskExecutionError("Parent research task not found in this workspace")
+    if parent_task.task_type not in RESEARCH_TASK_TYPES:
+        raise TaskExecutionError("Parent task must be a completed Research task")
+    if parent_task.status != TASK_STATUS_DONE:
+        raise TaskExecutionError("Parent research task must be completed before follow-up")
+
+    result = parent_task.output_json.get("result")
+    if not isinstance(result, dict) or result.get("module_type") != "research":
+        raise TaskExecutionError("Parent research task does not contain a structured Research result")
+
+    title = result.get("title")
+    summary = result.get("summary")
+    if not isinstance(title, str) or not title.strip():
+        raise TaskExecutionError("Parent research task is missing a Research title")
+    if not isinstance(summary, str) or not summary.strip():
+        raise TaskExecutionError("Parent research task is missing a Research summary")
+
+    parent_input = result.get("input")
+    parent_goal: str | None = None
+    if isinstance(parent_input, dict):
+        raw_parent_goal = parent_input.get("goal")
+        if isinstance(raw_parent_goal, str) and raw_parent_goal.strip():
+            parent_goal = raw_parent_goal.strip()
+
+    parent_report = result.get("report")
+    parent_report_headline: str | None = None
+    if isinstance(parent_report, dict):
+        raw_headline = parent_report.get("headline")
+        if isinstance(raw_headline, str) and raw_headline.strip():
+            parent_report_headline = raw_headline.strip()
+
+    return ResearchLineage(
+        parent_task_id=parent_task.id,
+        parent_task_type=parent_task.task_type,
+        parent_title=title.strip(),
+        parent_goal=parent_goal,
+        parent_summary=summary.strip(),
+        parent_report_headline=parent_report_headline,
+        continuation_notes=research_input.continuation_notes,
+    )
 
 
 def _classify_task_failure(error: Exception) -> dict[str, object]:
@@ -412,6 +479,8 @@ def run_task_execution(task_id: str) -> dict[str, object]:
                     "task_type": execution_result.final_output.get("task_type", running_task.task_type),
                     "deliverable": result_metadata.get("deliverable"),
                     "requested_sections": result_metadata.get("requested_sections", []),
+                    "is_follow_up": result_metadata.get("is_follow_up"),
+                    "parent_task_id": result_metadata.get("parent_task_id"),
                     "report_ready": result_metadata.get("report_ready"),
                     "evidence_status": result_metadata.get("evidence_status"),
                     "trust": trust_metadata,

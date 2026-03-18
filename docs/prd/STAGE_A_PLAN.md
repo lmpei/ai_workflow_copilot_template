@@ -130,7 +130,7 @@ Stage A is successful when:
 
 ## Next Step
 
-Execute the second Stage A wave, starting with `tasks/stage-a-07-research-iteration-workflow.md`.
+Execute the second Stage A wave, with `tasks/stage-a-08-research-eval-baseline.md` as the next active task after `stage-a-07`.
 
 ## Initial Task Wave
 

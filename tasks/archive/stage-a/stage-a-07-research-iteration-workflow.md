@@ -106,3 +106,24 @@ Disallowed files:
 ## Rollback Plan
 
 - revert the follow-up Research contract and surface changes while keeping the current Stage A report flow intact
+
+## Results
+
+- added follow-up Research input fields `parent_task_id` and `continuation_notes`
+- added structured Research `lineage` output so follow-up runs keep an explicit parent-task link
+- validated parent-task references during task creation and task execution
+- updated the Research surface so completed results can seed a follow-up Research run directly
+- updated backend and frontend regression coverage for follow-up Research flows
+
+## Execution Status
+
+- Status: completed
+- Completed At: 2026-03-18
+- Notes: Stage A Research iteration now supports parent-task lineage, follow-up prompt construction, and follow-up launch from the Research surface
+
+## Verification Result
+
+- `python -m compileall server/app server/tests`
+- `cd server`
+- `..\.venv\Scripts\python.exe -m pytest tests/test_research_assistant_service.py tests/test_tasks.py tests/test_agent_service.py tests/test_task_execution_service.py`
+- `cmd /c npm --prefix web run verify`

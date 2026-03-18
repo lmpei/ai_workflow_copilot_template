@@ -100,6 +100,20 @@ async def create_task(
     ) as error:
         raise TaskValidationError(str(error)) from error
 
+    if payload.task_type in RESEARCH_TASK_TYPES:
+        parent_task_id = normalized_input.get("parent_task_id")
+        if isinstance(parent_task_id, str) and parent_task_id:
+            parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
+            if parent_task is None or parent_task.workspace_id != workspace_id:
+                raise TaskValidationError("Parent research task not found in this workspace")
+            if parent_task.task_type not in RESEARCH_TASK_TYPES:
+                raise TaskValidationError("Parent task must be a completed Research task")
+            if parent_task.status != "done":
+                raise TaskValidationError("Parent research task must be completed before follow-up")
+            result = parent_task.output_json.get("result")
+            if not isinstance(result, dict) or result.get("module_type") != "research":
+                raise TaskValidationError("Parent research task does not contain a structured Research result")
+
     task = task_repository.create_task(
         workspace_id=workspace_id,
         task_type=payload.task_type,

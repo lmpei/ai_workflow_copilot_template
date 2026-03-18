@@ -1,4 +1,4 @@
-﻿# Status
+# Status
 
 Current state only. Keep this file short, current, and action-oriented.
 
@@ -13,20 +13,20 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Current Phase
 
 - Phase 5 baseline complete
-- Stage A second task wave defined
+- Stage A second task wave in progress
 
 ## Current Objective
 
-- execute the second Stage A wave, starting with the Research iteration workflow
+- execute the second Stage A wave, with the Research eval baseline as the next active task
 
 ## Active Task
 
-- File: `tasks/stage-a-07-research-iteration-workflow.md`
-- Status: Stage A wave two is defined; `stage-a-07` is ready to execute next
+- File: `tasks/stage-a-08-research-eval-baseline.md`
+- Status: `stage-a-07` is complete and archived; `stage-a-08` is the next active task
 
 ## Verification Status
 
-- Summary: Stage A task wave one is complete, and the second Stage A wave is now fixed in text. `stage-a-07`, `stage-a-08`, and `stage-a-09` are the next execution-ready tasks.
+- Summary: `stage-a-07` is complete, including follow-up Research lineage and surface support. `stage-a-08` and `stage-a-09` remain the next execution-ready tasks in Stage A wave two.
 - Last Verified At: 2026-03-18
 
 ## Current Blockers
@@ -47,9 +47,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `tasks/stage-a-07-research-iteration-workflow.md`
-2. follow with `tasks/stage-a-08-research-eval-baseline.md`
-3. then execute `tasks/stage-a-09-staging-delivery-path.md`
+1. execute `tasks/stage-a-08-research-eval-baseline.md`
+2. follow with `tasks/stage-a-09-staging-delivery-path.md`
+3. review whether Stage A needs another Research-focused follow-up task after the eval baseline lands
 
 ## Parked / Later
 
@@ -58,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-a/stage-a-06-wave-two-planning.md`
+- `tasks/archive/stage-a/stage-a-07-research-iteration-workflow.md`
 
 ## Recent Decisions
 

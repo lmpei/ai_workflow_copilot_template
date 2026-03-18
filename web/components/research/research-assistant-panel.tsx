@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,6 +14,7 @@ import type {
   ResearchArtifacts,
   ResearchDeliverable,
   ResearchFormalReport,
+  ResearchLineage,
   ResearchRequestedSection,
   ResearchResultSections,
   ResearchTaskInput,
@@ -116,6 +117,46 @@ function parseResearchTaskInput(value: unknown): ResearchTaskInput {
         item === "open_questions" ||
         item === "next_steps",
     ),
+    parent_task_id:
+      typeof value.parent_task_id === "string" && value.parent_task_id.length > 0 ? value.parent_task_id : undefined,
+    continuation_notes:
+      typeof value.continuation_notes === "string" && value.continuation_notes.length > 0
+        ? value.continuation_notes
+        : undefined,
+  };
+}
+
+function parseResearchLineage(value: unknown): ResearchLineage | undefined {
+  if (!isJsonObject(value)) {
+    return undefined;
+  }
+
+  if (
+    typeof value.parent_task_id !== "string" ||
+    typeof value.parent_task_type !== "string" ||
+    typeof value.parent_title !== "string" ||
+    typeof value.parent_summary !== "string"
+  ) {
+    return undefined;
+  }
+
+  return {
+    parent_task_id: value.parent_task_id,
+    parent_task_type:
+      value.parent_task_type === "research_summary" || value.parent_task_type === "workspace_report"
+        ? value.parent_task_type
+        : "research_summary",
+    parent_title: value.parent_title,
+    parent_goal: typeof value.parent_goal === "string" && value.parent_goal.length > 0 ? value.parent_goal : undefined,
+    parent_summary: value.parent_summary,
+    parent_report_headline:
+      typeof value.parent_report_headline === "string" && value.parent_report_headline.length > 0
+        ? value.parent_report_headline
+        : undefined,
+    continuation_notes:
+      typeof value.continuation_notes === "string" && value.continuation_notes.length > 0
+        ? value.continuation_notes
+        : undefined,
   };
 }
 
@@ -206,6 +247,7 @@ function parseResearchTaskResult(task: TaskRecord): ResearchTaskResult | null {
   return {
     ...(result as unknown as ResearchTaskResult),
     input: parseResearchTaskInput(result.input),
+    lineage: parseResearchLineage(result.lineage),
     sections: parseResearchSections(result.sections, result),
     report: parseResearchReport(result.report),
   };
@@ -352,6 +394,8 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const [requestedSections, setRequestedSections] = useState<ResearchRequestedSection[]>(
     DEFAULT_REQUESTED_SECTIONS.research_summary,
   );
+  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
+  const [continuationNotes, setContinuationNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -445,6 +489,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     () => (selectedTask ? parseResearchTaskResult(selectedTask) : null),
     [selectedTask],
   );
+  const continuationParentTask = useMemo(
+    () => tasks.find((task) => task.id === parentTaskId) ?? null,
+    [parentTaskId, tasks],
+  );
+  const continuationParentResult = useMemo(
+    () => (continuationParentTask ? parseResearchTaskResult(continuationParentTask) : null),
+    [continuationParentTask],
+  );
   const evidenceLookup = useMemo(
     () =>
       new Map(
@@ -460,6 +512,24 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       }
       return [...currentSections, section];
     });
+  };
+
+  const startFollowUpFromTask = (task: TaskRecord, result: ResearchTaskResult) => {
+    const followUpTaskType = result.task_type;
+    setTaskType(followUpTaskType);
+    setGoal(result.input.goal ?? "");
+    setFocusAreasText(result.input.focus_areas.join("\n"));
+    setKeyQuestionsText(result.input.key_questions.join("\n"));
+    setConstraintsText(result.input.constraints.join("\n"));
+    setDeliverable(result.input.deliverable ?? (followUpTaskType === "workspace_report" ? "report" : "brief"));
+    setRequestedSections(
+      result.input.requested_sections.length > 0
+        ? result.input.requested_sections
+        : DEFAULT_REQUESTED_SECTIONS[followUpTaskType],
+    );
+    setParentTaskId(task.id);
+    setContinuationNotes(result.sections.open_questions[0] ?? "");
+    setErrorMessage(null);
   };
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -501,6 +571,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       payloadInput.requested_sections = requestedSections;
     }
 
+    if (parentTaskId) {
+      payloadInput.parent_task_id = parentTaskId;
+    }
+
+    const trimmedContinuationNotes = continuationNotes.trim();
+    if (trimmedContinuationNotes.length > 0) {
+      payloadInput.continuation_notes = trimmedContinuationNotes;
+    }
+
     try {
       const createdTask = await createWorkspaceTask(session.accessToken, workspaceId, {
         task_type: taskType,
@@ -513,6 +592,8 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setKeyQuestionsText("");
       setConstraintsText("");
       setRequestedSections(DEFAULT_REQUESTED_SECTIONS[taskType]);
+      setParentTaskId(null);
+      setContinuationNotes("");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch research task");
     } finally {
@@ -578,6 +659,43 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             </select>
           </label>
           <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
+          {continuationParentTask && continuationParentResult ? (
+            <div
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #cbd5e1",
+                borderRadius: 12,
+                display: "grid",
+                gap: 8,
+                padding: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700 }}>Follow-up context</div>
+              <div>
+                <strong>Parent task:</strong> {continuationParentTask.id}
+              </div>
+              <div>
+                <strong>Parent title:</strong> {continuationParentResult.title}
+              </div>
+              <div>
+                <strong>Parent summary:</strong> {continuationParentResult.summary}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => setSelectedTaskId(continuationParentTask.id)} type="button">
+                  Open parent result
+                </button>
+                <button
+                  onClick={() => {
+                    setParentTaskId(null);
+                    setContinuationNotes("");
+                  }}
+                  type="button"
+                >
+                  Clear follow-up
+                </button>
+              </div>
+            </div>
+          ) : null}
           <label style={{ display: "grid", gap: 6 }}>
             <span>Research goal</span>
             <textarea
@@ -616,6 +734,16 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               placeholder="Optional. One constraint per line. Example: Use only indexed workspace documents."
               rows={3}
               value={constraintsText}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Continuation notes</span>
+            <textarea
+              disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
+              onChange={(event) => setContinuationNotes(event.target.value)}
+              placeholder="Optional. Describe what this follow-up run should refine, compare, or challenge."
+              rows={3}
+              value={continuationNotes}
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
@@ -691,9 +819,16 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                    Open result
-                  </button>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button onClick={() => setSelectedTaskId(task.id)} type="button">
+                      Open result
+                    </button>
+                    {task.status === "done" && result ? (
+                      <button onClick={() => startFollowUpFromTask(task, result)} type="button">
+                        Continue research
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             );
@@ -721,6 +856,13 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
               {extractGoal(selectedTask, selectedResult) ? (
                 <div>
                   <strong>Goal:</strong> {extractGoal(selectedTask, selectedResult)}
+                </div>
+              ) : null}
+              {selectedTask.status === "done" && selectedResult ? (
+                <div>
+                  <button onClick={() => startFollowUpFromTask(selectedTask, selectedResult)} type="button">
+                    Continue from this result
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -764,7 +906,54 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     <strong>Constraints</strong>
                     {renderStringList(selectedResult.input.constraints, "No explicit constraints were provided.")}
                   </div>
+                  <div>
+                    <strong>Continuation notes</strong>
+                    <p style={{ marginBottom: 0, marginTop: 8 }}>
+                      {selectedResult.input.continuation_notes ?? "No continuation notes were provided."}
+                    </p>
+                  </div>
                 </div>
+
+                {selectedResult.lineage ? (
+                  <div
+                    style={{
+                      backgroundColor: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 16,
+                      display: "grid",
+                      gap: 10,
+                      padding: 16,
+                    }}
+                  >
+                    <div style={{ color: "#1d4ed8", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
+                      Follow-up lineage
+                    </div>
+                    <div>
+                      <strong>Parent task:</strong> {selectedResult.lineage.parent_task_id}
+                    </div>
+                    <div>
+                      <strong>Parent title:</strong> {selectedResult.lineage.parent_title}
+                    </div>
+                    {selectedResult.lineage.parent_goal ? (
+                      <div>
+                        <strong>Parent goal:</strong> {selectedResult.lineage.parent_goal}
+                      </div>
+                    ) : null}
+                    {selectedResult.lineage.parent_report_headline ? (
+                      <div>
+                        <strong>Parent report:</strong> {selectedResult.lineage.parent_report_headline}
+                      </div>
+                    ) : null}
+                    <div>
+                      <strong>Parent summary:</strong> {selectedResult.lineage.parent_summary}
+                    </div>
+                    {selectedResult.lineage.continuation_notes ? (
+                      <div>
+                        <strong>Follow-up guidance:</strong> {selectedResult.lineage.continuation_notes}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {selectedResult.report ? (
                   <div

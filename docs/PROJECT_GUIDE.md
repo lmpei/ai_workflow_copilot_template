@@ -1,4 +1,4 @@
-﻿# Project Guide
+# Project Guide
 
 ## Purpose
 
@@ -135,9 +135,14 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `constraints`
   - `deliverable`
   - `requested_sections`
+  - optional follow-up fields:
+    - `parent_task_id`
+    - `continuation_notes`
 - the shared task primitives remain generic; the structured Research contract is resolved in the Research module layer
 - canonical Research results now carry both the normalized `input` and structured `sections` alongside the existing
   `summary`, `highlights`, `evidence`, and `artifacts` fields
+- follow-up Research runs can also carry a structured `lineage` object that points back to the parent Research task,
+  including the parent summary, optional parent goal, and optional parent report headline
 - `workspace_report` and any Research run that requests `deliverable=report` can also emit a formal `report` object
   with:
   - `headline`
@@ -156,6 +161,8 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `regression_passed`
 - Research task execution now records `research_task` traces for successful and failed runs so trust signals and failure
   shapes remain inspectable after the task completes
+- the Research surface now lets a user continue from a completed Research result, reusing its input shape while linking
+  the new task to the parent task through Stage A follow-up lineage
 
 ## Scenario Module Boundaries
 

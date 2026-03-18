@@ -149,6 +149,141 @@ def test_create_research_task_accepts_structured_input_payload(
     }
 
 
+def test_create_follow_up_research_task_accepts_completed_parent_task(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="follow-up-owner@example.com", name="Follow-up Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    parent_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "workspace_report",
+            "input": {
+                "goal": "Build the initial workspace report",
+                "deliverable": "report",
+            },
+        },
+        headers=headers,
+    )
+    assert parent_response.status_code == 201
+    parent_task = parent_response.json()
+
+    complete_parent_response = client.get(f"/api/v1/tasks/{parent_task['id']}", headers=headers)
+    assert complete_parent_response.status_code == 200
+
+    from app.repositories import task_repository
+
+    running_parent = task_repository.update_task_status(
+        parent_task["id"],
+        next_status="running",
+    )
+    assert running_parent is not None
+    updated_parent = task_repository.update_task_status(
+        parent_task["id"],
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "research",
+                "task_type": "workspace_report",
+                "title": "Workspace Report",
+                "summary": "Delayed sign-off is the strongest current risk.",
+                "input": {"goal": "Build the initial workspace report"},
+                "sections": {
+                    "summary": "Delayed sign-off is the strongest current risk.",
+                    "findings": [],
+                    "evidence_overview": [],
+                    "open_questions": [],
+                    "next_steps": [],
+                },
+                "highlights": [],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 0,
+                    "match_count": 0,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                },
+                "metadata": {},
+            },
+        },
+    )
+    assert updated_parent is not None
+
+    follow_up_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "workspace_report",
+            "input": {
+                "goal": "Refine the strongest risk",
+                "deliverable": "report",
+                "parent_task_id": parent_task["id"],
+                "continuation_notes": "Focus on evidence gaps that remain unresolved.",
+            },
+        },
+        headers=headers,
+    )
+
+    assert follow_up_response.status_code == 201
+    created_task = follow_up_response.json()
+    assert created_task["input_json"]["parent_task_id"] == parent_task["id"]
+    assert created_task["input_json"]["continuation_notes"] == "Focus on evidence gaps that remain unresolved."
+
+
+def test_create_follow_up_research_task_rejects_incomplete_parent(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="follow-up-owner-2@example.com", name="Follow-up Owner 2")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    parent_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "research_summary",
+            "input": {"goal": "Summarize the workspace"},
+        },
+        headers=headers,
+    )
+    assert parent_response.status_code == 201
+    parent_task = parent_response.json()
+
+    follow_up_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "workspace_report",
+            "input": {
+                "goal": "Refine the workspace report",
+                "parent_task_id": parent_task["id"],
+            },
+        },
+        headers=headers,
+    )
+
+    assert follow_up_response.status_code == 400
+    assert "Parent research task must be completed before follow-up" in follow_up_response.json()["detail"]
+
+
 def test_create_support_task_for_support_workspace_member(
     client: TestClient,
     monkeypatch,

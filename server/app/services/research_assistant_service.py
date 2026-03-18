@@ -6,6 +6,7 @@ from app.schemas.research import (
     ResearchDeliverable,
     ResearchFinding,
     ResearchFormalReport,
+    ResearchLineage,
     ResearchReportSection,
     ResearchResultSections,
     ResearchTaskInput,
@@ -109,6 +110,14 @@ def normalize_research_task_input(input_json: dict[str, object] | None) -> dict[
     if requested_sections:
         normalized_payload["requested_sections"] = requested_sections
 
+    normalized_parent_task_id = _normalize_optional_string(payload.parent_task_id)
+    if normalized_parent_task_id:
+        normalized_payload["parent_task_id"] = normalized_parent_task_id
+
+    normalized_continuation_notes = _normalize_optional_string(payload.continuation_notes)
+    if normalized_continuation_notes:
+        normalized_payload["continuation_notes"] = normalized_continuation_notes
+
     return normalized_payload
 
 
@@ -132,6 +141,8 @@ def resolve_research_task_input(
         deliverable=payload.deliverable or _DEFAULT_RESEARCH_DELIVERABLES[task_type],
         requested_sections=payload.requested_sections
         or list(_DEFAULT_RESEARCH_REQUESTED_SECTIONS[task_type]),
+        parent_task_id=payload.parent_task_id,
+        continuation_notes=payload.continuation_notes,
     )
 
 
@@ -139,16 +150,32 @@ def build_research_task_search_query(
     *,
     task_type: ResearchTaskType,
     research_input: ResearchTaskInput,
+    lineage: ResearchLineage | None = None,
 ) -> str:
     if research_input.goal:
-        return research_input.goal
-    if research_input.key_questions:
-        return research_input.key_questions[0]
-    if research_input.focus_areas:
-        return f"Summarize findings about {research_input.focus_areas[0]}."
-    if task_type == "workspace_report":
-        return "Create a concise report for the current workspace."
-    return "Summarize the most relevant findings in this workspace."
+        base_query = research_input.goal
+    elif research_input.key_questions:
+        base_query = research_input.key_questions[0]
+    elif research_input.focus_areas:
+        base_query = f"Summarize findings about {research_input.focus_areas[0]}."
+    elif task_type == "workspace_report":
+        base_query = "Create a concise report for the current workspace."
+    else:
+        base_query = "Summarize the most relevant findings in this workspace."
+
+    if lineage is None:
+        return base_query
+
+    follow_up_parts = [
+        f"Continue the prior research run '{lineage.parent_title}'.",
+        f"Prior summary: {lineage.parent_summary}",
+    ]
+    if lineage.parent_goal:
+        follow_up_parts.append(f"Original goal: {lineage.parent_goal}")
+    if lineage.continuation_notes:
+        follow_up_parts.append(f"Follow-up guidance: {lineage.continuation_notes}")
+    follow_up_parts.append(f"Current request: {base_query}")
+    return " ".join(follow_up_parts)
 
 
 def _build_research_summary(
@@ -219,6 +246,7 @@ def _build_research_sections(
     *,
     task_type: ResearchTaskType,
     research_input: ResearchTaskInput,
+    lineage: ResearchLineage | None,
     summary: str,
     document_models: list[ToolDocumentSummary],
     match_models: list[SearchDocumentMatch],
@@ -282,6 +310,14 @@ def _build_research_sections(
             "Clarify the scope and key questions once supporting sources are available.",
         ]
 
+    if lineage is not None:
+        if lineage.continuation_notes:
+            open_questions = [lineage.continuation_notes, *open_questions]
+        next_steps = [
+            f"Compare this run against parent research task {lineage.parent_task_id}.",
+            *next_steps,
+        ]
+
     return ResearchResultSections(
         summary=summary,
         findings=findings,
@@ -340,6 +376,7 @@ def _build_formal_research_report(
     *,
     task_type: ResearchTaskType,
     research_input: ResearchTaskInput,
+    lineage: ResearchLineage | None,
     sections: ResearchResultSections,
     evidence: list[ScenarioEvidenceItem],
 ) -> ResearchFormalReport | None:
@@ -347,7 +384,8 @@ def _build_formal_research_report(
         return None
 
     headline_source = research_input.goal or "Workspace research report"
-    headline = f"Research Report: {headline_source}"
+    headline_prefix = "Research Follow-up Report" if lineage is not None else "Research Report"
+    headline = f"{headline_prefix}: {headline_source}"
     section_items: list[ResearchReportSection] = []
     evidence_ref_ids = _flatten_evidence_ref_ids(sections)
 
@@ -434,6 +472,7 @@ def _build_research_trust_metadata(
     *,
     task_type: ResearchTaskType,
     research_input: ResearchTaskInput,
+    lineage: ResearchLineage | None,
     sections: ResearchResultSections,
     report: ResearchFormalReport | None,
     document_models: list[ToolDocumentSummary],
@@ -482,6 +521,7 @@ def _build_research_trust_metadata(
         "grounded_finding_count": grounded_finding_count,
         "report_requested": report_requested,
         "report_section_count": len(report.sections) if report is not None else 0,
+        "is_follow_up": lineage is not None,
         "checks": checks,
         "gaps": gaps,
         "regression_passed": all(checks.values()),
@@ -492,6 +532,7 @@ def build_research_task_result(
     *,
     task_type: ResearchTaskType,
     research_input: dict[str, object] | None,
+    lineage: dict[str, object] | None = None,
     documents: list[dict[str, object]],
     matches: list[dict[str, object]],
     tool_call_ids: list[str],
@@ -500,6 +541,7 @@ def build_research_task_result(
         task_type=task_type,
         input_json=research_input,
     )
+    resolved_lineage = ResearchLineage.model_validate(lineage) if lineage else None
 
     document_models = [ToolDocumentSummary.model_validate(document) for document in documents]
     match_models = [SearchDocumentMatch.model_validate(match) for match in matches]
@@ -514,6 +556,7 @@ def build_research_task_result(
     sections = _build_research_sections(
         task_type=task_type,
         research_input=resolved_input,
+        lineage=resolved_lineage,
         summary=summary,
         document_models=document_models,
         match_models=match_models,
@@ -522,12 +565,14 @@ def build_research_task_result(
     report = _build_formal_research_report(
         task_type=task_type,
         research_input=resolved_input,
+        lineage=resolved_lineage,
         sections=sections,
         evidence=evidence,
     )
     trust_metadata = _build_research_trust_metadata(
         task_type=task_type,
         research_input=resolved_input,
+        lineage=resolved_lineage,
         sections=sections,
         report=report,
         document_models=document_models,
@@ -546,6 +591,7 @@ def build_research_task_result(
         task_type=task_type,
         title=_RESEARCH_TASK_TITLES[task_type],
         input=resolved_input,
+        lineage=resolved_lineage,
         summary=summary,
         sections=sections,
         report=report,
@@ -560,6 +606,8 @@ def build_research_task_result(
             "key_question_count": len(resolved_input.key_questions),
             "document_count": len(document_models),
             "match_count": len(match_models),
+            "is_follow_up": resolved_lineage is not None,
+            "parent_task_id": resolved_lineage.parent_task_id if resolved_lineage is not None else None,
             "evidence_status": trust_metadata["evidence_status"],
             "report_ready": report is not None,
             "regression_passed": trust_metadata["regression_passed"],

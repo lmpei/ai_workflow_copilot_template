@@ -1,4 +1,4 @@
-﻿# Context
+# Context
 
 Stable project facts only. Keep this file concise and update it when the project baseline changes.
 
@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A second task wave defined
+- Current stage: Stage A second task wave in progress
 
 ## Success Criteria
 

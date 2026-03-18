@@ -29,6 +29,18 @@ class ResearchTaskInput(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     deliverable: ResearchDeliverable | None = None
     requested_sections: list[ResearchRequestedSection] = Field(default_factory=list)
+    parent_task_id: str | None = None
+    continuation_notes: str | None = None
+
+
+class ResearchLineage(BaseModel):
+    parent_task_id: str
+    parent_task_type: ResearchTaskType
+    parent_title: str
+    parent_goal: str | None = None
+    parent_summary: str
+    parent_report_headline: str | None = None
+    continuation_notes: str | None = None
 
 
 class ResearchFinding(BaseModel):
@@ -75,6 +87,7 @@ class ResearchAssistantResult(BaseModel):
     task_type: ResearchTaskType
     title: str
     input: ResearchTaskInput = Field(default_factory=ResearchTaskInput)
+    lineage: ResearchLineage | None = None
     summary: str
     sections: ResearchResultSections
     report: ResearchFormalReport | None = None

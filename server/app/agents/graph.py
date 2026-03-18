@@ -22,6 +22,7 @@ class WorkspaceResearchState(TypedDict, total=False):
     task_type: ResearchTaskType
     goal: str
     research_input: dict[str, object]
+    research_lineage: dict[str, object]
     should_search: bool
     documents: list[dict[str, object]]
     document_count: int
@@ -115,6 +116,7 @@ def _compose_research_result(state: WorkspaceResearchState) -> WorkspaceResearch
         "final_output": build_research_task_result(
             task_type=state["task_type"],
             research_input=state.get("research_input"),
+            lineage=state.get("research_lineage"),
             documents=documents,
             matches=matches,
             tool_call_ids=state.get("tool_call_ids", []),

@@ -259,6 +259,118 @@ def test_run_task_execution_persists_formal_workspace_report_with_evidence(
     ]
 
 
+def test_run_task_execution_carries_follow_up_research_lineage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert "Continue the prior research run" in question
+            assert "Prior summary: Delayed sign-off is the strongest current risk." in question
+            assert "Follow-up guidance: Focus on unresolved evidence gaps." in question
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="Delayed sign-off still lacks owner-level evidence.",
+                    content="Delayed sign-off still lacks owner-level evidence.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    unique_suffix = uuid4().hex
+    user = create_user(
+        email=f"follow-up-worker-{unique_suffix}@example.com",
+        password_hash="not-used-in-this-test",
+        name="Follow-up Worker",
+    )
+    workspace = create_workspace(
+        WorkspaceCreate(name="Follow-up Research Workspace", module_type="research"),
+        owner_id=user.id,
+    )
+    document_repository.create_document(
+        document_id=str(uuid4()),
+        workspace_id=workspace.id,
+        title="demo.txt",
+        file_path="uploads/demo.txt",
+        mime_type="text/plain",
+        created_by=user.id,
+        status=DOCUMENT_STATUS_INDEXED,
+    )
+    parent_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="workspace_report",
+        created_by=user.id,
+        input_json={
+            "goal": "Build a grounded workspace report",
+            "deliverable": "report",
+        },
+    )
+    parent_output = {
+        "result": {
+            "module_type": "research",
+            "task_type": "workspace_report",
+            "title": "Workspace Report",
+            "summary": "Delayed sign-off is the strongest current risk.",
+            "input": {"goal": "Build a grounded workspace report"},
+            "report": {"headline": "Research Report: Build a grounded workspace report"},
+            "sections": {
+                "summary": "Delayed sign-off is the strongest current risk.",
+                "findings": [],
+                "evidence_overview": [],
+                "open_questions": [],
+                "next_steps": [],
+            },
+            "highlights": [],
+            "evidence": [],
+            "artifacts": {
+                "document_count": 1,
+                "match_count": 1,
+                "documents": [],
+                "matches": [],
+                "tool_call_ids": [],
+            },
+            "metadata": {},
+        },
+    }
+    running_parent = task_repository.update_task_status(
+        parent_task.id,
+        next_status="running",
+    )
+    assert running_parent is not None
+    updated_parent = task_repository.update_task_status(
+        parent_task.id,
+        next_status="done",
+        output_json=parent_output,
+    )
+
+    assert updated_parent is not None
+    follow_up_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="workspace_report",
+        created_by=user.id,
+        input_json={
+            "goal": "Refine the strongest risk",
+            "deliverable": "report",
+            "parent_task_id": parent_task.id,
+            "continuation_notes": "Focus on unresolved evidence gaps.",
+        },
+    )
+    output = task_execution_service.run_task_execution(follow_up_task.id)
+    traces = trace_repository.list_traces_for_task(follow_up_task.id)
+
+    assert output["result"]["lineage"]["parent_task_id"] == parent_task.id
+    assert output["result"]["lineage"]["parent_summary"] == "Delayed sign-off is the strongest current risk."
+    assert output["result"]["metadata"]["is_follow_up"] is True
+    assert output["result"]["metadata"]["parent_task_id"] == parent_task.id
+    assert output["result"]["report"]["headline"] == "Research Follow-up Report: Refine the strongest risk"
+    assert traces[0].request_json["lineage"]["parent_task_id"] == parent_task.id
+    assert traces[0].metadata_json["is_follow_up"] is True
+
+
 def test_run_task_execution_executes_support_reply_draft_and_persists_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

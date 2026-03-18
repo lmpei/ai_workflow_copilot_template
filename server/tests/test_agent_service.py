@@ -197,6 +197,60 @@ def test_workspace_research_agent_builds_formal_report_for_workspace_report(
     ]
 
 
+def test_workspace_research_agent_includes_follow_up_lineage_in_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert "Continue the prior research run" in question
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="demo.txt",
+                    chunk_index=0,
+                    snippet="The strongest risk still lacks owner-level evidence.",
+                    content="The strongest risk still lacks owner-level evidence.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    research_input = {
+        "goal": "Refine the strongest risk",
+        "deliverable": "report",
+        "parent_task_id": "task-parent",
+        "continuation_notes": "Focus on unresolved evidence gaps.",
+    }
+    research_lineage = {
+        "parent_task_id": "task-parent",
+        "parent_task_type": "workspace_report",
+        "parent_title": "Workspace Report",
+        "parent_goal": "Build a grounded workspace report",
+        "parent_summary": "Delayed sign-off is the strongest current risk.",
+        "parent_report_headline": "Research Report: Build a grounded workspace report",
+        "continuation_notes": "Focus on unresolved evidence gaps.",
+    }
+    user_id, workspace_id, task_id = _create_runtime_fixture(
+        task_type="workspace_report",
+        input_json=research_input,
+    )
+
+    result = run_workspace_research_agent(
+        task_id=task_id,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        goal="Continue the prior research run",
+        research_input=research_input,
+        research_lineage=research_lineage,
+    )
+
+    assert result.final_output["lineage"]["parent_task_id"] == "task-parent"
+    assert result.final_output["metadata"]["is_follow_up"] is True
+    assert result.final_output["report"]["headline"] == "Research Follow-up Report: Refine the strongest risk"
+
+
 def test_workspace_support_agent_completes_grounded_reply_draft(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

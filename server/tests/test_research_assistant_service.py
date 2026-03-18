@@ -17,6 +17,8 @@ def test_normalize_research_task_input_trims_structured_payload() -> None:
             "constraints": ["Use indexed docs only", " Use indexed docs only "],
             "deliverable": "report",
             "requested_sections": ["summary", "findings", "summary"],
+            "parent_task_id": "  task-123  ",
+            "continuation_notes": "  Compare against the previous report  ",
         },
     )
 
@@ -27,6 +29,8 @@ def test_normalize_research_task_input_trims_structured_payload() -> None:
         "constraints": ["Use indexed docs only"],
         "deliverable": "report",
         "requested_sections": ["summary", "findings"],
+        "parent_task_id": "task-123",
+        "continuation_notes": "Compare against the previous report",
     }
 
 
@@ -39,6 +43,7 @@ def test_resolve_research_task_input_applies_defaults_for_summary_task() -> None
     assert resolved.goal == "Summarize the workspace"
     assert resolved.deliverable == "brief"
     assert resolved.requested_sections == ["summary", "findings", "evidence", "next_steps"]
+    assert resolved.parent_task_id is None
 
 
 def test_normalize_research_task_input_rejects_invalid_shapes() -> None:
@@ -140,6 +145,55 @@ def test_build_research_task_result_builds_formal_report_for_workspace_report() 
     assert result["metadata"]["report_ready"] is True
     assert result["metadata"]["trust"]["report_requested"] is True
     assert result["metadata"]["trust"]["report_section_count"] == 4
+
+
+def test_build_research_task_result_carries_follow_up_lineage() -> None:
+    result = build_research_task_result(
+        task_type="workspace_report",
+        research_input={
+            "goal": "Revisit the strongest project risks",
+            "deliverable": "report",
+            "parent_task_id": "task-parent",
+            "continuation_notes": "Focus on which risk still lacks support.",
+        },
+        lineage={
+            "parent_task_id": "task-parent",
+            "parent_task_type": "workspace_report",
+            "parent_title": "Workspace Report",
+            "parent_goal": "Build a grounded workspace report",
+            "parent_summary": "Delayed sign-off is the strongest current risk.",
+            "parent_report_headline": "Research Report: Build a grounded workspace report",
+            "continuation_notes": "Focus on which risk still lacks support.",
+        },
+        documents=[
+            {
+                "id": "doc-1",
+                "title": "apollo.md",
+                "status": "indexed",
+                "source_type": "upload",
+                "mime_type": "text/markdown",
+            },
+        ],
+        matches=[
+            {
+                "document_id": "doc-1",
+                "chunk_id": "chunk-1",
+                "document_title": "apollo.md",
+                "chunk_index": 0,
+                "snippet": "Delayed sign-off remains the strongest grounded risk.",
+            },
+        ],
+        tool_call_ids=["tool-1"],
+    )
+
+    assert result["lineage"]["parent_task_id"] == "task-parent"
+    assert result["lineage"]["parent_goal"] == "Build a grounded workspace report"
+    assert result["report"]["headline"] == "Research Follow-up Report: Revisit the strongest project risks"
+    assert result["sections"]["open_questions"][0] == "Focus on which risk still lacks support."
+    assert result["sections"]["next_steps"][0] == "Compare this run against parent research task task-parent."
+    assert result["metadata"]["is_follow_up"] is True
+    assert result["metadata"]["parent_task_id"] == "task-parent"
+    assert result["metadata"]["trust"]["is_follow_up"] is True
 
 
 def test_build_research_task_result_keeps_report_coherent_when_matches_are_missing() -> None:

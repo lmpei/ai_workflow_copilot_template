@@ -153,6 +153,7 @@ def run_workspace_research_agent(
     user_id: str,
     goal: str,
     research_input: dict[str, object] | None = None,
+    research_lineage: dict[str, object] | None = None,
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
     return _run_workspace_agent(
@@ -164,7 +165,10 @@ def run_workspace_research_agent(
         graph_builder=build_workspace_research_graph,
         validate_contract=validate_research_task_contract,
         graph_runner=graph_runner,
-        extra_state={"research_input": research_input or {"goal": goal}},
+        extra_state={
+            "research_input": research_input or {"goal": goal},
+            "research_lineage": research_lineage or {},
+        },
     )
 
 
