@@ -119,7 +119,7 @@ The active formal planning unit is now `Stage B`, documented in `docs/prd/STAGE_
 ## Current Status
 
 The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, and is now executing the
-first `Stage B` wave.
+second `Stage B` wave.
 
 The current implemented platform increment includes:
 
@@ -169,3 +169,9 @@ The first executable Stage B wave is now complete as:
 - `tasks/archive/stage-b/stage-b-02-research-workbench-and-asset-lifecycle.md` (complete)
 - `tasks/archive/stage-b/stage-b-03-recoverable-runtime-and-control-actions.md` (complete)
 - `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md` (complete)
+
+The second executable Stage B wave is now active as:
+
+- `tasks/stage-b-06-research-briefs-and-asset-comparison.md` (active)
+- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (queued)
+- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md` (queued)

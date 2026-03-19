@@ -96,8 +96,8 @@ Use these when you need deeper reference material:
 
 The latest live state is maintained in `STATUS.md`.
 
-At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, and has now activated the
-first `Stage B` wave under the three-track roadmap model in `docs/prd/STAGE_B_PLAN.md`.
+At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, and is now executing the
+second `Stage B` wave under the three-track roadmap model in `docs/prd/STAGE_B_PLAN.md`.
 
 ## Runtime Services
 

@@ -4,30 +4,31 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-18
+- Last Updated: 2026-03-19
 
 ## Project Mode
 
-- Planning
+- Execution
 
 ## Current Phase
 
 - Phase 5 baseline complete
 - Stage A complete and closed
 - Stage B first task wave complete
+- Stage B second task wave active
 
 ## Current Objective
 
-- review the completed first Stage B wave and decide whether to close the wave or define a second Stage B wave
+- execute the second Stage B wave, starting with reusable Research briefs and asset comparison
 
 ## Active Task
 
-- none currently; `stage-b-04` is complete and archived
+- `tasks/stage-b-06-research-briefs-and-asset-comparison.md`
 
 ## Verification Status
 
-- Summary: Stage B now has a persistent Research workbench, recoverable cancel/retry control semantics for tasks and eval runs, and a more repeatable staging rehearsal plus handoff routine.
-- Last Verified At: 2026-03-18
+- Summary: Stage B wave one is complete and the repository is now positioned for the next Research / Runtime / Delivery wave centered on briefs, comparison, recovery visibility, and release evidence.
+- Last Verified At: 2026-03-19
 
 ## Current Blockers
 
@@ -41,15 +42,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- whether the first Stage B wave is sufficient to close the stage or only the wave
-- which Research workflow step should lead the next planning unit if Stage B continues
-- how much additional delivery automation is useful before it starts implying unsupported production guarantees
+- how far Research brief and comparison flows should go before broader module productization resumes
+- what level of recovery history and operator visibility is enough before Stage B starts implying unsupported checkpoint/resume guarantees
+- how much release evidence capture is useful before it starts imitating a heavier production-operations system than the project actually has
 
 ## Ready Now
 
-1. decide whether to close the first Stage B wave or define a second Stage B wave
-2. if Stage B continues, define the next Research and runtime-reliability wave
-3. if Stage B closes, define the next formal planning unit and task stack
+1. execute `stage-b-06` to introduce reusable Research briefs and asset comparison
+2. follow with `stage-b-07` to expose recovery history and operator visibility
+3. complete `stage-b-08` to capture release evidence and rehearsal records
 
 ## Parked / Later
 
@@ -58,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md`
+- `tasks/archive/stage-b/stage-b-05-wave-two-planning.md`
 
 ## Recent Decisions
 
@@ -70,3 +71,5 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-011` introduce the Stage B Research workbench and asset lifecycle
 - `DEC-2026-03-18-012` add Stage B recoverable runtime control actions for tasks and eval runs
 - `DEC-2026-03-18-013` standardize the Stage B staging rehearsal and handoff path
+- `DEC-2026-03-18-014` keep Stage B open and close only the first execution wave
+- `DEC-2026-03-18-015` define the second Stage B task wave as `stage-b-06`, `stage-b-07`, and `stage-b-08`

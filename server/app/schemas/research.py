@@ -34,6 +34,16 @@ class ResearchTaskInput(BaseModel):
     continuation_notes: str | None = None
 
 
+class ResearchBrief(BaseModel):
+    goal: str | None = None
+    focus_areas: list[str] = Field(default_factory=list)
+    key_questions: list[str] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    deliverable: ResearchDeliverable | None = None
+    requested_sections: list[ResearchRequestedSection] = Field(default_factory=list)
+    continuation_notes: str | None = None
+
+
 class ResearchLineage(BaseModel):
     parent_task_id: str
     parent_task_type: ResearchTaskType

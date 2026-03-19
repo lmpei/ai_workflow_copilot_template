@@ -263,3 +263,34 @@ Append-only log. Add new entries at the bottom.
 - Impact: `release-check-windows.cmd` now validates `APP_ENV_FILE` alignment, `staging-rehearse-windows.cmd` can execute the full Stage B rehearsal path, and the staging docs now expect an explicit handoff artifact.
 - Related Task: `tasks/archive/stage-b/stage-b-04-staging-rehearsal-automation-and-handoff.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-014
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: Stage B wave closeout boundary
+- Context: the first Stage B wave completed across the Research, Platform Reliability, and Delivery and Operations tracks, but the broader Stage B goals were not yet satisfied
+- Choice: close only the first Stage B execution wave and keep Stage B itself open
+- Why: the project needs another bounded Stage B wave instead of prematurely closing the whole stage or opening a new planning unit too early
+- Impact: planning continues under `docs/prd/STAGE_B_PLAN.md`, with a new task wave defined under `stage-b-*`
+- Related Task: `tasks/archive/stage-b/stage-b-05-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-18-015
+- Date: 2026-03-18
+- Status: Confirmed
+- Source: Human
+- Topic: second Stage B task wave
+- Context: the first Stage B wave completed the initial workbench, runtime control, and rehearsal baselines, but the stage still needs deeper Research workflow assets, better recovery visibility, and more durable release evidence
+- Choice: define the second Stage B wave as:
+  - `tasks/stage-b-06-research-briefs-and-asset-comparison.md`
+  - `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
+  - `tasks/stage-b-08-release-evidence-and-rehearsal-records.md`
+- Why: this keeps Research as the primary Stage B track while explicitly pairing it with the next runtime-reliability and delivery increments instead of treating those tracks as optional follow-up
+- Impact: `stage-b-06` becomes the next active execution task and Stage B gains a second explicit wave instead of drifting into ad hoc work
+- Related Task: `tasks/archive/stage-b/stage-b-05-wave-two-planning.md`
+- Supersedes:

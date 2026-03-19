@@ -9,6 +9,7 @@
 - Status: active
 - Opened At: 2026-03-18
 - First Task Wave: complete
+- Second Task Wave: active
 
 ## Position In The Project
 
@@ -129,7 +130,7 @@ Stage B is successful when:
 
 ## Next Step
 
-Review the completed first Stage B wave and decide whether to close the wave or define a second Stage B wave.
+Execute `tasks/stage-b-06-research-briefs-and-asset-comparison.md` as the first active task of the second Stage B wave.
 
 ## First Task Wave
 
@@ -141,3 +142,14 @@ The first executable Stage B wave is complete:
 
 This wave kept `Research` as the primary Stage B track while pairing it with the first recovery-oriented runtime and
 operator-oriented staging improvements.
+
+## Second Task Wave
+
+The second executable Stage B wave is now active:
+
+- `tasks/stage-b-06-research-briefs-and-asset-comparison.md` (active)
+- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (queued)
+- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md` (queued)
+
+This wave keeps `Research` as the primary Stage B track while deepening the asset workflow, making runtime recovery
+history more operator-visible, and capturing more durable release evidence around the staging rehearsal path.

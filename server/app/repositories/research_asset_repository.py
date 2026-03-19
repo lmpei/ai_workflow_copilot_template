@@ -57,6 +57,11 @@ def get_research_asset_revision_by_task_id(task_id: str) -> ResearchAssetRevisio
         return session.scalar(statement)
 
 
+def get_research_asset_revision(revision_id: str) -> ResearchAssetRevision | None:
+    with session_scope() as session:
+        return session.get(ResearchAssetRevision, revision_id)
+
+
 def create_research_asset(
     *,
     workspace_id: str,
