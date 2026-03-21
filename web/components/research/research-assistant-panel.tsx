@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  cancelTask,
   compareResearchAssets,
   createWorkspaceResearchAsset,
   createWorkspaceTask,
@@ -12,6 +13,7 @@ import {
   isApiClientError,
   listWorkspaceResearchAssets,
   listWorkspaceTasks,
+  retryTask,
 } from "../../lib/api";
 import type {
   JsonObject,
@@ -34,6 +36,7 @@ import type {
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
+import RecoveryDetailCard from "../ui/recovery-detail-card";
 import SectionCard from "../ui/section-card";
 import ResearchWorkbenchSection from "./research-workbench-section";
 
@@ -461,6 +464,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const [isLoadingSelectedAsset, setIsLoadingSelectedAsset] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isSavingAsset, setIsSavingAsset] = useState(false);
+  const [isControllingTaskId, setIsControllingTaskId] = useState<string | null>(null);
 
   const availableTaskTypes = useMemo(() => parseEntryTaskTypes(workspace), [workspace]);
 
@@ -840,6 +844,44 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     }
   };
 
+  const handleCancelTask = async (task: TaskRecord) => {
+    if (!session) {
+      return;
+    }
+
+    setIsControllingTaskId(task.id);
+    setErrorMessage(null);
+
+    try {
+      const updatedTask = await cancelTask(session.accessToken, task.id);
+      setSelectedTaskId(updatedTask.id);
+      await loadTasks(true);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to cancel research task");
+    } finally {
+      setIsControllingTaskId(null);
+    }
+  };
+
+  const handleRetryTask = async (task: TaskRecord) => {
+    if (!session) {
+      return;
+    }
+
+    setIsControllingTaskId(task.id);
+    setErrorMessage(null);
+
+    try {
+      const retriedTask = await retryTask(session.accessToken, task.id);
+      setSelectedTaskId(retriedTask.id);
+      await loadTasks(true);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to retry research task");
+    } finally {
+      setIsControllingTaskId(null);
+    }
+  };
+
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -1197,11 +1239,30 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 </div>
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
+                <div>Recovery: {task.recovery_state}</div>
                 <div style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setSelectedTaskId(task.id)} type="button">
                       Open result
                     </button>
+                    {task.status === "pending" || task.status === "running" ? (
+                      <button
+                        disabled={isControllingTaskId === task.id}
+                        onClick={() => void handleCancelTask(task)}
+                        type="button"
+                      >
+                        {isControllingTaskId === task.id ? "Cancelling..." : "Cancel task"}
+                      </button>
+                    ) : null}
+                    {task.status === "failed" ? (
+                      <button
+                        disabled={isControllingTaskId === task.id}
+                        onClick={() => void handleRetryTask(task)}
+                        type="button"
+                      >
+                        {isControllingTaskId === task.id ? "Retrying..." : "Retry task"}
+                      </button>
+                    ) : null}
                     {task.status === "done" && result ? (
                       <button onClick={() => startFollowUpFromTask(task, result)} type="button">
                         Continue research
@@ -1240,6 +1301,9 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <strong>Status:</strong> {renderStatus(selectedTask.status)}
               </div>
               <div>
+                <strong>Recovery:</strong> {selectedTask.recovery_state}
+              </div>
+              <div>
                 <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as ResearchTaskType].label}
               </div>
               {extractGoal(selectedTask, selectedResult) ? (
@@ -1262,6 +1326,28 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   ) : null}
                 </div>
               ) : null}
+              {selectedTask.status === "pending" || selectedTask.status === "running" ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    disabled={isControllingTaskId === selectedTask.id}
+                    onClick={() => void handleCancelTask(selectedTask)}
+                    type="button"
+                  >
+                    {isControllingTaskId === selectedTask.id ? "Cancelling..." : "Cancel task"}
+                  </button>
+                </div>
+              ) : null}
+              {selectedTask.status === "failed" ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    disabled={isControllingTaskId === selectedTask.id}
+                    onClick={() => void handleRetryTask(selectedTask)}
+                    type="button"
+                  >
+                    {isControllingTaskId === selectedTask.id ? "Retrying..." : "Retry task"}
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             {selectedTask.error_message ? (
@@ -1270,6 +1356,12 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 <p style={{ color: "#b91c1c", marginBottom: 0 }}>{selectedTask.error_message}</p>
               </div>
             ) : null}
+
+            <RecoveryDetailCard
+              detail={selectedTask.recovery_detail}
+              emptyText="This task has not recorded any cancel or retry lineage yet."
+              title="Task recovery detail"
+            />
 
             {selectedResult ? (
               <>

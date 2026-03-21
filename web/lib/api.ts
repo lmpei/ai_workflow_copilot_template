@@ -310,6 +310,36 @@ export async function getEvalRun(accessToken: string, evalRunId: string): Promis
   return fetchBrowserApiJson<EvalRunRecord>(`/evals/runs/${evalRunId}`, {}, accessToken);
 }
 
+export async function cancelEvalRun(
+  accessToken: string,
+  evalRunId: string,
+  payload?: { reason?: string },
+): Promise<EvalRunRecord> {
+  return fetchBrowserApiJson<EvalRunRecord>(
+    `/evals/runs/${evalRunId}/cancel`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    },
+    accessToken,
+  );
+}
+
+export async function retryEvalRun(
+  accessToken: string,
+  evalRunId: string,
+  payload?: { reason?: string },
+): Promise<EvalRunRecord> {
+  return fetchBrowserApiJson<EvalRunRecord>(
+    `/evals/runs/${evalRunId}/retry`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    },
+    accessToken,
+  );
+}
+
 export async function listEvalRunResults(
   accessToken: string,
   evalRunId: string,
@@ -345,6 +375,36 @@ export async function listWorkspaceTasks(
 
 export async function getTask(accessToken: string, taskId: string): Promise<TaskRecord> {
   return fetchBrowserApiJson<TaskRecord>(`/tasks/${taskId}`, {}, accessToken);
+}
+
+export async function cancelTask(
+  accessToken: string,
+  taskId: string,
+  payload?: { reason?: string },
+): Promise<TaskRecord> {
+  return fetchBrowserApiJson<TaskRecord>(
+    `/tasks/${taskId}/cancel`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    },
+    accessToken,
+  );
+}
+
+export async function retryTask(
+  accessToken: string,
+  taskId: string,
+  payload?: { reason?: string },
+): Promise<TaskRecord> {
+  return fetchBrowserApiJson<TaskRecord>(
+    `/tasks/${taskId}/retry`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload ?? {}),
+    },
+    accessToken,
+  );
 }
 
 export async function createWorkspaceResearchAsset(

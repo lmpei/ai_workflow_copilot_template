@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.core.runtime_control import derive_recovery_state
+from app.core.runtime_control import build_recovery_detail, derive_recovery_state
 from app.models.eval_case import EvalCase
 from app.models.eval_dataset import EvalDataset
 from app.models.eval_result import EvalResult
@@ -97,6 +97,7 @@ class EvalRunResponse(BaseModel):
     eval_type: str
     status: str
     recovery_state: str
+    recovery_detail: dict[str, object]
     created_by: str
     summary_json: dict[str, object]
     control_json: dict[str, object]
@@ -114,6 +115,7 @@ class EvalRunResponse(BaseModel):
             eval_type=eval_run.eval_type,
             status=eval_run.status,
             recovery_state=derive_recovery_state(status=eval_run.status, control_json=eval_run.control_json),
+            recovery_detail=build_recovery_detail(status=eval_run.status, control_json=eval_run.control_json),
             created_by=eval_run.created_by,
             summary_json=eval_run.summary_json,
             control_json=eval_run.control_json,

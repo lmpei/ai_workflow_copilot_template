@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  cancelEvalRun,
   createEvalDataset,
   createEvalRun,
   getEvalRun,
@@ -10,6 +11,7 @@ import {
   isApiClientError,
   listEvalDatasets,
   listEvalRunResults,
+  retryEvalRun,
 } from "../../lib/api";
 import type {
   EvalCaseRecord,
@@ -22,6 +24,7 @@ import type {
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
+import RecoveryDetailCard from "../ui/recovery-detail-card";
 import SectionCard from "../ui/section-card";
 
 type EvalManagerProps = {
@@ -199,6 +202,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingDataset, setIsCreatingDataset] = useState(false);
   const [isCreatingRunId, setIsCreatingRunId] = useState<string | null>(null);
+  const [isControllingRunId, setIsControllingRunId] = useState<string | null>(null);
 
   const scenarioTaskTypeOptions = useMemo(
     () => getScenarioTaskTypeOptions(workspace),
@@ -430,6 +434,60 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
     }
   };
 
+  const handleCancelRun = async (run: EvalRunRecord) => {
+    if (!session) {
+      return;
+    }
+
+    setIsControllingRunId(run.id);
+    setErrorMessage(null);
+
+    try {
+      const updatedRun = await cancelEvalRun(session.accessToken, run.id);
+      setRuns((currentRuns) => sortRuns(currentRuns.map((currentRun) => (currentRun.id === updatedRun.id ? updatedRun : currentRun))));
+      setSelectedRunId(updatedRun.id);
+      if (!ACTIVE_RUN_STATUSES.has(updatedRun.status)) {
+        await loadRunResults(updatedRun.id);
+      }
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to cancel eval run");
+    } finally {
+      setIsControllingRunId(null);
+    }
+  };
+
+  const handleRetryRun = async (run: EvalRunRecord) => {
+    if (!session) {
+      return;
+    }
+
+    setIsControllingRunId(run.id);
+    setErrorMessage(null);
+
+    try {
+      const retriedRun = await retryEvalRun(session.accessToken, run.id);
+      setRuns((currentRuns) => sortRuns([retriedRun, ...currentRuns.filter((currentRun) => currentRun.id !== retriedRun.id)]));
+      setSelectedRunId(retriedRun.id);
+      const storedRunIds = readStoredRunIds(workspaceId);
+      writeStoredRunIds(workspaceId, Array.from(new Set([retriedRun.id, ...storedRunIds])));
+      if (!ACTIVE_RUN_STATUSES.has(retriedRun.status)) {
+        await loadRunResults(retriedRun.id);
+      }
+      const refreshedSourceRun = await getEvalRun(session.accessToken, run.id);
+      setRuns((currentRuns) =>
+        sortRuns(
+          [retriedRun, ...currentRuns.filter((currentRun) => currentRun.id !== retriedRun.id)].map((currentRun) =>
+            currentRun.id === refreshedSourceRun.id ? refreshedSourceRun : currentRun,
+          ),
+        ),
+      );
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to retry eval run");
+    } finally {
+      setIsControllingRunId(null);
+    }
+  };
+
   if (!isReady) {
     return <SectionCard title="Evaluations">Loading session...</SectionCard>;
   }
@@ -548,6 +606,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               </div>
               <div>Run ID: {run.id}</div>
               <div>Created: {new Date(run.created_at).toLocaleString()}</div>
+              <div>Recovery: {run.recovery_state}</div>
               <div>
                 Summary: {getSummaryMetric(run.summary_json, "completed_cases")} completed / {" "}
                 {getSummaryMetric(run.summary_json, "total_cases")} total
@@ -556,6 +615,24 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                 <button onClick={() => void refreshRun(run.id)} type="button">
                   {ACTIVE_RUN_STATUSES.has(run.status) ? "Refresh / Poll" : "Open"}
                 </button>
+                {run.status === "pending" || run.status === "running" ? (
+                  <button
+                    disabled={isControllingRunId === run.id}
+                    onClick={() => void handleCancelRun(run)}
+                    type="button"
+                  >
+                    {isControllingRunId === run.id ? "Cancelling..." : "Cancel run"}
+                  </button>
+                ) : null}
+                {run.status === "failed" ? (
+                  <button
+                    disabled={isControllingRunId === run.id}
+                    onClick={() => void handleRetryRun(run)}
+                    type="button"
+                  >
+                    {isControllingRunId === run.id ? "Retrying..." : "Retry run"}
+                  </button>
+                ) : null}
               </div>
             </li>
           ))}
@@ -573,6 +650,9 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               <strong>Status:</strong> {renderRunStatus(selectedRun.status)}
             </div>
             <div>
+              <strong>Recovery:</strong> {selectedRun.recovery_state}
+            </div>
+            <div>
               <strong>Dataset:</strong> {datasetNameById[selectedRun.dataset_id] ?? selectedRun.dataset_id}
             </div>
             <div>
@@ -583,6 +663,34 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               <strong>Baseline:</strong> {String(selectedRun.summary_json.quality_baseline ?? "n/a")} (
               threshold {getSummaryMetric(selectedRun.summary_json, "pass_threshold")})
             </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <button onClick={() => void refreshRun(selectedRun.id)} type="button">
+                {ACTIVE_RUN_STATUSES.has(selectedRun.status) ? "Refresh / Poll" : "Refresh run"}
+              </button>
+              {selectedRun.status === "pending" || selectedRun.status === "running" ? (
+                <button
+                  disabled={isControllingRunId === selectedRun.id}
+                  onClick={() => void handleCancelRun(selectedRun)}
+                  type="button"
+                >
+                  {isControllingRunId === selectedRun.id ? "Cancelling..." : "Cancel run"}
+                </button>
+              ) : null}
+              {selectedRun.status === "failed" ? (
+                <button
+                  disabled={isControllingRunId === selectedRun.id}
+                  onClick={() => void handleRetryRun(selectedRun)}
+                  type="button"
+                >
+                  {isControllingRunId === selectedRun.id ? "Retrying..." : "Retry run"}
+                </button>
+              ) : null}
+            </div>
+            <RecoveryDetailCard
+              detail={selectedRun.recovery_detail}
+              emptyText="This eval run has not recorded any cancel or retry lineage yet."
+              title="Eval run recovery detail"
+            />
             <div
               style={{
                 display: "grid",

@@ -173,5 +173,5 @@ The first executable Stage B wave is now complete as:
 The second executable Stage B wave is now active as:
 
 - `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md` (complete)
-- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (active)
-- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md` (queued)
+- `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (complete)
+- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md` (active)

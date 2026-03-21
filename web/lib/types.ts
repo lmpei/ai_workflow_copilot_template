@@ -16,6 +16,31 @@ export type TaskType = (typeof scenarioTaskTypes)[number];
 export type ScenarioTaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
 
+export type RecoveryHistoryEntryRecord = {
+  event: string;
+  at: string;
+  state?: string;
+  by?: string;
+  reason?: string;
+  metadata?: JsonObject;
+};
+
+export type RecoveryDetailRecord = {
+  state: string;
+  history: RecoveryHistoryEntryRecord[];
+  metadata: JsonObject;
+  last_action?: string;
+  reason?: string;
+  requested_by?: string;
+  requested_at?: string;
+  applied_by?: string;
+  applied_at?: string;
+  source_task_id?: string;
+  target_task_id?: string;
+  source_eval_run_id?: string;
+  target_eval_run_id?: string;
+};
+
 export type ScenarioEvidenceItem = {
   kind: string;
   ref_id: string;
@@ -384,6 +409,7 @@ export type EvalRunRecord = {
   eval_type: EvalType;
   status: "pending" | "running" | "completed" | "failed";
   recovery_state: string;
+  recovery_detail: RecoveryDetailRecord;
   created_by: string;
   summary_json: JsonObject;
   control_json: JsonObject;
@@ -438,6 +464,7 @@ export type TaskRecord = {
   task_type: TaskType;
   status: "pending" | "running" | "done" | "failed";
   recovery_state: string;
+  recovery_detail: RecoveryDetailRecord;
   created_by: string;
   input_json: JsonObject;
   output_json: JsonObject;

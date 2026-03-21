@@ -621,6 +621,8 @@ def test_cancel_pending_task_marks_it_failed_with_control_state(
     cancelled_task = cancel_response.json()
     assert cancelled_task["status"] == "failed"
     assert cancelled_task["recovery_state"] == "cancelled"
+    assert cancelled_task["recovery_detail"]["state"] == "cancelled"
+    assert cancelled_task["recovery_detail"]["history"][-1]["event"] == "cancelled"
     assert cancelled_task["control_json"]["last_action"] == "cancel"
     assert cancelled_task["control_json"]["state"] == "cancelled"
 
@@ -665,6 +667,8 @@ def test_retry_failed_task_creates_linked_retry_attempt(
     retry_task = retry_response.json()
     assert retry_task["status"] == "pending"
     assert retry_task["recovery_state"] == "retry_attempt"
+    assert retry_task["recovery_detail"]["source_task_id"] == task_id
+    assert retry_task["recovery_detail"]["history"][-1]["event"] == "retry_attempt"
     assert retry_task["control_json"]["source_task_id"] == task_id
 
     original_task = task_repository.get_task(task_id)

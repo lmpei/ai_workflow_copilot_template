@@ -19,15 +19,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the second Stage B wave by exposing runtime recovery history and operator-visible state after completing Research briefs and asset comparison
+- complete the second Stage B wave by capturing release evidence and rehearsal records after finishing runtime recovery history and operator-visible state
 
 ## Active Task
 
-- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
+- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md`
 
 ## Verification Status
 
-- Summary: Stage B wave two is underway; Research briefs and asset comparison are complete, and the next increment is runtime recovery history plus operator-visible state.
+- Summary: Stage B wave two is underway; Research briefs plus operator-visible runtime recovery are complete, and the next increment is release evidence with rehearsal records.
 - Last Verified At: 2026-03-21
 
 ## Current Blockers
@@ -48,9 +48,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `stage-b-07` to expose recovery history and operator visibility
-2. complete `stage-b-08` to capture release evidence and rehearsal records
-3. decide whether Stage B should close after the second wave or continue into another bounded planning pass
+1. execute `stage-b-08` to capture release evidence and rehearsal records
+2. decide whether Stage B should close after the second wave or continue into another bounded planning pass
+3. keep Stage B runtime visibility scoped to operator history rather than unsupported resume claims
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md`
+- `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
 
 ## Recent Decisions
 
@@ -74,3 +74,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-014` keep Stage B open and close only the first execution wave
 - `DEC-2026-03-18-015` define the second Stage B task wave as `stage-b-06`, `stage-b-07`, and `stage-b-08`
 - `DEC-2026-03-21-016` complete `stage-b-06` by adding reusable Research briefs and comparison in the Stage B workbench
+- `DEC-2026-03-21-017` complete `stage-b-07` by surfacing recovery history and operator-visible runtime detail for tasks and eval runs

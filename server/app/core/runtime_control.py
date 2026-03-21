@@ -18,6 +18,71 @@ def clone_control_json(control_json: dict[str, object] | None) -> dict[str, obje
     return {}
 
 
+def _coerce_history(control_json: dict[str, object] | None) -> list[dict[str, object]]:
+    if not isinstance(control_json, dict):
+        return []
+
+    raw_history = control_json.get("history")
+    if not isinstance(raw_history, list):
+        return []
+
+    history: list[dict[str, object]] = []
+    for item in raw_history:
+        if not isinstance(item, dict):
+            continue
+
+        event = item.get("event")
+        at = item.get("at")
+        if not isinstance(event, str) or not event or not isinstance(at, str) or not at:
+            continue
+
+        normalized_item: dict[str, object] = {
+            "event": event,
+            "at": at,
+        }
+        state = item.get("state")
+        if isinstance(state, str) and state:
+            normalized_item["state"] = state
+        actor_id = item.get("by")
+        if isinstance(actor_id, str) and actor_id:
+            normalized_item["by"] = actor_id
+        reason = item.get("reason")
+        if isinstance(reason, str) and reason:
+            normalized_item["reason"] = reason
+        metadata = item.get("metadata")
+        if isinstance(metadata, dict) and metadata:
+            normalized_item["metadata"] = deepcopy(metadata)
+        history.append(normalized_item)
+
+    return history
+
+
+def _append_history_entry(
+    control_json: dict[str, object],
+    *,
+    event: str,
+    state: str,
+    actor_id: str,
+    timestamp: str,
+    reason: str | None = None,
+    metadata: dict[str, object] | None = None,
+) -> dict[str, object]:
+    history = _coerce_history(control_json)
+    entry: dict[str, object] = {
+        "event": event,
+        "state": state,
+        "at": timestamp,
+        "by": actor_id,
+    }
+    if reason:
+        entry["reason"] = reason
+    if metadata:
+        entry["metadata"] = deepcopy(metadata)
+    history.append(entry)
+    control_json["history"] = history
+    return control_json
+
+
 def derive_recovery_state(*, status: str, control_json: dict[str, object] | None) -> str:
     if isinstance(control_json, dict):
         control_state = control_json.get("state")
@@ -27,6 +92,40 @@ def derive_recovery_state(*, status: str, control_json: dict[str, object] | None
     if status == "failed":
         return "retryable_failed"
     return status
+
+
+def build_recovery_detail(*, status: str, control_json: dict[str, object] | None) -> dict[str, object]:
+    detail: dict[str, object] = {
+        "state": derive_recovery_state(status=status, control_json=control_json),
+        "history": _coerce_history(control_json),
+        "metadata": {},
+    }
+    if not isinstance(control_json, dict):
+        return detail
+
+    for key in ("last_action", "reason", "requested_by", "requested_at", "applied_by", "applied_at"):
+        value = control_json.get(key)
+        if isinstance(value, str) and value:
+            detail[key] = value
+
+    for key in ("source_task_id", "target_task_id", "source_eval_run_id", "target_eval_run_id"):
+        value = control_json.get(key)
+        if isinstance(value, str) and value:
+            detail[key] = value
+
+    metadata: dict[str, object] = {}
+    for key in (
+        "cancel_requested_from_status",
+        "cancelled_from_status",
+        "retry_enqueue_failed",
+    ):
+        value = control_json.get(key)
+        if value is not None:
+            metadata[key] = deepcopy(value)
+    if metadata:
+        detail["metadata"] = metadata
+
+    return detail
 
 
 def is_cancel_requested(control_json: dict[str, object] | None) -> bool:
@@ -69,7 +168,15 @@ def build_cancel_requested_control(
         control_json["reason"] = reason
     if extra_json:
         control_json.update(extra_json)
-    return control_json
+    return _append_history_entry(
+        control_json,
+        event="cancel_requested",
+        state=CONTROL_STATE_CANCEL_REQUESTED,
+        actor_id=user_id,
+        timestamp=requested_at,
+        reason=reason,
+        metadata=extra_json,
+    )
 
 
 def build_cancelled_control(
@@ -94,6 +201,7 @@ def build_cancelled_control(
         if isinstance(previous_requested_by, str) and previous_requested_by:
             requested_by = previous_requested_by
 
+    applied_at = datetime.now(UTC).isoformat()
     control_json.update(
         {
             "last_action": CONTROL_ACTION_CANCEL,
@@ -101,14 +209,22 @@ def build_cancelled_control(
             "requested_by": requested_by,
             "requested_at": requested_at,
             "applied_by": user_id,
-            "applied_at": datetime.now(UTC).isoformat(),
+            "applied_at": applied_at,
         }
     )
     if reason:
         control_json["reason"] = reason
     if extra_json:
         control_json.update(extra_json)
-    return control_json
+    return _append_history_entry(
+        control_json,
+        event="cancelled",
+        state=CONTROL_STATE_CANCELLED,
+        actor_id=user_id,
+        timestamp=applied_at,
+        reason=reason,
+        metadata=extra_json,
+    )
 
 
 def build_retry_created_control(
@@ -137,7 +253,19 @@ def build_retry_created_control(
         control_json["reason"] = reason
     if extra_json:
         control_json.update(extra_json)
-    return control_json
+
+    entry_metadata = {target_id_key: target_id}
+    if extra_json:
+        entry_metadata.update(extra_json)
+    return _append_history_entry(
+        control_json,
+        event="retry_created",
+        state=CONTROL_STATE_RETRY_CREATED,
+        actor_id=user_id,
+        timestamp=requested_at,
+        reason=reason,
+        metadata=entry_metadata,
+    )
 
 
 def build_retry_attempt_control(
@@ -162,4 +290,16 @@ def build_retry_attempt_control(
         control_json["reason"] = reason
     if extra_json:
         control_json.update(extra_json)
-    return control_json
+
+    entry_metadata = {source_id_key: source_id}
+    if extra_json:
+        entry_metadata.update(extra_json)
+    return _append_history_entry(
+        control_json,
+        event="retry_attempt",
+        state=CONTROL_STATE_RETRY_ATTEMPT,
+        actor_id=user_id,
+        timestamp=requested_at,
+        reason=reason,
+        metadata=entry_metadata,
+    )

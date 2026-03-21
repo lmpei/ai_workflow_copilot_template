@@ -348,6 +348,8 @@ def test_cancel_pending_eval_run_marks_it_failed_with_control_state(client: Test
     cancelled_eval_run = cancel_response.json()
     assert cancelled_eval_run["status"] == "failed"
     assert cancelled_eval_run["recovery_state"] == "cancelled"
+    assert cancelled_eval_run["recovery_detail"]["state"] == "cancelled"
+    assert cancelled_eval_run["recovery_detail"]["history"][-1]["event"] == "cancelled"
     assert cancelled_eval_run["control_json"]["last_action"] == "cancel"
     assert cancelled_eval_run["control_json"]["state"] == "cancelled"
 
@@ -394,6 +396,8 @@ def test_retry_failed_eval_run_creates_linked_retry_attempt(client: TestClient) 
     retry_eval_run = retry_response.json()
     assert retry_eval_run["status"] == "pending"
     assert retry_eval_run["recovery_state"] == "retry_attempt"
+    assert retry_eval_run["recovery_detail"]["source_eval_run_id"] == eval_run_id
+    assert retry_eval_run["recovery_detail"]["history"][-1]["event"] == "retry_attempt"
     assert retry_eval_run["control_json"]["source_eval_run_id"] == eval_run_id
 
     original_eval_run = eval_repository.get_eval_run(eval_run_id)

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.core.runtime_control import derive_recovery_state
+from app.core.runtime_control import build_recovery_detail, derive_recovery_state
 
 
 class TaskCreate(BaseModel):
@@ -20,6 +20,7 @@ class TaskResponse(BaseModel):
     task_type: str
     status: str
     recovery_state: str
+    recovery_detail: dict[str, object]
     created_by: str
     input_json: dict
     output_json: dict
@@ -36,6 +37,7 @@ class TaskResponse(BaseModel):
             task_type=task.task_type,
             status=task.status,
             recovery_state=derive_recovery_state(status=task.status, control_json=task.control_json),
+            recovery_detail=build_recovery_detail(status=task.status, control_json=task.control_json),
             created_by=task.created_by,
             input_json=task.input_json,
             output_json=task.output_json,

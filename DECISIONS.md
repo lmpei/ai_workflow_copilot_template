@@ -1,4 +1,4 @@
-﻿# Decisions
+# Decisions
 
 Append-only log. Add new entries at the bottom.
 
@@ -307,4 +307,17 @@ Append-only log. Add new entries at the bottom.
 - Why: Stage B Research should feel like a reusable workflow surface rather than a collection of saved blobs or isolated task outputs
 - Impact: the Research workbench now exposes reusable brief summaries, asset/revision comparison, and clearer revision-level reuse without changing the broader platform module boundaries
 - Related Task: `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md`
+- Supersedes:
+## Decision Entry
+
+- ID: DEC-2026-03-21-017
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B runtime recovery history and operator visibility
+- Context: Stage B runtime controls already supported cancel and retry semantics, but operators still had to infer lineage from raw `control_json` and lacked direct UI visibility into recovery state transitions.
+- Choice: expose a structured `recovery_detail` contract for tasks and eval runs, preserve ordered cancel/retry history entries, and surface that recovery lineage directly in the Research and eval operator panels.
+- Why: Stage B needs clearer runtime diagnostics and control lineage without overstating unsupported checkpoint/resume guarantees.
+- Impact: operators can inspect why a task or eval run is in its current recovery state, retry lineage is visible through source/target links, and the UI no longer depends on raw JSON inspection for recovery debugging.
+- Related Task: `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
 - Supersedes:
