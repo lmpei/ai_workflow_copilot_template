@@ -15,19 +15,19 @@ Current state only. Keep this file short, current, and action-oriented.
 - Phase 5 baseline complete
 - Stage A complete and closed
 - Stage B first task wave complete
-- Stage B second task wave active
+- Stage B second task wave complete
 
 ## Current Objective
 
-- complete the second Stage B wave by capturing release evidence and rehearsal records after finishing runtime recovery history and operator-visible state
+- decide whether Stage B should close or continue into another bounded planning pass after completing release evidence and rehearsal records
 
 ## Active Task
 
-- `tasks/stage-b-08-release-evidence-and-rehearsal-records.md`
+- none; Stage B closeout or next-wave planning is pending
 
 ## Verification Status
 
-- Summary: Stage B wave two is underway; Research briefs plus operator-visible runtime recovery are complete, and the next increment is release evidence with rehearsal records.
+- Summary: Stage B wave two is complete; Research briefs, operator-visible runtime recovery, and release evidence with rehearsal records are now in place.
 - Last Verified At: 2026-03-21
 
 ## Current Blockers
@@ -42,15 +42,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how far Research brief and comparison flows should go before broader module productization resumes
-- what level of recovery history and operator visibility is enough before Stage B starts implying unsupported checkpoint/resume guarantees
-- how much release evidence capture is useful before it starts imitating a heavier production-operations system than the project actually has
+- whether the next increment should close Stage B or define a third bounded Stage B wave
+- how far release evidence should go before it starts imitating a heavier production-operations system than the project actually has
+- whether the next planning pass should emphasize Research productization again or broaden Stage B delivery and runtime depth first
 
 ## Ready Now
 
-1. execute `stage-b-08` to capture release evidence and rehearsal records
-2. decide whether Stage B should close after the second wave or continue into another bounded planning pass
-3. keep Stage B runtime visibility scoped to operator history rather than unsupported resume claims
+1. decide whether Stage B should close or stay open for another bounded wave
+2. if Stage B stays open, define the next planning task and task stack
+3. keep delivery evidence lightweight and operator-facing rather than implying unsupported production guarantees
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
+- `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md`
 
 ## Recent Decisions
 
@@ -75,3 +75,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-015` define the second Stage B task wave as `stage-b-06`, `stage-b-07`, and `stage-b-08`
 - `DEC-2026-03-21-016` complete `stage-b-06` by adding reusable Research briefs and comparison in the Stage B workbench
 - `DEC-2026-03-21-017` complete `stage-b-07` by surfacing recovery history and operator-visible runtime detail for tasks and eval runs
+- `DEC-2026-03-21-018` complete `stage-b-08` by pairing the Stage B rehearsal path with release evidence records and reusable evidence templates

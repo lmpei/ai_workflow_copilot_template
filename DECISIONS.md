@@ -321,3 +321,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: operators can inspect why a task or eval run is in its current recovery state, retry lineage is visible through source/target links, and the UI no longer depends on raw JSON inspection for recovery debugging.
 - Related Task: `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-018
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B release evidence and rehearsal records
+- Context: Stage B already had a repeatable staging rehearsal helper and handoff note, but collaborators still lacked a more durable artifact describing what the rehearsal actually checked and which rollback target applied.
+- Choice: pair the existing Stage B rehearsal path with a reusable release evidence record, a helper script that generates that record, and a documented evidence template alongside the existing handoff template.
+- Why: the delivery track needs clearer operator-facing evidence without pretending to be a heavier production-operations system than the project actually has.
+- Impact: Stage B rehearsals now generate both release evidence and handoff artifacts, and the delivery docs now define what should be preserved after a rehearsal.
+- Related Task: `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md`
+- Supersedes:

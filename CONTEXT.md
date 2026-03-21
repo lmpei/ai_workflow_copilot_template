@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-19
+- Last Updated: 2026-03-21
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete and Stage B second task wave active
+- Current stage: Stage A complete and Stage B second task wave complete
 
 ## Success Criteria
 
@@ -66,7 +66,7 @@ the primary track and reliability plus delivery work treated as required paralle
 - `dev`
   - shared internal validation with environment-specific secrets and service URLs
 - `staging`
-  - release-like validation with explicit migration, smoke, rollback, and handoff discipline
+  - release-like validation with explicit migration, smoke, rollback, release evidence, and handoff discipline
 
 ## Verification
 
@@ -78,7 +78,7 @@ the primary track and reliability plus delivery work treated as required paralle
 - document ingest and reindex lifecycle
 - retrieval quality and grounded citation behavior
 - task and eval worker execution guarantees
-- staging rehearsal drift between scripts, env conventions, and docs
+- staging rehearsal drift between scripts, env conventions, release evidence, and docs
 - cross-module consistency across research, support, and job
 - documentation drift between current state, decisions, and archived task history
 

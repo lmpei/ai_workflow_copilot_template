@@ -4,7 +4,7 @@ This document turns the Stage B delivery baseline into a concrete staging rehear
 
 It does not define a production deployment system. It defines the smallest repeatable path that a collaborator can use
 to rehearse a release-like validation routine with explicit environment selection, migration sequencing, smoke checks,
-rollback decisions, and a handoff artifact.
+rollback decisions, and companion evidence plus handoff artifacts.
 
 ## Supported Stage B Shape
 
@@ -12,8 +12,8 @@ Stage B supports a lightweight staging path built from four inputs:
 
 - an environment-specific env file such as `.env.staging`
 - Docker Compose startup for the application services
-- Windows helper scripts for preflight, migration, smoke, and full rehearsal
-- a handoff note that records what changed, what was checked, and what rollback target applies
+- Windows helper scripts for preflight, migration, smoke, release evidence, and full rehearsal
+- a release evidence record plus a handoff note that record what changed, what was checked, and what rollback target applies
 
 This path is intentionally limited:
 
@@ -134,23 +134,26 @@ The release is not considered rehearsed until a human completes these checks:
 - the formal Research report path can complete
 - traces and task history remain visible after the run
 
-### 7. Handoff Record
+### 7. Evidence and Handoff Records
 
 Record the rehearsal outcome before handing off the release candidate.
 
 Preferred helper:
 
 ```powershell
-cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target> app-tier C:\staging\handoff.md C:\staging\evidence.md
 ```
 
-This helper runs the Stage B routine end to end and writes a handoff note to `%TEMP%\ai_workflow_copilot_staging_handoff.md`
-by default, or to a custom path when one is provided.
+This helper runs the Stage B routine end to end and writes:
+
+- a release evidence record to `%TEMP%\ai_workflow_copilot_staging_evidence.md` by default, or to a custom path when one is provided
+- a handoff note to `%TEMP%\ai_workflow_copilot_staging_handoff.md` by default, or to a custom path when one is provided
 
 Fallback path:
 
+- copy `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md` outside git
 - copy `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
-- fill in the env file, change ref, rollback target, automated steps completed, and any operator notes
+- fill in the env file, change ref, rollback target, automated steps completed, checked URLs, and any operator notes
 
 ## Failure Handling
 
@@ -184,6 +187,7 @@ The Stage B rollback decision path is:
 ## Related Docs
 
 - `docs/development/DELIVERY_BASELINE.md`
+- `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/development/WINDOWS_SETUP.md`
 - `README.md`

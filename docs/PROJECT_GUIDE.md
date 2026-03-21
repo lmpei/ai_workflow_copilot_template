@@ -39,7 +39,11 @@ Use these files for detailed reference material:
 - `docs/development/DELIVERY_BASELINE.md`
   - Stage B delivery, migration, release, rollback, rehearsal, and runbook baseline
 - `docs/development/STAGING_RELEASE_PATH.md`
-  - concrete Stage B staging rehearsal sequence, smoke expectations, and handoff path
+  - concrete Stage B staging rehearsal sequence, smoke expectations, evidence capture, and handoff path
+- `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
+  - fallback release-evidence template for Stage B rehearsal records
+- `docs/development/STAGING_HANDOFF_TEMPLATE.md`
+  - fallback handoff template for Stage B rehearsal records
 - `docs/development/WINDOWS_SETUP.md`
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
@@ -256,12 +260,16 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
   - applies Alembic migrations using `DATABASE_URL` from the selected env file
 - `scripts/release-check-windows.cmd`
   - validates the selected env file, checks `APP_ENV_FILE` alignment, rejects placeholder secrets, and runs the repository verification baseline
+- `scripts/write-release-evidence-windows.cmd`
+  - writes a reusable Stage B release evidence record with the env file, change ref, rollback target, checked URLs, and companion handoff path
 - `scripts/staging-smoke-windows.cmd`
   - checks the health endpoint and web root for the selected staging env file
 - `scripts/staging-rehearse-windows.cmd`
-  - runs the Stage B Windows rehearsal routine and writes a handoff note with the change ref and rollback target
+  - runs the Stage B Windows rehearsal routine and writes both a release evidence record and a handoff note with the change ref and rollback target
 - `docs/development/STAGING_RELEASE_PATH.md`
-  - defines the concrete Stage B staging rehearsal path, including restart order, smoke checks, rollback expectations, and handoff recording
+  - defines the concrete Stage B staging rehearsal path, including restart order, smoke checks, rollback expectations, evidence capture, and handoff recording
+- `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
+  - provides the fallback evidence-record shape when the helper-generated record is not used
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
   - provides the fallback handoff shape when the helper-generated note is not used
 

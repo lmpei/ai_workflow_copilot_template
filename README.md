@@ -87,6 +87,7 @@ Use these when you need deeper reference material:
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
+- `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
@@ -96,7 +97,7 @@ Use these when you need deeper reference material:
 
 The latest live state is maintained in `STATUS.md`.
 
-At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, and is now executing the
+At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, and has completed the
 second `Stage B` wave under the three-track roadmap model in `docs/prd/STAGE_B_PLAN.md`.
 
 ## Runtime Services
@@ -165,5 +166,5 @@ cmd /c scripts\staging-smoke-windows.cmd .env.staging
 Stage B rehearsal helper:
 
 ```powershell
-cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target> app-tier C:\staging\handoff.md C:\staging\evidence.md
 ```

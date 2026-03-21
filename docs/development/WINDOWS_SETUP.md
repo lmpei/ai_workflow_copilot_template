@@ -49,7 +49,7 @@ Useful local URLs after startup:
 - `dev`
   - a shared validation environment with non-placeholder secrets and environment-specific URLs
 - `staging`
-  - a release-like environment that must follow migration, smoke-check, and handoff discipline
+  - a release-like environment that must follow migration, smoke-check, evidence, and handoff discipline
 
 ## Optional local dependency setup
 
@@ -89,6 +89,7 @@ cd ..
 - `scripts\verify-windows.cmd`
 - `scripts\migrate-windows.cmd`
 - `scripts\release-check-windows.cmd`
+- `scripts\write-release-evidence-windows.cmd`
 - `scripts\staging-smoke-windows.cmd`
 - `scripts\staging-rehearse-windows.cmd`
 
@@ -102,10 +103,12 @@ These are local development and release rehearsal helpers, not project startup c
   - applies Alembic migrations using `DATABASE_URL` from the provided env file and runs inside the `server` container when the URL targets the local Compose `db` hostname
 - `release-check-windows.cmd`
   - validates env-file alignment, rejects placeholder secrets, and then runs the verification baseline
+- `write-release-evidence-windows.cmd`
+  - writes a reusable Stage B release evidence record with the env file, change ref, rollback target, checked URLs, and companion handoff path
 - `staging-smoke-windows.cmd`
   - checks the health endpoint and web root derived from the provided env file
 - `staging-rehearse-windows.cmd`
-  - runs the Stage B staging preflight, compose validation, startup, migration, force-recreate, smoke checks, and writes a handoff note
+  - runs the Stage B staging preflight, compose validation, startup, migration, force-recreate, smoke checks, and writes both release evidence and a handoff note
 
 Run them from PowerShell with:
 
@@ -114,8 +117,9 @@ cmd /c scripts\setup-windows.cmd
 cmd /c scripts\verify-windows.cmd
 cmd /c scripts\migrate-windows.cmd .env
 cmd /c scripts\release-check-windows.cmd .env
+cmd /c scripts\write-release-evidence-windows.cmd .env.staging <rollback-target>
 cmd /c scripts\staging-smoke-windows.cmd .env
-cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target> app-tier C:\staging\handoff.md C:\staging\evidence.md
 ```
 
 ## Stage B staging rehearsal
@@ -126,7 +130,7 @@ Recommended Windows rehearsal flow:
 2. set `APP_ENV_FILE=.env.staging` inside `.env.staging`
 3. replace all placeholder secrets and update the environment URLs
 4. pick a rollback target before you start the rehearsal
-5. run `cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>`
-6. keep the generated handoff note or fill `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git if you used the manual path
+5. run `cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target> app-tier <handoff-file> <evidence-file>`
+6. keep the generated evidence and handoff files, or fill `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md` and `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git if you used the manual path
 
 If you need the manual step-by-step version instead of the helper, use `docs/development/STAGING_RELEASE_PATH.md`.

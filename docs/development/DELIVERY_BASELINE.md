@@ -3,7 +3,8 @@
 This document defines the minimum delivery and operations baseline for Stage B.
 
 It does not describe a full production platform. It defines the smallest repeatable path from local development toward
-shared `dev` or `staging` delivery, plus the first operator-friendly rehearsal routine and handoff expectations.
+shared `dev` or `staging` delivery, plus the first operator-friendly rehearsal routine, release evidence, and handoff
+expectations.
 
 For the concrete Stage B staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
 
@@ -35,7 +36,7 @@ Use `staging` for release-like validation before any stronger deployment target.
 - must follow the release checklist
 - must have an explicit migration step
 - must support a documented rollback decision, even if rollback is manual
-- must leave a rehearsal handoff record describing what changed and what rollback target is expected
+- must leave both a rehearsal evidence record and a handoff record describing what changed and what rollback target is expected
 
 ## Configuration and Secret Rules
 
@@ -101,7 +102,7 @@ For a Stage B `local`, `dev`, or `staging` release candidate:
 3. run `cmd /c scripts\migrate-windows.cmd <env-file>`
 4. restart or recreate the application services
 5. run a smoke check
-6. record the rollback target and release handoff note
+6. record the rollback target, release evidence, and release handoff note
 
 Minimum smoke check:
 
@@ -117,7 +118,7 @@ Minimum smoke check:
 Use the Stage B helper when you want a single repeatable Windows rehearsal routine:
 
 ```powershell
-cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target>
+cmd /c scripts\staging-rehearse-windows.cmd .env.staging <rollback-target> app-tier C:\staging\handoff.md C:\staging\evidence.md
 ```
 
 This helper:
@@ -128,11 +129,11 @@ This helper:
 - applies migrations
 - force-recreates the application tier
 - runs the minimum smoke helper
-- writes a handoff note with the env file, change ref, rollback target, and completed automated steps
+- writes a release evidence record plus a handoff note with the env file, change ref, rollback target, and completed automated steps
 
 It is intentionally lightweight. It does not replace manual smoke, production orchestration, or full incident handling.
 
-## Handoff Baseline
+## Release Evidence Baseline
 
 Each Stage B staging rehearsal should capture:
 
@@ -140,10 +141,12 @@ Each Stage B staging rehearsal should capture:
 - which change ref was rehearsed
 - which rollback target should be used if the release is unhealthy
 - which automated checks completed
+- which automated targets were actually checked
 - which manual smoke checks are still required or already performed
 - anything unusual that the next operator should know
 
-Use `docs/development/STAGING_HANDOFF_TEMPLATE.md` as the human-readable fallback shape when the helper is not used.
+Use `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md` and `docs/development/STAGING_HANDOFF_TEMPLATE.md` as the
+fallback shapes when the helper is not used.
 
 ## Rollback and Recovery
 
@@ -182,8 +185,9 @@ The minimum operational runbook for Stage B is:
 - smoke:
   - `cmd /c scripts\staging-smoke-windows.cmd <env-file>` plus manual validation
 - rehearse:
-  - `cmd /c scripts\staging-rehearse-windows.cmd <env-file> <rollback-target>` when you want the full Stage B routine
+  - `cmd /c scripts\staging-rehearse-windows.cmd <env-file> <rollback-target> app-tier <handoff-file> <evidence-file>` when you want the full Stage B routine
 - handoff:
-  - keep the generated note or copy `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
+  - keep the generated evidence and handoff files or copy `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md` and
+    `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
 - rollback:
   - restore the previous code/image version and reconcile schema state before retrying

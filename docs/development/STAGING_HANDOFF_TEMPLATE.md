@@ -13,6 +13,7 @@ exists so the expected shape stays visible even when the helper is not used.
 - Service Mode:
 - Change Ref:
 - Rollback Target:
+- Evidence File:
 
 ## Automated Steps Completed
 
