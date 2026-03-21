@@ -130,7 +130,7 @@ Stage B is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-b-06-research-briefs-and-asset-comparison.md` as the first active task of the second Stage B wave.
+Execute `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` as the next active task of the second Stage B wave.
 
 ## First Task Wave
 
@@ -147,8 +147,8 @@ operator-oriented staging improvements.
 
 The second executable Stage B wave is now active:
 
-- `tasks/stage-b-06-research-briefs-and-asset-comparison.md` (active)
-- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (queued)
+- `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md` (complete)
+- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (active)
 - `tasks/stage-b-08-release-evidence-and-rehearsal-records.md` (queued)
 
 This wave keeps `Research` as the primary Stage B track while deepening the asset workflow, making runtime recovery

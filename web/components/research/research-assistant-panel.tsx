@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  compareResearchAssets,
   createWorkspaceResearchAsset,
   createWorkspaceTask,
   getResearchAsset,
@@ -15,6 +16,7 @@ import {
 import type {
   JsonObject,
   ResearchArtifacts,
+  ResearchAssetComparisonRecord,
   ResearchAssetLink,
   ResearchAssetRecord,
   ResearchAssetRevisionRecord,
@@ -434,6 +436,12 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<ResearchAssetRecord | null>(null);
+  const [compareAssetId, setCompareAssetId] = useState<string | null>(null);
+  const [compareAsset, setCompareAsset] = useState<ResearchAssetRecord | null>(null);
+  const [selectedAssetCompareRevisionId, setSelectedAssetCompareRevisionId] = useState<string | null>(null);
+  const [compareAssetRevisionId, setCompareAssetRevisionId] = useState<string | null>(null);
+  const [assetComparison, setAssetComparison] = useState<ResearchAssetComparisonRecord | null>(null);
+  const [isComparingAssets, setIsComparingAssets] = useState(false);
   const [taskType, setTaskType] = useState<ResearchTaskType>("research_summary");
   const [goal, setGoal] = useState("");
   const [focusAreasText, setFocusAreasText] = useState("");
@@ -539,12 +547,31 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     [session],
   );
 
+  const loadCompareAsset = useCallback(
+    async (assetId: string) => {
+      if (!session) {
+        setCompareAsset(null);
+        return;
+      }
+
+      try {
+        setCompareAsset(await getResearchAsset(session.accessToken, assetId));
+      } catch (error) {
+        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load comparison asset");
+      }
+    },
+    [session],
+  );
+
   const loadResearchAssets = useCallback(
     async (silent = false) => {
       if (!session) {
         setResearchAssets([]);
         setSelectedAssetId(null);
         setSelectedAsset(null);
+        setCompareAssetId(null);
+        setCompareAsset(null);
+        setAssetComparison(null);
         return;
       }
 
@@ -590,12 +617,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       if (selectedAssetId) {
         void loadSelectedAsset(selectedAssetId, true);
       }
+      if (compareAssetId) {
+        void loadCompareAsset(compareAssetId);
+      }
     }, 2000);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadResearchAssets, loadSelectedAsset, loadTasks, selectedAssetId, session]);
+  }, [compareAssetId, loadCompareAsset, loadResearchAssets, loadSelectedAsset, loadTasks, selectedAssetId, session]);
 
   useEffect(() => {
     if (!selectedAssetId) {
@@ -605,6 +635,50 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
     void loadSelectedAsset(selectedAssetId);
   }, [loadSelectedAsset, selectedAssetId]);
+
+  useEffect(() => {
+    const compareCandidates = researchAssets.filter((asset) => asset.id !== selectedAssetId);
+    setCompareAssetId((currentCompareAssetId) => {
+      if (compareCandidates.length === 0) {
+        return null;
+      }
+      if (currentCompareAssetId && compareCandidates.some((asset) => asset.id === currentCompareAssetId)) {
+        return currentCompareAssetId;
+      }
+      return compareCandidates[0]?.id ?? null;
+    });
+  }, [researchAssets, selectedAssetId]);
+
+  useEffect(() => {
+    if (!compareAssetId) {
+      setCompareAsset(null);
+      return;
+    }
+
+    void loadCompareAsset(compareAssetId);
+  }, [compareAssetId, loadCompareAsset]);
+
+  useEffect(() => {
+    if (
+      selectedAssetCompareRevisionId &&
+      !selectedAsset?.revisions.some((revision) => revision.id === selectedAssetCompareRevisionId)
+    ) {
+      setSelectedAssetCompareRevisionId(null);
+    }
+  }, [selectedAsset, selectedAssetCompareRevisionId]);
+
+  useEffect(() => {
+    if (
+      compareAssetRevisionId &&
+      !compareAsset?.revisions.some((revision) => revision.id === compareAssetRevisionId)
+    ) {
+      setCompareAssetRevisionId(null);
+    }
+  }, [compareAsset, compareAssetRevisionId]);
+
+  useEffect(() => {
+    setAssetComparison(null);
+  }, [compareAssetId, compareAssetRevisionId, selectedAssetCompareRevisionId, selectedAssetId]);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? null,
@@ -717,6 +791,29 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       openTaskId: revision.task_id,
       openAssetId: asset.id,
     });
+  };
+
+  const handleRunAssetComparison = async () => {
+    if (!session || !selectedAsset || !compareAssetId) {
+      return;
+    }
+
+    setIsComparingAssets(true);
+    setErrorMessage(null);
+
+    try {
+      const comparison = await compareResearchAssets(session.accessToken, {
+        left_asset_id: selectedAsset.id,
+        right_asset_id: compareAssetId,
+        left_revision_id: selectedAssetCompareRevisionId ?? undefined,
+        right_revision_id: compareAssetRevisionId ?? undefined,
+      });
+      setAssetComparison(comparison);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to compare research assets");
+    } finally {
+      setIsComparingAssets(false);
+    }
   };
 
   const handleSaveTaskToWorkbench = async (task: TaskRecord) => {
@@ -859,9 +956,23 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
         researchAssets={researchAssets}
         selectedAssetId={selectedAssetId}
         selectedAsset={selectedAsset}
+        compareAssetId={compareAssetId}
+        compareAsset={compareAsset}
+        selectedAssetCompareRevisionId={selectedAssetCompareRevisionId}
+        compareAssetRevisionId={compareAssetRevisionId}
+        comparison={assetComparison}
         isLoadingAssets={isLoadingAssets}
         isLoadingSelectedAsset={isLoadingSelectedAsset}
+        isComparing={isComparingAssets}
         onSelectAsset={setSelectedAssetId}
+        onSelectCompareAsset={setCompareAssetId}
+        onSelectSelectedAssetCompareRevision={(revisionId) =>
+          setSelectedAssetCompareRevisionId(revisionId && revisionId.length > 0 ? revisionId : null)
+        }
+        onSelectCompareAssetRevision={(revisionId) =>
+          setCompareAssetRevisionId(revisionId && revisionId.length > 0 ? revisionId : null)
+        }
+        onRunComparison={() => void handleRunAssetComparison()}
         onContinueAsset={startResearchFromAsset}
         onContinueRevision={startResearchFromRevision}
         onOpenTask={setSelectedTaskId}

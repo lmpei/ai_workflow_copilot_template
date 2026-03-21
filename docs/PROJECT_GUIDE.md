@@ -192,6 +192,21 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - reopen a saved asset
   - inspect revision history
   - continue from the latest revision or any prior revision
+  - review a stable Research brief for the latest asset state or any saved revision
+  - compare the current asset or revision against another saved asset without manually inspecting raw JSON
+- the Stage B Research brief is derived from the canonical structured Research input shape and surfaces:
+  - `goal`
+  - `focus_areas`
+  - `key_questions`
+  - `constraints`
+  - `deliverable`
+  - `requested_sections`
+  - optional `continuation_notes`
+- the Research asset comparison path now highlights:
+  - shared versus side-specific focus areas
+  - shared versus side-specific key questions
+  - shared constraints and side-specific open questions
+  - deltas in findings, evidence count, document count, and retrieval match count
 - task history remains the execution log; Research assets are the reusable work product layer for Stage B
 
 ## Scenario Module Boundaries

@@ -11,6 +11,7 @@ import type {
   LoginRequestPayload,
   LoginResponsePayload,
   RegisterRequestPayload,
+  ResearchAssetComparisonRecord,
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
   TaskCreatePayload,
@@ -377,4 +378,22 @@ export async function getResearchAsset(
   assetId: string,
 ): Promise<ResearchAssetRecord> {
   return fetchBrowserApiJson<ResearchAssetRecord>(`/research-assets/${assetId}`, {}, accessToken);
+}
+export async function compareResearchAssets(
+  accessToken: string,
+  payload: {
+    left_asset_id: string;
+    right_asset_id: string;
+    left_revision_id?: string;
+    right_revision_id?: string;
+  },
+): Promise<ResearchAssetComparisonRecord> {
+  return fetchBrowserApiJson<ResearchAssetComparisonRecord>(
+    "/research-assets/compare",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
 }

@@ -105,3 +105,24 @@ Disallowed files:
 ## Rollback Plan
 
 - revert the Research brief and comparison changes while preserving the Stage B asset lifecycle and follow-up flow
+
+## Execution Status
+
+- Status: completed
+- Completed At: 2026-03-21
+- Notes:
+  - exposed reusable Research briefs on asset and revision contracts
+  - added workbench comparison across saved assets or specific revisions
+  - connected the Stage B Research surface to the comparison workflow without changing non-Research module boundaries
+
+## Result
+
+- Saved Research assets now surface a stable brief-like summary of intent and scope.
+- The Research workbench now supports comparing two related assets or revisions without manually reading raw JSON.
+- The next active Stage B task is `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md`.
+
+## Verification Result
+
+- `python -m compileall server/app server/tests`
+- `cd server && ..\.venv\Scripts\python.exe -m pytest tests/test_research_assets.py tests/test_tasks.py tests/test_research_assistant_service.py`
+- `cmd /c npm --prefix web run verify`

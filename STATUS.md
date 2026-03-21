@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-19
+- Last Updated: 2026-03-21
 
 ## Project Mode
 
@@ -19,16 +19,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the second Stage B wave, starting with reusable Research briefs and asset comparison
+- continue the second Stage B wave by exposing runtime recovery history and operator-visible state after completing Research briefs and asset comparison
 
 ## Active Task
 
-- `tasks/stage-b-06-research-briefs-and-asset-comparison.md`
+- `tasks/stage-b-07-runtime-recovery-history-and-operator-visibility.md`
 
 ## Verification Status
 
-- Summary: Stage B wave one is complete and the repository is now positioned for the next Research / Runtime / Delivery wave centered on briefs, comparison, recovery visibility, and release evidence.
-- Last Verified At: 2026-03-19
+- Summary: Stage B wave two is underway; Research briefs and asset comparison are complete, and the next increment is runtime recovery history plus operator-visible state.
+- Last Verified At: 2026-03-21
 
 ## Current Blockers
 
@@ -48,9 +48,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `stage-b-06` to introduce reusable Research briefs and asset comparison
-2. follow with `stage-b-07` to expose recovery history and operator visibility
-3. complete `stage-b-08` to capture release evidence and rehearsal records
+1. execute `stage-b-07` to expose recovery history and operator visibility
+2. complete `stage-b-08` to capture release evidence and rehearsal records
+3. decide whether Stage B should close after the second wave or continue into another bounded planning pass
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-05-wave-two-planning.md`
+- `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md`
 
 ## Recent Decisions
 
@@ -73,3 +73,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-18-013` standardize the Stage B staging rehearsal and handoff path
 - `DEC-2026-03-18-014` keep Stage B open and close only the first execution wave
 - `DEC-2026-03-18-015` define the second Stage B task wave as `stage-b-06`, `stage-b-07`, and `stage-b-08`
+- `DEC-2026-03-21-016` complete `stage-b-06` by adding reusable Research briefs and comparison in the Stage B workbench

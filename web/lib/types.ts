@@ -135,6 +135,16 @@ export type ResearchTaskResult = ScenarioTaskResult & {
   artifacts: ResearchArtifacts;
 };
 
+export type ResearchBriefRecord = {
+  goal?: string;
+  focus_areas: string[];
+  key_questions: string[];
+  constraints: string[];
+  deliverable?: ResearchDeliverable | null;
+  requested_sections: ResearchRequestedSection[];
+  continuation_notes?: string | null;
+};
+
 export type ResearchAssetRevisionRecord = {
   id: string;
   research_asset_id: string;
@@ -142,6 +152,7 @@ export type ResearchAssetRevisionRecord = {
   task_type: ResearchTaskType;
   revision_number: number;
   title: string;
+  brief: ResearchBriefRecord;
   input_json: JsonObject;
   result_json: JsonObject;
   summary: string;
@@ -156,6 +167,7 @@ export type ResearchAssetSummaryRecord = {
   latest_task_id?: string | null;
   latest_task_type: ResearchTaskType;
   latest_revision_number: number;
+  latest_brief: ResearchBriefRecord;
   latest_input_json: JsonObject;
   latest_result_json: JsonObject;
   latest_summary: string;
@@ -165,6 +177,49 @@ export type ResearchAssetSummaryRecord = {
 };
 export type ResearchAssetRecord = ResearchAssetSummaryRecord & {
   revisions: ResearchAssetRevisionRecord[];
+};
+
+export type ResearchAssetComparisonSideRecord = {
+  asset_id: string;
+  asset_title: string;
+  revision_id?: string | null;
+  revision_number: number;
+  task_id?: string | null;
+  task_type: ResearchTaskType;
+  brief: ResearchBriefRecord;
+  summary: string;
+  report_headline?: string | null;
+  open_questions: string[];
+  findings_count: number;
+  evidence_count: number;
+  document_count: number;
+  match_count: number;
+};
+
+export type ResearchAssetComparisonDiffRecord = {
+  shared_focus_areas: string[];
+  left_only_focus_areas: string[];
+  right_only_focus_areas: string[];
+  shared_key_questions: string[];
+  left_only_key_questions: string[];
+  right_only_key_questions: string[];
+  shared_constraints: string[];
+  left_only_constraints: string[];
+  right_only_constraints: string[];
+  left_only_open_questions: string[];
+  right_only_open_questions: string[];
+  summary_changed: boolean;
+  report_headline_changed: boolean;
+  finding_count_delta: number;
+  evidence_count_delta: number;
+  document_count_delta: number;
+  match_count_delta: number;
+};
+
+export type ResearchAssetComparisonRecord = {
+  left: ResearchAssetComparisonSideRecord;
+  right: ResearchAssetComparisonSideRecord;
+  diff: ResearchAssetComparisonDiffRecord;
 };
 
 export type SupportDocumentSummary = ResearchDocumentSummary;

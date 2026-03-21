@@ -294,3 +294,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: `stage-b-06` becomes the next active execution task and Stage B gains a second explicit wave instead of drifting into ad hoc work
 - Related Task: `tasks/archive/stage-b/stage-b-05-wave-two-planning.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-016
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: Stage B reusable Research briefs and asset comparison
+- Context: the Stage B workbench already preserved assets and revisions, but collaborators still had to inspect raw JSON to understand intent shifts or compare related research runs over time
+- Choice: derive a stable Research brief from the canonical structured input, expose it on asset and revision contracts, and add a workbench comparison path for related assets or revisions
+- Why: Stage B Research should feel like a reusable workflow surface rather than a collection of saved blobs or isolated task outputs
+- Impact: the Research workbench now exposes reusable brief summaries, asset/revision comparison, and clearer revision-level reuse without changing the broader platform module boundaries
+- Related Task: `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md`
+- Supersedes:
