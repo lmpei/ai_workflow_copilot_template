@@ -45,7 +45,7 @@ API base: `http://localhost:8000/api/v1`
 Health check: `http://localhost:8000/api/v1/health`
 
 For Windows-specific setup notes, see `docs/development/WINDOWS_SETUP.md`.
-For the concrete Stage B staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
+For the concrete staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
 
 ## Common Commands
 
@@ -84,6 +84,7 @@ Use these when you need deeper reference material:
 - `docs/prd/PLATFORM_PRD.md`
 - `docs/prd/STAGE_A_PLAN.md`
 - `docs/prd/STAGE_B_PLAN.md`
+- `docs/prd/STAGE_C_PLAN.md`
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
@@ -97,8 +98,9 @@ Use these when you need deeper reference material:
 
 The latest live state is maintained in `STATUS.md`.
 
-At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, and has completed the
-second `Stage B` wave under the three-track roadmap model in `docs/prd/STAGE_B_PLAN.md`.
+At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, has completed and closed
+`Stage B`, and is now executing the first `Stage C` wave under the three-track roadmap model in
+`docs/prd/STAGE_C_PLAN.md`.
 
 ## Runtime Services
 

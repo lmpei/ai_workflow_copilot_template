@@ -104,6 +104,62 @@ def test_create_get_and_list_tasks_for_workspace_member(
     assert listed_ids == [created_task["id"]]
 
 
+def test_get_task_serializes_internal_done_status_as_completed(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="status-owner@example.com", name="Status Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "research_summary",
+            "input": {"goal": "Summarize indexed workspace findings"},
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    created_task = create_response.json()
+
+    running_task = task_repository.update_task_status(
+        created_task["id"],
+        next_status="running",
+    )
+    assert running_task is not None
+    completed_task = task_repository.update_task_status(
+        created_task["id"],
+        next_status="done",
+        control_json={
+            "history": [
+                {
+                    "event": "completed",
+                    "state": "done",
+                    "at": "2026-03-22T00:00:00Z",
+                }
+            ]
+        },
+        output_json={"result": {"module_type": "research", "task_type": "research_summary"}},
+    )
+    assert completed_task is not None
+
+    get_response = client.get(f"/api/v1/tasks/{created_task['id']}", headers=headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["status"] == "completed"
+    assert get_response.json()["recovery_state"] == "completed"
+    assert get_response.json()["recovery_detail"]["state"] == "completed"
+    assert get_response.json()["recovery_detail"]["history"][-1]["state"] == "completed"
+
+
 
 def test_create_research_task_accepts_structured_input_payload(
     client: TestClient,
@@ -407,8 +463,8 @@ def test_create_task_rejects_unsupported_task_type(
         headers=headers,
     )
 
-    assert response.status_code == 400
-    assert "Unsupported task type" in response.json()["detail"]
+    assert response.status_code == 422
+    assert "task_type" in response.json()["detail"][0]["loc"]
 
 
 
@@ -683,3 +739,59 @@ def test_retry_failed_task_creates_linked_retry_attempt(
     )
     assert second_retry_response.status_code == 200
     assert second_retry_response.json()["id"] == retry_task["id"]
+def test_create_support_task_rejects_goal_alias_input(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-owner-goal@example.com", name="Support Owner Goal")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "ticket_summary",
+            "input": {"goal": "Customer cannot log in"},
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "customer_issue instead of goal" in response.json()["detail"]
+
+
+def test_create_job_task_rejects_goal_alias_input(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-owner-goal@example.com", name="Job Owner Goal")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "jd_summary",
+            "input": {"goal": "Platform engineer"},
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "target_role instead of goal" in response.json()["detail"]

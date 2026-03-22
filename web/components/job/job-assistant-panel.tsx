@@ -9,8 +9,15 @@ import {
   isApiClientError,
   listWorkspaceTasks,
 } from "../../lib/api";
-import type { JobArtifacts, JobTaskResult, JobTaskType } from "../../lib/job-types";
-import type { JsonObject, TaskRecord, Workspace } from "../../lib/types";
+import type {
+  JobArtifacts,
+  JobTaskInput,
+  JobTaskResult,
+  JobTaskType,
+  JsonObject,
+  TaskRecord,
+  Workspace,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -65,6 +72,13 @@ function parseJobTaskResult(task: TaskRecord): JobTaskResult | null {
   return result as unknown as JobTaskResult;
 }
 
+function parseJobTaskInput(task: TaskRecord): JobTaskInput {
+  const targetRole = task.input_json.target_role;
+  return {
+    target_role: typeof targetRole === "string" ? targetRole : undefined,
+  };
+}
+
 function parseEntryTaskTypes(workspace: Workspace | null): JobTaskType[] {
   const entryTaskTypes = workspace?.module_config_json.entry_task_types;
   if (!Array.isArray(entryTaskTypes)) {
@@ -86,7 +100,7 @@ function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
     pending: { label: "pending", color: "#92400e" },
     running: { label: "running", color: "#1d4ed8" },
-    done: { label: "done", color: "#15803d" },
+    completed: { label: "completed", color: "#15803d" },
     failed: { label: "failed", color: "#b91c1c" },
   };
   const style = statusStyles[status];
@@ -137,8 +151,8 @@ function renderArtifactStats(artifacts: JobArtifacts) {
 }
 
 function extractTargetRole(task: TaskRecord): string | null {
-  const targetRole = task.input_json.target_role;
-  return typeof targetRole === "string" && targetRole.length > 0 ? targetRole : null;
+  const input = parseJobTaskInput(task);
+  return input.target_role && input.target_role.length > 0 ? input.target_role : null;
 }
 
 export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProps) {
@@ -485,6 +499,3 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     </>
   );
 }
-
-
-

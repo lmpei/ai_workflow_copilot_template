@@ -19,6 +19,7 @@ def _validate_supported_module_type(module_type: str | None) -> str | None:
 
 class WorkspaceCreate(BaseModel):
     name: str
+    # Deprecated compatibility alias. New callers should send module_type only.
     type: str | None = None
     module_type: str | None = None
     description: str | None = None
@@ -45,6 +46,7 @@ class WorkspaceCreate(BaseModel):
 
 class WorkspaceUpdate(BaseModel):
     name: str | None = None
+    # Deprecated compatibility alias. New callers should send module_type only.
     type: str | None = None
     module_type: str | None = None
     description: str | None = None
@@ -70,7 +72,6 @@ class WorkspaceResponse(BaseModel):
     id: str
     owner_id: str
     name: str
-    type: str
     module_type: str
     description: str | None = None
     module_config_json: dict[str, object]
@@ -83,7 +84,6 @@ class WorkspaceResponse(BaseModel):
             id=workspace.id,
             owner_id=workspace.owner_id,
             name=workspace.name,
-            type=workspace.module_type,
             module_type=workspace.module_type,
             description=workspace.description,
             module_config_json=workspace.module_config_json,

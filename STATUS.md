@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-21
+- Last Updated: 2026-03-22
 
 ## Project Mode
 
@@ -14,21 +14,21 @@ Current state only. Keep this file short, current, and action-oriented.
 
 - Phase 5 baseline complete
 - Stage A complete and closed
-- Stage B first task wave complete
-- Stage B second task wave complete
+- Stage B complete and closed
+- Stage C first task wave active
 
 ## Current Objective
 
-- decide whether Stage B should close or continue into another bounded planning pass after completing release evidence and rehearsal records
+- resume the planned Stage C module-depth wave now that the global governance baseline initiated during Stage C early execution is complete
 
 ## Active Task
 
-- none; Stage B closeout or next-wave planning is pending
+- `tasks/stage-c-02-support-copilot-grounded-case-workflow.md`
 
 ## Verification Status
 
-- Summary: Stage B wave two is complete; Research briefs, operator-visible runtime recovery, and release evidence with rehearsal records are now in place.
-- Last Verified At: 2026-03-21
+- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution is complete through archived tasks `stage-c-06` through `stage-c-09`, and the next active execution task is now `stage-c-02`.
+- Last Verified At: 2026-03-22
 
 ## Current Blockers
 
@@ -37,20 +37,20 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Assumptions
 
 - module product names remain unchanged for now
-- `Research` is the Stage B primary track
-- `Platform Reliability` and `Delivery and Operations` are Stage B required parallel tracks
+- Research remains the reference workflow for deeper scenario-module work
+- Platform Reliability and Delivery and Operations remain required parallel tracks during Stage C
 
 ## Information Gaps
 
-- whether the next increment should close Stage B or define a third bounded Stage B wave
-- how far release evidence should go before it starts imitating a heavier production-operations system than the project actually has
-- whether the next planning pass should emphasize Research productization again or broaden Stage B delivery and runtime depth first
+- how far Support Copilot should move beyond grounded case summarization before it starts implying a deeper ticketing workflow than the project actually has
+- how far Job Assistant should move beyond structured hiring summaries before it starts implying a heavier recruiting workflow than the project actually has
+- what cross-module quality and demo baseline is enough before Stage C starts imitating heavier release governance than the project actually needs
 
 ## Ready Now
 
-1. decide whether Stage B should close or stay open for another bounded wave
-2. if Stage B stays open, define the next planning task and task stack
-3. keep delivery evidence lightweight and operator-facing rather than implying unsupported production guarantees
+1. execute `stage-c-02` to deepen Support Copilot into a clearer grounded case workflow
+2. queue `stage-c-03` to deepen Job Assistant into a clearer structured hiring workflow
+3. follow with `stage-c-04` to define cross-module quality and demo readiness across Research, Support, and Job
 
 ## Parked / Later
 
@@ -59,20 +59,20 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md`
+- `tasks/archive/stage-c/stage-c-09-maintainability-annotations-and-surface-hygiene.md`
 
 ## Recent Decisions
 
-- `DEC-2026-03-18-001` adopt a three-track roadmap model
 - `DEC-2026-03-18-007` close Stage A as complete
 - `DEC-2026-03-18-008` define Stage B as the next formal planning unit
-- `DEC-2026-03-18-009` use `stage-b-*` naming for Stage B tasks
-- `DEC-2026-03-18-010` define the first Stage B task wave
-- `DEC-2026-03-18-011` introduce the Stage B Research workbench and asset lifecycle
-- `DEC-2026-03-18-012` add Stage B recoverable runtime control actions for tasks and eval runs
-- `DEC-2026-03-18-013` standardize the Stage B staging rehearsal and handoff path
-- `DEC-2026-03-18-014` keep Stage B open and close only the first execution wave
-- `DEC-2026-03-18-015` define the second Stage B task wave as `stage-b-06`, `stage-b-07`, and `stage-b-08`
-- `DEC-2026-03-21-016` complete `stage-b-06` by adding reusable Research briefs and comparison in the Stage B workbench
-- `DEC-2026-03-21-017` complete `stage-b-07` by surfacing recovery history and operator-visible runtime detail for tasks and eval runs
 - `DEC-2026-03-21-018` complete `stage-b-08` by pairing the Stage B rehearsal path with release evidence records and reusable evidence templates
+- `DEC-2026-03-21-019` close Stage B as complete
+- `DEC-2026-03-21-020` define Stage C as the next formal planning unit
+- `DEC-2026-03-21-021` use `stage-c-*` naming for Stage C tasks
+- `DEC-2026-03-21-022` define the first Stage C task wave as `stage-c-02`, `stage-c-03`, and `stage-c-04`
+- `DEC-2026-03-22-023` define the global governance baseline initiated during Stage C early execution and execute it through `stage-c-06` through `stage-c-09`
+- `DEC-2026-03-22-024` canonicalize module contracts and lifecycle terminology across backend and frontend
+- `DEC-2026-03-22-025` complete `stage-c-06` and move the active governance step to `stage-c-07`
+- `DEC-2026-03-22-026` complete `stage-c-07`, make `server/app/schemas/scenario.py` the canonical scenario registry, and move the active governance step to `stage-c-08`
+- `DEC-2026-03-22-027` complete `stage-c-08`, centralize runtime-control transitions, move Research task execution into an explicit extension, and move the active governance step to `stage-c-09`
+- `DEC-2026-03-22-028` complete `stage-c-09`, close the global governance baseline, and return the active Stage C task to `stage-c-02`

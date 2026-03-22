@@ -11,10 +11,9 @@ export const scenarioTaskTypes = [
 export const taskTypes = scenarioTaskTypes;
 
 export type ModuleType = (typeof moduleTypes)[number];
-export type WorkspaceType = ModuleType;
 export type TaskType = (typeof scenarioTaskTypes)[number];
-export type ScenarioTaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
+export type TaskStatus = "pending" | "running" | "completed" | "failed";
 
 export type RecoveryHistoryEntryRecord = {
   event: string;
@@ -51,13 +50,39 @@ export type ScenarioEvidenceItem = {
 
 export type ScenarioTaskResult = {
   module_type: ModuleType;
-  task_type: ScenarioTaskType;
+  task_type: TaskType;
   title: string;
   summary: string;
   highlights: string[];
   evidence: ScenarioEvidenceItem[];
   artifacts: JsonObject;
   metadata: JsonObject;
+};
+
+export type ScenarioTaskDefinitionRecord = {
+  task_type: TaskType;
+  label: string;
+  input_field: string;
+  eval_prompt_placeholder: string;
+};
+
+export type ScenarioModuleRecord = {
+  module_type: ModuleType;
+  title: string;
+  short_label: string;
+  description: string;
+  work_object: string;
+  primary_output: string;
+  core_capabilities: string[];
+  not_responsible_for: string[];
+  entry_task_types: TaskType[];
+  task_labels: Partial<Record<TaskType, string>>;
+  eval_input_label: string;
+  eval_prompt_field: string;
+  default_eval_task_type: TaskType;
+  quality_baseline: string;
+  pass_threshold: number;
+  tasks: ScenarioTaskDefinitionRecord[];
 };
 
 export type ResearchTaskType = Extract<TaskType, "research_summary" | "workspace_report">;
@@ -94,6 +119,9 @@ export type ResearchLineage = {
   continuation_notes?: string;
 };
 export type SupportTaskType = Extract<TaskType, "ticket_summary" | "reply_draft">;
+export type SupportTaskInput = {
+  customer_issue?: string;
+};
 
 export type ResearchDocumentSummary = {
   id: string;
@@ -265,6 +293,27 @@ export type SupportTaskResult = ScenarioTaskResult & {
   artifacts: SupportArtifacts;
 };
 
+export type JobTaskType = Extract<TaskType, "jd_summary" | "resume_match">;
+export type JobTaskInput = {
+  target_role?: string;
+};
+
+export type JobArtifacts = {
+  document_count: number;
+  match_count: number;
+  documents: ResearchDocumentSummary[];
+  matches: ResearchMatch[];
+  tool_call_ids: string[];
+  fit_signal?: string | null;
+  recommended_next_step?: string | null;
+};
+
+export type JobTaskResult = ScenarioTaskResult & {
+  module_type: "job";
+  task_type: JobTaskType;
+  artifacts: JobArtifacts;
+};
+
 export type User = {
   id: string;
   email: string;
@@ -296,7 +345,6 @@ export type Workspace = {
   id: string;
   owner_id: string;
   name: string;
-  type?: WorkspaceType;
   module_type: ModuleType;
   description: string | null;
   module_config_json: JsonObject;
@@ -462,7 +510,7 @@ export type TaskRecord = {
   id: string;
   workspace_id: string;
   task_type: TaskType;
-  status: "pending" | "running" | "done" | "failed";
+  status: TaskStatus;
   recovery_state: string;
   recovery_detail: RecoveryDetailRecord;
   created_by: string;

@@ -4,12 +4,19 @@ from pydantic import ValidationError
 
 from app.core.runtime_control import (
     CONTROL_STATE_CANCELLED,
-    build_cancel_requested_control,
-    build_cancelled_control,
     build_retry_attempt_control,
     build_retry_created_control,
+    get_linked_retry_target_id,
+    is_cancel_recorded,
+    resolve_cancel_transition,
 )
 from app.repositories import task_repository, workspace_repository
+from app.schemas.scenario import (
+    MODULE_TYPE_JOB,
+    MODULE_TYPE_RESEARCH,
+    MODULE_TYPE_SUPPORT,
+    get_scenario_task_module_type,
+)
 from app.schemas.task import TaskControlRequest, TaskCreate, TaskResponse
 from app.services.job_assistant_service import (
     JobAssistantContractError,
@@ -28,19 +35,22 @@ from app.services.support_copilot_service import (
 )
 from app.services.task_execution_service import TaskExecutionError, enqueue_task_execution
 
-RESEARCH_TASK_TYPES = {
-    "research_summary",
-    "workspace_report",
+MODULE_CONTRACT_VALIDATORS = {
+    MODULE_TYPE_RESEARCH: validate_research_task_contract,
+    MODULE_TYPE_SUPPORT: validate_support_task_contract,
+    MODULE_TYPE_JOB: validate_job_task_contract,
 }
-SUPPORT_TASK_TYPES = {
-    "ticket_summary",
-    "reply_draft",
+MODULE_INPUT_NORMALIZERS = {
+    MODULE_TYPE_RESEARCH: normalize_research_task_input,
+    MODULE_TYPE_SUPPORT: normalize_support_task_input,
+    MODULE_TYPE_JOB: normalize_job_task_input,
 }
-JOB_TASK_TYPES = {
-    "jd_summary",
-    "resume_match",
-}
-SUPPORTED_TASK_TYPES = RESEARCH_TASK_TYPES | SUPPORT_TASK_TYPES | JOB_TASK_TYPES
+MODULE_CONTRACT_ERRORS = (
+    ResearchAssistantContractError,
+    SupportCopilotContractError,
+    JobAssistantContractError,
+)
+MODULE_VALIDATION_ERRORS = MODULE_CONTRACT_ERRORS + (ValidationError,)
 TASK_CANCELLED_ERROR_MESSAGE = "Task cancelled by operator"
 
 
@@ -60,31 +70,27 @@ class TaskControlError(Exception):
     pass
 
 
+def _resolve_task_module_type(task_type: str) -> str:
+    try:
+        return get_scenario_task_module_type(task_type)
+    except ValueError as error:
+        raise TaskValidationError(str(error)) from error
+
+
 def _normalize_task_input(
     *,
     workspace_module_type: str,
     task_type: str,
     input_json: dict[str, object],
 ) -> dict[str, object]:
-    if task_type in RESEARCH_TASK_TYPES:
-        validate_research_task_contract(
-            workspace_module_type=workspace_module_type,
-            task_type=task_type,
-        )
-        return normalize_research_task_input(input_json)
-    if task_type in SUPPORT_TASK_TYPES:
-        validate_support_task_contract(
-            workspace_module_type=workspace_module_type,
-            task_type=task_type,
-        )
-        return normalize_support_task_input(input_json)
-    if task_type in JOB_TASK_TYPES:
-        validate_job_task_contract(
-            workspace_module_type=workspace_module_type,
-            task_type=task_type,
-        )
-        return normalize_job_task_input(input_json)
-    raise TaskValidationError(f"Unsupported task type: {task_type}")
+    task_module_type = _resolve_task_module_type(task_type)
+    validate_contract = MODULE_CONTRACT_VALIDATORS[task_module_type]
+    normalize_input = MODULE_INPUT_NORMALIZERS[task_module_type]
+    validate_contract(
+        workspace_module_type=workspace_module_type,
+        task_type=task_type,
+    )
+    return normalize_input(input_json)
 
 
 def _validate_research_task_lineage(
@@ -106,12 +112,12 @@ def _validate_research_task_lineage(
         parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
         if parent_task is None or parent_task.workspace_id != workspace_id:
             raise TaskValidationError("Parent research task not found in this workspace")
-        if parent_task.task_type not in RESEARCH_TASK_TYPES:
+        if _resolve_task_module_type(parent_task.task_type) != MODULE_TYPE_RESEARCH:
             raise TaskValidationError("Parent task must be a completed Research task")
         if parent_task.status != "done":
             raise TaskValidationError("Parent research task must be completed before follow-up")
         result = parent_task.output_json.get("result")
-        if not isinstance(result, dict) or result.get("module_type") != "research":
+        if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_RESEARCH:
             raise TaskValidationError("Parent research task does not contain a structured Research result")
 
         if isinstance(research_asset_id, str) and research_asset_id:
@@ -143,9 +149,7 @@ async def create_task(
     payload: TaskCreate,
 ) -> TaskResponse:
     workspace = _get_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
-
-    if payload.task_type not in SUPPORTED_TASK_TYPES:
-        raise TaskValidationError(f"Unsupported task type: {payload.task_type}")
+    task_module_type = _resolve_task_module_type(payload.task_type)
 
     try:
         normalized_input = _normalize_task_input(
@@ -153,15 +157,10 @@ async def create_task(
             task_type=payload.task_type,
             input_json=payload.input,
         )
-    except (
-        ResearchAssistantContractError,
-        SupportCopilotContractError,
-        JobAssistantContractError,
-        ValidationError,
-    ) as error:
+    except MODULE_VALIDATION_ERRORS as error:
         raise TaskValidationError(str(error)) from error
 
-    if payload.task_type in RESEARCH_TASK_TYPES:
+    if task_module_type == MODULE_TYPE_RESEARCH:
         _validate_research_task_lineage(
             workspace_id=workspace_id,
             user_id=user_id,
@@ -211,36 +210,27 @@ def cancel_task(
 ) -> TaskResponse:
     task = _get_task_or_raise(task_id=task_id, user_id=user_id)
     reason = payload.reason if payload is not None else None
-    control_state = task.control_json.get("state") if isinstance(task.control_json, dict) else None
 
-    if control_state in {"cancel_requested", CONTROL_STATE_CANCELLED}:
+    if is_cancel_recorded(task.control_json):
         return TaskResponse.from_model(task)
 
-    if task.status == "pending":
-        updated_task = task_repository.update_task_status(
-            task.id,
-            next_status="failed",
-            control_json=build_cancelled_control(
-                current_control_json=task.control_json,
-                user_id=user_id,
-                reason=reason,
-                extra_json={"cancelled_from_status": "pending"},
-            ),
-            error_message=TASK_CANCELLED_ERROR_MESSAGE,
+    try:
+        cancel_transition = resolve_cancel_transition(
+            current_status=task.status,
+            current_control_json=task.control_json,
+            user_id=user_id,
+            reason=reason,
+            cancelled_error_message=TASK_CANCELLED_ERROR_MESSAGE,
         )
-    elif task.status == "running":
-        updated_task = task_repository.update_task_status(
-            task.id,
-            next_status="running",
-            control_json=build_cancel_requested_control(
-                current_control_json=task.control_json,
-                user_id=user_id,
-                reason=reason,
-                extra_json={"cancel_requested_from_status": "running"},
-            ),
-        )
-    else:
-        raise TaskControlError("Only pending or running tasks can be cancelled")
+    except ValueError as error:
+        raise TaskControlError(str(error).replace("runtime items", "tasks")) from error
+
+    updated_task = task_repository.update_task_status(
+        task.id,
+        next_status=cancel_transition.next_status,
+        control_json=cancel_transition.control_json,
+        error_message=cancel_transition.error_message,
+    )
 
     if updated_task is None:
         raise TaskAccessError("Task not found")
@@ -259,7 +249,10 @@ async def retry_task(
     if task.status != "failed":
         raise TaskControlError("Only failed tasks can be retried")
 
-    existing_retry_task_id = task.control_json.get("target_task_id") if isinstance(task.control_json, dict) else None
+    existing_retry_task_id = get_linked_retry_target_id(
+        task.control_json,
+        target_id_key="target_task_id",
+    )
     if isinstance(existing_retry_task_id, str) and existing_retry_task_id:
         existing_retry_task = task_repository.get_task_for_user(existing_retry_task_id, user_id)
         if existing_retry_task is not None:

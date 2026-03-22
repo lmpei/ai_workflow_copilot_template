@@ -1,3 +1,10 @@
+"""Placeholder agent routes.
+
+The live platform executes scenario work through task-scoped worker flows.
+Direct durable agent APIs are intentionally left scaffolded until the runtime
+contract for standalone agent runs exists.
+"""
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
@@ -18,7 +25,10 @@ async def run_agent(workspace_id: str, payload: AgentRunRequest) -> dict:
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail={
             "status": "scaffolded",
-            "message": "Durable LangGraph execution is planned for Phase 3 Tasks + Agents.",
+            "message": (
+                "This route is a placeholder. The current platform supports "
+                "task-scoped agent execution only; direct durable agent runs are not implemented."
+            ),
             "workspace_id": workspace_id,
             "agent_name": payload.agent_name,
             "preview": preview,
@@ -32,7 +42,10 @@ async def get_agent_run(run_id: str) -> dict:
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail={
             "status": "scaffolded",
-            "message": "Agent run history is planned for Phase 3 with persistence and tracing.",
+            "message": (
+                "This route is a placeholder. Agent run history is available "
+                "only through task-scoped execution records today."
+            ),
             "run_id": run_id,
         },
     )

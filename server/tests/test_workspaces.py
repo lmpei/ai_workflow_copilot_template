@@ -45,8 +45,8 @@ def test_workspace_crud_requires_auth_and_persists_owner(client: TestClient) -> 
     created = create_response.json()
     workspace_id = created["id"]
     assert created["name"] == "Research Demo"
-    assert created["type"] == "research"
     assert created["module_type"] == "research"
+    assert "type" not in created
     assert created["module_config_json"]["result_type"] == "research_report"
     assert created["owner_id"] == auth["user_id"]
 
@@ -143,8 +143,8 @@ def test_workspace_module_contract_can_be_switched_with_shared_defaults(client: 
     assert patch_response.status_code == 200
 
     updated = patch_response.json()
-    assert updated["type"] == "support"
     assert updated["module_type"] == "support"
+    assert "type" not in updated
     assert updated["module_config_json"]["entry_task_types"] == [
         "ticket_summary",
         "reply_draft",
@@ -172,8 +172,8 @@ def test_workspace_update_accepts_deprecated_type_alias(client: TestClient) -> N
     assert patch_response.status_code == 200
 
     updated = patch_response.json()
-    assert updated["type"] == "job"
     assert updated["module_type"] == "job"
+    assert "type" not in updated
     assert updated["module_config_json"]["result_type"] == "job_match_summary"
 
 

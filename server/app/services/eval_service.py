@@ -1,9 +1,10 @@
 from app.core.runtime_control import (
     CONTROL_STATE_CANCELLED,
-    build_cancel_requested_control,
-    build_cancelled_control,
     build_retry_attempt_control,
     build_retry_created_control,
+    get_linked_retry_target_id,
+    is_cancel_recorded,
+    resolve_cancel_transition,
 )
 from app.models.workspace import Workspace
 from app.repositories import eval_repository, workspace_repository
@@ -191,37 +192,27 @@ def cancel_eval_run(
         raise EvalAccessError("Eval run not found")
 
     reason = payload.reason if payload is not None else None
-    control_state = eval_run.control_json.get("state") if isinstance(eval_run.control_json, dict) else None
-    if control_state in {"cancel_requested", CONTROL_STATE_CANCELLED}:
+    if is_cancel_recorded(eval_run.control_json):
         return EvalRunResponse.from_model(eval_run)
 
-    if eval_run.status == "pending":
-        updated_eval_run = eval_repository.update_eval_run_status(
-            eval_run.id,
-            next_status="failed",
-            summary_json=eval_run.summary_json,
-            control_json=build_cancelled_control(
-                current_control_json=eval_run.control_json,
-                user_id=user_id,
-                reason=reason,
-                extra_json={"cancelled_from_status": "pending"},
-            ),
-            error_message=EVAL_RUN_CANCELLED_ERROR_MESSAGE,
+    try:
+        cancel_transition = resolve_cancel_transition(
+            current_status=eval_run.status,
+            current_control_json=eval_run.control_json,
+            user_id=user_id,
+            reason=reason,
+            cancelled_error_message=EVAL_RUN_CANCELLED_ERROR_MESSAGE,
         )
-    elif eval_run.status == "running":
-        updated_eval_run = eval_repository.update_eval_run_status(
-            eval_run.id,
-            next_status="running",
-            summary_json=eval_run.summary_json,
-            control_json=build_cancel_requested_control(
-                current_control_json=eval_run.control_json,
-                user_id=user_id,
-                reason=reason,
-                extra_json={"cancel_requested_from_status": "running"},
-            ),
-        )
-    else:
-        raise EvalControlError("Only pending or running eval runs can be cancelled")
+    except ValueError as error:
+        raise EvalControlError(str(error).replace("runtime items", "eval runs")) from error
+
+    updated_eval_run = eval_repository.update_eval_run_status(
+        eval_run.id,
+        next_status=cancel_transition.next_status,
+        summary_json=eval_run.summary_json,
+        control_json=cancel_transition.control_json,
+        error_message=cancel_transition.error_message,
+    )
 
     if updated_eval_run is None:
         raise EvalAccessError("Eval run not found")
@@ -242,7 +233,10 @@ async def retry_eval_run(
         raise EvalControlError("Only failed eval runs can be retried")
 
     reason = payload.reason if payload is not None else None
-    existing_retry_eval_run_id = eval_run.control_json.get("target_eval_run_id") if isinstance(eval_run.control_json, dict) else None
+    existing_retry_eval_run_id = get_linked_retry_target_id(
+        eval_run.control_json,
+        target_id_key="target_eval_run_id",
+    )
     if isinstance(existing_retry_eval_run_id, str) and existing_retry_eval_run_id:
         existing_retry_eval_run = eval_repository.get_eval_run_for_user(existing_retry_eval_run_id, user_id)
         if existing_retry_eval_run is not None:

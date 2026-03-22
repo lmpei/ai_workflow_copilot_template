@@ -1,5 +1,7 @@
 ﻿from typing import TypedDict, cast
 
+"""Workspace agent graphs built from one shared execution skeleton."""
+
 from langgraph.graph import END, START, StateGraph
 
 from app.agents.tool_registry import invoke_tool
@@ -154,15 +156,22 @@ def _compose_job_result(state: WorkspaceJobState) -> WorkspaceJobState:
     }
 
 
-def build_workspace_research_graph():
-    workflow = StateGraph(WorkspaceResearchState)
-    workflow.add_node("plan_research", _plan_goal)
+def _build_workspace_graph(
+    *,
+    state_schema,
+    plan_step_name: str,
+    compose_result,
+):
+    # Research, Support, and Job share the same graph skeleton; only the
+    # final composition step and plan-step label differ by module.
+    workflow = StateGraph(state_schema)
+    workflow.add_node(plan_step_name, _plan_goal)
     workflow.add_node("list_workspace_documents", _list_workspace_documents)
     workflow.add_node("search_documents", _search_documents)
-    workflow.add_node("compose_result", _compose_research_result)
+    workflow.add_node("compose_result", compose_result)
 
-    workflow.add_edge(START, "plan_research")
-    workflow.add_edge("plan_research", "list_workspace_documents")
+    workflow.add_edge(START, plan_step_name)
+    workflow.add_edge(plan_step_name, "list_workspace_documents")
     workflow.add_conditional_edges(
         "list_workspace_documents",
         _should_search,
@@ -175,91 +184,69 @@ def build_workspace_research_graph():
     workflow.add_edge("compose_result", END)
     return workflow.compile()
 
+
+def build_workspace_research_graph():
+    return _build_workspace_graph(
+        state_schema=WorkspaceResearchState,
+        plan_step_name="plan_research",
+        compose_result=_compose_research_result,
+    )
 
 
 def build_workspace_support_graph():
-    workflow = StateGraph(WorkspaceSupportState)
-    workflow.add_node("plan_support", _plan_goal)
-    workflow.add_node("list_workspace_documents", _list_workspace_documents)
-    workflow.add_node("search_documents", _search_documents)
-    workflow.add_node("compose_result", _compose_support_result)
-
-    workflow.add_edge(START, "plan_support")
-    workflow.add_edge("plan_support", "list_workspace_documents")
-    workflow.add_conditional_edges(
-        "list_workspace_documents",
-        _should_search,
-        {
-            "search_documents": "search_documents",
-            "compose_result": "compose_result",
-        },
+    return _build_workspace_graph(
+        state_schema=WorkspaceSupportState,
+        plan_step_name="plan_support",
+        compose_result=_compose_support_result,
     )
-    workflow.add_edge("search_documents", "compose_result")
-    workflow.add_edge("compose_result", END)
-    return workflow.compile()
 
 
 def build_workspace_job_graph():
-    workflow = StateGraph(WorkspaceJobState)
-    workflow.add_node("plan_job", _plan_goal)
-    workflow.add_node("list_workspace_documents", _list_workspace_documents)
-    workflow.add_node("search_documents", _search_documents)
-    workflow.add_node("compose_result", _compose_job_result)
-
-    workflow.add_edge(START, "plan_job")
-    workflow.add_edge("plan_job", "list_workspace_documents")
-    workflow.add_conditional_edges(
-        "list_workspace_documents",
-        _should_search,
-        {
-            "search_documents": "search_documents",
-            "compose_result": "compose_result",
-        },
+    return _build_workspace_graph(
+        state_schema=WorkspaceJobState,
+        plan_step_name="plan_job",
+        compose_result=_compose_job_result,
     )
-    workflow.add_edge("search_documents", "compose_result")
-    workflow.add_edge("compose_result", END)
-    return workflow.compile()
 
+
+def _build_workspace_preview(
+    *,
+    agent_name: str,
+    goal: str,
+    plan_step_name: str,
+) -> dict[str, object]:
+    return {
+        "agent_name": agent_name,
+        "goal": goal,
+        "steps": [
+            plan_step_name,
+            "list_workspace_documents",
+            "search_documents",
+            "compose_result",
+        ],
+        "status": "preview",
+    }
 
 
 def build_workspace_research_preview(goal: str) -> dict[str, object]:
-    return {
-        "agent_name": WORKSPACE_RESEARCH_AGENT_NAME,
-        "goal": goal,
-        "steps": [
-            "plan_research",
-            "list_workspace_documents",
-            "search_documents",
-            "compose_result",
-        ],
-        "status": "preview",
-    }
-
+    return _build_workspace_preview(
+        agent_name=WORKSPACE_RESEARCH_AGENT_NAME,
+        goal=goal,
+        plan_step_name="plan_research",
+    )
 
 
 def build_workspace_support_preview(goal: str) -> dict[str, object]:
-    return {
-        "agent_name": WORKSPACE_SUPPORT_AGENT_NAME,
-        "goal": goal,
-        "steps": [
-            "plan_support",
-            "list_workspace_documents",
-            "search_documents",
-            "compose_result",
-        ],
-        "status": "preview",
-    }
+    return _build_workspace_preview(
+        agent_name=WORKSPACE_SUPPORT_AGENT_NAME,
+        goal=goal,
+        plan_step_name="plan_support",
+    )
 
 
 def build_workspace_job_preview(goal: str) -> dict[str, object]:
-    return {
-        "agent_name": WORKSPACE_JOB_AGENT_NAME,
-        "goal": goal,
-        "steps": [
-            "plan_job",
-            "list_workspace_documents",
-            "search_documents",
-            "compose_result",
-        ],
-        "status": "preview",
-    }
+    return _build_workspace_preview(
+        agent_name=WORKSPACE_JOB_AGENT_NAME,
+        goal=goal,
+        plan_step_name="plan_job",
+    )

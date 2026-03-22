@@ -4,14 +4,10 @@ from app.schemas.job import JobArtifacts, JobAssistantResult, JobTaskInput, JobT
 from app.schemas.scenario import (
     MODULE_TYPE_JOB,
     ScenarioEvidenceItem,
+    get_scenario_task_module_type,
     get_supported_scenario_task_types,
 )
 from app.schemas.tool import SearchDocumentMatch, ToolDocumentSummary
-
-SUPPORTED_JOB_TASK_TYPES = {
-    "jd_summary",
-    "resume_match",
-}
 
 _JOB_TASK_TITLES = {
     "jd_summary": "Job Description Summary",
@@ -29,7 +25,7 @@ def validate_job_task_contract(*, workspace_module_type: str, task_type: str) ->
         raise JobAssistantContractError(
             f"Task type {task_type} is not supported for workspace module {workspace_module_type}",
         )
-    if task_type not in SUPPORTED_JOB_TASK_TYPES:
+    if get_scenario_task_module_type(task_type) != MODULE_TYPE_JOB:
         raise JobAssistantContractError(
             f"Job Assistant does not support task type: {task_type}",
         )
@@ -41,8 +37,13 @@ def validate_job_task_contract(*, workspace_module_type: str, task_type: str) ->
 
 def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, object]:
     raw_input = input_json or {}
+    if raw_input.get("target_role") is None and isinstance(raw_input.get("goal"), str):
+        raise JobAssistantContractError(
+            "Job task input must use target_role instead of goal",
+        )
+
     payload_input = {
-        "target_role": raw_input.get("target_role") or raw_input.get("goal"),
+        "target_role": raw_input.get("target_role"),
     }
     try:
         payload = JobTaskInput.model_validate(payload_input)

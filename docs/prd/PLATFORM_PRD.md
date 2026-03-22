@@ -114,12 +114,13 @@ After the Phase 5 baseline, roadmap planning shifts from a purely phase-based bu
 - `Delivery and Operations`
 
 The first formal planning unit under that model was `Stage A`, documented in `docs/prd/STAGE_A_PLAN.md`.
-The active formal planning unit is now `Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`.
+`Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, and has completed the
-second `Stage B` wave.
+The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, has completed and closed
+`Stage B`, and is executing the first `Stage C` wave.
 
 The current implemented platform increment includes:
 
@@ -149,8 +150,10 @@ The repository does not yet implement:
 - deeper scenario-specific product workflows beyond the current Research MVP and Support/Job skeletons
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
-The active formal planning unit is `Stage B: Research Workflow Productization With Recoverable Runtime`, documented in
-`docs/prd/STAGE_B_PLAN.md`.
+`Stage B: Research Workflow Productization With Recoverable Runtime`, documented in `docs/prd/STAGE_B_PLAN.md`, is
+complete and closed.
+The active formal planning unit is `Stage C: Multi-Module Workflow Expansion With Cross-Module Readiness`, documented
+in `docs/prd/STAGE_C_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and
@@ -175,3 +178,9 @@ The second executable Stage B wave is now complete as:
 - `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md` (complete)
 - `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (complete)
 - `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md` (complete)
+
+The first executable Stage C wave is now active as:
+
+- `tasks/stage-c-02-support-copilot-grounded-case-workflow.md` (active)
+- `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md` (active)
+- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` (active)

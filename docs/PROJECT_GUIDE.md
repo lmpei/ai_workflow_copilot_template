@@ -33,7 +33,9 @@ Use these files for detailed reference material:
 - `docs/prd/STAGE_A_PLAN.md`
   - closed Stage A planning document derived from the post-Phase-5 roadmap model
 - `docs/prd/STAGE_B_PLAN.md`
-  - active Stage B planning document for research workflow productization and recoverable runtime
+  - closed Stage B planning document for research workflow productization and recoverable runtime
+- `docs/prd/STAGE_C_PLAN.md`
+  - active Stage C planning document for multi-module workflow expansion and cross-module readiness
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
 - `docs/development/DELIVERY_BASELINE.md`
@@ -48,6 +50,8 @@ Use these files for detailed reference material:
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
   - human review checklist before merge
+- `docs/review/STAGE_C_GOVERNANCE_DIAGNOSIS.md`
+  - global governance baseline initiated during Stage C early execution
 - `docs/archive/`
   - completed or superseded long-form docs
 
@@ -65,8 +69,9 @@ Use these files for execution and history:
   - completed tasks and execution history
 
 Stage A work should use `stage-a-*` task naming and remain archived under `tasks/archive/stage-a/`.
-Stage B work should use `stage-b-*` task naming while active under `tasks/`, then archive under
-`tasks/archive/stage-b/`.
+Stage B work should remain archived under `tasks/archive/stage-b/`.
+Stage C work should use `stage-c-*` task naming while active under `tasks/`, then archive under
+`tasks/archive/stage-c/`.
 Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 
 ### Workflow and Prompting
@@ -133,6 +138,51 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - route-facing business panels rendered directly by page shells
 - `*Placeholder`
   - draft or reserved UI not yet on the live path
+
+## Placeholder Surfaces
+
+- `server/app/workers/task_worker.py`
+  - live ARQ entrypoint bundle for task and eval execution
+- `server/app/workers/report_worker.py`, `classification_worker.py`, `ingest_worker.py`
+  - scaffold helpers only; not registered in `WorkerSettings`
+- `server/app/api/routes/agents.py`
+  - explicit `501` scaffold; durable standalone agent APIs are not implemented yet
+- `web/components/tasks/task-manager.tsx`
+  - legacy Research-only component that is not on the live route path
+- `web/lib/navigation.ts`
+  - navigation-only helpers; module registry truth is server-derived
+
+## Global Governance Baseline
+
+- canonical workspace identity field:
+  - `module_type`
+- deprecated workspace request alias accepted only for backward compatibility:
+  - `type`
+- canonical task selector field across backend and frontend:
+  - `task_type`
+- canonical externally visible task success state:
+  - `completed`
+- internal persistence status may still use:
+  - `done`
+- unsupported `task_type` values are now rejected at schema-validation time before service dispatch
+- scenario-specific input defaults should use:
+  - Research: `goal`
+  - Support: `customer_issue`
+  - Job: `target_role`
+- canonical scenario registry ownership now lives in:
+  - `server/app/schemas/scenario.py`
+- frontend scenario metadata should be derived from:
+  - `/api/v1/scenario-modules`
+- repositories must not depend on service-layer contract resolution:
+  - normalize module contracts in services, then persist normalized values in repositories
+- runtime-control transitions should be derived from:
+  - `server/app/core/runtime_control.py`
+- generic task lifecycle should stay in:
+  - `server/app/services/task_execution_service.py`
+- module-specific execution hooks should live in:
+  - `server/app/services/task_execution_extensions.py`
+- workspace agent graphs should share one execution skeleton in:
+  - `server/app/agents/graph.py`
 
 ## Stage A Research Contract
 
@@ -291,3 +341,6 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
 - the original failed record keeps a link to the retry target, and the retry attempt keeps a link back to the source record
 - the Research and eval surfaces now render operator-visible recovery history instead of requiring manual inspection of raw `control_json`
 - Stage B still does not claim full checkpoint/resume support; this increment improves inspectability and control lineage, not durable resume semantics
+
+
+

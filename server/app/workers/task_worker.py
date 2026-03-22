@@ -1,3 +1,9 @@
+"""Live ARQ worker entrypoints.
+
+This module is the active async boundary for task and eval execution. Other
+files under server/app/workers are lightweight scaffolds unless they are wired
+into WorkerSettings here.
+"""
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
 from app.services.eval_execution_service import run_eval_execution

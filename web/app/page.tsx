@@ -1,11 +1,23 @@
 import Link from "next/link";
 
 import SectionCard from "../components/ui/section-card";
-import { getHealth } from "../lib/api";
-import { platformModules } from "../lib/navigation";
+import { getHealth, getScenarioModules } from "../lib/api";
+import { platformCoreModule } from "../lib/navigation";
 
 export default async function Home() {
-  const health = await getHealth();
+  const [health, scenarioModulesResponse] = await Promise.all([
+    getHealth(),
+    getScenarioModules(),
+  ]);
+  const scenarioModules = Array.isArray(scenarioModulesResponse) ? scenarioModulesResponse : [];
+  const platformModules = [
+    platformCoreModule,
+    ...scenarioModules.map((module) => ({
+      title: module.title,
+      description: module.description,
+    })),
+  ];
+
   return (
     <main>
       <h1>AI Workflow Copilot</h1>

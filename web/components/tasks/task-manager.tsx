@@ -1,3 +1,4 @@
+// Legacy research-only task manager. This component is not on the live route path and still reflects the older freeform-goal Research surface.
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -44,7 +45,7 @@ function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
     pending: { label: "pending", color: "#92400e" },
     running: { label: "running", color: "#1d4ed8" },
-    done: { label: "done", color: "#15803d" },
+    completed: { label: "completed", color: "#15803d" },
     failed: { label: "failed", color: "#b91c1c" },
   };
   const style = statusStyles[status];
@@ -77,7 +78,7 @@ function extractSummary(task: TaskRecord): string | null {
   return typeof summary === "string" && summary.length > 0 ? summary : null;
 }
 
-export default function TaskManager({ workspaceId }: TaskManagerProps) {
+export default function LegacyTaskManager({ workspaceId }: TaskManagerProps) {
   const { session, isReady } = useAuthSession();
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -206,8 +207,8 @@ export default function TaskManager({ workspaceId }: TaskManagerProps) {
   return (
     <>
       <SectionCard
-        title="Create task"
-        description={`Workspace: ${workspaceId}. Phase 3 tasks enqueue agent runs in Redis-backed workers.`}
+        title="Legacy task form"
+        description={`Workspace: ${workspaceId}. This legacy component is not on the live route path and still reflects the older Research-only task flow.`}
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 640 }}>
           <label style={{ display: "grid", gap: 6 }}>

@@ -335,3 +335,149 @@ Append-only log. Add new entries at the bottom.
 - Impact: Stage B rehearsals now generate both release evidence and handoff artifacts, and the delivery docs now define what should be preserved after a rehearsal.
 - Related Task: `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-019
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human
+- Topic: Stage B closeout
+- Context: both Stage B execution waves are complete across Research workflow productization, recoverable runtime, and release evidence capture
+- Choice: close Stage B as complete instead of adding a default third Stage B wave
+- Why: the Stage B success criteria are now satisfied, and future work should move into a new planning unit rather than extending Stage B without a fresh boundary
+- Impact: `STATUS.md`, the PRD docs, and task planning move forward under Stage C
+- Related Task: `tasks/archive/stage-c/stage-c-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-020
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human
+- Topic: next formal planning unit after Stage B
+- Context: the project needs a post-Stage-B planning unit that broadens deeper workflow value beyond Research while preserving the shared runtime and delivery discipline established so far
+- Choice: create `docs/prd/STAGE_C_PLAN.md` for `Stage C: Multi-Module Workflow Expansion With Cross-Module Readiness`
+- Why: the next work is broader than a single task and needs a formal planning document that bridges Support depth, Job depth, and cross-module readiness
+- Impact: Stage C becomes the active planning document and reference point for the next task wave
+- Related Task: `tasks/archive/stage-c/stage-c-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-021
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human
+- Topic: Stage C task naming
+- Context: Stage C begins after Stage B closeout and should be clearly distinguishable from both earlier stage tasks and the older phase archive
+- Choice: use `stage-c-*` naming for Stage C tasks
+- Why: the repository should preserve a visible planning boundary between Stage B and Stage C execution work
+- Impact: new Stage C task specs now live under `tasks/` as `stage-c-*`, while completed work archives under `tasks/archive/stage-c/`
+- Related Task: `tasks/archive/stage-c/stage-c-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-21-022
+- Date: 2026-03-21
+- Status: Confirmed
+- Source: Human
+- Topic: first Stage C task wave
+- Context: Stage C has been fixed in text and now needs an initial executable wave that broadens scenario depth while tightening cross-module readiness
+- Choice: define the first Stage C wave as:
+  - `tasks/stage-c-02-support-copilot-grounded-case-workflow.md`
+  - `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md`
+  - `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md`
+- Why: this keeps Research as the reference workflow while explicitly pairing deeper Support and Job surfaces with the next shared quality and delivery increment
+- Impact: `stage-c-02` becomes the next active execution task and Stage C gains an explicit first task wave instead of drifting into ad hoc work
+- Related Task: `tasks/archive/stage-c/stage-c-01-task-stack-planning.md`
+- Supersedes:
+## Decision Entry
+
+- ID: DEC-2026-03-22-023
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Analysis
+- Topic: global governance baseline initiated during Stage C early execution
+- Context: Stage C early execution exposed duplicated module contracts, raw JSON coupling, eroded boundaries, and Research-biased shared execution that affect the whole repository rather than only one Stage C wave
+- Choice: record the diagnosis in `docs/review/STAGE_C_GOVERNANCE_DIAGNOSIS.md` and execute the resulting global governance baseline through:
+  - `tasks/stage-c-06-canonical-module-contracts-and-terminology.md`
+  - `tasks/stage-c-07-scenario-registry-and-boundary-hardening.md`
+  - `tasks/stage-c-08-runtime-architecture-alignment.md`
+  - `tasks/stage-c-09-maintainability-annotations-and-surface-hygiene.md`
+- Why: the project should not open the planning unit after Stage C while duplicated contracts, boundary erosion, and hidden cross-layer coupling remain undocumented and unowned
+- Impact: the repository now treats this cleanup as a global governance baseline initiated during Stage C early execution, not as a Stage C-only feature wave
+- Related Task: `tasks/archive/stage-c/stage-c-05-governance-convergence-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-22-024
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: canonical module contracts and lifecycle terminology
+- Context: the global governance baseline initiated during Stage C early execution identified duplicated module identity fields, ambiguous task status language, and frontend aliases that obscured scenario-contract drift
+- Choice: make `module_type` the canonical workspace identity field across storage, API, and UI, keep request-only `type` as a deprecated compatibility alias, make `task_type` the canonical task selector term, and expose `completed` as the external success-state label even while internal persistence still stores `done`
+- Why: contract consumers need one authoritative vocabulary so scenario boundaries, UI state, and future registry cleanup can converge without carrying duplicate truths
+- Impact: workspace responses no longer emit `type`, task responses serialize `done` as `completed`, invalid task types fail at schema validation time, and frontend shared types now use one explicit task-status vocabulary
+- Related Task: `tasks/archive/stage-c/stage-c-06-canonical-module-contracts-and-terminology.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-22-025
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-06 canonical module contracts and terminology
+- Context: stage-c-06 was executed to turn the global governance baseline into concrete API, UI, and documentation changes rather than leaving the canonical vocabulary only in review notes
+- Choice: complete `stage-c-06` and archive it under `tasks/archive/stage-c/`
+- Why: the repository now has one canonical workspace identity field, one external success-state label for task APIs and UI, and explicit scenario-task type usage across the frontend shared layer
+- Impact: the next governance task can move to boundary hardening instead of continuing terminology cleanup, and the control plane now records `stage-c-07` as the next active step
+- Related Task: `tasks/archive/stage-c/stage-c-06-canonical-module-contracts-and-terminology.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-22-026
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-07 scenario registry and boundary hardening
+- Context: stage-c-07 executed the next step of the global governance baseline by replacing scattered scenario metadata and task-routing lists with one backend-owned registry while also removing the repository-to-service contract leak
+- Choice: make `server/app/schemas/scenario.py` the canonical scenario registry, expose it through `/api/v1/scenario-modules`, derive frontend module and eval metadata from that registry, require Support and Job to reject `goal` alias input at the module boundary, and archive `stage-c-07` under `tasks/archive/stage-c/`
+- Why: module availability, labels, eval prompt fields, and input boundaries should come from one owned registry instead of drifting across backend services, repositories, and frontend navigation helpers
+- Impact: shared orchestration now resolves scenario behavior from one registry source, repositories no longer depend on service-layer contract resolution, and the active governance step moves to `stage-c-08` runtime architecture alignment
+- Related Task: `tasks/archive/stage-c/stage-c-07-scenario-registry-and-boundary-hardening.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-22-027
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-08 runtime architecture alignment
+- Context: stage-c-08 executed the next global governance baseline step by aligning task and eval control semantics, extracting a shared workspace-agent graph skeleton, and moving Research-only execution behavior out of the generic task executor
+- Choice: centralize cancel transition helpers in `server/app/core/runtime_control.py`, make `server/app/services/task_execution_extensions.py` the explicit home for Research task trace, lineage, and asset-sync hooks, keep `server/app/services/task_execution_service.py` focused on generic task lifecycle, and archive `stage-c-08` under `tasks/archive/stage-c/`
+- Why: runtime recovery semantics and module execution boundaries should be explicit and shared before the project opens the next planning unit after Stage C
+- Impact: task and eval cancel paths now use the same transition model, workspace agent graphs share one execution skeleton, Research extensions no longer sit as implicit defaults inside the generic executor, and the active governance step moves to `stage-c-09`
+- Related Task: `tasks/archive/stage-c/stage-c-08-runtime-architecture-alignment.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-22-028
+- Date: 2026-03-22
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-09 maintainability annotations and close the global governance baseline
+- Context: stage-c-09 executed the final governance-baseline step by marking placeholder surfaces honestly, documenting the intended runtime boundaries, and clarifying which workers and frontend surfaces are live versus legacy or scaffolded
+- Choice: archive `stage-c-09`, record the placeholder-surface rules in the control-plane docs, and treat the global governance baseline initiated during Stage C early execution as complete
+- Why: the repository now has durable contract, boundary, runtime, and maintainability guidance, so the planned Stage C module-depth work can resume without carrying unresolved global governance ambiguity
+- Impact: the active Stage C task returns to `stage-c-02`, the archived governance stack now covers `stage-c-06` through `stage-c-09`, and future collaborators have clearer guidance about runtime semantics and placeholder surfaces
+- Related Task: `tasks/archive/stage-c/stage-c-09-maintainability-annotations-and-surface-hygiene.md`
+- Supersedes:

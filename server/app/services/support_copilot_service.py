@@ -1,8 +1,9 @@
-﻿from pydantic import ValidationError
+from pydantic import ValidationError
 
 from app.schemas.scenario import (
     MODULE_TYPE_SUPPORT,
     ScenarioEvidenceItem,
+    get_scenario_task_module_type,
     get_supported_scenario_task_types,
 )
 from app.schemas.support import (
@@ -12,11 +13,6 @@ from app.schemas.support import (
     SupportTaskType,
 )
 from app.schemas.tool import SearchDocumentMatch, ToolDocumentSummary
-
-SUPPORTED_SUPPORT_TASK_TYPES = {
-    "ticket_summary",
-    "reply_draft",
-}
 
 _SUPPORT_TASK_TITLES = {
     "ticket_summary": "Support Ticket Summary",
@@ -35,7 +31,7 @@ def validate_support_task_contract(*, workspace_module_type: str, task_type: str
         raise SupportCopilotContractError(
             f"Task type {task_type} is not supported for workspace module {workspace_module_type}",
         )
-    if task_type not in SUPPORTED_SUPPORT_TASK_TYPES:
+    if get_scenario_task_module_type(task_type) != MODULE_TYPE_SUPPORT:
         raise SupportCopilotContractError(
             f"Support Copilot does not support task type: {task_type}",
         )
@@ -48,8 +44,13 @@ def validate_support_task_contract(*, workspace_module_type: str, task_type: str
 
 def normalize_support_task_input(input_json: dict[str, object] | None) -> dict[str, object]:
     raw_input = input_json or {}
+    if raw_input.get("customer_issue") is None and isinstance(raw_input.get("goal"), str):
+        raise SupportCopilotContractError(
+            "Support task input must use customer_issue instead of goal",
+        )
+
     payload_input = {
-        "customer_issue": raw_input.get("customer_issue") or raw_input.get("goal"),
+        "customer_issue": raw_input.get("customer_issue"),
     }
     try:
         payload = SupportTaskInput.model_validate(payload_input)

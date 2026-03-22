@@ -14,6 +14,7 @@ import type {
   ResearchAssetComparisonRecord,
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
+  ScenarioModuleRecord,
   TaskCreatePayload,
   TaskRecord,
   TraceRecord,
@@ -78,6 +79,10 @@ export async function fetchApiJson<T>(
 
 export async function getHealth(): Promise<HealthResponse> {
   return fetchApiJson<{ status: string }>("/health");
+}
+
+export async function getScenarioModules(): Promise<ScenarioModuleRecord[] | ApiErrorResponse | ApiUnreachableResponse> {
+  return fetchApiJson<ScenarioModuleRecord[]>("/scenario-modules");
 }
 
 async function parseErrorDetail(response: Response): Promise<string> {
@@ -147,6 +152,10 @@ export async function loginUser(payload: LoginRequestPayload): Promise<LoginResp
 
 export async function getCurrentUser(accessToken: string): Promise<User> {
   return fetchBrowserApiJson<User>("/auth/me", {}, accessToken);
+}
+
+export async function listScenarioModules(): Promise<ScenarioModuleRecord[]> {
+  return fetchBrowserApiJson<ScenarioModuleRecord[]>("/scenario-modules");
 }
 
 export async function listWorkspaces(accessToken: string): Promise<Workspace[]> {

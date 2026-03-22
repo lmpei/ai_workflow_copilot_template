@@ -60,3 +60,46 @@ def test_build_recovery_detail_exposes_linked_retry_history() -> None:
     assert detail["target_task_id"] == "task-2"
     assert detail["history"][0]["event"] == "retry_created"
     assert detail["history"][0]["metadata"]["target_task_id"] == "task-2"
+
+
+def test_resolve_cancel_transition_uses_shared_pending_and_running_rules() -> None:
+    pending_transition = runtime_control.resolve_cancel_transition(
+        current_status="pending",
+        current_control_json={},
+        user_id="operator-1",
+        reason="Stop before execution.",
+        cancelled_error_message="Task cancelled by operator",
+    )
+    running_transition = runtime_control.resolve_cancel_transition(
+        current_status="running",
+        current_control_json={},
+        user_id="operator-1",
+        reason="Stop while running.",
+        cancelled_error_message="Task cancelled by operator",
+    )
+
+    assert pending_transition.next_status == "failed"
+    assert pending_transition.error_message == "Task cancelled by operator"
+    assert pending_transition.control_json["state"] == runtime_control.CONTROL_STATE_CANCELLED
+    assert running_transition.next_status == "running"
+    assert running_transition.error_message is None
+    assert running_transition.control_json["state"] == runtime_control.CONTROL_STATE_CANCEL_REQUESTED
+
+
+def test_build_cancelled_control_from_request_reuses_requested_metadata() -> None:
+    cancel_requested = runtime_control.build_cancel_requested_control(
+        current_control_json={},
+        user_id="operator-1",
+        reason="Cancel this work.",
+    )
+
+    cancelled = runtime_control.build_cancelled_control_from_request(
+        current_status="running",
+        current_control_json=cancel_requested,
+        fallback_user_id="worker-1",
+    )
+
+    assert cancelled["requested_by"] == "operator-1"
+    assert cancelled["reason"] == "Cancel this work."
+    assert cancelled["state"] == runtime_control.CONTROL_STATE_CANCELLED
+    assert cancelled["cancelled_from_status"] == "running"

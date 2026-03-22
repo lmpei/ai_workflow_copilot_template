@@ -1,16 +1,11 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { getWorkspace, isApiClientError } from "../../lib/api";
-import {
-  getScenarioModule,
-  isModuleType,
-  scenarioModules,
-  scenarioTaskLabels,
-} from "../../lib/navigation";
-import type { ModuleType, ScenarioTaskType, Workspace } from "../../lib/types";
+import { getWorkspace, isApiClientError, listScenarioModules } from "../../lib/api";
+import { isModuleType } from "../../lib/navigation";
+import type { ModuleType, ScenarioModuleRecord, TaskType, Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -24,19 +19,24 @@ function moduleHref(workspaceId: string, moduleType: ModuleType) {
   return `/workspaces/${workspaceId}/modules/${moduleType}`;
 }
 
-function filterScenarioTaskTypes(values: unknown): ScenarioTaskType[] {
-  if (!Array.isArray(values)) {
+function getTaskLabel(module: ScenarioModuleRecord, taskType: TaskType): string {
+  return module.task_labels[taskType] ?? taskType;
+}
+
+function filterTaskTypes(values: unknown, module: ScenarioModuleRecord | null): TaskType[] {
+  if (!module || !Array.isArray(values)) {
     return [];
   }
 
+  const supportedTaskTypes = new Set(module.tasks.map((task) => task.task_type));
   return values.filter(
-    (value): value is ScenarioTaskType =>
-      typeof value === "string" && value in scenarioTaskLabels,
+    (value): value is TaskType =>
+      typeof value === "string" && supportedTaskTypes.has(value as TaskType),
   );
 }
 
-function renderTaskTypeList(taskTypes: ScenarioTaskType[]) {
-  return taskTypes.map((taskType) => scenarioTaskLabels[taskType]).join(" · ");
+function renderTaskTypeList(module: ScenarioModuleRecord, taskTypes: TaskType[]) {
+  return taskTypes.map((taskType) => getTaskLabel(module, taskType)).join(" · ");
 }
 
 export default function ModuleHubPanel({
@@ -45,29 +45,36 @@ export default function ModuleHubPanel({
 }: ModuleHubPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [scenarioModules, setScenarioModules] = useState<ScenarioModuleRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadWorkspace = useCallback(async () => {
+  const loadWorkspaceContext = useCallback(async () => {
     if (!session) {
       setWorkspace(null);
+      setScenarioModules([]);
       return;
     }
 
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      setWorkspace(await getWorkspace(session.accessToken, workspaceId));
+      const [loadedWorkspace, loadedScenarioModules] = await Promise.all([
+        getWorkspace(session.accessToken, workspaceId),
+        listScenarioModules(),
+      ]);
+      setWorkspace(loadedWorkspace);
+      setScenarioModules(loadedScenarioModules);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace module settings");
     } finally {
       setIsLoading(false);
     }
   }, [session, workspaceId]);
 
   useEffect(() => {
-    void loadWorkspace();
-  }, [loadWorkspace]);
+    void loadWorkspaceContext();
+  }, [loadWorkspaceContext]);
 
   const requestedModule = useMemo(() => {
     if (!selectedModuleType) {
@@ -75,6 +82,11 @@ export default function ModuleHubPanel({
     }
     return isModuleType(selectedModuleType) ? selectedModuleType : "invalid";
   }, [selectedModuleType]);
+
+  const scenarioModuleMap = useMemo(
+    () => Object.fromEntries(scenarioModules.map((module) => [module.module_type, module])) as Partial<Record<ModuleType, ScenarioModuleRecord>>,
+    [scenarioModules],
+  );
 
   if (!isReady) {
     return <SectionCard title="Scenario Modules">Loading session...</SectionCard>;
@@ -114,15 +126,19 @@ export default function ModuleHubPanel({
   }
 
   const activeModuleType = workspace?.module_type ?? "research";
-  const activeModule = getScenarioModule(activeModuleType);
+  const activeModule = scenarioModuleMap[activeModuleType] ?? scenarioModules[0] ?? null;
+
+  if (!activeModule) {
+    return <SectionCard title="Scenario Modules">Scenario registry is unavailable.</SectionCard>;
+  }
 
   if (requestedModule) {
-    const moduleInfo = getScenarioModule(requestedModule);
-    const isActiveModule = moduleInfo.moduleType === activeModuleType;
-    const configuredTaskTypes = filterScenarioTaskTypes(workspace?.module_config_json.entry_task_types);
+    const moduleInfo = scenarioModuleMap[requestedModule] ?? activeModule;
+    const isActiveModule = moduleInfo.module_type === activeModuleType;
+    const configuredTaskTypes = filterTaskTypes(workspace?.module_config_json.entry_task_types, moduleInfo);
     const entryTaskTypes = isActiveModule && configuredTaskTypes.length > 0
       ? configuredTaskTypes
-      : moduleInfo.entryTaskTypes;
+      : moduleInfo.entry_task_types;
 
     return (
       <SectionCard
@@ -137,7 +153,7 @@ export default function ModuleHubPanel({
             <strong>Status:</strong> {isActiveModule ? "active in this workspace" : "not configured for this workspace"}
           </div>
           <div>
-            <strong>Entry tasks:</strong> {renderTaskTypeList(entryTaskTypes)}
+            <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, entryTaskTypes)}
           </div>
           {isActiveModule ? (
             <>
@@ -185,11 +201,11 @@ export default function ModuleHubPanel({
         }}
       >
         {scenarioModules.map((moduleInfo) => {
-          const isActiveModule = moduleInfo.moduleType === activeModuleType;
+          const isActiveModule = moduleInfo.module_type === activeModuleType;
 
           return (
             <div
-              key={moduleInfo.moduleType}
+              key={moduleInfo.module_type}
               style={{
                 border: isActiveModule ? "1px solid #0f172a" : "1px solid #cbd5e1",
                 borderRadius: 12,
@@ -214,10 +230,10 @@ export default function ModuleHubPanel({
               </div>
               <p style={{ marginTop: 0 }}>{moduleInfo.description}</p>
               <p style={{ marginTop: 0 }}>
-                <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo.entryTaskTypes)}
+                <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, moduleInfo.entry_task_types)}
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href={moduleHref(workspaceId, moduleInfo.moduleType)}>Open module</Link>
+                <Link href={moduleHref(workspaceId, moduleInfo.module_type)}>Open module</Link>
                 {isActiveModule ? <Link href={`/workspaces/${workspaceId}/tasks`}>Go to tasks</Link> : null}
               </div>
             </div>
@@ -227,5 +243,3 @@ export default function ModuleHubPanel({
     </SectionCard>
   );
 }
-
-

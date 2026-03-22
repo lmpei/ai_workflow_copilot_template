@@ -1,11 +1,11 @@
-﻿# Architecture
+# Architecture
 
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
 ## Metadata
 
-- Last Updated: 2026-03-17
+- Last Updated: 2026-03-22
 
 ## Main Modules
 
@@ -42,6 +42,21 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - persistence in `server/app/repositories/`
 - worker entrypoints in `server/app/workers/`
 - agent runtime in `server/app/agents/`
+
+## Runtime Boundaries
+
+- `server/app/core/runtime_control.py`
+  - owns cancel and retry control-state transitions plus recovery-detail derivation
+- `server/app/services/task_execution_service.py`
+  - owns generic task lifecycle only: pending -> running -> completed or failed
+- `server/app/services/task_execution_extensions.py`
+  - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior lives here instead of in the generic executor
+- `server/app/agents/graph.py`
+  - owns one shared workspace-agent execution skeleton with module-specific compose steps
+- `server/app/workers/task_worker.py`
+  - is the only live ARQ worker bundle today
+- `server/app/api/routes/agents.py`
+  - remains a scaffolded `501` surface until standalone agent runtime contracts exist
 
 ## External Dependencies
 

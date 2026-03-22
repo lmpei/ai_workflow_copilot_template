@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,6 +12,7 @@ import {
 import type {
   JsonObject,
   SupportArtifacts,
+  SupportTaskInput,
   SupportTaskResult,
   SupportTaskType,
   TaskRecord,
@@ -71,6 +72,13 @@ function parseSupportTaskResult(task: TaskRecord): SupportTaskResult | null {
   return result as unknown as SupportTaskResult;
 }
 
+function parseSupportTaskInput(task: TaskRecord): SupportTaskInput {
+  const customerIssue = task.input_json.customer_issue;
+  return {
+    customer_issue: typeof customerIssue === "string" ? customerIssue : undefined,
+  };
+}
+
 function parseEntryTaskTypes(workspace: Workspace | null): SupportTaskType[] {
   const entryTaskTypes = workspace?.module_config_json.entry_task_types;
   if (!Array.isArray(entryTaskTypes)) {
@@ -92,7 +100,7 @@ function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
     pending: { label: "pending", color: "#92400e" },
     running: { label: "running", color: "#1d4ed8" },
-    done: { label: "done", color: "#15803d" },
+    completed: { label: "completed", color: "#15803d" },
     failed: { label: "failed", color: "#b91c1c" },
   };
   const style = statusStyles[status];
@@ -143,8 +151,8 @@ function renderArtifactStats(artifacts: SupportArtifacts) {
 }
 
 function extractCustomerIssue(task: TaskRecord): string | null {
-  const customerIssue = task.input_json.customer_issue;
-  return typeof customerIssue === "string" && customerIssue.length > 0 ? customerIssue : null;
+  const input = parseSupportTaskInput(task);
+  return input.customer_issue && input.customer_issue.length > 0 ? input.customer_issue : null;
 }
 
 export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanelProps) {

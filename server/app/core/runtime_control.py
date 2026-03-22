@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+"""Shared runtime-control helpers for task and eval recovery semantics.
+
+This module owns the persisted control-state shape, transition builders, and
+operator-facing recovery detail. Service layers should derive cancel/retry
+behavior here instead of hand-assembling control_json mutations.
+"""
+
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 CONTROL_ACTION_CANCEL = "cancel"
@@ -10,6 +18,13 @@ CONTROL_STATE_CANCEL_REQUESTED = "cancel_requested"
 CONTROL_STATE_CANCELLED = "cancelled"
 CONTROL_STATE_RETRY_CREATED = "retry_created"
 CONTROL_STATE_RETRY_ATTEMPT = "retry_attempt"
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeControlTransition:
+    next_status: str
+    control_json: dict[str, object]
+    error_message: str | None = None
 
 
 def clone_control_json(control_json: dict[str, object] | None) -> dict[str, object]:
@@ -94,6 +109,16 @@ def derive_recovery_state(*, status: str, control_json: dict[str, object] | None
     return status
 
 
+def get_control_state(control_json: dict[str, object] | None) -> str | None:
+    if not isinstance(control_json, dict):
+        return None
+
+    control_state = control_json.get("state")
+    if isinstance(control_state, str) and control_state:
+        return control_state
+    return None
+
+
 def build_recovery_detail(*, status: str, control_json: dict[str, object] | None) -> dict[str, object]:
     detail: dict[str, object] = {
         "state": derive_recovery_state(status=status, control_json=control_json),
@@ -137,6 +162,27 @@ def is_cancel_requested(control_json: dict[str, object] | None) -> bool:
     )
 
 
+def is_cancel_recorded(control_json: dict[str, object] | None) -> bool:
+    return get_control_state(control_json) in {
+        CONTROL_STATE_CANCEL_REQUESTED,
+        CONTROL_STATE_CANCELLED,
+    }
+
+
+def get_linked_retry_target_id(
+    control_json: dict[str, object] | None,
+    *,
+    target_id_key: str,
+) -> str | None:
+    if not isinstance(control_json, dict):
+        return None
+
+    target_id = control_json.get(target_id_key)
+    if isinstance(target_id, str) and target_id:
+        return target_id
+    return None
+
+
 def build_cancel_requested_control(
     *,
     current_control_json: dict[str, object] | None,
@@ -177,6 +223,41 @@ def build_cancel_requested_control(
         reason=reason,
         metadata=extra_json,
     )
+
+
+def resolve_cancel_transition(
+    *,
+    current_status: str,
+    current_control_json: dict[str, object] | None,
+    user_id: str,
+    reason: str | None,
+    cancelled_error_message: str,
+) -> RuntimeControlTransition:
+    """Resolve the operator-facing cancel transition for pending or running work."""
+    if current_status == "pending":
+        return RuntimeControlTransition(
+            next_status="failed",
+            control_json=build_cancelled_control(
+                current_control_json=current_control_json,
+                user_id=user_id,
+                reason=reason,
+                extra_json={"cancelled_from_status": "pending"},
+            ),
+            error_message=cancelled_error_message,
+        )
+
+    if current_status == "running":
+        return RuntimeControlTransition(
+            next_status="running",
+            control_json=build_cancel_requested_control(
+                current_control_json=current_control_json,
+                user_id=user_id,
+                reason=reason,
+                extra_json={"cancel_requested_from_status": "running"},
+            ),
+        )
+
+    raise ValueError("Only pending or running runtime items can be cancelled")
 
 
 def build_cancelled_control(
@@ -224,6 +305,25 @@ def build_cancelled_control(
         timestamp=applied_at,
         reason=reason,
         metadata=extra_json,
+    )
+
+
+def build_cancelled_control_from_request(
+    *,
+    current_status: str,
+    current_control_json: dict[str, object] | None,
+    fallback_user_id: str,
+) -> dict[str, object]:
+    """Apply a previously recorded cancel request at a worker-safe boundary."""
+    control_json = current_control_json if isinstance(current_control_json, dict) else {}
+    requested_by = control_json.get("requested_by")
+    reason = control_json.get("reason")
+
+    return build_cancelled_control(
+        current_control_json=current_control_json,
+        user_id=str(requested_by) if isinstance(requested_by, str) and requested_by else fallback_user_id,
+        reason=str(reason) if isinstance(reason, str) and reason else None,
+        extra_json={"cancelled_from_status": current_status},
     )
 
 

@@ -325,7 +325,7 @@ function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
     pending: { label: "pending", color: "#92400e" },
     running: { label: "running", color: "#1d4ed8" },
-    done: { label: "done", color: "#15803d" },
+    completed: { label: "completed", color: "#15803d" },
     failed: { label: "failed", color: "#b91c1c" },
   };
   const style = statusStyles[status];
@@ -1263,12 +1263,12 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                         {isControllingTaskId === task.id ? "Retrying..." : "Retry task"}
                       </button>
                     ) : null}
-                    {task.status === "done" && result ? (
+                    {task.status === "completed" && result ? (
                       <button onClick={() => startFollowUpFromTask(task, result)} type="button">
                         Continue research
                       </button>
                     ) : null}
-                    {task.status === "done" && result ? (
+                    {task.status === "completed" && result ? (
                       <button disabled={isSavingAsset} onClick={() => void handleSaveTaskToWorkbench(task)} type="button">
                         {assetLink ? "Refresh asset" : isSavingAsset ? "Saving..." : "Save to workbench"}
                       </button>
@@ -1311,7 +1311,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   <strong>Goal:</strong> {extractGoal(selectedTask, selectedResult)}
                 </div>
               ) : null}
-              {selectedTask.status === "done" && selectedResult ? (
+              {selectedTask.status === "completed" && selectedResult ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => startFollowUpFromTask(selectedTask, selectedResult)} type="button">
                     Continue from this result

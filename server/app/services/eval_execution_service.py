@@ -2,7 +2,11 @@ from arq import create_pool
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
-from app.core.runtime_control import build_cancelled_control, derive_recovery_state, is_cancel_requested
+from app.core.runtime_control import (
+    build_cancelled_control_from_request,
+    derive_recovery_state,
+    is_cancel_requested,
+)
 from app.models.eval_result import (
     EVAL_RESULT_STATUS_COMPLETED,
     EVAL_RESULT_STATUS_FAILED,
@@ -73,15 +77,10 @@ def _cancel_eval_run_from_control_request(eval_run):
         eval_run.id,
         next_status=EVAL_RUN_STATUS_FAILED,
         summary_json=eval_run.summary_json,
-        control_json=build_cancelled_control(
+        control_json=build_cancelled_control_from_request(
+            current_status=eval_run.status,
             current_control_json=eval_run.control_json,
-            user_id=str(eval_run.control_json.get("requested_by", eval_run.created_by)),
-            reason=(
-                str(eval_run.control_json.get("reason"))
-                if isinstance(eval_run.control_json.get("reason"), str)
-                else None
-            ),
-            extra_json={"cancelled_from_status": eval_run.status},
+            fallback_user_id=eval_run.created_by,
         ),
         error_message="Eval run cancelled by operator",
     )
@@ -245,15 +244,10 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                     passed_cases=passed_cases,
                     score_total=score_total,
                 ),
-                control_json=build_cancelled_control(
+                control_json=build_cancelled_control_from_request(
+                    current_status=current_eval_run.status,
                     current_control_json=current_eval_run.control_json,
-                    user_id=str(current_eval_run.control_json.get("requested_by", current_eval_run.created_by)),
-                    reason=(
-                        str(current_eval_run.control_json.get("reason"))
-                        if isinstance(current_eval_run.control_json.get("reason"), str)
-                        else None
-                    ),
-                    extra_json={"cancelled_from_status": current_eval_run.status},
+                    fallback_user_id=current_eval_run.created_by,
                 ),
                 error_message=str(error),
             )
