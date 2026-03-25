@@ -495,3 +495,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: backend `ruff`, `mypy`, and `pytest` now pass again, frontend lint/build still pass, and the planned Stage C execution task remains `stage-c-02`
 - Related Task: `tasks/archive/stage-c/stage-c-10-ci-build-repair.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-25-030
+- Date: 2026-03-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-02 Support Copilot grounded case workflow
+- Context: the governance baseline and CI repair restored the shared platform foundation, but Support Copilot still behaved like a thin launcher and result dump instead of a clearer grounded case workflow
+- Choice: deepen the Support module contract around structured case input and output, add explicit case brief, grounded findings, triage, open-question, next-step, and reply-draft result fields, upgrade the Support panel to collect and display that workflow, archive `stage-c-02`, and move the active Stage C execution task to `stage-c-03`
+- Why: Stage C needs to prove that deeper workflow value now extends beyond Research without bypassing the shared runtime, registry, or operator-facing inspection surfaces
+- Impact: Support runs now preserve a canonical case-workflow shape, limited-context runs stay honest about missing grounding, and the next Stage C module-depth task can focus on Job Assistant instead of leaving Support at skeleton depth
+- Related Task: `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md`
+- Supersedes:

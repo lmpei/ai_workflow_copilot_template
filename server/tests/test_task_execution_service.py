@@ -506,7 +506,13 @@ def test_run_task_execution_executes_support_reply_draft_and_persists_output(
     class FakeRetriever:
         def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
             assert workspace_id
-            assert question == "Customer cannot reset their password"
+            assert question == (
+                "Customer cannot reset their password"
+                " | Product area: Authentication"
+                " | Severity: high"
+                " | Desired outcome: Restore access quickly"
+                " | Reproduction steps: Open reset email; Click expired link"
+            )
             return [
                 RetrievedChunk(
                     document_id="doc-1",
@@ -529,7 +535,16 @@ def test_run_task_execution_executes_support_reply_draft_and_persists_output(
     task_id = _create_task_fixture(
         task_type="reply_draft",
         workspace_type="support",
-        input_json={"customer_issue": "Customer cannot reset their password"},
+        input_json={
+            "customer_issue": "Customer cannot reset their password",
+            "product_area": "Authentication",
+            "severity": "high",
+            "desired_outcome": "Restore access quickly",
+            "reproduction_steps": [
+                "Open reset email",
+                "Click expired link",
+            ],
+        },
     )
 
     output = task_execution_service.run_task_execution(task_id)
@@ -539,10 +554,13 @@ def test_run_task_execution_executes_support_reply_draft_and_persists_output(
     assert output["agent_name"] == "workspace_support_agent"
     assert output["result"]["module_type"] == "support"
     assert output["result"]["task_type"] == "reply_draft"
-    assert output["result"]["artifacts"]["draft_reply"].startswith(
-        "Thanks for reaching out",
-    )
+    assert output["result"]["input"]["product_area"] == "Authentication"
+    assert output["result"]["case_brief"]["severity"] == "high"
+    assert output["result"]["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert output["result"]["reply_draft"]["subject_line"] == "Support update for your reported issue"
+    assert output["result"]["triage"]["recommended_owner"] == "support_escalation"
     assert output["result"]["artifacts"]["match_count"] == 1
+    assert output["result"]["artifacts"]["evidence_status"] == "grounded_matches"
     assert persisted_task is not None
     assert persisted_task.status == "done"
 
@@ -553,7 +571,10 @@ def test_run_task_execution_completes_support_ticket_summary_with_limited_contex
         task_type="ticket_summary",
         workspace_type="support",
         with_document=False,
-        input_json={"customer_issue": "Customer billing question"},
+        input_json={
+            "customer_issue": "Customer billing question",
+            "desired_outcome": "Confirm next billing step",
+        },
     )
 
     output = task_execution_service.run_task_execution(task_id)
@@ -561,8 +582,13 @@ def test_run_task_execution_completes_support_ticket_summary_with_limited_contex
 
     assert output["task_type"] == "ticket_summary"
     assert output["result"]["title"] == "Support Ticket Summary"
+    assert output["result"]["case_brief"]["desired_outcome"] == "Confirm next billing step"
+    assert output["result"]["triage"]["recommended_owner"] == "knowledge_base_owner"
+    assert output["result"]["open_questions"][0] == "Which product area or feature is affected?"
+    assert output["result"]["next_steps"][0].startswith("Index support runbooks")
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
+    assert output["result"]["artifacts"]["evidence_status"] == "no_documents"
     assert (
         output["result"]["summary"]
         == "No support knowledge documents are available for this workspace."

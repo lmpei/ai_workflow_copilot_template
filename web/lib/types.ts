@@ -119,8 +119,14 @@ export type ResearchLineage = {
   continuation_notes?: string;
 };
 export type SupportTaskType = Extract<TaskType, "ticket_summary" | "reply_draft">;
+export type SupportSeverity = "low" | "medium" | "high" | "critical";
+export type SupportEvidenceStatus = "grounded_matches" | "documents_only" | "no_documents";
 export type SupportTaskInput = {
   customer_issue?: string;
+  product_area?: string;
+  severity?: SupportSeverity;
+  desired_outcome?: string;
+  reproduction_steps: string[];
 };
 
 export type ResearchDocumentSummary = {
@@ -284,12 +290,48 @@ export type SupportArtifacts = {
   documents: SupportDocumentSummary[];
   matches: SupportMatch[];
   tool_call_ids: string[];
-  draft_reply?: string | null;
+  evidence_status: SupportEvidenceStatus;
+};
+
+export type SupportCaseBrief = {
+  issue_summary: string;
+  product_area?: string | null;
+  severity?: SupportSeverity | null;
+  desired_outcome?: string | null;
+  reproduction_steps: string[];
+  evidence_status: SupportEvidenceStatus;
+};
+
+export type SupportFinding = {
+  title: string;
+  summary: string;
+  evidence_ref_ids: string[];
+};
+
+export type SupportTriageDecision = {
+  evidence_status: SupportEvidenceStatus;
+  needs_manual_review: boolean;
+  should_escalate: boolean;
+  recommended_owner: string;
+  rationale: string;
+};
+
+export type SupportReplyDraft = {
+  subject_line: string;
+  body: string;
+  confidence_note: string;
 };
 
 export type SupportTaskResult = ScenarioTaskResult & {
   module_type: "support";
   task_type: SupportTaskType;
+  input: SupportTaskInput;
+  case_brief: SupportCaseBrief;
+  findings: SupportFinding[];
+  triage: SupportTriageDecision;
+  open_questions: string[];
+  next_steps: string[];
+  reply_draft?: SupportReplyDraft;
   artifacts: SupportArtifacts;
 };
 
@@ -521,3 +563,5 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
+
+

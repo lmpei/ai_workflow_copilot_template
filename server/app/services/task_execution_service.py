@@ -53,7 +53,8 @@ from app.services.research_assistant_service import (
 )
 from app.services.support_copilot_service import (
     SupportCopilotContractError,
-    normalize_support_task_input,
+    build_support_task_search_query,
+    resolve_support_task_input,
     validate_support_task_contract,
 )
 from app.services.task_execution_extensions import (
@@ -113,10 +114,10 @@ def _resolve_task_prompt(task: Task) -> str:
         )
 
     if task_module_type == MODULE_TYPE_SUPPORT:
-        normalized_input = normalize_support_task_input(task.input_json)
-        customer_issue = normalized_input.get("customer_issue")
-        if isinstance(customer_issue, str) and customer_issue.strip():
-            return customer_issue.strip()
+        support_input = resolve_support_task_input(task.input_json)
+        support_query = build_support_task_search_query(support_input)
+        if support_query:
+            return support_query
 
         if task.task_type == "reply_draft":
             return "Draft a grounded customer reply for the current support issue."
@@ -175,11 +176,13 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
 
     prompt = _resolve_task_prompt(task)
     if task_module_type == MODULE_TYPE_SUPPORT:
+        support_input = resolve_support_task_input(task.input_json)
         return run_workspace_support_agent(
             task_id=task.id,
             workspace_id=task.workspace_id,
             user_id=task.created_by,
             customer_issue=prompt,
+            support_input=support_input.model_dump(exclude_none=True),
         )
 
     return run_workspace_job_agent(

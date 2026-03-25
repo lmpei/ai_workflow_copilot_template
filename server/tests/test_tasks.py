@@ -360,7 +360,17 @@ def test_create_support_task_for_support_workspace_member(
         f"/api/v1/workspaces/{workspace_id}/tasks",
         json={
             "task_type": "reply_draft",
-            "input": {"customer_issue": "Customer cannot reset their password"},
+            "input": {
+                "customer_issue": "  Customer cannot reset their password  ",
+                "product_area": " Authentication ",
+                "severity": "high",
+                "desired_outcome": " Restore access quickly ",
+                "reproduction_steps": [
+                    " Open reset email ",
+                    "Click expired link",
+                    "Open reset email",
+                ],
+            },
         },
         headers=headers,
     )
@@ -368,7 +378,48 @@ def test_create_support_task_for_support_workspace_member(
     created_task = create_response.json()
     assert created_task["task_type"] == "reply_draft"
     assert created_task["status"] == "pending"
-    assert created_task["input_json"] == {"customer_issue": "Customer cannot reset their password"}
+    assert created_task["input_json"] == {
+        "customer_issue": "Customer cannot reset their password",
+        "product_area": "Authentication",
+        "severity": "high",
+        "desired_outcome": "Restore access quickly",
+        "reproduction_steps": [
+            "Open reset email",
+            "Click expired link",
+        ],
+    }
+
+
+def test_create_task_rejects_invalid_support_task_input(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-owner-invalid@example.com", name="Support Owner Invalid")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "ticket_summary",
+            "input": {
+                "customer_issue": "Customer billing question",
+                "severity": "urgent",
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "Invalid support task input" in response.json()["detail"]
 
 
 def test_create_job_task_for_job_workspace_member(

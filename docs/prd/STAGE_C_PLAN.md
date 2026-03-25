@@ -130,15 +130,16 @@ Stage C is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-c-02-support-copilot-grounded-case-workflow.md` as the next active task of the first Stage C wave.
+Execute `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md` as the next active task of the first Stage C
+wave.
 
 ## First Task Wave
 
 The first executable Stage C wave is now active:
 
-- `tasks/stage-c-02-support-copilot-grounded-case-workflow.md` (active)
+- `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md` (completed)
 - `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md` (active)
-- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` (active)
+- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` (queued)
 
 This wave uses the mature Research workflow as the reference pattern while deepening Support and Job and tightening the
 cross-module quality and delivery path.

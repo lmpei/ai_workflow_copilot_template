@@ -257,7 +257,13 @@ def test_workspace_support_agent_completes_grounded_reply_draft(
     class FakeRetriever:
         def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
             assert workspace_id
-            assert question == "Customer cannot reset their password"
+            assert question == (
+                "Customer cannot reset their password"
+                " | Product area: Authentication"
+                " | Severity: high"
+                " | Desired outcome: Restore access quickly"
+                " | Reproduction steps: Open reset email; Click expired link"
+            )
             return [
                 RetrievedChunk(
                     document_id="doc-1",
@@ -280,7 +286,16 @@ def test_workspace_support_agent_completes_grounded_reply_draft(
     user_id, workspace_id, task_id = _create_runtime_fixture(
         workspace_type="support",
         task_type="reply_draft",
-        input_json={"customer_issue": "Customer cannot reset their password"},
+        input_json={
+            "customer_issue": "Customer cannot reset their password",
+            "product_area": "Authentication",
+            "severity": "high",
+            "desired_outcome": "Restore access quickly",
+            "reproduction_steps": [
+                "Open reset email",
+                "Click expired link",
+            ],
+        },
     )
 
     result = run_workspace_support_agent(
@@ -288,17 +303,32 @@ def test_workspace_support_agent_completes_grounded_reply_draft(
         workspace_id=workspace_id,
         user_id=user_id,
         customer_issue="Customer cannot reset their password",
+        support_input={
+            "customer_issue": "Customer cannot reset their password",
+            "product_area": "Authentication",
+            "severity": "high",
+            "desired_outcome": "Restore access quickly",
+            "reproduction_steps": [
+                "Open reset email",
+                "Click expired link",
+            ],
+        },
     )
 
     assert result.agent_name == "workspace_support_agent"
     assert result.final_output["module_type"] == "support"
     assert result.final_output["task_type"] == "reply_draft"
     assert result.final_output["title"] == "Grounded Reply Draft"
+    assert result.final_output["input"]["product_area"] == "Authentication"
+    assert result.final_output["case_brief"]["severity"] == "high"
+    assert result.final_output["triage"]["recommended_owner"] == "support_escalation"
+    assert result.final_output["triage"]["should_escalate"] is True
+    assert result.final_output["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert result.final_output["reply_draft"]["subject_line"] == "Support update for your reported issue"
+    assert "indexed support guidance" in result.final_output["reply_draft"]["body"]
     assert result.final_output["artifacts"]["document_count"] == 1
     assert result.final_output["artifacts"]["match_count"] == 1
-    assert result.final_output["artifacts"]["draft_reply"].startswith(
-        "Thanks for reaching out",
-    )
+    assert result.final_output["artifacts"]["evidence_status"] == "grounded_matches"
     assert result.final_output["evidence"][0]["metadata"]["document_id"] == "doc-1"
     assert (
         result.final_output["metadata"]["customer_issue"]
@@ -318,7 +348,10 @@ def test_workspace_support_agent_returns_bounded_shape_without_documents() -> No
         with_document=False,
         workspace_type="support",
         task_type="ticket_summary",
-        input_json={"customer_issue": "Customer billing question"},
+        input_json={
+            "customer_issue": "Customer billing question",
+            "desired_outcome": "Confirm next billing step",
+        },
     )
 
     result = run_workspace_support_agent(
@@ -326,12 +359,22 @@ def test_workspace_support_agent_returns_bounded_shape_without_documents() -> No
         workspace_id=workspace_id,
         user_id=user_id,
         customer_issue="Customer billing question",
+        support_input={
+            "customer_issue": "Customer billing question",
+            "desired_outcome": "Confirm next billing step",
+        },
     )
 
     assert result.final_output["module_type"] == "support"
+    assert result.final_output["case_brief"]["desired_outcome"] == "Confirm next billing step"
+    assert result.final_output["triage"]["recommended_owner"] == "knowledge_base_owner"
+    assert result.final_output["triage"]["should_escalate"] is True
+    assert result.final_output["open_questions"][0] == "Which product area or feature is affected?"
+    assert result.final_output["next_steps"][0].startswith("Index support runbooks")
     assert result.final_output["artifacts"]["document_count"] == 0
     assert result.final_output["artifacts"]["match_count"] == 0
     assert result.final_output["artifacts"]["matches"] == []
+    assert result.final_output["artifacts"]["evidence_status"] == "no_documents"
     assert (
         result.final_output["summary"]
         == "No support knowledge documents are available for this workspace."

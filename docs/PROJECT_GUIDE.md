@@ -263,6 +263,33 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - deltas in findings, evidence count, document count, and retrieval match count
 - task history remains the execution log; Research assets are the reusable work product layer for Stage B
 
+## Stage C Support Workflow
+
+- Support task inputs now use a canonical case-workflow shape instead of only a freeform issue string
+- canonical Support input fields are:
+  - `customer_issue`
+  - `product_area`
+  - `severity`
+  - `desired_outcome`
+  - `reproduction_steps`
+- Support task results now carry both the normalized `input` and a structured case workflow alongside the shared
+  scenario envelope
+- canonical Support result fields now include:
+  - `case_brief`
+  - `findings`
+  - `triage`
+  - `open_questions`
+  - `next_steps`
+  - optional `reply_draft`
+- Support evidence honesty should remain explicit through:
+  - `grounded_matches`
+  - `documents_only`
+  - `no_documents`
+- `reply_draft` remains a Support task type, but the customer-facing draft now sits beside the case workflow output
+  instead of hiding inside `artifacts`
+- limited-context Support runs should still return a bounded result with explicit escalation and knowledge-gap signals
+  instead of pretending the case is grounded
+
 ## Scenario Module Boundaries
 
 The repository hosts one shared platform core plus three scenario modules.

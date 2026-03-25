@@ -23,6 +23,8 @@ from app.services.research_assistant_service import (
 )
 from app.services.support_copilot_service import (
     SupportCopilotContractError,
+    build_support_task_search_query,
+    resolve_support_task_input,
     validate_support_task_contract,
 )
 
@@ -179,17 +181,25 @@ def run_workspace_support_agent(
     workspace_id: str,
     user_id: str,
     customer_issue: str,
+    support_input: dict[str, object] | None = None,
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
+    resolved_support_input = support_input or {"customer_issue": customer_issue}
+    support_query = build_support_task_search_query(
+        resolve_support_task_input(resolved_support_input),
+    )
     return _run_workspace_agent(
         task_id=task_id,
         workspace_id=workspace_id,
         user_id=user_id,
-        goal=customer_issue,
+        goal=support_query or customer_issue,
         agent_name=WORKSPACE_SUPPORT_AGENT_NAME,
         graph_builder=build_workspace_support_graph,
         validate_contract=validate_support_task_contract,
         graph_runner=graph_runner,
+        extra_state={
+            "support_input": resolved_support_input,
+        },
     )
 
 

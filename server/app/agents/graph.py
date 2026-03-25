@@ -39,6 +39,7 @@ class WorkspaceSupportState(TypedDict, total=False):
     user_id: str
     task_type: SupportTaskType
     goal: str
+    support_input: dict[str, object]
     should_search: bool
     documents: list[dict[str, object]]
     document_count: int
@@ -133,7 +134,7 @@ def _compose_support_result(state: WorkspaceSupportState) -> WorkspaceSupportSta
     return {
         "final_output": build_support_task_result(
             task_type=state["task_type"],
-            customer_issue=state.get("goal", ""),
+            support_input=state.get("support_input"),
             documents=documents,
             matches=matches,
             tool_call_ids=state.get("tool_call_ids", []),
