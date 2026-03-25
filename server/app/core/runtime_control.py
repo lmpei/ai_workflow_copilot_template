@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Shared runtime-control helpers for task and eval recovery semantics.
 
 This module owns the persisted control-state shape, transition builders, and
 operator-facing recovery detail. Service layers should derive cancel/retry
 behavior here instead of hand-assembling control_json mutations.
 """
+
+from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -354,7 +354,7 @@ def build_retry_created_control(
     if extra_json:
         control_json.update(extra_json)
 
-    entry_metadata = {target_id_key: target_id}
+    entry_metadata: dict[str, object] = {target_id_key: target_id}
     if extra_json:
         entry_metadata.update(extra_json)
     return _append_history_entry(
@@ -391,7 +391,7 @@ def build_retry_attempt_control(
     if extra_json:
         control_json.update(extra_json)
 
-    entry_metadata = {source_id_key: source_id}
+    entry_metadata: dict[str, object] = {source_id_key: source_id}
     if extra_json:
         entry_metadata.update(extra_json)
     return _append_history_entry(

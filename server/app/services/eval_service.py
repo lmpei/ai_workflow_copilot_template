@@ -1,5 +1,4 @@
 from app.core.runtime_control import (
-    CONTROL_STATE_CANCELLED,
     build_retry_attempt_control,
     build_retry_created_control,
     get_linked_retry_target_id,

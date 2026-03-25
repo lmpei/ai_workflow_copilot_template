@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -150,6 +150,8 @@ _SCENARIO_REGISTRY: dict[str, dict[str, object]] = {
     },
 }
 
+ScenarioTaskRegistry = dict[str, dict[str, object]]
+
 
 class ScenarioTaskDefinitionResponse(BaseModel):
     task_type: ScenarioTaskType
@@ -202,12 +204,33 @@ def _deepcopy_registry_module(module_type: str) -> dict[str, object]:
     return deepcopy(_SCENARIO_REGISTRY[module_type])
 
 
+def _get_registry_tasks(module_data: dict[str, object]) -> ScenarioTaskRegistry:
+    tasks = module_data.get("tasks")
+    if not isinstance(tasks, dict):
+        raise ValueError("Scenario registry module is missing task definitions")
+    return cast(ScenarioTaskRegistry, deepcopy(tasks))
+
+
+def _get_registry_string_list(module_data: dict[str, object], key: str) -> list[str]:
+    raw_values = module_data.get(key)
+    if not isinstance(raw_values, list):
+        return []
+    return [value for value in raw_values if isinstance(value, str)]
+
+
+def _get_registry_float(module_data: dict[str, object], key: str) -> float:
+    raw_value = module_data.get(key)
+    if isinstance(raw_value, (int, float)):
+        return float(raw_value)
+    raise ValueError(f"Scenario registry field {key} must be numeric")
+
+
 def _iter_registry_tasks() -> list[tuple[str, dict[str, object]]]:
     task_entries: list[tuple[str, dict[str, object]]] = []
     for module_data in _SCENARIO_REGISTRY.values():
         task_entries.extend(
             (task_type, deepcopy(task_definition))
-            for task_type, task_definition in dict(module_data["tasks"]).items()
+            for task_type, task_definition in _get_registry_tasks(module_data).items()
         )
     return task_entries
 
@@ -239,28 +262,28 @@ def get_scenario_task_input_field(task_type: str) -> str:
 
 def get_scenario_task_module_type(task_type: str) -> str:
     for module_type, module_data in _SCENARIO_REGISTRY.items():
-        if task_type in dict(module_data["tasks"]):
+        if task_type in _get_registry_tasks(module_data):
             return module_type
     raise ValueError(f"Unsupported task type: {task_type}")
 
 
 def get_supported_scenario_task_types(module_type: str) -> tuple[str, ...]:
     module_definition = _deepcopy_registry_module(module_type)
-    return tuple(dict(module_definition["tasks"]).keys())
+    return tuple(_get_registry_tasks(module_definition).keys())
 
 
 def get_default_module_config(module_type: str) -> dict[str, object]:
     module_definition = _deepcopy_registry_module(module_type)
     return {
-        "entry_task_types": list(dict(module_definition["tasks"]).keys()),
+        "entry_task_types": list(_get_registry_tasks(module_definition).keys()),
         "result_type": module_definition["result_type"],
-        "features": list(module_definition["features"]),
+        "features": _get_registry_string_list(module_definition, "features"),
     }
 
 
 def get_scenario_module_definition(module_type: str) -> dict[str, object]:
     module_definition = _deepcopy_registry_module(module_type)
-    task_definitions = dict(module_definition.pop("tasks"))
+    task_definitions = _get_registry_tasks(module_definition)
     return {
         "module_type": module_definition["module_type"],
         "title": module_definition["title"],
@@ -268,8 +291,8 @@ def get_scenario_module_definition(module_type: str) -> dict[str, object]:
         "description": module_definition["description"],
         "work_object": module_definition["work_object"],
         "primary_output": module_definition["primary_output"],
-        "core_capabilities": list(module_definition["core_capabilities"]),
-        "not_responsible_for": list(module_definition["not_responsible_for"]),
+        "core_capabilities": _get_registry_string_list(module_definition, "core_capabilities"),
+        "not_responsible_for": _get_registry_string_list(module_definition, "not_responsible_for"),
         "entry_task_types": list(task_definitions.keys()),
         "task_labels": {
             task_type: str(task_definition["label"])
@@ -279,7 +302,7 @@ def get_scenario_module_definition(module_type: str) -> dict[str, object]:
         "eval_prompt_field": module_definition["eval_prompt_field"],
         "default_eval_task_type": module_definition["default_eval_task_type"],
         "quality_baseline": module_definition["quality_baseline"],
-        "pass_threshold": float(module_definition["pass_threshold"]),
+        "pass_threshold": _get_registry_float(module_definition, "pass_threshold"),
         "tasks": [
             {
                 "task_type": task_type,
@@ -302,7 +325,7 @@ def get_default_scenario_eval_config(module_type: str) -> dict[str, object]:
         "module_type": module_definition["module_type"],
         "scenario_task_type": module_definition["default_eval_task_type"],
         "quality_baseline": module_definition["quality_baseline"],
-        "pass_threshold": float(module_definition["pass_threshold"]),
+        "pass_threshold": _get_registry_float(module_definition, "pass_threshold"),
     }
 
 
@@ -317,9 +340,11 @@ def get_scenario_eval_input_label(module_type: str) -> str:
 
 
 def merge_module_config(
-    module_type: str,
+    module_type: str | None,
     module_config_json: dict[str, object] | None,
 ) -> dict[str, object]:
+    if module_type is None:
+        raise ValueError("Module type is required")
     merged = get_default_module_config(module_type)
     if module_config_json:
         merged.update(deepcopy(module_config_json))

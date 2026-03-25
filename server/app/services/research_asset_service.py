@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from typing import cast
 
 from app.models.task import TASK_STATUS_DONE, Task
 from app.repositories import research_asset_repository, task_repository, workspace_repository
-from app.schemas.research import ResearchBrief, ResearchTaskType
+from app.schemas.research import ResearchBrief, ResearchRequestedSection, ResearchTaskType
 from app.schemas.research_asset import (
     ResearchAssetComparisonDiffResponse,
     ResearchAssetComparisonRequest,
@@ -15,7 +16,10 @@ from app.schemas.research_asset import (
     ResearchAssetRevisionResponse,
     ResearchAssetSummaryResponse,
 )
-from app.services.research_assistant_service import ResearchAssistantContractError, resolve_research_task_input
+from app.services.research_assistant_service import (
+    ResearchAssistantContractError,
+    resolve_research_task_input,
+)
 
 
 class ResearchAssetAccessError(Exception):
@@ -28,7 +32,7 @@ class ResearchAssetValidationError(Exception):
 
 def _coerce_research_task_type(value: object) -> ResearchTaskType:
     if value in {"research_summary", "workspace_report"}:
-        return value
+        return cast(ResearchTaskType, value)
     raise ResearchAssetValidationError("Research asset contains an unsupported task type")
 
 
@@ -47,6 +51,21 @@ def _normalize_string_list(values: object) -> list[str]:
         normalized.append(item)
         seen.add(item)
     return normalized
+
+
+def _normalize_requested_sections(values: object) -> list[ResearchRequestedSection]:
+    allowed_values = {
+        "summary",
+        "findings",
+        "evidence",
+        "open_questions",
+        "next_steps",
+    }
+    normalized_sections: list[ResearchRequestedSection] = []
+    for value in _normalize_string_list(values):
+        if value in allowed_values:
+            normalized_sections.append(cast(ResearchRequestedSection, value))
+    return normalized_sections
 
 
 def _build_research_brief(
@@ -80,7 +99,7 @@ def _build_research_brief(
             deliverable=input_payload.get("deliverable")
             if input_payload.get("deliverable") in {"brief", "report"}
             else None,
-            requested_sections=_normalize_string_list(input_payload.get("requested_sections")),
+            requested_sections=_normalize_requested_sections(input_payload.get("requested_sections")),
             continuation_notes=input_payload.get("continuation_notes")
             if isinstance(input_payload.get("continuation_notes"), str)
             else None,

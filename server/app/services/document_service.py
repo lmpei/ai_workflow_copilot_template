@@ -3,7 +3,12 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
-from app.models.document import DOCUMENT_STATUS_CHUNKED, DOCUMENT_STATUS_FAILED, DOCUMENT_STATUS_INDEXED, DOCUMENT_STATUS_PARSING
+from app.models.document import (
+    DOCUMENT_STATUS_CHUNKED,
+    DOCUMENT_STATUS_FAILED,
+    DOCUMENT_STATUS_INDEXED,
+    DOCUMENT_STATUS_PARSING,
+)
 from app.repositories import document_repository
 from app.schemas.document import DocumentResponse
 from app.services import document_parsing_service, document_reindex_service
@@ -12,7 +17,7 @@ from app.services.document_parsing_service import (
     DocumentUploadError,
     ParsedDocumentSegment,
 )
-from app.services.document_reindex_service import DocumentAccessError, PreparedDocumentChunk
+from app.services.document_reindex_service import DocumentAccessError
 from app.services.indexing_service import (
     DocumentIndexingError,
     EmbeddingProvider,

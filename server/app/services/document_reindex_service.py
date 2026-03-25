@@ -6,6 +6,7 @@ from app.models.document import (
     DOCUMENT_STATUS_FAILED,
     DOCUMENT_STATUS_INDEXED,
     DOCUMENT_STATUS_INDEXING,
+    Document,
 )
 from app.repositories import document_repository
 from app.repositories.document_repository import (
@@ -101,11 +102,11 @@ def restore_document_status(document_id: str, previous_status: str) -> None:
 
 def reindex_document_preserving_existing_index(
     *,
-    document,
+    document: Document,
     chunk_creates: list[DocumentChunkCreate],
     embedding_provider: EmbeddingProvider,
     vector_store: VectorStoreClient,
-) -> object:
+) -> Document:
     previous_status = document.status
     current_embeddings = document_repository.list_document_embeddings(document.id)
     current_vector_ids = [embedding.vector_store_id for embedding in current_embeddings]

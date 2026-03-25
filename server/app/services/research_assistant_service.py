@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from pydantic import ValidationError
 
 from app.schemas.research import (
@@ -8,9 +10,9 @@ from app.schemas.research import (
     ResearchFormalReport,
     ResearchLineage,
     ResearchReportSection,
+    ResearchRequestedSection,
     ResearchResultSections,
     ResearchTaskInput,
-    ResearchRequestedSection,
     ResearchTaskType,
 )
 from app.schemas.scenario import (
@@ -68,7 +70,7 @@ def _normalize_optional_string(value: str | None) -> str | None:
     return normalized or None
 
 
-def _normalize_string_list(values: list[str]) -> list[str]:
+def _normalize_string_list(values: Sequence[str]) -> list[str]:
     normalized: list[str] = []
     seen: set[str] = set()
     for value in values:
@@ -548,7 +550,7 @@ def evaluate_research_result_regression(
     artifacts_json = result_json.get("artifacts")
     artifacts_payload = artifacts_json if isinstance(artifacts_json, dict) else {}
     report_json = result_json.get("report")
-    report_payload = report_json if isinstance(report_json, dict) else None
+    report_payload = report_json if isinstance(report_json, dict) else {}
     lineage_json = result_json.get("lineage")
 
     task_type = result_json.get("task_type")
@@ -579,8 +581,6 @@ def evaluate_research_result_regression(
     report_expected = task_type == "workspace_report" or deliverable == "report"
     report_sections = (
         report_payload.get("sections")
-        if isinstance(report_payload, dict)
-        else None
     )
     report_section_list = report_sections if isinstance(report_sections, list) else []
     is_follow_up = metadata_json.get("is_follow_up") is True or input_payload.get("parent_task_id") is not None
@@ -709,6 +709,12 @@ def build_research_task_result(
         match_models=match_models,
         evidence=evidence,
     )
+    trust_gaps_raw = trust_metadata.get("gaps")
+    trust_gaps = [
+        gap
+        for gap in trust_gaps_raw
+        if isinstance(gap, str)
+    ] if isinstance(trust_gaps_raw, list) else []
 
     artifacts = ResearchArtifacts(
         document_count=len(document_models),
@@ -741,7 +747,7 @@ def build_research_task_result(
             "evidence_status": trust_metadata["evidence_status"],
             "report_ready": report is not None,
             "regression_passed": trust_metadata["regression_passed"],
-            "trust_gaps": list(trust_metadata["gaps"]),
+            "trust_gaps": trust_gaps,
             "trust": trust_metadata,
         },
     )

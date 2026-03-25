@@ -1,5 +1,3 @@
-from arq import create_pool
-
 """Generic task lifecycle executor.
 
 This service owns the shared pending -> running -> completed or failed flow.
@@ -8,6 +6,9 @@ task execution extensions.
 """
 
 from datetime import UTC, datetime
+from typing import cast
+
+from arq import create_pool
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
@@ -24,6 +25,7 @@ from app.models.task import (
     Task,
 )
 from app.repositories import task_repository, workspace_repository
+from app.schemas.research import ResearchTaskType
 from app.schemas.scenario import (
     MODULE_TYPE_JOB,
     MODULE_TYPE_RESEARCH,
@@ -91,15 +93,22 @@ def _resolve_task_module_type(task_type: str) -> str:
         raise TaskExecutionError(str(error)) from error
 
 
+def _coerce_research_task_type(task_type: str) -> ResearchTaskType:
+    if task_type in {"research_summary", "workspace_report"}:
+        return cast(ResearchTaskType, task_type)
+    raise TaskExecutionError(f"Unsupported Research task type: {task_type}")
+
+
 def _resolve_task_prompt(task: Task) -> str:
     task_module_type = _resolve_task_module_type(task.task_type)
     if task_module_type == MODULE_TYPE_RESEARCH:
+        research_task_type = _coerce_research_task_type(task.task_type)
         research_input = resolve_research_task_input(
-            task_type=task.task_type,
+            task_type=research_task_type,
             input_json=task.input_json,
         )
         return build_research_task_search_query(
-            task_type=task.task_type,
+            task_type=research_task_type,
             research_input=research_input,
         )
 
@@ -140,8 +149,9 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
         raise TaskExecutionError(str(error)) from error
 
     if task_module_type == MODULE_TYPE_RESEARCH:
+        research_task_type = _coerce_research_task_type(task.task_type)
         research_input = resolve_research_task_input(
-            task_type=task.task_type,
+            task_type=research_task_type,
             input_json=task.input_json,
         )
         research_lineage = resolve_research_task_lineage(
@@ -149,7 +159,7 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             research_input=research_input,
         )
         prompt = build_research_task_search_query(
-            task_type=task.task_type,
+            task_type=research_task_type,
             research_input=research_input,
             lineage=research_lineage,
         )

@@ -7,16 +7,16 @@ records, or Research asset synchronization, lives here.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Protocol, cast
 
 from app.models.task import TASK_STATUS_DONE, Task
 from app.repositories import task_repository
+from app.schemas.research import ResearchLineage, ResearchTaskInput, ResearchTaskType
 from app.schemas.scenario import MODULE_TYPE_RESEARCH, get_scenario_task_module_type
 from app.services import research_asset_service, trace_service
 from app.services.agent_service import AgentExecutionResult
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
-    ResearchLineage,
     build_research_task_search_query,
     resolve_research_task_input,
 )
@@ -104,7 +104,7 @@ class NoopTaskExecutionExtension:
 def resolve_research_task_lineage(
     *,
     task: Task,
-    research_input,
+    research_input: ResearchTaskInput,
 ) -> ResearchLineage | None:
     if not research_input.parent_task_id:
         return None
@@ -144,7 +144,7 @@ def resolve_research_task_lineage(
 
     return ResearchLineage(
         parent_task_id=parent_task.id,
-        parent_task_type=parent_task.task_type,
+        parent_task_type=cast(ResearchTaskType, parent_task.task_type),
         parent_title=title.strip(),
         parent_goal=parent_goal,
         parent_summary=summary.strip(),
@@ -158,9 +158,10 @@ def _build_research_trace_request(task: Task) -> dict[str, object]:
         "task_type": task.task_type,
         "input": dict(task.input_json),
     }
+    research_task_type = cast(ResearchTaskType, task.task_type)
     try:
         research_input = resolve_research_task_input(
-            task_type=task.task_type,
+            task_type=research_task_type,
             input_json=task.input_json,
         )
     except ResearchAssistantContractError:
@@ -175,7 +176,7 @@ def _build_research_trace_request(task: Task) -> dict[str, object]:
     if research_lineage is not None:
         request_json["lineage"] = research_lineage.model_dump(exclude_none=True)
     request_json["prompt"] = build_research_task_search_query(
-        task_type=task.task_type,
+        task_type=research_task_type,
         research_input=research_input,
         lineage=research_lineage,
     )

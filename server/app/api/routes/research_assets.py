@@ -10,7 +10,10 @@ from app.schemas.research_asset import (
     ResearchAssetSummaryResponse,
 )
 from app.services import research_asset_service
-from app.services.research_asset_service import ResearchAssetAccessError, ResearchAssetValidationError
+from app.services.research_asset_service import (
+    ResearchAssetAccessError,
+    ResearchAssetValidationError,
+)
 
 router = APIRouter()
 

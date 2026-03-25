@@ -1,7 +1,7 @@
 import os
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/ai_workflow"
     redis_url: str = "redis://redis:6379/0"
     task_queue_name: str = "platform_tasks"
-    auth_secret_key: str
+    auth_secret_key: str = Field(default="")
     openai_api_key: str = "replace_me"
     chat_provider: str = "qwen"
     chat_api_key: str = "replace_me"

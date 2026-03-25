@@ -1,6 +1,6 @@
-﻿from typing import TypedDict, cast
-
 """Workspace agent graphs built from one shared execution skeleton."""
+
+from typing import Any, TypedDict, cast
 
 from langgraph.graph import END, START, StateGraph
 
@@ -158,17 +158,17 @@ def _compose_job_result(state: WorkspaceJobState) -> WorkspaceJobState:
 
 def _build_workspace_graph(
     *,
-    state_schema,
+    state_schema: Any,
     plan_step_name: str,
-    compose_result,
-):
+    compose_result: Any,
+) -> Any:
     # Research, Support, and Job share the same graph skeleton; only the
     # final composition step and plan-step label differ by module.
     workflow = StateGraph(state_schema)
-    workflow.add_node(plan_step_name, _plan_goal)
-    workflow.add_node("list_workspace_documents", _list_workspace_documents)
-    workflow.add_node("search_documents", _search_documents)
-    workflow.add_node("compose_result", compose_result)
+    workflow.add_node(plan_step_name, cast(Any, _plan_goal))
+    workflow.add_node("list_workspace_documents", cast(Any, _list_workspace_documents))
+    workflow.add_node("search_documents", cast(Any, _search_documents))
+    workflow.add_node("compose_result", cast(Any, compose_result))
 
     workflow.add_edge(START, plan_step_name)
     workflow.add_edge(plan_step_name, "list_workspace_documents")
@@ -185,7 +185,7 @@ def _build_workspace_graph(
     return workflow.compile()
 
 
-def build_workspace_research_graph():
+def build_workspace_research_graph() -> Any:
     return _build_workspace_graph(
         state_schema=WorkspaceResearchState,
         plan_step_name="plan_research",
@@ -193,7 +193,7 @@ def build_workspace_research_graph():
     )
 
 
-def build_workspace_support_graph():
+def build_workspace_support_graph() -> Any:
     return _build_workspace_graph(
         state_schema=WorkspaceSupportState,
         plan_step_name="plan_support",
@@ -201,7 +201,7 @@ def build_workspace_support_graph():
     )
 
 
-def build_workspace_job_graph():
+def build_workspace_job_graph() -> Any:
     return _build_workspace_graph(
         state_schema=WorkspaceJobState,
         plan_step_name="plan_job",

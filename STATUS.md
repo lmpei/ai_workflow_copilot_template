@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-22
+- Last Updated: 2026-03-23
 
 ## Project Mode
 
@@ -27,8 +27,8 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Verification Status
 
-- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution is complete through archived tasks `stage-c-06` through `stage-c-09`, and the next active execution task is now `stage-c-02`.
-- Last Verified At: 2026-03-22
+- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; an unplanned CI repair task `stage-c-10` is now complete; and the next active execution task remains `stage-c-02`.
+- Last Verified At: 2026-03-23
 
 ## Current Blockers
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-c/stage-c-09-maintainability-annotations-and-surface-hygiene.md`
+- `tasks/archive/stage-c/stage-c-10-ci-build-repair.md`
 
 ## Recent Decisions
 
@@ -76,3 +76,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-22-026` complete `stage-c-07`, make `server/app/schemas/scenario.py` the canonical scenario registry, and move the active governance step to `stage-c-08`
 - `DEC-2026-03-22-027` complete `stage-c-08`, centralize runtime-control transitions, move Research task execution into an explicit extension, and move the active governance step to `stage-c-09`
 - `DEC-2026-03-22-028` complete `stage-c-09`, close the global governance baseline, and return the active Stage C task to `stage-c-02`
+- `DEC-2026-03-23-029` complete `stage-c-10`, repair backend CI typing/lint drift, and keep the active Stage C execution task on `stage-c-02`

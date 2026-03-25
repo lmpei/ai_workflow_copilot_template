@@ -212,6 +212,8 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                 failed_cases += 1
                 error_messages.append(str(error))
             finally:
+                current_eval_run = eval_repository.get_eval_run(eval_run.id)
+                control_json = current_eval_run.control_json if current_eval_run is not None else None
                 refreshed = eval_repository.update_eval_run_status(
                     eval_run.id,
                     next_status=EVAL_RUN_STATUS_RUNNING,
@@ -223,7 +225,7 @@ def run_eval_execution(eval_run_id: str) -> dict[str, object]:
                         passed_cases=passed_cases,
                         score_total=score_total,
                     ),
-                    control_json=eval_repository.get_eval_run(eval_run.id).control_json,
+                    control_json=control_json,
                 )
                 if refreshed is None:
                     raise EvalExecutionError("Eval run not found")

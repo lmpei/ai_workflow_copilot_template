@@ -13,8 +13,12 @@ TaskStatus = Literal["pending", "running", "completed", "failed"]
 def _serialize_task_status(status: str) -> TaskStatus:
     if status == TASK_STATUS_DONE:
         return "completed"
-    if status in {"pending", "running", "failed"}:
-        return status
+    if status == "pending":
+        return "pending"
+    if status == "running":
+        return "running"
+    if status == "failed":
+        return "failed"
     raise ValueError(f"Unsupported task status: {status}")
 
 

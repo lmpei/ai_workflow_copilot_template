@@ -1,7 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agents, auth, chat, documents, evals, health, metrics, research_assets, scenarios, tasks, workspaces
+from app.api.routes import (
+    agents,
+    auth,
+    chat,
+    documents,
+    evals,
+    health,
+    metrics,
+    research_assets,
+    scenarios,
+    tasks,
+    workspaces,
+)
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 

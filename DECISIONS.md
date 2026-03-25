@@ -481,3 +481,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the active Stage C task returns to `stage-c-02`, the archived governance stack now covers `stage-c-06` through `stage-c-09`, and future collaborators have clearer guidance about runtime semantics and placeholder surfaces
 - Related Task: `tasks/archive/stage-c/stage-c-09-maintainability-annotations-and-surface-hygiene.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-23-029
+- Date: 2026-03-23
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: repair stage-c CI build drift after the governance baseline
+- Context: the Stage C codebase had passed the repo's day-to-day verification baseline, but the CI workflow in `.github/workflows/ci.yml` was stricter on backend lint and typing, which left the pipeline red after the governance and runtime-alignment work
+- Choice: complete an unplanned `stage-c-10` hotfix, tighten backend typing in the runtime/scenario/research execution path, and align Ruff with live application code by excluding `alembic` and `tests` and ignoring `E501`
+- Why: CI must be reliable before Stage C module-depth execution can continue, and the failing checks were mostly application-type drift plus lint noise outside the maintained backend surface
+- Impact: backend `ruff`, `mypy`, and `pytest` now pass again, frontend lint/build still pass, and the planned Stage C execution task remains `stage-c-02`
+- Related Task: `tasks/archive/stage-c/stage-c-10-ci-build-repair.md`
+- Supersedes:
