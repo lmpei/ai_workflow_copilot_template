@@ -8,6 +8,7 @@ expectations.
 
 For the concrete Stage B staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
 For the Stage C cross-module demo baseline, also read `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`.
+For the reusable Stage C evidence shape, also read `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`.
 
 ## Environment Intent
 
@@ -202,3 +203,4 @@ When the candidate is intended to represent Stage C readiness rather than only S
 - record which Research, Support, and Job surfaces were actually checked
 - confirm module outputs stay honest when context is thin instead of pretending grounding exists
 - confirm the eval surface exposes the registry-backed quality baseline and pass threshold for the reviewed module
+- capture the cross-module evidence record with `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md` or the eval-manager evidence draft

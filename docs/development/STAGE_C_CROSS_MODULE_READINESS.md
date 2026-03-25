@@ -51,6 +51,11 @@ For each module candidate under review:
 
 - the eval surface should show the module quality baseline from the scenario registry
 - the eval surface should show the pass threshold from the scenario registry
+- the eval surface should show whether default-task eval coverage is:
+  - `covered`
+  - `template_only`
+  - `missing`
+  - `no_workspace`
 - there should be either:
   - a current eval dataset or run for the module's default eval task
   - or a documented note explaining why eval coverage is still pending
@@ -82,10 +87,15 @@ Every Stage C demo or release-like rehearsal should record:
 - which eval datasets or runs were inspected
 - which module surfaces remain out of scope or still need follow-up
 
+The eval manager can now generate a lightweight cross-module rehearsal evidence draft directly from visible workspace and
+dataset coverage. When a durable handoff record is needed, use
+`docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`.
+
 ## Related Docs
 
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
+- `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`
 - `docs/prd/STAGE_C_PLAN.md`
 - `docs/PROJECT_GUIDE.md`
 

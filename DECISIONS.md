@@ -579,3 +579,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: collaborators can now build shortlist runs from completed grounded candidate reviews, Job outputs preserve evidence-linked ranking risks and interview focus, and candidate-comparison flows stay explicit about missing materials instead of implying a final hiring decision
 - Related Task: `tasks/archive/stage-c/stage-c-13-job-shortlist-and-candidate-comparison.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-036
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-14 cross-module eval coverage and rehearsal evidence durability
+- Context: `stage-c-04` exposed a lightweight cross-module readiness baseline, but collaborators still had to infer which module evals existed and hand-write rehearsal evidence without one durable cross-module draft path
+- Choice: extend the eval manager with visible cross-module default-task coverage states and a lightweight rehearsal-evidence draft, add `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md` as the reusable evidence shape, archive `stage-c-14`, and close the second Stage C task wave
+- Why: the second Stage C wave should end with one explicit way to show default eval coverage and preserve a lightweight cross-module rehearsal record without overstating production maturity
+- Impact: collaborators can now inspect which module default evals are covered, template-only, missing, or blocked by missing workspaces, and can capture one cross-module rehearsal evidence draft directly from the eval surface
+- Related Task: `tasks/archive/stage-c/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md`
+- Supersedes:

@@ -185,8 +185,8 @@ The first executable Stage C wave is now complete as:
 - `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md` (complete)
 - `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md` (complete)
 
-The second executable Stage C wave is now active as:
+The second executable Stage C wave is now complete as:
 
 - `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md` (complete)
-- `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` (active)
-- `tasks/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (queued)
+- `tasks/archive/stage-c/stage-c-13-job-shortlist-and-candidate-comparison.md` (complete)
+- `tasks/archive/stage-c/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (complete)

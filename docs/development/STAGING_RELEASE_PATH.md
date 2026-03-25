@@ -132,8 +132,9 @@ The release is not considered rehearsed until a human completes these checks:
 - the documents view loads without server errors
 - Research, Support, and Job surfaces are visible from the workspace hub or otherwise explicitly documented as unavailable
 - each module can run its default workflow task or return an honest degraded result when context is thin
-- the eval surface shows the module quality baseline and pass threshold for the reviewed candidate
+- the eval surface shows the module quality baseline, pass threshold, and default-task coverage state for the reviewed candidate
 - traces and task history remain visible after the run
+- the Stage C rehearsal evidence record captures module coverage plus any remaining eval gaps
 
 ### 7. Evidence and Handoff Records
 
@@ -191,6 +192,7 @@ The Stage B rollback decision path is:
 - `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`
+- `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`
 - `docs/development/WINDOWS_SETUP.md`
 - `README.md`
 - `tasks/archive/stage-a/stage-a-09-staging-delivery-path.md`
@@ -198,3 +200,4 @@ The Stage B rollback decision path is:
 ## Stage C Demo Readiness Extension
 
 When the rehearsal is intended to represent Stage C readiness, pair this document with `docs/development/STAGE_C_CROSS_MODULE_READINESS.md` so the handoff explicitly covers Research, Support, and Job rather than only a generic application restart path.
+Use `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md` or the eval-manager evidence draft to record which module evals were covered, which remain pending, and which surfaces stayed out of scope.

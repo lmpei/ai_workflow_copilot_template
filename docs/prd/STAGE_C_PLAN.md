@@ -131,16 +131,16 @@ Stage C is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` as the next active task of the second Stage C
-wave after completing `stage-c-12`.
+Decide whether Stage C should close after the second wave or open one more bounded wave for deeper reusable non-Research
+workflow layers.
 
 ## Second Task Wave
 
-The second executable Stage C wave is now active:
+The second executable Stage C wave is now complete:
 
 - `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md` (complete)
-- `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` (active)
-- `tasks/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (queued)
+- `tasks/archive/stage-c/stage-c-13-job-shortlist-and-candidate-comparison.md` (complete)
+- `tasks/archive/stage-c/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (complete)
 
 This wave uses Research's reusable iteration patterns as a reference while turning Support and Job into multi-step
 workflows and making cross-module eval coverage and rehearsal evidence more durable.

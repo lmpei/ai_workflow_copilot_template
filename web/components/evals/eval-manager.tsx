@@ -9,6 +9,7 @@ import {
   getEvalRun,
   getWorkspace,
   isApiClientError,
+  listWorkspaces,
   listEvalDatasets,
   listEvalRunResults,
   listScenarioModules,
@@ -56,6 +57,31 @@ const MODULE_READINESS_CHECKS: Record<ModuleType, string[]> = {
   ],
 };
 
+type CoverageStatus = "covered" | "template_only" | "missing" | "no_workspace";
+
+type ModuleWorkspaceCoverageRecord = {
+  workspace_id: string;
+  workspace_name: string;
+  dataset_count: number;
+  default_task_dataset_count: number;
+  default_task_case_count: number;
+  latest_dataset_name?: string;
+  status: CoverageStatus;
+};
+
+type ModuleEvalCoverageRecord = {
+  module: ScenarioModuleRecord;
+  status: CoverageStatus;
+  total_workspace_count: number;
+  total_dataset_count: number;
+  default_task_dataset_count: number;
+  default_task_case_count: number;
+  covered_workspace_count: number;
+  summary: string;
+  known_gap: string;
+  workspaces: ModuleWorkspaceCoverageRecord[];
+};
+
 function getStorageKey(workspaceId: string) {
   return `${STORAGE_KEY_PREFIX}${workspaceId}`;
 }
@@ -96,6 +122,115 @@ function sortDatasets(datasets: EvalDatasetRecord[]): EvalDatasetRecord[] {
 
 function sortRuns(runs: EvalRunRecord[]): EvalRunRecord[] {
   return [...runs].sort((left, right) => right.created_at.localeCompare(left.created_at));
+}
+
+function sortWorkspaces(workspaces: Workspace[]): Workspace[] {
+  return [...workspaces].sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function getDatasetScenarioTaskType(dataset: EvalDatasetRecord): TaskType | null {
+  const scenarioTaskType = dataset.config_json.scenario_task_type;
+  return typeof scenarioTaskType === "string" ? (scenarioTaskType as TaskType) : null;
+}
+
+function getCoverageStatusBadge(status: CoverageStatus) {
+  const styles: Record<CoverageStatus, { label: string; color: string }> = {
+    covered: { label: "Covered", color: "#166534" },
+    template_only: { label: "Template only", color: "#92400e" },
+    missing: { label: "Coverage missing", color: "#b91c1c" },
+    no_workspace: { label: "No workspace", color: "#475569" },
+  };
+  const style = styles[status];
+
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        borderRadius: 999,
+        padding: "4px 10px",
+        fontSize: 12,
+        fontWeight: 600,
+        color: style.color,
+        backgroundColor: `${style.color}14`,
+      }}
+    >
+      {style.label}
+    </span>
+  );
+}
+
+function buildModuleCoverage(
+  module: ScenarioModuleRecord,
+  workspaces: Workspace[],
+  datasetsByWorkspaceId: Record<string, EvalDatasetRecord[]>,
+): ModuleEvalCoverageRecord {
+  const moduleWorkspaces = workspaces.filter((workspace) => workspace.module_type === module.module_type);
+  const workspaceCoverage = moduleWorkspaces.map((workspace) => {
+    const workspaceDatasets = sortDatasets(datasetsByWorkspaceId[workspace.id] ?? []);
+    const defaultTaskDatasets = workspaceDatasets.filter(
+      (dataset) => getDatasetScenarioTaskType(dataset) === module.default_eval_task_type,
+    );
+    const defaultTaskCaseCount = defaultTaskDatasets.reduce((total, dataset) => total + dataset.cases.length, 0);
+    const status: CoverageStatus =
+      defaultTaskDatasets.length === 0
+        ? "missing"
+        : defaultTaskCaseCount > 0
+          ? "covered"
+          : "template_only";
+
+    return {
+      workspace_id: workspace.id,
+      workspace_name: workspace.name,
+      dataset_count: workspaceDatasets.length,
+      default_task_dataset_count: defaultTaskDatasets.length,
+      default_task_case_count: defaultTaskCaseCount,
+      latest_dataset_name: workspaceDatasets[0]?.name,
+      status,
+    } satisfies ModuleWorkspaceCoverageRecord;
+  });
+
+  const totalDatasetCount = workspaceCoverage.reduce((total, workspace) => total + workspace.dataset_count, 0);
+  const defaultTaskDatasetCount = workspaceCoverage.reduce(
+    (total, workspace) => total + workspace.default_task_dataset_count,
+    0,
+  );
+  const defaultTaskCaseCount = workspaceCoverage.reduce((total, workspace) => total + workspace.default_task_case_count, 0);
+  const coveredWorkspaceCount = workspaceCoverage.filter((workspace) => workspace.status === "covered").length;
+  const status: CoverageStatus =
+    workspaceCoverage.length === 0
+      ? "no_workspace"
+      : coveredWorkspaceCount > 0
+        ? "covered"
+        : workspaceCoverage.some((workspace) => workspace.status === "template_only")
+          ? "template_only"
+          : "missing";
+
+  let summary = "Cross-module eval coverage is pending for this module.";
+  let knownGap = "No default-task eval dataset is visible yet.";
+
+  if (status === "covered") {
+    summary = `Found ${defaultTaskDatasetCount} default-task dataset(s) with ${defaultTaskCaseCount} total case(s).`;
+    knownGap = "No blocking default-task coverage gap is currently visible.";
+  } else if (status === "template_only") {
+    summary = `Default-task datasets exist, but they still have ${defaultTaskCaseCount} visible case(s).`;
+    knownGap = "A template dataset exists, but it still needs real module-specific eval cases.";
+  } else if (status === "no_workspace") {
+    summary = "No workspace for this module is visible to the current collaborator.";
+    knownGap = "Create or expose a workspace before claiming cross-module eval coverage.";
+  }
+
+  return {
+    module,
+    status,
+    total_workspace_count: workspaceCoverage.length,
+    total_dataset_count: totalDatasetCount,
+    default_task_dataset_count: defaultTaskDatasetCount,
+    default_task_case_count: defaultTaskCaseCount,
+    covered_workspace_count: coveredWorkspaceCount,
+    summary,
+    known_gap: knownGap,
+    workspaces: workspaceCoverage,
+  };
 }
 
 function renderRunStatus(status: EvalRunRecord["status"]) {
@@ -233,6 +368,8 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [scenarioModules, setScenarioModules] = useState<ScenarioModuleRecord[]>([]);
+  const [allWorkspaces, setAllWorkspaces] = useState<Workspace[]>([]);
+  const [coverageDatasetsByWorkspaceId, setCoverageDatasetsByWorkspaceId] = useState<Record<string, EvalDatasetRecord[]>>({});
   const [datasets, setDatasets] = useState<EvalDatasetRecord[]>([]);
   const [runs, setRuns] = useState<EvalRunRecord[]>([]);
   const [resultsByRunId, setResultsByRunId] = useState<Record<string, EvalResultRecord[]>>({});
@@ -246,6 +383,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const [isCreatingDataset, setIsCreatingDataset] = useState(false);
   const [isCreatingRunId, setIsCreatingRunId] = useState<string | null>(null);
   const [isControllingRunId, setIsControllingRunId] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   const scenarioTaskTypeOptions = useMemo(
     () => getScenarioTaskTypeOptions(workspace, scenarioModules),
@@ -276,6 +414,30 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
     }
   }, [session, workspaceId]);
+
+  const loadCoverage = useCallback(async () => {
+    if (!session) {
+      setAllWorkspaces([]);
+      setCoverageDatasetsByWorkspaceId({});
+      return;
+    }
+
+    try {
+      const loadedWorkspaces = sortWorkspaces(await listWorkspaces(session.accessToken));
+      setAllWorkspaces(loadedWorkspaces);
+      const coverageEntries = await Promise.all(
+        loadedWorkspaces.map(async (candidateWorkspace) => {
+          const workspaceDatasets = sortDatasets(
+            await listEvalDatasets(session.accessToken, candidateWorkspace.id),
+          );
+          return [candidateWorkspace.id, workspaceDatasets] as const;
+        }),
+      );
+      setCoverageDatasetsByWorkspaceId(Object.fromEntries(coverageEntries));
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load cross-module eval coverage");
+    }
+  }, [session]);
 
   const loadDatasets = useCallback(async () => {
     if (!session) {
@@ -381,9 +543,10 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
 
   useEffect(() => {
     void loadWorkspace();
+    void loadCoverage();
     void loadDatasets();
     void loadStoredRuns();
-  }, [loadDatasets, loadStoredRuns, loadWorkspace]);
+  }, [loadCoverage, loadDatasets, loadStoredRuns, loadWorkspace]);
 
   useEffect(() => {
     if (!session) {
@@ -409,6 +572,65 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
     [runs, selectedRunId],
   );
   const selectedRunResults = selectedRunId ? resultsByRunId[selectedRunId] ?? [] : [];
+  const moduleCoverage = useMemo(
+    () =>
+      scenarioModules.map((module) =>
+        buildModuleCoverage(module, allWorkspaces, coverageDatasetsByWorkspaceId),
+      ),
+    [allWorkspaces, coverageDatasetsByWorkspaceId, scenarioModules],
+  );
+  const rehearsalEvidenceDraft = useMemo(() => {
+    const lines = [
+      "# Stage C Cross-Module Rehearsal Evidence",
+      "",
+      "## Metadata",
+      "- Completed At:",
+      "- Release Owner:",
+      "- Candidate Workspace:",
+      `- Current Workspace: ${workspace?.name ?? workspaceId}`,
+      "- Change Ref:",
+      "- Rollback Target:",
+      "",
+      "## Coverage Snapshot",
+    ];
+
+    for (const coverage of moduleCoverage) {
+      lines.push(
+        `- ${coverage.module.title}: ${coverage.summary}`,
+        `  - Status: ${coverage.status}`,
+        `  - Default eval task: ${getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}`,
+        `  - Quality baseline: ${coverage.module.quality_baseline}`,
+        `  - Pass threshold: ${formatThreshold(coverage.module.pass_threshold)}`,
+        `  - Known gap: ${coverage.known_gap}`,
+      );
+      if (coverage.workspaces.length > 0) {
+        for (const workspaceCoverage of coverage.workspaces) {
+          lines.push(
+            `  - Workspace ${workspaceCoverage.workspace_name}: ${workspaceCoverage.default_task_dataset_count} default-task dataset(s), ${workspaceCoverage.default_task_case_count} case(s), status ${workspaceCoverage.status}`,
+          );
+        }
+      } else {
+        lines.push("  - Workspace coverage: none visible to the current collaborator");
+      }
+    }
+
+    lines.push(
+      "",
+      "## Manual Module Checks",
+      "- Research surface checked:",
+      "- Support surface checked:",
+      "- Job surface checked:",
+      "- Eval datasets or runs inspected:",
+      "- Honest degraded output confirmed where context was thin:",
+      "",
+      "## Known Gaps / Follow-up",
+      "- Remaining missing eval coverage:",
+      "- Out-of-scope module surfaces:",
+      "- Follow-up before wider use:",
+    );
+
+    return lines.join("\n");
+  }, [moduleCoverage, scenarioModules, workspace, workspaceId]);
   const datasetNameById = useMemo(
     () => Object.fromEntries(datasets.map((dataset) => [dataset.id, dataset.name])),
     [datasets],
@@ -449,6 +671,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         cases,
       });
       setDatasets((currentDatasets) => sortDatasets([createdDataset, ...currentDatasets]));
+      await loadCoverage();
       setDatasetName("");
       setDatasetDescription("");
       setDatasetQuestions("");
@@ -537,6 +760,29 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
     }
   };
 
+  const handleCopyEvidenceDraft = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(rehearsalEvidenceDraft);
+      setCopyFeedback("Evidence draft copied to clipboard.");
+    } catch {
+      setCopyFeedback("Clipboard copy failed. Select the draft manually.");
+    }
+  }, [rehearsalEvidenceDraft]);
+
+  useEffect(() => {
+    if (!copyFeedback) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setCopyFeedback(null);
+    }, 2500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [copyFeedback]);
+
   if (!isReady) {
     return <SectionCard title="Evaluations">Loading session...</SectionCard>;
   }
@@ -607,6 +853,66 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               </div>
             ))}
           </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Cross-module eval coverage"
+        description="Aggregate visible workspaces and eval datasets so collaborators can tell which default module evals exist, which are still template-only, and which remain missing."
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          {moduleCoverage.map((coverage) => (
+            <div
+              key={coverage.module.module_type}
+              style={{
+                border: "1px solid #cbd5e1",
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <strong>{coverage.module.title}</strong>
+                {getCoverageStatusBadge(coverage.status)}
+              </div>
+              <div>
+                Default eval task: {getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}
+              </div>
+              <div>
+                Coverage snapshot: {coverage.default_task_dataset_count} default-task dataset(s) / {coverage.default_task_case_count} case(s)
+              </div>
+              <div>{coverage.summary}</div>
+              <div style={{ color: "#475569", marginTop: 8 }}>
+                <strong>Known gap:</strong> {coverage.known_gap}
+              </div>
+              {coverage.workspaces.length > 0 ? (
+                <ul style={{ marginBottom: 0, marginTop: 10 }}>
+                  {coverage.workspaces.map((workspaceCoverage) => (
+                    <li key={workspaceCoverage.workspace_id}>
+                      {workspaceCoverage.workspace_name}: {workspaceCoverage.default_task_dataset_count} default-task dataset(s), {workspaceCoverage.default_task_case_count} case(s), status {workspaceCoverage.status}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ marginBottom: 0, marginTop: 10 }}>No visible workspace currently represents this module.</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Cross-module rehearsal evidence draft"
+        description="Use this lightweight draft as the durable record for Stage C rehearsal evidence. It stays explicit about module checks, default eval coverage, and known gaps without pretending stronger operational guarantees."
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <button onClick={() => void handleCopyEvidenceDraft()} type="button">
+              Copy evidence draft
+            </button>
+            <span style={{ color: "#475569" }}>Template doc: `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`</span>
+          </div>
+          {copyFeedback ? <p style={{ color: "#0369a1", margin: 0 }}>{copyFeedback}</p> : null}
+          <pre style={{ margin: 0, overflowX: "auto", whiteSpace: "pre-wrap" }}>{rehearsalEvidenceDraft}</pre>
         </div>
       </SectionCard>
 

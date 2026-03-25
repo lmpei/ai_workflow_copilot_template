@@ -48,6 +48,8 @@ Use these files for detailed reference material:
   - fallback handoff template for Stage B rehearsal records
 - `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`
   - lightweight cross-module demo-readiness baseline for Research, Support, and Job during Stage C
+- `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`
+  - reusable lightweight evidence shape for Stage C cross-module rehearsal records
 - `docs/development/WINDOWS_SETUP.md`
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
@@ -404,6 +406,10 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
   - provides the fallback evidence-record shape when the helper-generated record is not used
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
   - provides the fallback handoff shape when the helper-generated note is not used
+- `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`
+  - provides the Stage C cross-module evidence shape when rehearsal records need explicit module coverage and eval-gap notes
+- `web/components/evals/eval-manager.tsx`
+  - aggregates visible workspace and dataset coverage into Stage C module coverage states and can draft a lightweight rehearsal evidence record
 
 ## Stage B Recoverable Runtime
 
