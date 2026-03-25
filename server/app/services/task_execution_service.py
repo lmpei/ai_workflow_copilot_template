@@ -43,6 +43,7 @@ from app.services.agent_service import (
 from app.services.job_assistant_service import (
     JobAssistantContractError,
     build_job_task_search_query,
+    resolve_job_comparison_candidates,
     resolve_job_task_input,
     validate_job_task_contract,
 )
@@ -125,7 +126,16 @@ def _resolve_task_prompt(task: Task) -> str:
         return "Summarize the current support issue and the best grounded next steps."
 
     job_input = resolve_job_task_input(task.input_json)
+    comparison_candidates = resolve_job_comparison_candidates(
+        workspace_id=task.workspace_id,
+        job_input=job_input,
+    )
     job_query = build_job_task_search_query(job_input)
+    if comparison_candidates:
+        job_query = build_job_task_search_query(
+            job_input,
+            comparison_candidates=comparison_candidates,
+        )
     if job_query:
         return job_query
 

@@ -565,3 +565,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: collaborators can continue a completed Support case without copying raw JSON by hand, Support follow-up runs now preserve parent-case lineage and reviewer-ready escalation packets, and limited-context runs stay explicit about missing grounding in the handoff output
 - Related Task: `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-035
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-13 Job shortlist and candidate-comparison workflow depth
+- Context: `stage-c-03` gave Job Assistant a structured single-run hiring workflow, but the module still ended at isolated candidate or JD reviews and forced collaborators to compare completed job tasks by hand
+- Choice: extend the canonical Job input with `candidate_label`, `comparison_task_ids`, and `comparison_notes`, require shortlist comparisons to reference completed single-candidate `resume_match` tasks in the same workspace, add structured `comparison_candidates` and `shortlist` result fields, upgrade the Job panel with shortlist-selection and shortlist-inspection flows, archive `stage-c-13`, and move the active Stage C task to `stage-c-14`
+- Why: the second Stage C wave should prove that Job Assistant can turn grounded single-run reviews into a reusable shortlist workflow without inventing a separate persistence layer or bypassing the shared task runtime
+- Impact: collaborators can now build shortlist runs from completed grounded candidate reviews, Job outputs preserve evidence-linked ranking risks and interview focus, and candidate-comparison flows stay explicit about missing materials instead of implying a final hiring decision
+- Related Task: `tasks/archive/stage-c/stage-c-13-job-shortlist-and-candidate-comparison.md`
+- Supersedes:

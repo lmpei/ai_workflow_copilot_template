@@ -150,6 +150,59 @@ def _validate_support_task_lineage(
         raise TaskValidationError("Parent support task does not contain a structured Support result")
 
 
+def _validate_job_task_comparison(
+    *,
+    workspace_id: str,
+    user_id: str,
+    task_type: str,
+    normalized_input: dict[str, object],
+) -> None:
+    comparison_task_ids = normalized_input.get("comparison_task_ids")
+    if not isinstance(comparison_task_ids, list) or len(comparison_task_ids) == 0:
+        return
+
+    if task_type != "resume_match":
+        raise TaskValidationError("Comparison task IDs are only supported for resume_match tasks")
+    if len(comparison_task_ids) < 2:
+        raise TaskValidationError("At least two comparison job tasks are required for shortlist review")
+
+    normalized_target_role = normalized_input.get("target_role")
+    target_role_key = normalized_target_role.strip().casefold() if isinstance(normalized_target_role, str) and normalized_target_role.strip() else None
+
+    for comparison_task_id in comparison_task_ids:
+        if not isinstance(comparison_task_id, str) or not comparison_task_id:
+            raise TaskValidationError("Comparison job task IDs must be non-empty strings")
+        comparison_task = task_repository.get_task_for_user(comparison_task_id, user_id)
+        if comparison_task is None or comparison_task.workspace_id != workspace_id:
+            raise TaskValidationError("Comparison job task not found in this workspace")
+        if _resolve_task_module_type(comparison_task.task_type) != MODULE_TYPE_JOB:
+            raise TaskValidationError("Comparison task must be a completed Job review task")
+        if comparison_task.task_type != "resume_match":
+            raise TaskValidationError("Comparison task must be a completed Job resume_match task")
+        if comparison_task.status != "done":
+            raise TaskValidationError("Comparison job task must be completed before shortlist review")
+
+        result = comparison_task.output_json.get("result")
+        if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_JOB:
+            raise TaskValidationError("Comparison job task does not contain a structured Job result")
+        input_payload = result.get("input")
+        if not isinstance(input_payload, dict):
+            continue
+        nested_comparison_ids = input_payload.get("comparison_task_ids")
+        if isinstance(nested_comparison_ids, list) and len(nested_comparison_ids) > 0:
+            raise TaskValidationError(
+                "Comparison job task must be a single candidate review, not a prior shortlist",
+            )
+        comparison_target_role = input_payload.get("target_role")
+        comparison_role_key = (
+            comparison_target_role.strip().casefold()
+            if isinstance(comparison_target_role, str) and comparison_target_role.strip()
+            else None
+        )
+        if target_role_key is not None and comparison_role_key is not None and target_role_key != comparison_role_key:
+            raise TaskValidationError("Comparison job tasks must match the current target_role")
+
+
 def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
@@ -192,6 +245,13 @@ async def create_task(
         _validate_support_task_lineage(
             workspace_id=workspace_id,
             user_id=user_id,
+            normalized_input=normalized_input,
+        )
+    elif task_module_type == MODULE_TYPE_JOB:
+        _validate_job_task_comparison(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            task_type=payload.task_type,
             normalized_input=normalized_input,
         )
 

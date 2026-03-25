@@ -1,15 +1,20 @@
 from collections.abc import Sequence
+from typing import cast
 
 from pydantic import ValidationError
 
+from app.repositories import task_repository
 from app.schemas.job import (
     JobArtifacts,
     JobAssistantResult,
+    JobComparisonCandidate,
     JobEvidenceStatus,
     JobFinding,
     JobFitAssessment,
     JobFitSignal,
     JobReviewBrief,
+    JobShortlistEntry,
+    JobShortlistResult,
     JobTaskInput,
     JobTaskType,
 )
@@ -24,6 +29,13 @@ from app.schemas.tool import SearchDocumentMatch, ToolDocumentSummary
 _JOB_TASK_TITLES = {
     "jd_summary": "Job Description Summary",
     "resume_match": "Structured Resume Match Review",
+}
+_JOB_EVIDENCE_STATUSES = {"grounded_matches", "documents_only", "no_documents"}
+_JOB_FIT_SIGNALS = {
+    "grounded_match_found",
+    "role_requirements_grounded",
+    "insufficient_grounding",
+    "no_documents_available",
 }
 
 
@@ -66,6 +78,18 @@ def _normalize_string_list(values: Sequence[str]) -> list[str]:
     return normalized
 
 
+def _coerce_job_evidence_status(value: object) -> JobEvidenceStatus | None:
+    if isinstance(value, str) and value in _JOB_EVIDENCE_STATUSES:
+        return cast(JobEvidenceStatus, value)
+    return None
+
+
+def _coerce_job_fit_signal(value: object) -> JobFitSignal | None:
+    if isinstance(value, str) and value in _JOB_FIT_SIGNALS:
+        return cast(JobFitSignal, value)
+    return None
+
+
 def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, object]:
     raw_input = input_json or {}
     if raw_input.get("target_role") is None and isinstance(raw_input.get("goal"), str):
@@ -75,10 +99,13 @@ def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, 
 
     payload_input = {
         "target_role": raw_input.get("target_role"),
+        "candidate_label": raw_input.get("candidate_label"),
         "seniority": raw_input.get("seniority"),
         "must_have_skills": raw_input.get("must_have_skills", []),
         "preferred_skills": raw_input.get("preferred_skills", []),
         "hiring_context": raw_input.get("hiring_context"),
+        "comparison_task_ids": raw_input.get("comparison_task_ids", []),
+        "comparison_notes": raw_input.get("comparison_notes"),
     }
     try:
         payload = JobTaskInput.model_validate(payload_input)
@@ -90,6 +117,10 @@ def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, 
     normalized_target_role = _normalize_optional_string(payload.target_role)
     if normalized_target_role:
         normalized_payload["target_role"] = normalized_target_role
+
+    normalized_candidate_label = _normalize_optional_string(payload.candidate_label)
+    if normalized_candidate_label:
+        normalized_payload["candidate_label"] = normalized_candidate_label
 
     normalized_seniority = _normalize_optional_string(payload.seniority)
     if normalized_seniority:
@@ -107,6 +138,14 @@ def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, 
     if normalized_hiring_context:
         normalized_payload["hiring_context"] = normalized_hiring_context
 
+    comparison_task_ids = _normalize_string_list(payload.comparison_task_ids)
+    if comparison_task_ids:
+        normalized_payload["comparison_task_ids"] = comparison_task_ids
+
+    comparison_notes = _normalize_optional_string(payload.comparison_notes)
+    if comparison_notes:
+        normalized_payload["comparison_notes"] = comparison_notes
+
     return normalized_payload
 
 
@@ -117,10 +156,130 @@ def resolve_job_task_input(input_json: dict[str, object] | None) -> JobTaskInput
         raise JobAssistantContractError("Invalid job task input") from error
 
 
-def build_job_task_search_query(job_input: JobTaskInput) -> str:
+def _flatten_job_evidence_ref_ids(findings: Sequence[JobFinding]) -> list[str]:
+    ref_ids: list[str] = []
+    seen: set[str] = set()
+    for finding in findings:
+        for ref_id in finding.evidence_ref_ids:
+            if ref_id in seen:
+                continue
+            seen.add(ref_id)
+            ref_ids.append(ref_id)
+    return ref_ids
+
+
+def _extract_job_comparison_candidate(task_id: str) -> JobComparisonCandidate:
+    task = task_repository.get_task(task_id)
+    if task is None:
+        raise JobAssistantContractError("Comparison job task not found")
+    if get_scenario_task_module_type(task.task_type) != MODULE_TYPE_JOB:
+        raise JobAssistantContractError("Comparison task must be a completed Job review task")
+    if task.task_type != "resume_match":
+        raise JobAssistantContractError("Comparison task must be a completed Job resume_match task")
+    if task.status != "done":
+        raise JobAssistantContractError("Comparison job task must be completed before shortlist review")
+
+    result = task.output_json.get("result")
+    if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_JOB:
+        raise JobAssistantContractError("Comparison job task does not contain a structured Job result")
+
+    title = result.get("title")
+    summary = result.get("summary")
+    if not isinstance(title, str) or not title.strip():
+        raise JobAssistantContractError("Comparison job task is missing a Job title")
+    if not isinstance(summary, str) or not summary.strip():
+        raise JobAssistantContractError("Comparison job task is missing a Job summary")
+
+    input_json = result.get("input")
+    input_payload = input_json if isinstance(input_json, dict) else {}
+    nested_comparison_ids = input_payload.get("comparison_task_ids")
+    if isinstance(nested_comparison_ids, list) and len(nested_comparison_ids) > 0:
+        raise JobAssistantContractError(
+            "Comparison job task must be a single candidate review, not a prior shortlist",
+        )
+    assessment_json = result.get("assessment")
+    assessment_payload = assessment_json if isinstance(assessment_json, dict) else {}
+    findings_json = result.get("findings")
+    findings_payload = findings_json if isinstance(findings_json, list) else []
+    highlights_json = result.get("highlights")
+    highlight_values = [
+        item.strip()
+        for item in highlights_json
+        if isinstance(item, str) and item.strip()
+    ] if isinstance(highlights_json, list) else []
+
+    fit_signal = _coerce_job_fit_signal(assessment_payload.get("fit_signal"))
+    evidence_status = _coerce_job_evidence_status(assessment_payload.get("evidence_status"))
+    if fit_signal is None or evidence_status is None:
+        raise JobAssistantContractError("Comparison job task is missing structured assessment metadata")
+
+    findings = [
+        JobFinding.model_validate(finding)
+        for finding in findings_payload
+        if isinstance(finding, dict)
+    ]
+    candidate_label = _normalize_optional_string(cast(str | None, input_payload.get("candidate_label")))
+    target_role = _normalize_optional_string(cast(str | None, input_payload.get("target_role")))
+
+    return JobComparisonCandidate(
+        task_id=task.id,
+        task_type=cast(JobTaskType, task.task_type),
+        candidate_label=candidate_label or f"Candidate {task.id[:8]}",
+        title=title.strip(),
+        summary=summary.strip(),
+        target_role=target_role,
+        seniority=_normalize_optional_string(cast(str | None, input_payload.get("seniority"))),
+        fit_signal=fit_signal,
+        evidence_status=evidence_status,
+        recommended_outcome=_normalize_optional_string(
+            cast(str | None, assessment_payload.get("recommended_outcome")),
+        ),
+        findings=findings,
+        highlights=highlight_values,
+        evidence_ref_ids=_flatten_job_evidence_ref_ids(findings),
+    )
+
+
+def resolve_job_comparison_candidates(
+    *,
+    workspace_id: str,
+    job_input: JobTaskInput,
+) -> list[JobComparisonCandidate]:
+    comparison_candidates: list[JobComparisonCandidate] = []
+    normalized_target_role = _normalize_optional_string(job_input.target_role)
+    role_key = normalized_target_role.casefold() if normalized_target_role else None
+    comparison_role_key: str | None = None
+
+    for task_id in job_input.comparison_task_ids:
+        candidate = _extract_job_comparison_candidate(task_id)
+        task = task_repository.get_task(candidate.task_id)
+        if task is None or task.workspace_id != workspace_id:
+            raise JobAssistantContractError("Comparison job task not found in this workspace")
+
+        candidate_role = _normalize_optional_string(candidate.target_role)
+        candidate_role_key = candidate_role.casefold() if candidate_role else None
+        if comparison_role_key is None and candidate_role_key is not None:
+            comparison_role_key = candidate_role_key
+        elif comparison_role_key is not None and candidate_role_key is not None and candidate_role_key != comparison_role_key:
+            raise JobAssistantContractError("Comparison job tasks must target the same role")
+        if role_key is not None and candidate_role_key is not None and role_key != candidate_role_key:
+            raise JobAssistantContractError("Comparison job tasks must match the current target_role")
+
+        comparison_candidates.append(candidate)
+
+    return comparison_candidates
+
+
+def build_job_task_search_query(
+    job_input: JobTaskInput,
+    *,
+    comparison_candidates: Sequence[JobComparisonCandidate] | None = None,
+) -> str:
     query_parts: list[str] = []
     if job_input.target_role:
         query_parts.append(job_input.target_role)
+    if job_input.candidate_label:
+        query_parts.append(f"Candidate: {job_input.candidate_label}")
     if job_input.seniority:
         query_parts.append(f"Seniority: {job_input.seniority}")
     if job_input.must_have_skills:
@@ -129,7 +288,22 @@ def build_job_task_search_query(job_input: JobTaskInput) -> str:
         query_parts.append("Preferred skills: " + ", ".join(job_input.preferred_skills))
     if job_input.hiring_context:
         query_parts.append(f"Hiring context: {job_input.hiring_context}")
-    return " | ".join(query_parts)
+    base_query = " | ".join(query_parts)
+
+    if not comparison_candidates:
+        return base_query
+
+    comparison_parts = ["Compare these completed candidate reviews for the same hiring decision."]
+    if job_input.comparison_notes:
+        comparison_parts.append(f"Shortlist focus: {job_input.comparison_notes}")
+    for candidate in comparison_candidates[:5]:
+        comparison_parts.append(
+            f"{candidate.candidate_label}: {candidate.summary} "
+            f"(fit signal: {candidate.fit_signal}, evidence: {candidate.evidence_status})"
+        )
+    if base_query:
+        comparison_parts.append(f"Current role context: {base_query}")
+    return " ".join(comparison_parts)
 
 
 def _derive_evidence_status(*, has_documents: bool, has_matches: bool) -> JobEvidenceStatus:
@@ -144,14 +318,21 @@ def _build_review_brief(
     *,
     job_input: JobTaskInput,
     evidence_status: JobEvidenceStatus,
+    comparison_candidates: Sequence[JobComparisonCandidate],
 ) -> JobReviewBrief:
+    comparison_role = next(
+        (candidate.target_role for candidate in comparison_candidates if candidate.target_role),
+        None,
+    )
     return JobReviewBrief(
-        role_summary=job_input.target_role or "General hiring review",
+        role_summary=job_input.target_role or comparison_role or "General hiring review",
+        candidate_label=job_input.candidate_label,
         seniority=job_input.seniority,
         must_have_skills=list(job_input.must_have_skills),
         preferred_skills=list(job_input.preferred_skills),
         hiring_context=job_input.hiring_context,
         evidence_status=evidence_status,
+        comparison_task_count=len(comparison_candidates),
     )
 
 
@@ -322,10 +503,122 @@ def _build_recommended_next_step(
     return "Upload job descriptions or candidate materials to produce a grounded hiring result."
 
 
+def _build_shortlist_entry(candidate: JobComparisonCandidate, rank: int) -> JobShortlistEntry:
+    risks: list[str] = []
+    interview_focus: list[str] = []
+
+    if candidate.evidence_status != "grounded_matches":
+        risks.append("Grounding is incomplete for this candidate review.")
+    if candidate.fit_signal == "insufficient_grounding":
+        risks.append("The candidate comparison should stay provisional until stronger evidence is indexed.")
+    if candidate.fit_signal == "no_documents_available":
+        risks.append("No indexed candidate materials were available for a grounded comparison.")
+
+    if candidate.recommended_outcome == "advance_to_manual_review":
+        recommendation = "Prioritize for shortlist discussion"
+        rationale = "Grounded evidence exists and the prior review already recommended manual review."
+        interview_focus.append("Validate the strongest grounded match signal against the actual role rubric.")
+    elif candidate.recommended_outcome == "collect_more_hiring_signal":
+        recommendation = "Keep in consideration but gather more signal"
+        rationale = "Some materials exist, but the prior review could not support a confident grounded decision."
+        interview_focus.append("Probe the candidate areas where the current materials are thin or ambiguous.")
+    elif candidate.recommended_outcome == "gather_hiring_materials":
+        recommendation = "Do not rank yet"
+        rationale = "The prior review lacked indexed candidate evidence."
+        interview_focus.append("Request or index the candidate materials needed for a grounded review.")
+    else:
+        recommendation = "Use as a supporting comparison signal"
+        rationale = "The prior review adds context, but it does not yet justify a strong shortlist position on its own."
+        interview_focus.append("Verify whether the candidate really matches the required role depth.")
+
+    if not candidate.findings:
+        interview_focus.append("Ask for concrete work examples because the review produced limited grounded findings.")
+    else:
+        interview_focus.append(f"Follow up on: {candidate.findings[0].summary}")
+
+    return JobShortlistEntry(
+        rank=rank,
+        task_id=candidate.task_id,
+        candidate_label=candidate.candidate_label,
+        fit_signal=candidate.fit_signal,
+        evidence_status=candidate.evidence_status,
+        recommendation=recommendation,
+        rationale=rationale,
+        risks=risks,
+        interview_focus=interview_focus,
+        evidence_ref_ids=list(candidate.evidence_ref_ids),
+    )
+
+
+def _candidate_sort_key(candidate: JobComparisonCandidate) -> tuple[int, int]:
+    fit_score = {
+        "grounded_match_found": 4,
+        "role_requirements_grounded": 3,
+        "insufficient_grounding": 2,
+        "no_documents_available": 1,
+    }[candidate.fit_signal]
+    evidence_score = {
+        "grounded_matches": 3,
+        "documents_only": 2,
+        "no_documents": 1,
+    }[candidate.evidence_status]
+    return fit_score, evidence_score
+
+
+def _build_shortlist(
+    *,
+    job_input: JobTaskInput,
+    comparison_candidates: Sequence[JobComparisonCandidate],
+) -> JobShortlistResult | None:
+    if len(comparison_candidates) < 2:
+        return None
+
+    ranked_candidates = sorted(
+        comparison_candidates,
+        key=_candidate_sort_key,
+        reverse=True,
+    )
+    shortlist_entries = [
+        _build_shortlist_entry(candidate, rank=index + 1)
+        for index, candidate in enumerate(ranked_candidates)
+    ]
+
+    shortlist_summary = (
+        f"Compared {len(comparison_candidates)} completed candidate review task(s) for "
+        f"{job_input.target_role or ranked_candidates[0].target_role or 'the current role'}."
+    )
+    shortlist_risks = [
+        risk
+        for entry in shortlist_entries
+        for risk in entry.risks
+    ]
+    shortlist_focus = [
+        focus
+        for entry in shortlist_entries[:3]
+        for focus in entry.interview_focus[:2]
+    ]
+    shortlist_gaps: list[str] = []
+    if any(candidate.evidence_status != "grounded_matches" for candidate in comparison_candidates):
+        shortlist_gaps.append("At least one candidate review is still weakly grounded.")
+    if any(candidate.fit_signal == "no_documents_available" for candidate in comparison_candidates):
+        shortlist_gaps.append("Some candidate reviews still lack indexed supporting materials.")
+
+    return JobShortlistResult(
+        comparison_task_ids=[candidate.task_id for candidate in comparison_candidates],
+        comparison_notes=job_input.comparison_notes,
+        shortlist_summary=shortlist_summary,
+        entries=shortlist_entries,
+        risks=shortlist_risks,
+        interview_focus=shortlist_focus,
+        gaps=shortlist_gaps,
+    )
+
+
 def build_job_task_result(
     *,
     task_type: JobTaskType,
     job_input: dict[str, object] | None,
+    comparison_candidates: list[dict[str, object]] | None = None,
     documents: list[dict[str, object]],
     matches: list[dict[str, object]],
     tool_call_ids: list[str],
@@ -336,6 +629,10 @@ def build_job_task_result(
     )
 
     resolved_input = resolve_job_task_input(job_input)
+    resolved_comparison_candidates = [
+        JobComparisonCandidate.model_validate(candidate)
+        for candidate in (comparison_candidates or [])
+    ]
     document_models = [ToolDocumentSummary.model_validate(document) for document in documents]
     match_models = [SearchDocumentMatch.model_validate(match) for match in matches]
     evidence_status = _derive_evidence_status(
@@ -345,6 +642,7 @@ def build_job_task_result(
     review_brief = _build_review_brief(
         job_input=resolved_input,
         evidence_status=evidence_status,
+        comparison_candidates=resolved_comparison_candidates,
     )
     findings = _build_job_findings(
         task_type=task_type,
@@ -379,8 +677,14 @@ def build_job_task_result(
         task_type=task_type,
         assessment=assessment,
     )
+    shortlist = _build_shortlist(
+        job_input=resolved_input,
+        comparison_candidates=resolved_comparison_candidates,
+    )
 
-    if evidence_status == "grounded_matches":
+    if shortlist is not None:
+        summary = shortlist.shortlist_summary
+    elif evidence_status == "grounded_matches":
         summary = (
             f"Found grounded hiring evidence after reviewing {len(document_models)} document(s) "
             f"and {len(match_models)} relevant match(es)."
@@ -398,10 +702,14 @@ def build_job_task_result(
         f"Evidence status: {evidence_status}",
         f"Fit signal: {fit_signal}",
     ]
+    if resolved_input.candidate_label:
+        highlights.append(f"Candidate: {resolved_input.candidate_label}")
     if resolved_input.seniority:
         highlights.append(f"Seniority: {resolved_input.seniority}")
     if resolved_input.must_have_skills:
         highlights.append("Must-have skills: " + ", ".join(resolved_input.must_have_skills[:3]))
+    if shortlist is not None:
+        highlights.append(f"Shortlist candidates: {len(shortlist.entries)}")
     highlights.extend(finding.title for finding in findings[:2])
 
     if match_models:
@@ -444,12 +752,14 @@ def build_job_task_result(
     )
     result = JobAssistantResult(
         task_type=task_type,
-        title=_JOB_TASK_TITLES[task_type],
+        title="Candidate Comparison Shortlist" if shortlist is not None else _JOB_TASK_TITLES[task_type],
         input=resolved_input,
         review_brief=review_brief,
         findings=findings,
         gaps=gaps,
         assessment=assessment,
+        comparison_candidates=resolved_comparison_candidates,
+        shortlist=shortlist,
         open_questions=open_questions,
         next_steps=next_steps,
         summary=summary,
@@ -458,14 +768,17 @@ def build_job_task_result(
         artifacts=artifacts,
         metadata={
             "target_role": resolved_input.target_role,
+            "candidate_label": resolved_input.candidate_label,
             "seniority": resolved_input.seniority,
             "must_have_skill_count": len(resolved_input.must_have_skills),
             "preferred_skill_count": len(resolved_input.preferred_skills),
+            "comparison_task_count": len(resolved_comparison_candidates),
             "document_count": len(document_models),
             "match_count": len(match_models),
             "evidence_status": evidence_status,
             "fit_signal": fit_signal,
             "recommended_outcome": assessment.recommended_outcome,
+            "shortlist_ready": shortlist is not None,
         },
     )
     return result.model_dump(exclude_none=True)

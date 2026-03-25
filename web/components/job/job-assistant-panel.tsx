@@ -11,11 +11,13 @@ import {
 } from "../../lib/api";
 import type {
   JobArtifacts,
+  JobComparisonCandidate,
   JobEvidenceStatus,
   JobFinding,
   JobFitAssessment,
   JobFitSignal,
   JobReviewBrief,
+  JobShortlistResult,
   JobTaskInput,
   JobTaskResult,
   JobTaskType,
@@ -53,8 +55,14 @@ const TASK_OPTIONS: Record<
 
 const SENIORITY_OPTIONS = ["", "intern", "junior", "mid", "senior", "staff", "principal"] as const;
 
+type SeniorityOption = (typeof SENIORITY_OPTIONS)[number];
+
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSeniorityOption(value: string | undefined): value is SeniorityOption {
+  return typeof value === "string" && SENIORITY_OPTIONS.includes(value as SeniorityOption);
 }
 
 function normalizeOptionalString(value: unknown): string | undefined {
@@ -112,10 +120,13 @@ function parseJobTaskInput(task: TaskRecord, result: JobTaskResult | null = null
   const source = result?.input && isJsonObject(result.input) ? result.input : task.input_json;
   return {
     target_role: normalizeOptionalString(source.target_role),
+    candidate_label: normalizeOptionalString(source.candidate_label),
     seniority: normalizeOptionalString(source.seniority),
     must_have_skills: normalizeStringList(source.must_have_skills),
     preferred_skills: normalizeStringList(source.preferred_skills),
     hiring_context: normalizeOptionalString(source.hiring_context),
+    comparison_task_ids: normalizeStringList(source.comparison_task_ids),
+    comparison_notes: normalizeOptionalString(source.comparison_notes),
   };
 }
 
@@ -254,11 +265,17 @@ function extractTargetRole(task: TaskRecord, result: JobTaskResult | null = null
 
 function formatRoleSnapshot(input: JobTaskInput): string {
   const segments: string[] = [];
+  if (input.candidate_label) {
+    segments.push(`Candidate: ${input.candidate_label}`);
+  }
   if (input.seniority) {
     segments.push(`Seniority ${input.seniority}`);
   }
   if (input.must_have_skills.length > 0) {
     segments.push(`Must-have: ${input.must_have_skills.slice(0, 2).join(", ")}`);
+  }
+  if (input.comparison_task_ids.length > 0) {
+    segments.push(`Comparison tasks: ${input.comparison_task_ids.length}`);
   }
   return segments.join(" | ");
 }
@@ -336,6 +353,11 @@ function renderReviewBrief(reviewBrief: JobReviewBrief) {
         <div>
           <strong>Role summary:</strong> {reviewBrief.role_summary}
         </div>
+        {reviewBrief.candidate_label ? (
+          <div>
+            <strong>Candidate:</strong> {reviewBrief.candidate_label}
+          </div>
+        ) : null}
         {reviewBrief.seniority ? (
           <div>
             <strong>Seniority:</strong> {reviewBrief.seniority}
@@ -352,6 +374,11 @@ function renderReviewBrief(reviewBrief: JobReviewBrief) {
         {reviewBrief.hiring_context ? (
           <div>
             <strong>Hiring context:</strong> {reviewBrief.hiring_context}
+          </div>
+        ) : null}
+        {reviewBrief.comparison_task_count > 0 ? (
+          <div>
+            <strong>Comparison tasks:</strong> {reviewBrief.comparison_task_count}
           </div>
         ) : null}
       </div>
@@ -391,6 +418,149 @@ function renderAssessment(assessment: JobFitAssessment, recommendedNextStep: str
   );
 }
 
+function renderComparisonCandidates(candidates: JobComparisonCandidate[]) {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <strong>Compared candidate reviews</strong>
+      <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+        {candidates.map((candidate) => (
+          <li
+            key={candidate.task_id}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              padding: 12,
+            }}
+          >
+            <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+              <strong>{candidate.candidate_label}</strong>
+              {renderFitSignalBadge(candidate.fit_signal)}
+              {renderEvidenceStatusBadge(candidate.evidence_status)}
+            </div>
+            <div style={{ color: "#475569", marginBottom: 8 }}>{candidate.summary}</div>
+            {candidate.target_role ? (
+              <div>
+                <strong>Role:</strong> {candidate.target_role}
+              </div>
+            ) : null}
+            {candidate.highlights.length > 0 ? (
+              <div style={{ marginTop: 8 }}>
+                <strong>Highlights:</strong> {candidate.highlights.join(" | ")}
+              </div>
+            ) : null}
+            {candidate.evidence_ref_ids.length > 0 ? (
+              <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
+                Evidence refs: {candidate.evidence_ref_ids.join(", ")}
+              </div>
+            ) : null}
+            <div style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Source task: {candidate.task_id}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function renderShortlist(
+  shortlist: JobShortlistResult | undefined,
+  candidatesByTaskId: ReadonlyMap<string, JobComparisonCandidate>,
+) {
+  if (!shortlist) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid #cbd5e1",
+        borderRadius: 12,
+        padding: 16,
+      }}
+    >
+      <strong>Shortlist output</strong>
+      <p style={{ marginBottom: 12, marginTop: 12 }}>{shortlist.shortlist_summary}</p>
+      {shortlist.comparison_notes ? (
+        <div style={{ marginBottom: 12 }}>
+          <strong>Shortlist focus:</strong> {shortlist.comparison_notes}
+        </div>
+      ) : null}
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {shortlist.entries.map((entry) => {
+          const candidate = candidatesByTaskId.get(entry.task_id);
+          return (
+            <div
+              key={entry.task_id}
+              style={{
+                border: "1px solid #cbd5e1",
+                borderRadius: 12,
+                padding: 12,
+              }}
+            >
+              <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <strong>
+                  #{entry.rank} {entry.candidate_label}
+                </strong>
+                {renderFitSignalBadge(entry.fit_signal)}
+                {renderEvidenceStatusBadge(entry.evidence_status)}
+              </div>
+              {candidate ? <p style={{ color: "#475569", marginTop: 0 }}>{candidate.summary}</p> : null}
+              <div>
+                <strong>Recommendation:</strong> {entry.recommendation}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <strong>Rationale:</strong> {entry.rationale}
+              </div>
+              {entry.evidence_ref_ids.length > 0 ? (
+                <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
+                  Evidence refs: {entry.evidence_ref_ids.join(", ")}
+                </div>
+              ) : null}
+              {renderListSection({
+                title: "Risks",
+                items: entry.risks,
+                emptyText: "No explicit shortlist risks were recorded for this candidate.",
+              })}
+              {renderListSection({
+                title: "Interview focus",
+                items: entry.interview_focus,
+                emptyText: "No interview focus areas were recorded for this candidate.",
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {renderListSection({
+        title: "Shortlist-wide risks",
+        items: shortlist.risks,
+        emptyText: "No shortlist-wide risks were recorded.",
+      })}
+      {renderListSection({
+        title: "Shared interview focus",
+        items: shortlist.interview_focus,
+        emptyText: "No shared interview focus areas were recorded.",
+      })}
+      {renderListSection({
+        title: "Grounding gaps",
+        items: shortlist.gaps,
+        emptyText: "No additional shortlist gaps were recorded.",
+      })}
+    </div>
+  );
+}
+
+function isSelectableComparisonTask(task: TaskRecord, result: JobTaskResult | null): boolean {
+  if (task.status !== "completed" || task.task_type !== "resume_match" || result === null) {
+    return false;
+  }
+  return result.input.comparison_task_ids.length === 0;
+}
+
 export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -398,10 +568,13 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [taskType, setTaskType] = useState<JobTaskType>("jd_summary");
   const [targetRole, setTargetRole] = useState("");
-  const [seniority, setSeniority] = useState<(typeof SENIORITY_OPTIONS)[number]>("");
+  const [candidateLabel, setCandidateLabel] = useState("");
+  const [seniority, setSeniority] = useState<SeniorityOption>("");
   const [mustHaveSkillsText, setMustHaveSkillsText] = useState("");
   const [preferredSkillsText, setPreferredSkillsText] = useState("");
   const [hiringContext, setHiringContext] = useState("");
+  const [comparisonTaskIds, setComparisonTaskIds] = useState<string[]>([]);
+  const [comparisonNotes, setComparisonNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -494,6 +667,57 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     () => (selectedTask ? parseJobTaskInput(selectedTask, selectedResult) : null),
     [selectedResult, selectedTask],
   );
+  const comparisonTaskIdSet = useMemo(() => new Set(comparisonTaskIds), [comparisonTaskIds]);
+  const selectedComparisonTasks = useMemo(
+    () => tasks.filter((task) => comparisonTaskIdSet.has(task.id)),
+    [comparisonTaskIdSet, tasks],
+  );
+  const comparisonRole = useMemo(() => {
+    for (const task of selectedComparisonTasks) {
+      const result = parseJobTaskResult(task);
+      const input = parseJobTaskInput(task, result);
+      if (input.target_role) {
+        return input.target_role;
+      }
+    }
+    return undefined;
+  }, [selectedComparisonTasks]);
+  const isShortlistMode = comparisonTaskIds.length > 0;
+  const selectedComparisonCandidatesByTaskId = useMemo(
+    () =>
+      new Map(
+        (selectedResult?.comparison_candidates ?? []).map((candidate) => [candidate.task_id, candidate] as const),
+      ),
+    [selectedResult],
+  );
+
+  const handleToggleComparisonTask = useCallback((task: TaskRecord) => {
+    const result = parseJobTaskResult(task);
+    const input = parseJobTaskInput(task, result);
+
+    setTaskType("resume_match");
+    setCandidateLabel("");
+    setComparisonTaskIds((currentIds) =>
+      currentIds.includes(task.id) ? currentIds.filter((taskId) => taskId !== task.id) : [...currentIds, task.id],
+    );
+    setTargetRole((currentValue) => (currentValue.trim() ? currentValue : input.target_role ?? ""));
+    setHiringContext((currentValue) => (currentValue.trim() ? currentValue : input.hiring_context ?? ""));
+    setMustHaveSkillsText((currentValue) =>
+      currentValue.trim() ? currentValue : input.must_have_skills.join("\n"),
+    );
+    setPreferredSkillsText((currentValue) =>
+      currentValue.trim() ? currentValue : input.preferred_skills.join("\n"),
+    );
+    if (isSeniorityOption(input.seniority)) {
+      const inferredSeniority = input.seniority;
+      setSeniority((currentValue) => (currentValue ? currentValue : inferredSeniority));
+    }
+  }, []);
+
+  const handleClearComparison = useCallback(() => {
+    setComparisonTaskIds([]);
+    setComparisonNotes("");
+  }, []);
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -505,11 +729,16 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     const mustHaveSkills = parseSkillList(mustHaveSkillsText);
     const preferredSkills = parseSkillList(preferredSkillsText);
     const input: JsonObject = {};
-    const normalizedTargetRole = targetRole.trim();
+    const normalizedTargetRole = targetRole.trim() || comparisonRole || "";
+    const normalizedCandidateLabel = candidateLabel.trim();
     const normalizedHiringContext = hiringContext.trim();
+    const normalizedComparisonNotes = comparisonNotes.trim();
 
     if (normalizedTargetRole) {
       input.target_role = normalizedTargetRole;
+    }
+    if (!isShortlistMode && normalizedCandidateLabel) {
+      input.candidate_label = normalizedCandidateLabel;
     }
     if (seniority) {
       input.seniority = seniority;
@@ -523,6 +752,12 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     if (normalizedHiringContext) {
       input.hiring_context = normalizedHiringContext;
     }
+    if (comparisonTaskIds.length > 0) {
+      input.comparison_task_ids = comparisonTaskIds;
+    }
+    if (normalizedComparisonNotes) {
+      input.comparison_notes = normalizedComparisonNotes;
+    }
 
     setIsCreating(true);
     setErrorMessage(null);
@@ -535,10 +770,13 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
       setTasks((currentTasks) => sortTasks([createdTask, ...currentTasks]));
       setSelectedTaskId(createdTask.id);
       setTargetRole("");
+      setCandidateLabel("");
       setSeniority("");
       setMustHaveSkillsText("");
       setPreferredSkillsText("");
       setHiringContext("");
+      setComparisonTaskIds([]);
+      setComparisonNotes("");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch job task");
     } finally {
@@ -593,7 +831,14 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             <span>Task type</span>
             <select
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
-              onChange={(event) => setTaskType(event.target.value as JobTaskType)}
+              onChange={(event) => {
+                const nextTaskType = event.target.value as JobTaskType;
+                setTaskType(nextTaskType);
+                if (nextTaskType !== "resume_match") {
+                  setComparisonTaskIds([]);
+                  setComparisonNotes("");
+                }
+              }}
               value={taskType}
             >
               {availableTaskTypes.map((availableTaskType) => (
@@ -604,6 +849,45 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             </select>
           </label>
           <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
+
+          {selectedComparisonTasks.length > 0 ? (
+            <div
+              style={{
+                backgroundColor: "#eff6ff",
+                border: "1px solid #bfdbfe",
+                borderRadius: 12,
+                display: "grid",
+                gap: 8,
+                padding: 12,
+              }}
+            >
+              <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
+                <strong>Building shortlist comparison</strong>
+                <button onClick={handleClearComparison} type="button">
+                  Clear
+                </button>
+              </div>
+              <div>
+                <strong>Selected candidate reviews:</strong> {selectedComparisonTasks.length}
+              </div>
+              {comparisonRole ? (
+                <div>
+                  <strong>Shared role context:</strong> {comparisonRole}
+                </div>
+              ) : null}
+              <ul style={{ margin: 0, paddingLeft: 20 }}>
+                {selectedComparisonTasks.map((task) => {
+                  const result = parseJobTaskResult(task);
+                  const input = parseJobTaskInput(task, result);
+                  return (
+                    <li key={task.id}>
+                      {(input.candidate_label ?? result?.title ?? task.id)} ({task.id})
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
 
           <label style={{ display: "grid", gap: 6 }}>
             <span>Target role</span>
@@ -616,12 +900,25 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             />
           </label>
 
+          {taskType === "resume_match" && !isShortlistMode ? (
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Candidate label</span>
+              <input
+                disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
+                onChange={(event) => setCandidateLabel(event.target.value)}
+                placeholder="Example: Candidate A / Alex Chen"
+                type="text"
+                value={candidateLabel}
+              />
+            </label>
+          ) : null}
+
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <label style={{ display: "grid", gap: 6 }}>
               <span>Seniority</span>
               <select
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
-                onChange={(event) => setSeniority(event.target.value as (typeof SENIORITY_OPTIONS)[number])}
+                onChange={(event) => setSeniority(event.target.value as SeniorityOption)}
                 value={seniority}
               >
                 {SENIORITY_OPTIONS.map((option) => (
@@ -668,12 +965,25 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             </label>
           </div>
 
+          {isShortlistMode ? (
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Shortlist focus</span>
+              <textarea
+                disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
+                onChange={(event) => setComparisonNotes(event.target.value)}
+                placeholder="Example: prioritize candidates strongest on backend ownership and interview risk."
+                rows={3}
+                value={comparisonNotes}
+              />
+            </label>
+          ) : null}
+
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button
             disabled={isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "job")}
             type="submit"
           >
-            {isCreating ? "Launching..." : "Launch job task"}
+            {isCreating ? "Launching..." : isShortlistMode ? "Launch shortlist comparison" : "Launch job task"}
           </button>
         </form>
       </SectionCard>
@@ -689,6 +999,8 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             const result = parseJobTaskResult(task);
             const input = parseJobTaskInput(task, result);
             const roleSnapshot = formatRoleSnapshot(input);
+            const canUseForComparison = isSelectableComparisonTask(task, result);
+            const isSelectedForComparison = comparisonTaskIdSet.has(task.id);
             return (
               <li
                 key={task.id}
@@ -703,6 +1015,9 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
                   <strong>{TASK_OPTIONS[task.task_type as JobTaskType]?.label ?? task.task_type}</strong>
                   {renderStatus(task.status)}
                   {result ? renderFitSignalBadge(result.artifacts.fit_signal) : null}
+                  {result?.shortlist ? (
+                    <span style={{ color: "#0369a1", fontSize: 12, fontWeight: 600 }}>Shortlist run</span>
+                  ) : null}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
                   {result?.summary ?? extractTargetRole(task, result) ?? "No custom role focus provided."}
@@ -713,9 +1028,16 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                    Open result
-                  </button>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <button onClick={() => setSelectedTaskId(task.id)} type="button">
+                      Open result
+                    </button>
+                    {canUseForComparison ? (
+                      <button onClick={() => handleToggleComparisonTask(task)} type="button">
+                        {isSelectedForComparison ? "Remove from shortlist" : "Add to shortlist"}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             );
@@ -725,7 +1047,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
       <SectionCard
         title="Structured hiring result"
-        description="Inspect the hiring brief, grounded findings, fit assessment, and follow-up guidance from the selected job task."
+        description="Inspect the hiring brief, grounded findings, fit assessment, shortlist guidance, and follow-up decisions from the selected job task."
       >
         {!selectedTask ? <p>Select a job task to inspect its output.</p> : null}
         {selectedTask ? (
@@ -743,6 +1065,13 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
               {selectedInput?.target_role ? (
                 <div>
                   <strong>Target role:</strong> {selectedInput.target_role}
+                </div>
+              ) : null}
+              {selectedTask.status === "completed" && isSelectableComparisonTask(selectedTask, selectedResult) ? (
+                <div>
+                  <button onClick={() => handleToggleComparisonTask(selectedTask)} type="button">
+                    {comparisonTaskIdSet.has(selectedTask.id) ? "Remove from shortlist" : "Use in shortlist"}
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -763,7 +1092,9 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
                 {renderArtifactStats(selectedResult.artifacts)}
                 {renderReviewBrief(selectedResult.review_brief)}
+                {renderShortlist(selectedResult.shortlist, selectedComparisonCandidatesByTaskId)}
                 {renderAssessment(selectedResult.assessment, selectedResult.artifacts.recommended_next_step)}
+                {renderComparisonCandidates(selectedResult.comparison_candidates)}
                 {renderFindings(selectedResult.findings)}
 
                 {renderListSection({

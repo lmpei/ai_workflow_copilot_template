@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-25
+- Last Updated: 2026-03-26
 
 ## Project Mode
 
@@ -20,16 +20,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the second Stage C wave with Job shortlist and candidate-comparison workflow depth after completing Support escalation and follow-up workflow depth
+- continue the second Stage C wave with cross-module eval coverage and rehearsal evidence after completing Job shortlist and candidate-comparison workflow depth
 
 ## Active Task
 
-- `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md`
+- `tasks/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md`
 
 ## Verification Status
 
-- Summary: Stage B is closed; Stage C remains active; the first Stage C execution wave is complete through archived tasks `stage-c-02`, `stage-c-03`, and `stage-c-04`; the second Stage C execution wave is active through `stage-c-13` and `stage-c-14` after completing and archiving `stage-c-12`; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; and the unplanned CI repair task `stage-c-10` remains complete.
-- Last Verified At: 2026-03-25
+- Summary: Stage B is closed; Stage C remains active; the first Stage C execution wave is complete through archived tasks `stage-c-02`, `stage-c-03`, and `stage-c-04`; the second Stage C execution wave is active through `stage-c-14` after completing and archiving `stage-c-12` and `stage-c-13`; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; and the unplanned CI repair task `stage-c-10` remains complete.
+- Last Verified At: 2026-03-26
 
 ## Current Blockers
 
@@ -47,9 +47,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `stage-c-13` to deepen Job Assistant into shortlist and candidate-comparison workflow depth
-2. execute `stage-c-14` to make cross-module eval coverage and rehearsal evidence more durable
-3. define whether the next Stage C wave should broaden reusable asset layers beyond Research after the second wave lands
+1. execute `stage-c-14` to make cross-module eval coverage and rehearsal evidence more durable
+2. define whether the next Stage C wave should broaden reusable asset layers beyond Research after the second wave lands
+3. confirm whether Stage C should close after the second wave or open a third bounded wave
 
 ## Parked / Later
 
@@ -58,7 +58,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md`
+- `tasks/archive/stage-c/stage-c-13-job-shortlist-and-candidate-comparison.md`
 
 ## Recent Decisions
 
@@ -81,3 +81,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-25-032` complete `stage-c-04`, define the lightweight cross-module readiness baseline, and close the first Stage C task wave
 - `DEC-2026-03-25-033` define the second Stage C task wave as `stage-c-12`, `stage-c-13`, and `stage-c-14`, with `stage-c-12` as the next active task
 - `DEC-2026-03-25-034` complete `stage-c-12`, deepen Support Copilot into a follow-up and escalation workflow, and move the active Stage C task to `stage-c-13`
+- `DEC-2026-03-26-035` complete `stage-c-13`, deepen Job Assistant into shortlist and candidate-comparison workflow depth, and move the active Stage C task to `stage-c-14`

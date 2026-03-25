@@ -378,19 +378,24 @@ export type JobFitSignal =
   | "no_documents_available";
 export type JobTaskInput = {
   target_role?: string;
+  candidate_label?: string;
   seniority?: string;
   must_have_skills: string[];
   preferred_skills: string[];
   hiring_context?: string;
+  comparison_task_ids: string[];
+  comparison_notes?: string;
 };
 
 export type JobReviewBrief = {
   role_summary: string;
+  candidate_label?: string | null;
   seniority?: string | null;
   must_have_skills: string[];
   preferred_skills: string[];
   hiring_context?: string | null;
   evidence_status: JobEvidenceStatus;
+  comparison_task_count: number;
 };
 
 export type JobFinding = {
@@ -405,6 +410,45 @@ export type JobFitAssessment = {
   recommended_outcome: string;
   confidence_note: string;
   rationale: string;
+};
+
+export type JobComparisonCandidate = {
+  task_id: string;
+  task_type: JobTaskType;
+  candidate_label: string;
+  title: string;
+  summary: string;
+  target_role?: string | null;
+  seniority?: string | null;
+  fit_signal: JobFitSignal;
+  evidence_status: JobEvidenceStatus;
+  recommended_outcome?: string | null;
+  findings: JobFinding[];
+  highlights: string[];
+  evidence_ref_ids: string[];
+};
+
+export type JobShortlistEntry = {
+  rank: number;
+  task_id: string;
+  candidate_label: string;
+  fit_signal: JobFitSignal;
+  evidence_status: JobEvidenceStatus;
+  recommendation: string;
+  rationale: string;
+  risks: string[];
+  interview_focus: string[];
+  evidence_ref_ids: string[];
+};
+
+export type JobShortlistResult = {
+  comparison_task_ids: string[];
+  comparison_notes?: string | null;
+  shortlist_summary: string;
+  entries: JobShortlistEntry[];
+  risks: string[];
+  interview_focus: string[];
+  gaps: string[];
 };
 
 export type JobArtifacts = {
@@ -426,6 +470,8 @@ export type JobTaskResult = ScenarioTaskResult & {
   findings: JobFinding[];
   gaps: string[];
   assessment: JobFitAssessment;
+  comparison_candidates: JobComparisonCandidate[];
+  shortlist?: JobShortlistResult;
   open_questions: string[];
   next_steps: string[];
   artifacts: JobArtifacts;

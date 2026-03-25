@@ -89,6 +89,92 @@ def _create_task_fixture(
     return task.id
 
 
+def _create_completed_job_review_task(
+    *,
+    workspace_id: str,
+    user_id: str,
+    target_role: str,
+    candidate_label: str,
+    summary: str,
+    fit_signal: str = "grounded_match_found",
+    evidence_status: str = "grounded_matches",
+    recommended_outcome: str = "advance_to_manual_review",
+) -> str:
+    task = task_repository.create_task(
+        workspace_id=workspace_id,
+        task_type="resume_match",
+        created_by=user_id,
+        input_json={
+            "target_role": target_role,
+            "candidate_label": candidate_label,
+        },
+    )
+    running_task = task_repository.update_task_status(task.id, next_status="running")
+    assert running_task is not None
+    completed_task = task_repository.update_task_status(
+        task.id,
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "job",
+                "task_type": "resume_match",
+                "title": "Structured Resume Match Review",
+                "summary": summary,
+                "input": {
+                    "target_role": target_role,
+                    "candidate_label": candidate_label,
+                    "comparison_task_ids": [],
+                },
+                "review_brief": {
+                    "role_summary": target_role,
+                    "candidate_label": candidate_label,
+                    "must_have_skills": [],
+                    "preferred_skills": [],
+                    "evidence_status": evidence_status,
+                    "comparison_task_count": 0,
+                },
+                "findings": [
+                    {
+                        "title": f"{candidate_label} signal",
+                        "summary": summary,
+                        "evidence_ref_ids": [f"{task.id}-chunk"],
+                    }
+                ],
+                "gaps": [],
+                "assessment": {
+                    "fit_signal": fit_signal,
+                    "evidence_status": evidence_status,
+                    "recommended_outcome": recommended_outcome,
+                    "confidence_note": "Stored comparison fixture.",
+                    "rationale": "Stored comparison fixture.",
+                },
+                "comparison_candidates": [],
+                "open_questions": [],
+                "next_steps": [],
+                "highlights": [summary],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 1,
+                    "match_count": 1,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                    "evidence_status": evidence_status,
+                    "fit_signal": fit_signal,
+                    "recommended_next_step": "Review this candidate manually.",
+                },
+                "metadata": {
+                    "target_role": target_role,
+                    "candidate_label": candidate_label,
+                    "shortlist_ready": False,
+                },
+            }
+        },
+    )
+    assert completed_task is not None
+    return task.id
+
+
 
 def test_enqueue_task_execution_uses_arq_pool(monkeypatch: pytest.MonkeyPatch) -> None:
     task_id = _create_task_fixture()
@@ -789,6 +875,91 @@ def test_run_task_execution_completes_job_jd_summary_with_limited_context() -> N
     assert output["result"]["artifacts"]["fit_signal"] == "no_documents_available"
     assert output["result"]["artifacts"]["evidence_status"] == "no_documents"
     assert output["result"]["summary"] == "No job documents are available for this workspace."
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
+def test_run_task_execution_builds_job_shortlist_from_completed_candidate_reviews(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert "Compare these completed candidate reviews for the same hiring decision." in question
+            assert "Candidate A: Strong backend ownership with grounded platform evidence." in question
+            assert "Candidate B: Candidate materials are still missing for a grounded decision." in question
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="hiring-plan.md",
+                    chunk_index=0,
+                    snippet="Backend ownership matters more than breadth for this role.",
+                    content="Backend ownership matters more than breadth for this role.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    unique_suffix = uuid4().hex
+    user = create_user(
+        email=f"job-shortlist-worker-{unique_suffix}@example.com",
+        password_hash="not-used-in-this-test",
+        name="Job Shortlist Worker",
+    )
+    workspace = create_workspace(
+        WorkspaceCreate(name="Job Shortlist Workspace", module_type="job"),
+        owner_id=user.id,
+    )
+    document_repository.create_document(
+        document_id=str(uuid4()),
+        workspace_id=workspace.id,
+        title="hiring-plan.md",
+        file_path="uploads/hiring-plan.md",
+        mime_type="text/markdown",
+        created_by=user.id,
+        status=DOCUMENT_STATUS_INDEXED,
+    )
+    candidate_a_task_id = _create_completed_job_review_task(
+        workspace_id=workspace.id,
+        user_id=user.id,
+        target_role="Platform engineer",
+        candidate_label="Candidate A",
+        summary="Strong backend ownership with grounded platform evidence.",
+    )
+    candidate_b_task_id = _create_completed_job_review_task(
+        workspace_id=workspace.id,
+        user_id=user.id,
+        target_role="Platform engineer",
+        candidate_label="Candidate B",
+        summary="Candidate materials are still missing for a grounded decision.",
+        fit_signal="no_documents_available",
+        evidence_status="no_documents",
+        recommended_outcome="gather_hiring_materials",
+    )
+    shortlist_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="resume_match",
+        created_by=user.id,
+        input_json={
+            "target_role": "Platform engineer",
+            "comparison_task_ids": [candidate_a_task_id, candidate_b_task_id],
+            "comparison_notes": "Prioritize backend ownership and highlight missing evidence.",
+        },
+    )
+
+    output = task_execution_service.run_task_execution(shortlist_task.id)
+    persisted_task = task_repository.get_task(shortlist_task.id)
+
+    assert output["result"]["title"] == "Candidate Comparison Shortlist"
+    assert output["result"]["comparison_candidates"][0]["candidate_label"] == "Candidate A"
+    assert output["result"]["shortlist"]["entries"][0]["candidate_label"] == "Candidate A"
+    assert output["result"]["shortlist"]["entries"][1]["candidate_label"] == "Candidate B"
+    assert (
+        "Some candidate reviews still lack indexed supporting materials."
+        in output["result"]["shortlist"]["gaps"]
+    )
+    assert output["result"]["metadata"]["shortlist_ready"] is True
     assert persisted_task is not None
     assert persisted_task.status == "done"
 

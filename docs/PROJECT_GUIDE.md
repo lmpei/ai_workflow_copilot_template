@@ -310,10 +310,14 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 - Job task inputs now use a canonical hiring-review shape instead of only an optional target-role string
 - canonical Job input fields are:
   - `target_role`
+  - optional `candidate_label`
   - `seniority`
   - `must_have_skills`
   - `preferred_skills`
   - `hiring_context`
+  - optional shortlist fields:
+    - `comparison_task_ids`
+    - `comparison_notes`
 - Job task results now carry both the normalized `input` and a structured hiring workflow alongside the shared
   scenario envelope
 - canonical Job result fields now include:
@@ -321,6 +325,8 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `findings`
   - `gaps`
   - `assessment`
+  - `comparison_candidates`
+  - optional `shortlist`
   - `open_questions`
   - `next_steps`
 - Job evidence honesty should remain explicit through:
@@ -328,6 +334,14 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `documents_only`
   - `no_documents`
 - Job fit signals should remain reviewer-facing workflow markers rather than pretend-final hiring decisions
+- shortlist comparisons should only reference completed single-candidate `resume_match` tasks in the same workspace
+  instead of chaining prior shortlist runs into nested comparison-of-comparison flows
+- shortlist output should preserve:
+  - ranked candidate entries
+  - evidence-linked risks
+  - interview focus
+  - grounding gaps
+  - optional reviewer-facing comparison notes
 - limited-context Job runs should still return a bounded result with explicit role-definition or material-gathering gaps
   instead of pretending a grounded hiring review exists
 
@@ -352,8 +366,8 @@ The repository hosts one shared platform core plus three scenario modules.
 ### Job Assistant
 
 - Work object: hiring materials such as job descriptions, resumes, and fit criteria
-- Primary output: structured job summaries, match assessments, and next-step recommendations
-- Core capabilities: structured extraction, resume matching, gap analysis, application workflow support
+- Primary output: structured job summaries, match assessments, shortlist guidance, and next-step recommendations
+- Core capabilities: structured extraction, resume matching, candidate comparison, shortlist guidance, gap analysis
 - Not responsible for: support-case handling, knowledge-base reply generation, broad research report synthesis
 
 ## Live-State Rule

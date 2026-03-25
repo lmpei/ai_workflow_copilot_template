@@ -47,6 +47,92 @@ def _create_workspace(
     return response.json()["id"]
 
 
+def _create_completed_job_review_task(
+    *,
+    workspace_id: str,
+    user_id: str,
+    target_role: str,
+    candidate_label: str,
+    summary: str,
+    fit_signal: str = "grounded_match_found",
+    evidence_status: str = "grounded_matches",
+    recommended_outcome: str = "advance_to_manual_review",
+) -> str:
+    task = task_repository.create_task(
+        workspace_id=workspace_id,
+        task_type="resume_match",
+        created_by=user_id,
+        input_json={
+            "target_role": target_role,
+            "candidate_label": candidate_label,
+        },
+    )
+    running_task = task_repository.update_task_status(task.id, next_status="running")
+    assert running_task is not None
+    completed_task = task_repository.update_task_status(
+        task.id,
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "job",
+                "task_type": "resume_match",
+                "title": "Structured Resume Match Review",
+                "summary": summary,
+                "input": {
+                    "target_role": target_role,
+                    "candidate_label": candidate_label,
+                    "comparison_task_ids": [],
+                },
+                "review_brief": {
+                    "role_summary": target_role,
+                    "candidate_label": candidate_label,
+                    "must_have_skills": [],
+                    "preferred_skills": [],
+                    "evidence_status": evidence_status,
+                    "comparison_task_count": 0,
+                },
+                "findings": [
+                    {
+                        "title": f"{candidate_label} signal",
+                        "summary": summary,
+                        "evidence_ref_ids": [f"{task.id}-chunk"],
+                    }
+                ],
+                "gaps": [],
+                "assessment": {
+                    "fit_signal": fit_signal,
+                    "evidence_status": evidence_status,
+                    "recommended_outcome": recommended_outcome,
+                    "confidence_note": "Stored comparison fixture.",
+                    "rationale": "Stored comparison fixture.",
+                },
+                "comparison_candidates": [],
+                "open_questions": [],
+                "next_steps": [],
+                "highlights": [summary],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 1,
+                    "match_count": 1,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                    "evidence_status": evidence_status,
+                    "fit_signal": fit_signal,
+                    "recommended_next_step": "Review this candidate manually.",
+                },
+                "metadata": {
+                    "target_role": target_role,
+                    "candidate_label": candidate_label,
+                    "shortlist_ready": False,
+                },
+            }
+        },
+    )
+    assert completed_task is not None
+    return task.id
+
+
 
 def test_task_routes_require_authentication(client: TestClient) -> None:
     post_response = client.post(
@@ -673,6 +759,163 @@ def test_create_job_task_for_job_workspace_member(
         "preferred_skills": ["Reliability", "Mentorship"],
         "hiring_context": "Core platform modernization",
     }
+
+
+def test_create_job_shortlist_task_accepts_completed_comparison_tasks(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-shortlist-owner@example.com", name="Job Shortlist Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    comparison_task_a = _create_completed_job_review_task(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        target_role="Platform engineer",
+        candidate_label="Candidate A",
+        summary="Grounded Python and platform ownership evidence exists.",
+    )
+    comparison_task_b = _create_completed_job_review_task(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        target_role="Platform engineer",
+        candidate_label="Candidate B",
+        summary="Grounded systems-design evidence exists, but reliability depth is thinner.",
+        fit_signal="insufficient_grounding",
+        evidence_status="documents_only",
+        recommended_outcome="collect_more_hiring_signal",
+    )
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "resume_match",
+            "input": {
+                "target_role": " Platform engineer ",
+                "comparison_task_ids": [comparison_task_a, comparison_task_b],
+                "comparison_notes": " Prioritize backend ownership and platform depth. ",
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    created_task = response.json()
+    assert created_task["input_json"] == {
+        "target_role": "Platform engineer",
+        "comparison_task_ids": [comparison_task_a, comparison_task_b],
+        "comparison_notes": "Prioritize backend ownership and platform depth.",
+    }
+
+
+def test_create_job_shortlist_task_rejects_too_few_comparison_tasks(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-shortlist-owner-2@example.com", name="Job Shortlist Owner 2")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    comparison_task_id = _create_completed_job_review_task(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        target_role="Platform engineer",
+        candidate_label="Candidate Solo",
+        summary="Only one candidate review exists.",
+    )
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "resume_match",
+            "input": {
+                "target_role": "Platform engineer",
+                "comparison_task_ids": [comparison_task_id],
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "At least two comparison job tasks are required" in response.json()["detail"]
+
+
+def test_create_job_shortlist_task_rejects_prior_shortlist_as_comparison_source(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="job-shortlist-owner-3@example.com", name="Job Shortlist Owner 3")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="job")
+
+    valid_task_id = _create_completed_job_review_task(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        target_role="Platform engineer",
+        candidate_label="Candidate A",
+        summary="Grounded backend evidence exists.",
+    )
+    nested_shortlist_id = _create_completed_job_review_task(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        target_role="Platform engineer",
+        candidate_label="Candidate Nested",
+        summary="This fixture will be mutated into a shortlist task.",
+    )
+    nested_shortlist = task_repository.get_task(nested_shortlist_id)
+    assert nested_shortlist is not None
+    nested_output = dict(nested_shortlist.output_json)
+    nested_result = dict(nested_output["result"])
+    nested_result["input"] = {
+        "target_role": "Platform engineer",
+        "comparison_task_ids": [valid_task_id, nested_shortlist_id],
+    }
+    updated_nested_task = task_repository.update_task_status(
+        nested_shortlist_id,
+        next_status="done",
+        output_json={"result": nested_result},
+    )
+    assert updated_nested_task is not None
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "resume_match",
+            "input": {
+                "target_role": "Platform engineer",
+                "comparison_task_ids": [valid_task_id, nested_shortlist_id],
+            },
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert "single candidate review" in response.json()["detail"]
 
 
 

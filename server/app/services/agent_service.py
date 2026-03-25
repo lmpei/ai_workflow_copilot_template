@@ -16,6 +16,7 @@ from app.repositories import task_repository, workspace_repository
 from app.services.job_assistant_service import (
     JobAssistantContractError,
     build_job_task_search_query,
+    resolve_job_comparison_candidates,
     resolve_job_task_input,
     validate_job_task_contract,
 )
@@ -232,9 +233,14 @@ def run_workspace_job_agent(
     job_input: dict[str, object] | None = None,
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
-    resolved_job_input = job_input or {"target_role": target_role}
+    resolved_job_input = resolve_job_task_input(job_input or {"target_role": target_role})
+    comparison_candidates = resolve_job_comparison_candidates(
+        workspace_id=workspace_id,
+        job_input=resolved_job_input,
+    )
     job_query = build_job_task_search_query(
-        resolve_job_task_input(resolved_job_input),
+        resolved_job_input,
+        comparison_candidates=comparison_candidates,
     )
     return _run_workspace_agent(
         task_id=task_id,
@@ -246,7 +252,11 @@ def run_workspace_job_agent(
         validate_contract=validate_job_task_contract,
         graph_runner=graph_runner,
         extra_state={
-            "job_input": resolved_job_input,
+            "job_input": resolved_job_input.model_dump(exclude_none=True),
+            "job_comparison_candidates": [
+                candidate.model_dump(exclude_none=True)
+                for candidate in comparison_candidates
+            ],
         },
     )
 
