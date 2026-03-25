@@ -15,19 +15,19 @@ Current state only. Keep this file short, current, and action-oriented.
 - Phase 5 baseline complete
 - Stage A complete and closed
 - Stage B complete and closed
-- Stage C first task wave active
+- Stage C first task wave complete
 
 ## Current Objective
 
-- continue the planned Stage C wave after completing both the Support and Job structured workflow increments
+- define the next bounded Stage C execution wave now that the first wave has closed with a shared readiness baseline
 
 ## Active Task
 
-- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md`
+- none currently; define the next Stage C planning task before new implementation work starts
 
 ## Verification Status
 
-- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; the unplanned CI repair task `stage-c-10` remains complete; and both `stage-c-02` and `stage-c-03` are now complete with structured Support and Job workflows, leaving `stage-c-04` as the next active execution task.
+- Summary: Stage B is closed; Stage C remains active; the first Stage C execution wave is now complete through archived tasks `stage-c-02`, `stage-c-03`, and `stage-c-04`; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; and the unplanned CI repair task `stage-c-10` remains complete.
 - Last Verified At: 2026-03-25
 
 ## Current Blockers
@@ -42,13 +42,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- what cross-module quality and demo baseline is enough before Stage C starts imitating heavier release governance than the project actually needs
+- what the next bounded Stage C execution wave should be now that the first wave has closed
 
 ## Ready Now
 
-1. execute `stage-c-04` to define cross-module quality and demo readiness across Research, Support, and Job
-2. use the new Support and Job workflow shapes as the baseline for cross-module eval and demo rules
-3. keep validating Stage C module-depth work against the shared runtime, registry, and control-plane baseline
+1. define the next bounded Stage C execution wave
+2. decide whether the next wave should deepen scenario workflows further or shift toward stronger external delivery readiness
+3. keep validating future Stage C work against the shared runtime, registry, and control-plane baseline
 
 ## Parked / Later
 
@@ -57,7 +57,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md`
+- `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md`
 
 ## Recent Decisions
 
@@ -77,3 +77,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-23-029` complete `stage-c-10`, repair backend CI typing/lint drift, and keep the active Stage C execution task on `stage-c-02`
 - `DEC-2026-03-25-030` complete `stage-c-02`, deepen Support Copilot into a structured grounded case workflow, and move the active Stage C task to `stage-c-03`
 - `DEC-2026-03-25-031` complete `stage-c-03`, deepen Job Assistant into a structured hiring workflow, and move the active Stage C task to `stage-c-04`
+- `DEC-2026-03-25-032` complete `stage-c-04`, define the lightweight cross-module readiness baseline, and close the first Stage C task wave

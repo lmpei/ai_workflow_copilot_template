@@ -7,6 +7,7 @@ shared `dev` or `staging` delivery, plus the first operator-friendly rehearsal r
 expectations.
 
 For the concrete Stage B staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
+For the Stage C cross-module demo baseline, also read `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`.
 
 ## Environment Intent
 
@@ -110,8 +111,9 @@ Minimum smoke check:
 - login works
 - a workspace can load
 - documents view loads
-- Research tasks can run
-- the Research report path can complete
+- Research, Support, and Job module surfaces are visible from the workspace hub or otherwise explicitly documented as unavailable
+- each module can run its default workflow task or return an honest degraded result when context is thin
+- the eval surface shows the module quality baseline and pass threshold for the candidate under review
 
 ## Stage B Rehearsal Helper
 
@@ -191,3 +193,12 @@ The minimum operational runbook for Stage B is:
     `docs/development/STAGING_HANDOFF_TEMPLATE.md` outside git
 - rollback:
   - restore the previous code/image version and reconcile schema state before retrying
+
+## Stage C Cross-Module Extension
+
+When the candidate is intended to represent Stage C readiness rather than only Stage B release hygiene:
+
+- use `docs/development/STAGE_C_CROSS_MODULE_READINESS.md` as the shared demo checklist
+- record which Research, Support, and Job surfaces were actually checked
+- confirm module outputs stay honest when context is thin instead of pretending grounding exists
+- confirm the eval surface exposes the registry-backed quality baseline and pass threshold for the reviewed module

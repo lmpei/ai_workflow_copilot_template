@@ -46,6 +46,7 @@ Health check: `http://localhost:8000/api/v1/health`
 
 For Windows-specific setup notes, see `docs/development/WINDOWS_SETUP.md`.
 For the concrete staging rehearsal path, see `docs/development/STAGING_RELEASE_PATH.md`.
+For the Stage C cross-module demo baseline, see `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`.
 
 ## Common Commands
 
@@ -90,6 +91,7 @@ Use these when you need deeper reference material:
 - `docs/development/STAGING_RELEASE_PATH.md`
 - `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
+- `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`
 - `docs/PROJECT_GUIDE.md`
 - `AI_WORKFLOW.md`
 - `tasks/README.md`
@@ -99,7 +101,7 @@ Use these when you need deeper reference material:
 The latest live state is maintained in `STATUS.md`.
 
 At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, has completed and closed
-`Stage B`, and is now executing the first `Stage C` wave under the three-track roadmap model in
+`Stage B`, and has completed the first `Stage C` wave under the three-track roadmap model in
 `docs/prd/STAGE_C_PLAN.md`.
 
 ## Runtime Services

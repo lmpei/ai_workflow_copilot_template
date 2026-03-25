@@ -136,7 +136,7 @@ The current implemented platform increment includes:
 - a chat evaluator framework that combines rule checks with an independently configured LLM judge path
 - workspace module contracts for research, support, and job
 - a Research Assistant MVP that produces structured scenario results through the shared task / agent / tool runtime
-- Support Copilot and Job Assistant skeletons on the same shared platform primitives
+- structured Support Copilot and Job Assistant workflows on the same shared platform primitives
 - scenario-specific eval baselines and quality summaries for research, support, and job
 - cross-module workspace navigation and entry surfaces
 - a frontend demo path that connects auth -> workspace -> indexed documents -> module discovery -> grounded chat -> scenario tasks -> scenario evals -> observability review
@@ -147,7 +147,7 @@ The repository does not yet implement:
 - durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
-- deeper scenario-specific product workflows beyond the current Research MVP and Support/Job skeletons
+- deeper scenario-specific product workflows beyond the current Research, Support, and Job structured workflow baseline
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
 `Stage B: Research Workflow Productization With Recoverable Runtime`, documented in `docs/prd/STAGE_B_PLAN.md`, is
@@ -179,8 +179,8 @@ The second executable Stage B wave is now complete as:
 - `tasks/archive/stage-b/stage-b-07-runtime-recovery-history-and-operator-visibility.md` (complete)
 - `tasks/archive/stage-b/stage-b-08-release-evidence-and-rehearsal-records.md` (complete)
 
-The first executable Stage C wave is now active as:
+The first executable Stage C wave is now complete as:
 
-- `tasks/stage-c-02-support-copilot-grounded-case-workflow.md` (active)
-- `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md` (active)
-- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` (active)
+- `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md` (complete)
+- `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md` (complete)
+- `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md` (complete)

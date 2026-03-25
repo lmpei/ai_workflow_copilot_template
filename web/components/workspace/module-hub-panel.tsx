@@ -36,7 +36,7 @@ function filterTaskTypes(values: unknown, module: ScenarioModuleRecord | null): 
 }
 
 function renderTaskTypeList(module: ScenarioModuleRecord, taskTypes: TaskType[]) {
-  return taskTypes.map((taskType) => getTaskLabel(module, taskType)).join(" · ");
+  return taskTypes.map((taskType) => getTaskLabel(module, taskType)).join(" 路 ");
 }
 
 export default function ModuleHubPanel({
@@ -155,6 +155,12 @@ export default function ModuleHubPanel({
           <div>
             <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, entryTaskTypes)}
           </div>
+          <div>
+            <strong>Quality baseline:</strong> {moduleInfo.quality_baseline}
+          </div>
+          <div>
+            <strong>Eval pass threshold:</strong> {Math.round(moduleInfo.pass_threshold * 100)}%
+          </div>
           {isActiveModule ? (
             <>
               <p style={{ margin: 0 }}>
@@ -231,6 +237,10 @@ export default function ModuleHubPanel({
               <p style={{ marginTop: 0 }}>{moduleInfo.description}</p>
               <p style={{ marginTop: 0 }}>
                 <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, moduleInfo.entry_task_types)}
+              </p>
+              <p style={{ marginTop: 0 }}>
+                <strong>Quality baseline:</strong> {moduleInfo.quality_baseline} /{" "}
+                {Math.round(moduleInfo.pass_threshold * 100)}% pass threshold
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <Link href={moduleHref(workspaceId, moduleInfo.module_type)}>Open module</Link>

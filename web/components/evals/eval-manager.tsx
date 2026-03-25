@@ -35,6 +35,26 @@ type EvalManagerProps = {
 
 const ACTIVE_RUN_STATUSES = new Set<EvalRunRecord["status"]>(["pending", "running"]);
 const STORAGE_KEY_PREFIX = "ai_workflow_eval_runs:";
+const SHARED_READINESS_CHECKS = [
+  "Workspace access, documents view, and task history must load without hidden setup steps.",
+  "Each module should show either grounded output or an explicit degraded result instead of pretending confidence.",
+  "Each module should have at least one scenario-aware eval dataset or a documented reason why eval coverage is pending.",
+  "Release evidence and handoff notes should name which module surfaces were checked during the candidate rehearsal.",
+] as const;
+const MODULE_READINESS_CHECKS: Record<ModuleType, string[]> = {
+  research: [
+    "Run a Research task that produces either a structured report or an honest no-documents output.",
+    "Inspect traces or task history to confirm evidence and regression metadata remain visible.",
+  ],
+  support: [
+    "Run a Support task and verify case brief, triage, and reply guidance stay grounded or explicitly degraded.",
+    "Confirm limited-context support runs escalate honestly instead of implying a grounded fix.",
+  ],
+  job: [
+    "Run a Job task and verify hiring brief, fit assessment, and next steps stay grounded or explicitly degraded.",
+    "Confirm limited-context hiring runs surface role-definition or materials gaps instead of implying a hiring decision.",
+  ],
+};
 
 function getStorageKey(workspaceId: string) {
   return `${STORAGE_KEY_PREFIX}${workspaceId}`;
@@ -177,6 +197,10 @@ function getScenarioInputPlaceholder(
     candidateModule.tasks.some((task) => task.task_type === taskType),
   );
   return scenarioModule?.tasks.find((task) => task.task_type === taskType)?.eval_prompt_placeholder ?? "One prompt per line";
+}
+
+function formatThreshold(passThreshold: number): string {
+  return `${Math.round(passThreshold * 100)}%`;
 }
 
 function getCasePrompt(
@@ -523,6 +547,69 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
 
   return (
     <>
+      <SectionCard
+        title="Cross-module readiness baseline"
+        description="Use one shared readiness standard across Research, Support, and Job so demo candidates are checked the same way before handoff."
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          <div>
+            <strong>Shared candidate checks</strong>
+            <ul>
+              {SHARED_READINESS_CHECKS.map((check) => (
+                <li key={check}>{check}</li>
+              ))}
+            </ul>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            }}
+          >
+            {scenarioModules.map((module) => (
+              <div
+                key={module.module_type}
+                style={{
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 12,
+                  padding: 12,
+                }}
+              >
+                <div style={{ alignItems: "center", display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                  <strong>{module.title}</strong>
+                  {workspace?.module_type === module.module_type ? (
+                    <span
+                      style={{
+                        backgroundColor: "#0f172a12",
+                        borderRadius: 999,
+                        color: "#0f172a",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        padding: "2px 10px",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      active workspace
+                    </span>
+                  ) : null}
+                </div>
+                <div>Baseline: {module.quality_baseline}</div>
+                <div>Pass threshold: {formatThreshold(module.pass_threshold)}</div>
+                <div>
+                  Default eval task: {getScenarioTaskLabel(scenarioModules, module.default_eval_task_type)}
+                </div>
+                <ul style={{ marginBottom: 0, marginTop: 10 }}>
+                  {MODULE_READINESS_CHECKS[module.module_type].map((check) => (
+                    <li key={check}>{check}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </SectionCard>
+
       <SectionCard
         title="Eval datasets"
         description={`Workspace: ${workspace?.name ?? workspaceId}. Create scenario-aware retrieval eval datasets and launch eval runs.`}

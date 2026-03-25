@@ -8,7 +8,7 @@
 
 - Status: active
 - Opened At: 2026-03-21
-- First Task Wave: active
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -130,18 +130,18 @@ Stage C is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` as the next active task of the first Stage C
-wave.
+Define the next bounded Stage C execution wave now that the first wave has closed with Support depth, Job depth, and a
+shared cross-module readiness baseline in place.
 
 ## First Task Wave
 
-The first executable Stage C wave is now active:
+The first executable Stage C wave is complete:
 
 - `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md` (completed)
 - `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md` (completed)
-- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md` (active)
+- `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md` (completed)
 
-This wave uses the mature Research workflow as the reference pattern while deepening Support and Job and tightening the
+This wave used the mature Research workflow as the reference pattern while deepening Support and Job and tightening the
 cross-module quality and delivery path.
 
 ## Global Governance Baseline Initiated During Stage C Early Execution

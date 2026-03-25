@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-21
+- Last Updated: 2026-03-25
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, and Stage C first task wave active
+- Current stage: Stage A complete, Stage B complete, and Stage C first task wave complete
 
 ## Success Criteria
 

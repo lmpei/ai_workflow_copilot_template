@@ -523,3 +523,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Job runs now preserve a canonical hiring-review shape, limited-context runs stay honest about missing evidence or missing materials, and the next Stage C task can focus on cross-module quality and demo readiness instead of leaving Job at skeleton depth
 - Related Task: `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-25-032
+- Date: 2026-03-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-04 cross-module quality and demo readiness
+- Context: Stage C had already deepened Support and Job, but the first wave still lacked one shared readiness baseline that showed how Research, Support, and Job should be checked, demonstrated, and handed off together without pretending stronger production maturity than the project actually has
+- Choice: add a lightweight Stage C cross-module readiness baseline, surface registry-backed quality baseline and pass-threshold guidance in the eval and workspace module surfaces, extend the Stage B delivery docs with Stage C cross-module rehearsal rules, archive `stage-c-04`, and treat the first Stage C task wave as complete
+- Why: Stage C should close its first wave with one explicit shared demo and quality path rather than leaving Support and Job depth as isolated module increments
+- Impact: collaborators can now point to one lightweight readiness routine across Research, Support, and Job, and the next Stage C step can be chosen from a clearer cross-module baseline instead of ad hoc module checks
+- Related Task: `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md`
+- Supersedes:

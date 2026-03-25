@@ -46,6 +46,8 @@ Use these files for detailed reference material:
   - fallback release-evidence template for Stage B rehearsal records
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
   - fallback handoff template for Stage B rehearsal records
+- `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`
+  - lightweight cross-module demo-readiness baseline for Research, Support, and Job during Stage C
 - `docs/development/WINDOWS_SETUP.md`
   - Windows-specific setup and local verification notes
 - `docs/review/HUMAN_REVIEW_CHECKLIST.md`
@@ -394,6 +396,4 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
 - the original failed record keeps a link to the retry target, and the retry attempt keeps a link back to the source record
 - the Research and eval surfaces now render operator-visible recovery history instead of requiring manual inspection of raw `control_json`
 - Stage B still does not claim full checkpoint/resume support; this increment improves inspectability and control lineage, not durable resume semantics
-
-
 
