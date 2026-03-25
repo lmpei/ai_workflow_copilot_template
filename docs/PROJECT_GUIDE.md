@@ -30,12 +30,16 @@ Use these files for detailed reference material:
 
 - `docs/prd/PLATFORM_PRD.md`
   - product scope, module responsibilities, success criteria, and phase roadmap
+- `docs/prd/LONG_TERM_ROADMAP.md`
+  - post-Stage-C multi-stage direction for public demo work, later workbench productization, staged AI capability waves, and the long-term learning path
 - `docs/prd/STAGE_A_PLAN.md`
   - closed Stage A planning document derived from the post-Phase-5 roadmap model
 - `docs/prd/STAGE_B_PLAN.md`
   - closed Stage B planning document for research workflow productization and recoverable runtime
 - `docs/prd/STAGE_C_PLAN.md`
-  - active Stage C planning document for multi-module workflow expansion and cross-module readiness
+  - closed Stage C planning document for multi-module workflow expansion and cross-module readiness
+- `docs/prd/STAGE_D_PLAN.md`
+  - active Stage D planning document for the public internet demo baseline
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
 - `docs/development/DELIVERY_BASELINE.md`
@@ -76,6 +80,8 @@ Stage A work should use `stage-a-*` task naming and remain archived under `tasks
 Stage B work should remain archived under `tasks/archive/stage-b/`.
 Stage C work should use `stage-c-*` task naming while active under `tasks/`, then archive under
 `tasks/archive/stage-c/`.
+Stage D work should use `stage-d-*` task naming while active under `tasks/`, then archive under
+`tasks/archive/stage-d/`.
 Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 
 ### Workflow and Prompting

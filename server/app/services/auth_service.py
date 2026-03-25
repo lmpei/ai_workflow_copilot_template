@@ -5,6 +5,7 @@ from app.core.security import (
 )
 from app.repositories import user_repository
 from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, UserResponse
+from app.services.public_demo_service import ensure_registration_allowed
 
 
 class AuthConflictError(Exception):
@@ -25,6 +26,7 @@ def _to_user_response(user) -> UserResponse:
 
 
 def register_user(payload: RegisterRequest) -> UserResponse:
+    ensure_registration_allowed()
     existing_user = user_repository.get_user_by_email(payload.email)
     if existing_user is not None:
         raise AuthConflictError("Email already registered")

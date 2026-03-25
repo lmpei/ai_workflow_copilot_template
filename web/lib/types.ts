@@ -15,6 +15,15 @@ export type TaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
 export type TaskStatus = "pending" | "running" | "completed" | "failed";
 
+export type PublicDemoSettingsRecord = {
+  public_demo_mode: boolean;
+  registration_enabled: boolean;
+  max_workspaces_per_user: number;
+  max_documents_per_workspace: number;
+  max_tasks_per_workspace: number;
+  max_upload_bytes: number;
+};
+
 export type RecoveryHistoryEntryRecord = {
   event: string;
   at: string;
@@ -684,6 +693,3 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
-
-
-

@@ -115,12 +115,14 @@ After the Phase 5 baseline, roadmap planning shifts from a purely phase-based bu
 
 The first formal planning unit under that model was `Stage A`, documented in `docs/prd/STAGE_A_PLAN.md`.
 `Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`.
+`Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`.
+The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
 The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, has completed and closed
-`Stage B`, has completed the first `Stage C` wave, and is now executing the second `Stage C` wave.
+`Stage B`, has completed and closed `Stage C`, and is now executing the first `Stage D` wave.
 
 The current implemented platform increment includes:
 
@@ -147,7 +149,9 @@ The repository does not yet implement:
 - durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
-- deeper scenario-specific product workflows beyond the current Research, Support, and Job structured workflow baseline
+- a real public internet demo baseline beyond local and staging-oriented operation
+- deeper non-Research persistent workbench layers beyond the current Support and Job workflow baseline
+- the staged AI capability expansions described in `docs/prd/LONG_TERM_ROADMAP.md`
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
 `Stage B: Research Workflow Productization With Recoverable Runtime`, documented in `docs/prd/STAGE_B_PLAN.md`, is

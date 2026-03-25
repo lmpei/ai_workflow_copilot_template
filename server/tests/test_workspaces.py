@@ -1,3 +1,4 @@
+﻿from app.core.config import get_settings
 from fastapi.testclient import TestClient
 
 
@@ -187,3 +188,30 @@ def test_workspace_rejects_unsupported_module_type(client: TestClient) -> None:
         headers=headers,
     )
     assert create_response.status_code == 422
+
+
+def test_public_demo_limits_workspace_creation_per_user(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "public_demo_mode", True)
+    monkeypatch.setattr(settings, "public_demo_max_workspaces_per_user", 1)
+
+    auth = _register_and_login(client, email="demo-owner@example.com", name="Demo Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    first_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "First Demo Workspace", "module_type": "research"},
+        headers=headers,
+    )
+    assert first_response.status_code == 201
+
+    second_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Second Demo Workspace", "module_type": "support"},
+        headers=headers,
+    )
+    assert second_response.status_code == 409
+    assert "up to 1 workspaces per account" in second_response.json()["detail"]

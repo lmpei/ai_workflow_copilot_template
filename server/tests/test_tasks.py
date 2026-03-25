@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app.core.config import get_settings
 from app.repositories import task_repository
 from app.services.task_execution_service import TaskExecutionError
 
@@ -1311,3 +1312,45 @@ def test_create_job_task_rejects_goal_alias_input(
 
     assert response.status_code == 400
     assert "target_role instead of goal" in response.json()["detail"]
+
+
+def test_public_demo_limits_tasks_per_workspace(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "public_demo_mode", True)
+    monkeypatch.setattr(settings, "public_demo_max_tasks_per_workspace", 1)
+
+    auth = _register_and_login(client, email="demo-task-owner@example.com", name="Demo Task Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    first_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "research_summary",
+            "input": {"goal": "Summarize the demo workspace"},
+        },
+        headers=headers,
+    )
+    assert first_response.status_code == 201
+
+    second_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "workspace_report",
+            "input": {"goal": "Create a second task"},
+        },
+        headers=headers,
+    )
+    assert second_response.status_code == 409
+    assert "up to 1 tasks per workspace" in second_response.json()["detail"]

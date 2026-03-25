@@ -10,6 +10,7 @@ import type {
   EvalRunRecord,
   LoginRequestPayload,
   LoginResponsePayload,
+  PublicDemoSettingsRecord,
   RegisterRequestPayload,
   ResearchAssetComparisonRecord,
   ResearchAssetRecord,
@@ -80,9 +81,13 @@ export async function fetchApiJson<T>(
 export async function getHealth(): Promise<HealthResponse> {
   return fetchApiJson<{ status: string }>("/health");
 }
-
 export async function getScenarioModules(): Promise<ScenarioModuleRecord[] | ApiErrorResponse | ApiUnreachableResponse> {
   return fetchApiJson<ScenarioModuleRecord[]>("/scenario-modules");
+}
+export async function getPublicDemoSettings(): Promise<
+  PublicDemoSettingsRecord | ApiErrorResponse | ApiUnreachableResponse
+> {
+  return fetchApiJson<PublicDemoSettingsRecord>("/public-demo");
 }
 
 async function parseErrorDetail(response: Response): Promise<string> {
@@ -150,8 +155,8 @@ export async function loginUser(payload: LoginRequestPayload): Promise<LoginResp
   });
 }
 
-export async function getCurrentUser(accessToken: string): Promise<User> {
-  return fetchBrowserApiJson<User>("/auth/me", {}, accessToken);
+export async function readPublicDemoSettings(): Promise<PublicDemoSettingsRecord> {
+  return fetchBrowserApiJson<PublicDemoSettingsRecord>("/public-demo");
 }
 
 export async function listScenarioModules(): Promise<ScenarioModuleRecord[]> {

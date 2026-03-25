@@ -13,6 +13,7 @@ from app.services.document_service import (
     upload_document,
 )
 from app.services.indexing_service import DocumentIndexingError
+from app.services.public_demo_service import PublicDemoLimitError, PublicDemoUploadLimitError
 
 router = APIRouter()
 
@@ -37,6 +38,10 @@ async def upload_workspace_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except DocumentUploadError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except PublicDemoUploadLimitError as error:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=str(error)) from error
+    except PublicDemoLimitError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except DocumentProcessingError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
     except DocumentIndexingError as error:

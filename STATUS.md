@@ -1,4 +1,4 @@
-# Status
+﻿# Status
 
 Current state only. Keep this file short, current, and action-oriented.
 
@@ -15,20 +15,20 @@ Current state only. Keep this file short, current, and action-oriented.
 - Phase 5 baseline complete
 - Stage A complete and closed
 - Stage B complete and closed
-- Stage C first task wave complete
-- Stage C second task wave active
+- Stage C complete and closed
+- Stage D first task wave active
 
 ## Current Objective
 
-- decide whether Stage C should close or open a new bounded wave after completing the second Stage C wave
+- execute the Stage D public internet demo path after establishing the bounded public-demo access baseline in `stage-d-02`
 
 ## Active Task
 
-- none; second Stage C wave complete and next planning decision pending
+- `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md`
 
 ## Verification Status
 
-- Summary: Stage B is closed; Stage C remains active; the first Stage C execution wave is complete through archived tasks `stage-c-02`, `stage-c-03`, and `stage-c-04`; the second Stage C execution wave is complete through archived tasks `stage-c-12`, `stage-c-13`, and `stage-c-14`; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; and the unplanned CI repair task `stage-c-10` remains complete.
+- Summary: Stage D now has a backend-owned public-demo settings surface plus bounded registration, workspace, document, task, and upload guardrails; the next step is to seed demo-safe content and a clearer showcase path on top of that baseline.
 - Last Verified At: 2026-03-26
 
 ## Current Blockers
@@ -38,27 +38,28 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Assumptions
 
 - module product names remain unchanged for now
-- Research remains the reference workflow for deeper scenario-module work
-- Platform Reliability and Delivery and Operations remain required parallel tracks during Stage C
+- Research remains the reference workflow for deeper demo-path storytelling
+- public-demo work stays bounded and does not drift into full production SaaS claims
 
 ## Information Gaps
 
-- how far the second Stage C wave should push task-to-task workflow depth before a later non-Research asset layer is warranted
+- which sample workspace, seeded content, and guided showcase path will best demonstrate the public demo without hidden operator setup
 
 ## Ready Now
 
-1. define whether Stage C should close after the second wave or open a third bounded wave
-2. decide whether reusable non-Research asset layers should enter the next planning unit
-3. keep the Stage C cross-module coverage and rehearsal evidence routine aligned with future module-depth work
+1. execute `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md`
+2. build the demo path on top of the new `/api/v1/public-demo` guardrail contract instead of reintroducing hidden assumptions
+3. preserve the Stage C cross-module coverage and rehearsal evidence routine as the baseline public-demo quality path
 
 ## Parked / Later
 
-1. product-name redesign for the three scenario modules
-2. deeper non-Research asset or workbench layers after the second Stage C wave proves task-to-task workflow depth
+1. deeper non-Research workbench layers after the public-demo baseline is stable
+2. staged AI capability expansion from `docs/prd/LONG_TERM_ROADMAP.md`
+3. product-name redesign for the three scenario modules
 
 ## Last Completed Task
 
-- `tasks/archive/stage-c/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md`
+- `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md`
 
 ## Recent Decisions
 
@@ -83,3 +84,8 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-25-034` complete `stage-c-12`, deepen Support Copilot into a follow-up and escalation workflow, and move the active Stage C task to `stage-c-13`
 - `DEC-2026-03-26-035` complete `stage-c-13`, deepen Job Assistant into shortlist and candidate-comparison workflow depth, and move the active Stage C task to `stage-c-14`
 - `DEC-2026-03-26-036` complete `stage-c-14`, make cross-module eval coverage and rehearsal evidence more durable, and close the second Stage C task wave
+- `DEC-2026-03-26-037` close Stage C as complete instead of extending it into the public-demo and future-capability roadmap
+- `DEC-2026-03-26-038` create `docs/prd/LONG_TERM_ROADMAP.md` to hold the multi-stage learning and capability direction after Stage C
+- `DEC-2026-03-26-039` define `Stage D` as `Public Internet Demo Baseline` and open the first Stage D task wave with `stage-d-02` through `stage-d-04`
+- `DEC-2026-03-26-040` clarify the AI capability roadmap into explicit adoption waves while keeping that roadmap separate from the bounded Stage D plan
+- `DEC-2026-03-26-041` complete `stage-d-02`, add explicit public-demo guardrails and a `/api/v1/public-demo` settings surface, and move the active Stage D task to `stage-d-03`

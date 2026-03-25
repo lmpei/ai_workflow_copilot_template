@@ -593,3 +593,76 @@ Append-only log. Add new entries at the bottom.
 - Impact: collaborators can now inspect which module default evals are covered, template-only, missing, or blocked by missing workspaces, and can capture one cross-module rehearsal evidence draft directly from the eval surface
 - Related Task: `tasks/archive/stage-c/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-037
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human
+- Topic: close Stage C as complete
+- Context: Stage C completed both execution waves, the global governance baseline initiated during Stage C early execution, and the unplanned CI repair task, so the planning question after `stage-c-14` became whether to stretch Stage C further or open a fresh boundary
+- Choice: close Stage C as complete instead of extending it to cover the public-demo baseline and later roadmap themes
+- Why: the next work items are broader in direction and different in emphasis from Stage C's original multi-module workflow-expansion goal
+- Impact: Stage C becomes a closed reference stage, and the next bounded planning unit can focus on the public internet demo baseline without overloading the meaning of Stage C
+- Related Task: `tasks/archive/stage-d/stage-d-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-038
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human
+- Topic: separate the long-term roadmap from the next bounded stage
+- Context: the repository needs to capture a wider post-Stage-C direction that includes public demo work, non-Research workbench productization, staged AI capability expansion, and a continued trust-and-eval flywheel, but that direction is too broad for one bounded stage plan
+- Choice: create `docs/prd/LONG_TERM_ROADMAP.md` as the multi-stage direction document and keep the next stage plan narrower
+- Why: the project should preserve long-range learning and capability goals without turning the next stage into an unbounded catch-all
+- Impact: collaborators now have one place for longer-horizon direction and another place for the next execution-ready stage
+- Related Task: `tasks/archive/stage-d/stage-d-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-039
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human
+- Topic: define Stage D as the next bounded planning unit
+- Context: after Stage C closed, the most urgent bounded next step became moving the system from local or staging-oriented use into a real public internet demo while keeping later workbench and AI-capability themes separate in the long-term roadmap
+- Choice: create `docs/prd/STAGE_D_PLAN.md` for `Stage D: Public Internet Demo Baseline`, adopt `stage-d-*` naming, and define the first Stage D wave as:
+  - `tasks/stage-d-02-public-demo-foundation-and-guardrails.md`
+  - `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md`
+  - `tasks/stage-d-04-public-demo-ops-readiness.md`
+- Why: the repository needs one bounded next stage that is comparable in scope to Stages A through C instead of overloading the next planning unit with every future roadmap theme at once
+- Impact: `stage-d-02` becomes the next active execution task, Stage D becomes the active planning unit, and the long-term roadmap stays separate from the immediate task stack
+- Related Task: `tasks/archive/stage-d/stage-d-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-040
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human
+- Topic: clarify the AI capability roadmap after Stage C
+- Context: the first long-term roadmap captured the correct post-Stage-C themes, but the AI capability section still grouped too many concepts together and did not show clear sequencing, repository touchpoints, or learning-completion signals
+- Choice: refine `docs/prd/LONG_TERM_ROADMAP.md` so the AI capability direction is organized into explicit waves covering model interfaces and built-in tools, connector and context planes, agent orchestration and approval, evaluation and optimization, realtime multimodal interaction, and action-taking agents
+- Why: the project's first goal is learning, so the roadmap should make AI capability adoption legible as a staged learning path rather than as an undifferentiated list of trendy concepts
+- Impact: collaborators can now understand which AI capability families belong earlier or later, why each wave matters, and how those waves should remain separate from the bounded Stage D public-demo scope
+- Related Task: `tasks/archive/stage-d/stage-d-01a-ai-capability-roadmap-clarification.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-041
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-02 public-demo foundation and guardrails
+- Context: Stage D needed a bounded first execution step that would make the public-demo access path explicit before content seeding, showcase flows, or ops-ready deployment work continued
+- Choice: add public-demo mode settings in backend config, expose a backend-owned `/api/v1/public-demo` settings endpoint, enforce bounded registration, workspace, document, task, and upload guardrails when public-demo mode is enabled, surface those limits in the home, auth, and workspace entry UI, archive `stage-d-02`, and move the active Stage D task to `stage-d-03`
+- Why: outside users should see explicit demo limits and honest failure behavior instead of relying on hidden operator assumptions or silently discovering undefined capacity boundaries
+- Impact: the repository now has one operator-visible contract for public-demo guardrails, self-serve registration can be paused cleanly, public-demo users see the current limits before creating work, and the next Stage D task can focus on seeded content and showcase-path clarity rather than basic access control
+- Related Task: `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md`
+- Supersedes:

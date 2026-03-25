@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-25
+- Last Updated: 2026-03-26
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -16,13 +16,14 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, and Stage C second task wave active
+- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D first task wave active
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
-forking the architecture. The active stage should be executed through the three-track roadmap model, with Research as
-the reference workflow and reliability plus delivery work treated as required parallel investment.
+forking the architecture. The active stage should be executed through the three-track roadmap model, with one primary
+track chosen for the stage, the other two treated as required parallel investment, and Research kept as the reference
+workflow when deeper scenario-module structure is being evaluated.
 
 ## Technology Stack
 
@@ -39,16 +40,20 @@ the reference workflow and reliability plus delivery work treated as required pa
   - frontend routes, components, and client helpers
 - `docs/`
   - long-form product, architecture, review, and development docs
+- `docs/prd/LONG_TERM_ROADMAP.md`
+  - long-range multi-stage learning and capability direction after Stage C
 - `docs/prd/STAGE_A_PLAN.md`
   - closed Stage A planning document
 - `docs/prd/STAGE_B_PLAN.md`
   - closed Stage B planning document
 - `docs/prd/STAGE_C_PLAN.md`
-  - active Stage C planning document
+  - closed Stage C planning document
+- `docs/prd/STAGE_D_PLAN.md`
+  - active Stage D planning document
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage C work uses `stage-c-*`
+  - active Stage D work uses `stage-d-*`
 - Phase 5 task history
   - archived under `tasks/archive/phase5/`
 - root control-plane docs

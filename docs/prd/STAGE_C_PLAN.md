@@ -6,10 +6,11 @@
 
 ## Status
 
-- Status: active
+- Status: closed
 - Opened At: 2026-03-21
+- Closed At: 2026-03-26
 - First Task Wave: complete
-- Second Task Wave: active
+- Second Task Wave: complete
 
 ## Position In The Project
 
@@ -131,8 +132,8 @@ Stage C is successful when:
 
 ## Next Step
 
-Decide whether Stage C should close after the second wave or open one more bounded wave for deeper reusable non-Research
-workflow layers.
+Continue under `docs/prd/STAGE_D_PLAN.md` for the public-demo baseline and `docs/prd/LONG_TERM_ROADMAP.md` for the
+broader post-Stage-C direction.
 
 ## Second Task Wave
 
@@ -183,3 +184,8 @@ The global governance baseline was completed on 2026-03-22 through these archive
 
 This baseline no longer blocks later Stage C task waves. The planning unit that follows Stage C should still
 confirm these governance guarantees remain intact before opening.
+
+## Closeout Decision
+
+Stage C is closed because both execution waves achieved the stage goal and the next work is better represented by a new
+planning boundary rather than by stretching Stage C into public-demo and longer-horizon roadmap themes.

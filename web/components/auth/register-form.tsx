@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -6,10 +6,16 @@ import { useState } from "react";
 
 import { isApiClientError, loginUser, registerUser } from "../../lib/api";
 import { getAuthRoutes, storeLoginSession } from "../../lib/auth";
+import type { PublicDemoSettingsRecord } from "../../lib/types";
+import PublicDemoNotice from "../public-demo/public-demo-notice";
 import SectionCard from "../ui/section-card";
 import { useAuthSession } from "./use-auth-session";
 
-export default function RegisterForm() {
+type RegisterFormProps = {
+  publicDemoSettings?: PublicDemoSettingsRecord | null;
+};
+
+export default function RegisterForm({ publicDemoSettings = null }: RegisterFormProps) {
   const router = useRouter();
   const { session, isReady } = useAuthSession();
   const authRoutes = getAuthRoutes();
@@ -18,6 +24,8 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const registrationDisabled =
+    publicDemoSettings?.public_demo_mode && !publicDemoSettings.registration_enabled;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,41 +58,69 @@ export default function RegisterForm() {
     );
   }
 
+  if (registrationDisabled) {
+    return (
+      <>
+        {publicDemoSettings ? (
+          <PublicDemoNotice
+            settings={publicDemoSettings}
+            title="Public Demo Access"
+            description="Self-serve registration is temporarily disabled, so this public demo currently requires an operator-provided account."
+          />
+        ) : null}
+        <SectionCard title="Registration unavailable" description="Self-serve registration is disabled for the current public demo window.">
+          <p>
+            Use an operator-provided account to <Link href={authRoutes.login}>sign in</Link>, or try again later.
+          </p>
+        </SectionCard>
+      </>
+    );
+  }
+
   return (
-    <SectionCard title="Create account" description="Phase 1 uses bearer-token auth stored in the browser.">
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Name</span>
-          <input onChange={(event) => setName(event.target.value)} required type="text" value={name} />
-        </label>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Email</span>
-          <input
-            autoComplete="email"
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            type="email"
-            value={email}
-          />
-        </label>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Password</span>
-          <input
-            autoComplete="new-password"
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            type="password"
-            value={password}
-          />
-        </label>
-        {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-        <button disabled={isSubmitting} type="submit">
-          {isSubmitting ? "Creating account..." : "Create account"}
-        </button>
-      </form>
-      <p>
-        Already registered? <Link href={authRoutes.login}>Sign in</Link>
-      </p>
-    </SectionCard>
+    <>
+      {publicDemoSettings ? (
+        <PublicDemoNotice
+          settings={publicDemoSettings}
+          title="Public Demo Limits"
+          description="Create an account to explore the public demo within the current bounded limits."
+        />
+      ) : null}
+      <SectionCard title="Create account" description="Create a bounded public-demo account backed by browser-stored bearer auth.">
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Name</span>
+            <input onChange={(event) => setName(event.target.value)} required type="text" value={name} />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Email</span>
+            <input
+              autoComplete="email"
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              type="email"
+              value={email}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span>Password</span>
+            <input
+              autoComplete="new-password"
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              type="password"
+              value={password}
+            />
+          </label>
+          {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
+          <button disabled={isSubmitting} type="submit">
+            {isSubmitting ? "Creating account..." : "Create account"}
+          </button>
+        </form>
+        <p>
+          Already registered? <Link href={authRoutes.login}>Sign in</Link>
+        </p>
+      </SectionCard>
+    </>
   );
 }

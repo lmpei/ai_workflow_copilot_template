@@ -1,10 +1,15 @@
-import RegisterForm from "../../../components/auth/register-form";
+﻿import RegisterForm from "../../../components/auth/register-form";
+import { getPublicDemoSettings } from "../../../lib/api";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const publicDemoResponse = await getPublicDemoSettings();
+  const publicDemoSettings =
+    publicDemoResponse && "public_demo_mode" in publicDemoResponse ? publicDemoResponse : null;
+
   return (
     <main>
       <h1>Register</h1>
-      <RegisterForm />
+      <RegisterForm publicDemoSettings={publicDemoSettings} />
     </main>
   );
 }

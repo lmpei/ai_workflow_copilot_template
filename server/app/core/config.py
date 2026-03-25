@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     internal_api_base_url: str = "http://server:8000/api/v1"
     vector_store_backend: str = "chroma"
     default_workspace_type: str = "research"
+    public_demo_mode: bool = False
+    public_demo_registration_enabled: bool = True
+    public_demo_max_workspaces_per_user: int = 3
+    public_demo_max_documents_per_workspace: int = 12
+    public_demo_max_tasks_per_workspace: int = 30
+    public_demo_max_upload_bytes: int = 5 * 1024 * 1024
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 

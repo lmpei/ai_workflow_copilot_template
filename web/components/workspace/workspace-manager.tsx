@@ -4,10 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
+import {
+  createWorkspace,
+  isApiClientError,
+  listWorkspaces,
+  readPublicDemoSettings,
+} from "../../lib/api";
 import { clearStoredSession } from "../../lib/auth";
-import { moduleTypes, type ModuleType, type Workspace } from "../../lib/types";
+import { moduleTypes, type ModuleType, type PublicDemoSettingsRecord, type Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
+import PublicDemoNotice from "../public-demo/public-demo-notice";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
 
@@ -15,12 +21,25 @@ export default function WorkspaceManager() {
   const router = useRouter();
   const { session, isReady } = useAuthSession();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [publicDemoSettings, setPublicDemoSettings] = useState<PublicDemoSettingsRecord | null>(null);
   const [name, setName] = useState("");
   const [moduleType, setModuleType] = useState<ModuleType>("research");
   const [description, setDescription] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadPublicDemoSettings = async () => {
+      try {
+        setPublicDemoSettings(await readPublicDemoSettings());
+      } catch {
+        setPublicDemoSettings(null);
+      }
+    };
+
+    void loadPublicDemoSettings();
+  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -43,10 +62,14 @@ export default function WorkspaceManager() {
     void loadWorkspaces();
   }, [session]);
 
+  const workspaceLimitReached =
+    publicDemoSettings?.public_demo_mode === true &&
+    workspaces.length >= publicDemoSettings.max_workspaces_per_user;
+
   const handleCreateWorkspace = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!session) {
+    if (!session || workspaceLimitReached) {
       return;
     }
 
@@ -92,7 +115,27 @@ export default function WorkspaceManager() {
         </button>
       </SectionCard>
 
-      <SectionCard title="Create workspace" description="Each workspace owns documents, chat traces, and metrics.">
+      {publicDemoSettings ? (
+        <PublicDemoNotice
+          settings={publicDemoSettings}
+          description="Public demo accounts are intentionally bounded so outside users can explore the system without hidden operator setup."
+        />
+      ) : null}
+
+      <SectionCard
+        title="Create workspace"
+        description="Each workspace owns documents, chat traces, tasks, evals, and module-specific workflow state."
+      >
+        {publicDemoSettings?.public_demo_mode ? (
+          <p style={{ marginTop: 0 }}>
+            Current account usage: {workspaces.length} / {publicDemoSettings.max_workspaces_per_user} workspaces.
+          </p>
+        ) : null}
+        {workspaceLimitReached ? (
+          <p style={{ color: "#b45309", marginTop: 0 }}>
+            This public-demo account has reached its workspace limit. Open an existing workspace or ask the operator to reset the account.
+          </p>
+        ) : null}
         <form onSubmit={handleCreateWorkspace} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
           <label style={{ display: "grid", gap: 6 }}>
             <span>Name</span>
@@ -113,7 +156,7 @@ export default function WorkspaceManager() {
             <textarea onChange={(event) => setDescription(event.target.value)} rows={3} value={description} />
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-          <button disabled={isSubmitting} type="submit">
+          <button disabled={isSubmitting || workspaceLimitReached} type="submit">
             {isSubmitting ? "Creating..." : "Create workspace"}
           </button>
         </form>
@@ -121,7 +164,7 @@ export default function WorkspaceManager() {
 
       <SectionCard
         title="Workspace list"
-        description="Open a workspace to manage shared platform pages and discover scenario modules."
+        description="Open a workspace to manage documents, grounded chat, scenario tasks, and demo-ready module surfaces."
       >
         {isLoading ? <p>Loading workspaces...</p> : null}
         {!isLoading && workspaces.length === 0 ? <p>No workspaces yet.</p> : null}
@@ -146,5 +189,3 @@ export default function WorkspaceManager() {
     </>
   );
 }
-
-

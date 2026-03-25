@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 
@@ -11,7 +11,7 @@ type AuthRequiredProps = {
 
 export default function AuthRequired({
   title = "Login required",
-  description = "This page requires an authenticated Phase 1 session.",
+  description = "This page requires an authenticated account session.",
 }: AuthRequiredProps) {
   return (
     <SectionCard title={title} description={description}>
