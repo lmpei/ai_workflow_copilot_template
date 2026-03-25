@@ -336,8 +336,41 @@ export type SupportTaskResult = ScenarioTaskResult & {
 };
 
 export type JobTaskType = Extract<TaskType, "jd_summary" | "resume_match">;
+export type JobEvidenceStatus = "grounded_matches" | "documents_only" | "no_documents";
+export type JobFitSignal =
+  | "grounded_match_found"
+  | "role_requirements_grounded"
+  | "insufficient_grounding"
+  | "no_documents_available";
 export type JobTaskInput = {
   target_role?: string;
+  seniority?: string;
+  must_have_skills: string[];
+  preferred_skills: string[];
+  hiring_context?: string;
+};
+
+export type JobReviewBrief = {
+  role_summary: string;
+  seniority?: string | null;
+  must_have_skills: string[];
+  preferred_skills: string[];
+  hiring_context?: string | null;
+  evidence_status: JobEvidenceStatus;
+};
+
+export type JobFinding = {
+  title: string;
+  summary: string;
+  evidence_ref_ids: string[];
+};
+
+export type JobFitAssessment = {
+  fit_signal: JobFitSignal;
+  evidence_status: JobEvidenceStatus;
+  recommended_outcome: string;
+  confidence_note: string;
+  rationale: string;
 };
 
 export type JobArtifacts = {
@@ -346,13 +379,21 @@ export type JobArtifacts = {
   documents: ResearchDocumentSummary[];
   matches: ResearchMatch[];
   tool_call_ids: string[];
-  fit_signal?: string | null;
-  recommended_next_step?: string | null;
+  evidence_status: JobEvidenceStatus;
+  fit_signal: JobFitSignal;
+  recommended_next_step: string;
 };
 
 export type JobTaskResult = ScenarioTaskResult & {
   module_type: "job";
   task_type: JobTaskType;
+  input: JobTaskInput;
+  review_brief: JobReviewBrief;
+  findings: JobFinding[];
+  gaps: string[];
+  assessment: JobFitAssessment;
+  open_questions: string[];
+  next_steps: string[];
   artifacts: JobArtifacts;
 };
 
@@ -563,5 +604,6 @@ export type TaskRecord = {
   created_at: string;
   updated_at: string;
 };
+
 
 

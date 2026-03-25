@@ -509,3 +509,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Support runs now preserve a canonical case-workflow shape, limited-context runs stay honest about missing grounding, and the next Stage C module-depth task can focus on Job Assistant instead of leaving Support at skeleton depth
 - Related Task: `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-25-031
+- Date: 2026-03-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-03 Job Assistant structured hiring workflow
+- Context: Stage C had already proven deeper workflow value for Support, but Job Assistant still behaved like a thin role-focus launcher with shallow hiring output despite running on the same shared platform core
+- Choice: deepen the Job module contract around structured hiring-review input and output, add explicit hiring brief, grounded findings, gaps, fit assessment, open-question, and next-step result fields, upgrade the Job panel to collect and display that workflow, archive `stage-c-03`, and move the active Stage C execution task to `stage-c-04`
+- Why: Stage C should demonstrate that both non-Research modules can now carry structured, reviewer-readable workflows without forking the shared runtime, registry, or operator inspection surfaces
+- Impact: Job runs now preserve a canonical hiring-review shape, limited-context runs stay honest about missing evidence or missing materials, and the next Stage C task can focus on cross-module quality and demo readiness instead of leaving Job at skeleton depth
+- Related Task: `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md`
+- Supersedes:

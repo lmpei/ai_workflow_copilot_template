@@ -42,7 +42,8 @@ from app.services.agent_service import (
 )
 from app.services.job_assistant_service import (
     JobAssistantContractError,
-    normalize_job_task_input,
+    build_job_task_search_query,
+    resolve_job_task_input,
     validate_job_task_contract,
 )
 from app.services.research_assistant_service import (
@@ -123,10 +124,10 @@ def _resolve_task_prompt(task: Task) -> str:
             return "Draft a grounded customer reply for the current support issue."
         return "Summarize the current support issue and the best grounded next steps."
 
-    normalized_input = normalize_job_task_input(task.input_json)
-    target_role = normalized_input.get("target_role")
-    if isinstance(target_role, str) and target_role.strip():
-        return target_role.strip()
+    job_input = resolve_job_task_input(task.input_json)
+    job_query = build_job_task_search_query(job_input)
+    if job_query:
+        return job_query
 
     if task.task_type == "resume_match":
         return "Assess fit between the indexed hiring materials and the target role."
@@ -185,11 +186,13 @@ def _execute_task_agent(task: Task) -> AgentExecutionResult:
             support_input=support_input.model_dump(exclude_none=True),
         )
 
+    job_input = resolve_job_task_input(task.input_json)
     return run_workspace_job_agent(
         task_id=task.id,
         workspace_id=task.workspace_id,
         user_id=task.created_by,
         target_role=prompt,
+        job_input=job_input.model_dump(exclude_none=True),
     )
 
 

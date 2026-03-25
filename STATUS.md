@@ -19,15 +19,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the planned Stage C module-depth wave after completing the Support Copilot grounded case workflow
+- continue the planned Stage C wave after completing both the Support and Job structured workflow increments
 
 ## Active Task
 
-- `tasks/stage-c-03-job-assistant-structured-hiring-workflow.md`
+- `tasks/stage-c-04-cross-module-quality-and-demo-readiness.md`
 
 ## Verification Status
 
-- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; the unplanned CI repair task `stage-c-10` remains complete; and `stage-c-02` is now complete with a structured Support case workflow, leaving `stage-c-03` as the next active execution task.
+- Summary: Stage B is closed; Stage C is active; the global governance baseline initiated during Stage C early execution remains complete through archived tasks `stage-c-06` through `stage-c-09`; the unplanned CI repair task `stage-c-10` remains complete; and both `stage-c-02` and `stage-c-03` are now complete with structured Support and Job workflows, leaving `stage-c-04` as the next active execution task.
 - Last Verified At: 2026-03-25
 
 ## Current Blockers
@@ -42,13 +42,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how far Job Assistant should move beyond structured hiring summaries before it starts implying a heavier recruiting workflow than the project actually has
 - what cross-module quality and demo baseline is enough before Stage C starts imitating heavier release governance than the project actually needs
 
 ## Ready Now
 
-1. execute `stage-c-03` to deepen Job Assistant into a clearer structured hiring workflow
-2. follow with `stage-c-04` to define cross-module quality and demo readiness across Research, Support, and Job
+1. execute `stage-c-04` to define cross-module quality and demo readiness across Research, Support, and Job
+2. use the new Support and Job workflow shapes as the baseline for cross-module eval and demo rules
 3. keep validating Stage C module-depth work against the shared runtime, registry, and control-plane baseline
 
 ## Parked / Later
@@ -58,7 +57,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md`
+- `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md`
 
 ## Recent Decisions
 
@@ -77,3 +76,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-22-028` complete `stage-c-09`, close the global governance baseline, and return the active Stage C task to `stage-c-02`
 - `DEC-2026-03-23-029` complete `stage-c-10`, repair backend CI typing/lint drift, and keep the active Stage C execution task on `stage-c-02`
 - `DEC-2026-03-25-030` complete `stage-c-02`, deepen Support Copilot into a structured grounded case workflow, and move the active Stage C task to `stage-c-03`
+- `DEC-2026-03-25-031` complete `stage-c-03`, deepen Job Assistant into a structured hiring workflow, and move the active Stage C task to `stage-c-04`

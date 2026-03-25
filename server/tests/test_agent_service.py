@@ -388,7 +388,13 @@ def test_workspace_job_agent_completes_resume_match_with_grounded_signal(
     class FakeRetriever:
         def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
             assert workspace_id
-            assert question == "Platform engineer"
+            assert question == (
+                "Platform engineer"
+                " | Seniority: senior"
+                " | Must-have skills: Python, API design"
+                " | Preferred skills: Reliability"
+                " | Hiring context: Core platform modernization"
+            )
             return [
                 RetrievedChunk(
                     document_id="doc-1",
@@ -411,7 +417,13 @@ def test_workspace_job_agent_completes_resume_match_with_grounded_signal(
     user_id, workspace_id, task_id = _create_runtime_fixture(
         workspace_type="job",
         task_type="resume_match",
-        input_json={"target_role": "Platform engineer"},
+        input_json={
+            "target_role": "Platform engineer",
+            "seniority": "senior",
+            "must_have_skills": ["Python", "API design"],
+            "preferred_skills": ["Reliability"],
+            "hiring_context": "Core platform modernization",
+        },
     )
 
     result = run_workspace_job_agent(
@@ -419,15 +431,28 @@ def test_workspace_job_agent_completes_resume_match_with_grounded_signal(
         workspace_id=workspace_id,
         user_id=user_id,
         target_role="Platform engineer",
+        job_input={
+            "target_role": "Platform engineer",
+            "seniority": "senior",
+            "must_have_skills": ["Python", "API design"],
+            "preferred_skills": ["Reliability"],
+            "hiring_context": "Core platform modernization",
+        },
     )
 
     assert result.agent_name == "workspace_job_agent"
     assert result.final_output["module_type"] == "job"
     assert result.final_output["task_type"] == "resume_match"
+    assert result.final_output["input"]["seniority"] == "senior"
+    assert result.final_output["review_brief"]["must_have_skills"] == ["Python", "API design"]
+    assert result.final_output["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert result.final_output["assessment"]["recommended_outcome"] == "advance_to_manual_review"
+    assert "Grounded candidate evidence" in result.final_output["assessment"]["confidence_note"]
     assert result.final_output["artifacts"]["fit_signal"] == "grounded_match_found"
     assert result.final_output["artifacts"]["recommended_next_step"].startswith(
-        "Review the top grounded match",
+        "Review the grounded fit evidence",
     )
+    assert result.final_output["artifacts"]["evidence_status"] == "grounded_matches"
     assert result.final_output["evidence"][0]["metadata"]["document_id"] == "doc-1"
     assert result.final_output["metadata"]["target_role"] == "Platform engineer"
 
@@ -443,7 +468,10 @@ def test_workspace_job_agent_returns_bounded_shape_without_documents() -> None:
         with_document=False,
         workspace_type="job",
         task_type="jd_summary",
-        input_json={"target_role": "Platform engineer"},
+        input_json={
+            "target_role": "Platform engineer",
+            "seniority": "mid",
+        },
     )
 
     result = run_workspace_job_agent(
@@ -451,12 +479,21 @@ def test_workspace_job_agent_returns_bounded_shape_without_documents() -> None:
         workspace_id=workspace_id,
         user_id=user_id,
         target_role="Platform engineer",
+        job_input={
+            "target_role": "Platform engineer",
+            "seniority": "mid",
+        },
     )
 
     assert result.final_output["module_type"] == "job"
+    assert result.final_output["review_brief"]["seniority"] == "mid"
+    assert result.final_output["assessment"]["recommended_outcome"] == "gather_hiring_materials"
+    assert result.final_output["gaps"][0] == "Must-have skills are not specified."
+    assert result.final_output["open_questions"][0] == "Which skills are non-negotiable for this hiring decision?"
     assert result.final_output["artifacts"]["document_count"] == 0
     assert result.final_output["artifacts"]["match_count"] == 0
     assert result.final_output["artifacts"]["fit_signal"] == "no_documents_available"
+    assert result.final_output["artifacts"]["evidence_status"] == "no_documents"
     assert result.final_output["summary"] == "No job documents are available for this workspace."
     assert result.final_output["evidence"] == []
 

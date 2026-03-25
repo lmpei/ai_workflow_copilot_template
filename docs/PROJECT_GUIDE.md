@@ -290,6 +290,32 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 - limited-context Support runs should still return a bounded result with explicit escalation and knowledge-gap signals
   instead of pretending the case is grounded
 
+## Stage C Job Workflow
+
+- Job task inputs now use a canonical hiring-review shape instead of only an optional target-role string
+- canonical Job input fields are:
+  - `target_role`
+  - `seniority`
+  - `must_have_skills`
+  - `preferred_skills`
+  - `hiring_context`
+- Job task results now carry both the normalized `input` and a structured hiring workflow alongside the shared
+  scenario envelope
+- canonical Job result fields now include:
+  - `review_brief`
+  - `findings`
+  - `gaps`
+  - `assessment`
+  - `open_questions`
+  - `next_steps`
+- Job evidence honesty should remain explicit through:
+  - `grounded_matches`
+  - `documents_only`
+  - `no_documents`
+- Job fit signals should remain reviewer-facing workflow markers rather than pretend-final hiring decisions
+- limited-context Job runs should still return a bounded result with explicit role-definition or material-gathering gaps
+  instead of pretending a grounded hiring review exists
+
 ## Scenario Module Boundaries
 
 The repository hosts one shared platform core plus three scenario modules.

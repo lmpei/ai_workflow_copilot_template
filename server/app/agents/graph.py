@@ -54,6 +54,7 @@ class WorkspaceJobState(TypedDict, total=False):
     user_id: str
     task_type: JobTaskType
     goal: str
+    job_input: dict[str, object]
     should_search: bool
     documents: list[dict[str, object]]
     document_count: int
@@ -149,7 +150,7 @@ def _compose_job_result(state: WorkspaceJobState) -> WorkspaceJobState:
     return {
         "final_output": build_job_task_result(
             task_type=state["task_type"],
-            target_role=state.get("goal", ""),
+            job_input=state.get("job_input"),
             documents=documents,
             matches=matches,
             tool_call_ids=state.get("tool_call_ids", []),

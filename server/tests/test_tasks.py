@@ -442,7 +442,13 @@ def test_create_job_task_for_job_workspace_member(
         f"/api/v1/workspaces/{workspace_id}/tasks",
         json={
             "task_type": "resume_match",
-            "input": {"target_role": "Platform engineer"},
+            "input": {
+                "target_role": " Platform engineer ",
+                "seniority": " senior ",
+                "must_have_skills": ["Python", "System design", "Python"],
+                "preferred_skills": ["Reliability", "Mentorship"],
+                "hiring_context": " Core platform modernization ",
+            },
         },
         headers=headers,
     )
@@ -450,7 +456,13 @@ def test_create_job_task_for_job_workspace_member(
     created_task = create_response.json()
     assert created_task["task_type"] == "resume_match"
     assert created_task["status"] == "pending"
-    assert created_task["input_json"] == {"target_role": "Platform engineer"}
+    assert created_task["input_json"] == {
+        "target_role": "Platform engineer",
+        "seniority": "senior",
+        "must_have_skills": ["Python", "System design"],
+        "preferred_skills": ["Reliability", "Mentorship"],
+        "hiring_context": "Core platform modernization",
+    }
 
 
 

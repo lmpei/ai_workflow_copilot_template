@@ -603,7 +603,13 @@ def test_run_task_execution_executes_job_resume_match_and_persists_output(
     class FakeRetriever:
         def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
             assert workspace_id
-            assert question == "Platform engineer"
+            assert question == (
+                "Platform engineer"
+                " | Seniority: senior"
+                " | Must-have skills: Python, API design"
+                " | Preferred skills: Reliability"
+                " | Hiring context: Core platform modernization"
+            )
             return [
                 RetrievedChunk(
                     document_id="doc-1",
@@ -626,7 +632,13 @@ def test_run_task_execution_executes_job_resume_match_and_persists_output(
     task_id = _create_task_fixture(
         task_type="resume_match",
         workspace_type="job",
-        input_json={"target_role": "Platform engineer"},
+        input_json={
+            "target_role": "Platform engineer",
+            "seniority": "senior",
+            "must_have_skills": ["Python", "API design"],
+            "preferred_skills": ["Reliability"],
+            "hiring_context": "Core platform modernization",
+        },
     )
 
     output = task_execution_service.run_task_execution(task_id)
@@ -635,7 +647,12 @@ def test_run_task_execution_executes_job_resume_match_and_persists_output(
     assert output["task_type"] == "resume_match"
     assert output["agent_name"] == "workspace_job_agent"
     assert output["result"]["module_type"] == "job"
+    assert output["result"]["input"]["seniority"] == "senior"
+    assert output["result"]["review_brief"]["must_have_skills"] == ["Python", "API design"]
+    assert output["result"]["findings"][0]["evidence_ref_ids"] == ["chunk-1"]
+    assert output["result"]["assessment"]["recommended_outcome"] == "advance_to_manual_review"
     assert output["result"]["artifacts"]["fit_signal"] == "grounded_match_found"
+    assert output["result"]["artifacts"]["evidence_status"] == "grounded_matches"
     assert persisted_task is not None
     assert persisted_task.status == "done"
 
@@ -645,7 +662,10 @@ def test_run_task_execution_completes_job_jd_summary_with_limited_context() -> N
         task_type="jd_summary",
         workspace_type="job",
         with_document=False,
-        input_json={"target_role": "Platform engineer"},
+        input_json={
+            "target_role": "Platform engineer",
+            "seniority": "mid",
+        },
     )
 
     output = task_execution_service.run_task_execution(task_id)
@@ -653,8 +673,12 @@ def test_run_task_execution_completes_job_jd_summary_with_limited_context() -> N
 
     assert output["task_type"] == "jd_summary"
     assert output["result"]["title"] == "Job Description Summary"
+    assert output["result"]["review_brief"]["seniority"] == "mid"
+    assert output["result"]["assessment"]["recommended_outcome"] == "gather_hiring_materials"
+    assert output["result"]["gaps"][0] == "Must-have skills are not specified."
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["fit_signal"] == "no_documents_available"
+    assert output["result"]["artifacts"]["evidence_status"] == "no_documents"
     assert output["result"]["summary"] == "No job documents are available for this workspace."
     assert persisted_task is not None
     assert persisted_task.status == "done"
