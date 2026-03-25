@@ -390,6 +390,216 @@ def test_create_support_task_for_support_workspace_member(
     }
 
 
+def test_create_follow_up_support_task_accepts_completed_parent_task(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-follow-up@example.com", name="Support Follow Up")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    parent_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "reply_draft",
+            "input": {
+                "customer_issue": "Customer cannot reset their password",
+                "product_area": "Authentication",
+                "severity": "high",
+            },
+        },
+        headers=headers,
+    )
+    assert parent_response.status_code == 201
+    parent_task = parent_response.json()
+
+    running_parent = task_repository.update_task_status(
+        parent_task["id"],
+        next_status="running",
+    )
+    assert running_parent is not None
+    completed_parent = task_repository.update_task_status(
+        parent_task["id"],
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "support",
+                "task_type": "reply_draft",
+                "title": "Grounded Reply Draft",
+                "summary": "Grounded password reset guidance was found for the case.",
+                "input": {
+                    "customer_issue": "Customer cannot reset their password",
+                    "product_area": "Authentication",
+                    "severity": "high",
+                },
+                "case_brief": {
+                    "issue_summary": "Customer cannot reset their password",
+                    "product_area": "Authentication",
+                    "severity": "high",
+                    "evidence_status": "grounded_matches",
+                    "reproduction_steps": [],
+                },
+                "findings": [],
+                "triage": {
+                    "evidence_status": "grounded_matches",
+                    "needs_manual_review": True,
+                    "should_escalate": True,
+                    "recommended_owner": "support_escalation",
+                    "rationale": "Human review is required before updating the customer.",
+                },
+                "open_questions": [],
+                "next_steps": [],
+                "reply_draft": {
+                    "subject_line": "Support update for your reported issue",
+                    "body": "Reset links expire after 15 minutes.",
+                    "confidence_note": "Grounded in indexed support knowledge.",
+                },
+                "escalation_packet": {
+                    "recommended_owner": "support_escalation",
+                    "needs_manual_review": True,
+                    "should_escalate": True,
+                    "evidence_status": "grounded_matches",
+                    "escalation_reason": "Human review is required before updating the customer.",
+                    "case_summary": "Grounded password reset guidance was found for the case.",
+                    "findings": [],
+                    "unresolved_questions": [],
+                    "recommended_next_steps": [],
+                    "evidence_ref_ids": [],
+                    "handoff_note": "Route this case to support_escalation.",
+                },
+                "highlights": [],
+                "evidence": [],
+                "artifacts": {
+                    "document_count": 1,
+                    "match_count": 1,
+                    "documents": [],
+                    "matches": [],
+                    "tool_call_ids": [],
+                    "evidence_status": "grounded_matches",
+                },
+                "metadata": {},
+            },
+        },
+    )
+    assert completed_parent is not None
+
+    follow_up_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "reply_draft",
+            "input": {
+                "parent_task_id": parent_task["id"],
+                "follow_up_notes": "Confirm whether the reset link can be reissued safely.",
+            },
+        },
+        headers=headers,
+    )
+
+    assert follow_up_response.status_code == 201
+    created_task = follow_up_response.json()
+    assert created_task["input_json"]["parent_task_id"] == parent_task["id"]
+    assert created_task["input_json"]["follow_up_notes"] == "Confirm whether the reset link can be reissued safely."
+
+
+def test_create_follow_up_support_task_rejects_incomplete_parent(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-follow-up-2@example.com", name="Support Follow Up 2")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"], workspace_type="support")
+
+    parent_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "ticket_summary",
+            "input": {"customer_issue": "Customer billing question"},
+        },
+        headers=headers,
+    )
+    assert parent_response.status_code == 201
+    parent_task = parent_response.json()
+
+    follow_up_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/tasks",
+        json={
+            "task_type": "reply_draft",
+            "input": {
+                "parent_task_id": parent_task["id"],
+                "follow_up_notes": "Confirm who owns the next response.",
+            },
+        },
+        headers=headers,
+    )
+
+    assert follow_up_response.status_code == 400
+    assert "Parent support task must be completed before follow-up" in follow_up_response.json()["detail"]
+
+
+def test_create_follow_up_support_task_rejects_cross_module_parent(
+    client: TestClient,
+    monkeypatch,
+) -> None:
+    async def fake_enqueue_task_execution(task_id: str) -> str:
+        return f"job-{task_id}"
+
+    monkeypatch.setattr(
+        "app.services.task_service.enqueue_task_execution",
+        fake_enqueue_task_execution,
+    )
+
+    auth = _register_and_login(client, email="support-follow-up-3@example.com", name="Support Follow Up 3")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    support_workspace_id = _create_workspace(client, auth["token"], workspace_type="support", name="Support Demo")
+
+    parent_task = task_repository.create_task(
+        workspace_id=support_workspace_id,
+        task_type="research_summary",
+        created_by=auth["user_id"],
+        input_json={"goal": "Summarize the workspace"},
+    )
+
+    running_parent = task_repository.update_task_status(parent_task.id, next_status="running")
+    assert running_parent is not None
+    completed_parent = task_repository.update_task_status(
+        parent_task.id,
+        next_status="done",
+        output_json={"result": {"module_type": "research", "task_type": "research_summary"}},
+    )
+    assert completed_parent is not None
+
+    follow_up_response = client.post(
+        f"/api/v1/workspaces/{support_workspace_id}/tasks",
+        json={
+            "task_type": "ticket_summary",
+            "input": {
+                "parent_task_id": parent_task.id,
+                "follow_up_notes": "Use this as a support follow-up.",
+            },
+        },
+        headers=headers,
+    )
+
+    assert follow_up_response.status_code == 400
+    assert "Parent task must be a completed Support task" in follow_up_response.json()["detail"]
+
+
 def test_create_task_rejects_invalid_support_task_input(
     client: TestClient,
     monkeypatch,

@@ -14,6 +14,7 @@ import type {
   SupportArtifacts,
   SupportCaseBrief,
   SupportEvidenceStatus,
+  SupportEscalationPacket,
   SupportFinding,
   SupportReplyDraft,
   SupportSeverity,
@@ -125,6 +126,8 @@ function parseSupportTaskInput(task: TaskRecord, result: SupportTaskResult | nul
     severity: normalizeOptionalString(source.severity) as SupportSeverity | undefined,
     desired_outcome: normalizeOptionalString(source.desired_outcome),
     reproduction_steps: normalizeStringList(source.reproduction_steps),
+    parent_task_id: normalizeOptionalString(source.parent_task_id),
+    follow_up_notes: normalizeOptionalString(source.follow_up_notes),
   };
 }
 
@@ -392,6 +395,82 @@ function renderReplyDraft(replyDraft: SupportReplyDraft | undefined) {
   );
 }
 
+function renderEscalationPacket(escalationPacket: SupportEscalationPacket | undefined) {
+  if (!escalationPacket) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid #cbd5e1",
+        borderRadius: 12,
+        padding: 16,
+      }}
+    >
+      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <strong>Escalation packet</strong>
+        {renderEvidenceStatusBadge(escalationPacket.evidence_status)}
+      </div>
+      <div style={{ display: "grid", gap: 8 }}>
+        <div>
+          <strong>Recommended owner:</strong> {escalationPacket.recommended_owner}
+        </div>
+        <div>
+          <strong>Manual review required:</strong> {escalationPacket.needs_manual_review ? "Yes" : "No"}
+        </div>
+        <div>
+          <strong>Escalate:</strong> {escalationPacket.should_escalate ? "Yes" : "No"}
+        </div>
+        <div>
+          <strong>Escalation reason:</strong> {escalationPacket.escalation_reason}
+        </div>
+        <div>
+          <strong>Case summary:</strong> {escalationPacket.case_summary}
+        </div>
+        {escalationPacket.follow_up_notes ? (
+          <div>
+            <strong>Follow-up focus:</strong> {escalationPacket.follow_up_notes}
+          </div>
+        ) : null}
+        <div>
+          <strong>Handoff note:</strong> {escalationPacket.handoff_note}
+        </div>
+        {escalationPacket.evidence_ref_ids.length > 0 ? (
+          <div>
+            <strong>Evidence refs:</strong> {escalationPacket.evidence_ref_ids.join(", ")}
+          </div>
+        ) : null}
+      </div>
+
+      {escalationPacket.findings.length > 0 ? (
+        <div style={{ marginTop: 16 }}>
+          <strong>Evidence-linked findings</strong>
+          <ul style={{ marginBottom: 0, marginTop: 8, paddingLeft: 20 }}>
+            {escalationPacket.findings.map((finding) => (
+              <li key={`${finding.title}-${finding.summary}`}>
+                <strong>{finding.title}:</strong> {finding.summary}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {renderListSection({
+        title: "Unresolved questions",
+        items: escalationPacket.unresolved_questions,
+        emptyText: "No unresolved questions were included in the packet.",
+      })}
+
+      {renderListSection({
+        title: "Recommended next steps",
+        items: escalationPacket.recommended_next_steps,
+        emptyText: "No next steps were included in the packet.",
+      })}
+    </div>
+  );
+}
+
 export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -403,6 +482,8 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
   const [severity, setSeverity] = useState<"" | SupportSeverity>("");
   const [desiredOutcome, setDesiredOutcome] = useState("");
   const [reproductionStepsText, setReproductionStepsText] = useState("");
+  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
+  const [followUpNotes, setFollowUpNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -495,6 +576,38 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     () => (selectedTask ? parseSupportTaskInput(selectedTask, selectedResult) : null),
     [selectedResult, selectedTask],
   );
+  const parentTask = useMemo(
+    () => tasks.find((task) => task.id === parentTaskId) ?? null,
+    [parentTaskId, tasks],
+  );
+  const parentResult = useMemo(
+    () => (parentTask ? parseSupportTaskResult(parentTask) : null),
+    [parentTask],
+  );
+  const parentInput = useMemo(
+    () => (parentTask ? parseSupportTaskInput(parentTask, parentResult) : null),
+    [parentResult, parentTask],
+  );
+
+  const handleContinueFromTask = useCallback((task: TaskRecord) => {
+    const result = parseSupportTaskResult(task);
+    const input = parseSupportTaskInput(task, result);
+
+    setParentTaskId(task.id);
+    setTaskType(task.task_type as SupportTaskType);
+    setCustomerIssue(input.customer_issue ?? "");
+    setProductArea(input.product_area ?? "");
+    setSeverity(input.severity ?? "");
+    setDesiredOutcome(input.desired_outcome ?? "");
+    setReproductionStepsText(formatReproductionSteps(input.reproduction_steps));
+    setFollowUpNotes("");
+    setSelectedTaskId(task.id);
+  }, []);
+
+  const handleClearFollowUp = useCallback(() => {
+    setParentTaskId(null);
+    setFollowUpNotes("");
+  }, []);
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -508,6 +621,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     const normalizedIssue = customerIssue.trim();
     const normalizedProductArea = productArea.trim();
     const normalizedDesiredOutcome = desiredOutcome.trim();
+    const normalizedFollowUpNotes = followUpNotes.trim();
 
     if (normalizedIssue) {
       input.customer_issue = normalizedIssue;
@@ -523,6 +637,12 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     }
     if (reproductionSteps.length > 0) {
       input.reproduction_steps = reproductionSteps;
+    }
+    if (parentTaskId) {
+      input.parent_task_id = parentTaskId;
+    }
+    if (normalizedFollowUpNotes) {
+      input.follow_up_notes = normalizedFollowUpNotes;
     }
 
     setIsCreating(true);
@@ -540,6 +660,8 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
       setSeverity("");
       setDesiredOutcome("");
       setReproductionStepsText("");
+      setParentTaskId(null);
+      setFollowUpNotes("");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch support task");
     } finally {
@@ -606,6 +728,37 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
           </label>
           <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
 
+          {parentTask ? (
+            <div
+              style={{
+                backgroundColor: "#eff6ff",
+                border: "1px solid #bfdbfe",
+                borderRadius: 12,
+                display: "grid",
+                gap: 8,
+                padding: 12,
+              }}
+            >
+              <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
+                <strong>Continuing support case</strong>
+                <button onClick={handleClearFollowUp} type="button">
+                  Clear
+                </button>
+              </div>
+              <div>
+                <strong>Parent task:</strong> {parentTask.id}
+              </div>
+              <div>
+                <strong>Prior result:</strong> {parentResult?.summary ?? "Completed support task"}
+              </div>
+              {parentInput?.customer_issue ? (
+                <div>
+                  <strong>Inherited issue:</strong> {parentInput.customer_issue}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <label style={{ display: "grid", gap: 6 }}>
             <span>Customer issue</span>
             <textarea
@@ -667,6 +820,19 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
             />
           </label>
 
+          {parentTask ? (
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Follow-up notes</span>
+              <textarea
+                disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                onChange={(event) => setFollowUpNotes(event.target.value)}
+                placeholder="Example: confirm whether the reset link can be reissued safely and whether the outage scope changed."
+                rows={3}
+                value={followUpNotes}
+              />
+            </label>
+          ) : null}
+
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button
             disabled={
@@ -715,9 +881,16 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                 <div>Task ID: {task.id}</div>
                 <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
                 <div style={{ marginTop: 8 }}>
-                  <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                    Open result
-                  </button>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <button onClick={() => setSelectedTaskId(task.id)} type="button">
+                      Open result
+                    </button>
+                    {task.status === "completed" ? (
+                      <button onClick={() => handleContinueFromTask(task)} type="button">
+                        Continue case
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             );
@@ -742,9 +915,21 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
               <div>
                 <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as SupportTaskType]?.label ?? selectedTask.task_type}
               </div>
+              {selectedResult?.lineage ? (
+                <div>
+                  <strong>Follow-up from:</strong> {selectedResult.lineage.parent_title} ({selectedResult.lineage.parent_task_id})
+                </div>
+              ) : null}
               {selectedInput?.customer_issue ? (
                 <div>
                   <strong>Customer issue:</strong> {selectedInput.customer_issue}
+                </div>
+              ) : null}
+              {selectedTask.status === "completed" ? (
+                <div>
+                  <button onClick={() => handleContinueFromTask(selectedTask)} type="button">
+                    Continue this case
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -765,6 +950,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
 
                 {renderArtifactStats(selectedResult.artifacts)}
                 {renderCaseBrief(selectedResult.case_brief)}
+                {renderEscalationPacket(selectedResult.escalation_packet)}
 
                 <div
                   style={{

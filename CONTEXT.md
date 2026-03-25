@@ -16,7 +16,7 @@ same primitives.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, and Stage C first task wave complete
+- Current stage: Stage A complete, Stage B complete, and Stage C second task wave active
 
 ## Success Criteria
 

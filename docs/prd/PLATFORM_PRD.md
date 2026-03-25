@@ -120,7 +120,7 @@ The active formal planning unit is now `Stage C`, documented in `docs/prd/STAGE_
 ## Current Status
 
 The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, has completed and closed
-`Stage B`, and is executing the first `Stage C` wave.
+`Stage B`, has completed the first `Stage C` wave, and is now executing the second `Stage C` wave.
 
 The current implemented platform increment includes:
 
@@ -184,3 +184,9 @@ The first executable Stage C wave is now complete as:
 - `tasks/archive/stage-c/stage-c-02-support-copilot-grounded-case-workflow.md` (complete)
 - `tasks/archive/stage-c/stage-c-03-job-assistant-structured-hiring-workflow.md` (complete)
 - `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md` (complete)
+
+The second executable Stage C wave is now active as:
+
+- `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md` (complete)
+- `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` (active)
+- `tasks/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (queued)

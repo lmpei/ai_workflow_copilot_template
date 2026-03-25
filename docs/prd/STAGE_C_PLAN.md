@@ -9,6 +9,7 @@
 - Status: active
 - Opened At: 2026-03-21
 - First Task Wave: complete
+- Second Task Wave: active
 
 ## Position In The Project
 
@@ -130,8 +131,19 @@ Stage C is successful when:
 
 ## Next Step
 
-Define the next bounded Stage C execution wave now that the first wave has closed with Support depth, Job depth, and a
-shared cross-module readiness baseline in place.
+Execute `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` as the next active task of the second Stage C
+wave after completing `stage-c-12`.
+
+## Second Task Wave
+
+The second executable Stage C wave is now active:
+
+- `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md` (complete)
+- `tasks/stage-c-13-job-shortlist-and-candidate-comparison.md` (active)
+- `tasks/stage-c-14-cross-module-eval-coverage-and-rehearsal-evidence.md` (queued)
+
+This wave uses Research's reusable iteration patterns as a reference while turning Support and Job into multi-step
+workflows and making cross-module eval coverage and rehearsal evidence more durable.
 
 ## First Task Wave
 
@@ -169,5 +181,5 @@ The global governance baseline was completed on 2026-03-22 through these archive
 
 ## Readiness Gate After Stage C
 
-This baseline no longer blocks the remaining Stage C task wave. The planning unit that follows Stage C should still
+This baseline no longer blocks later Stage C task waves. The planning unit that follows Stage C should still
 confirm these governance guarantees remain intact before opening.

@@ -537,3 +537,31 @@ Append-only log. Add new entries at the bottom.
 - Impact: collaborators can now point to one lightweight readiness routine across Research, Support, and Job, and the next Stage C step can be chosen from a clearer cross-module baseline instead of ad hoc module checks
 - Related Task: `tasks/archive/stage-c/stage-c-04-cross-module-quality-and-demo-readiness.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-25-033
+- Date: 2026-03-25
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the second Stage C task wave
+- Context: the first Stage C wave completed Support depth, Job depth, and a lightweight cross-module readiness baseline, but the platform still needs a bounded next wave so non-Research modules can move beyond single-run structured outputs without drifting into ad hoc follow-up work
+- Choice: define the second Stage C wave as `stage-c-12`, `stage-c-13`, and `stage-c-14`, using Support escalation and follow-up workflow depth, Job shortlist and candidate comparison depth, and cross-module eval-coverage plus rehearsal-evidence durability as the next ordered stack
+- Why: Stage C should keep Research as the reference workflow while moving Support and Job toward multi-step reusable workflows and strengthening cross-module quality evidence at the same time
+- Impact: `stage-c-12` becomes the next active execution task, the second Stage C wave is now explicit in the control plane, and future collaborators can continue Stage C without inferring the next step from chat history
+- Related Task: `tasks/archive/stage-c/stage-c-11-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-25-034
+- Date: 2026-03-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-c-12 Support escalation and follow-up workflow depth
+- Context: `stage-c-02` gave Support a structured grounded case workflow, but the module still stopped at one isolated task result and lacked a clear path for continuing a case or handing it to a reviewer-facing escalation flow
+- Choice: extend the Support contract with canonical follow-up fields `parent_task_id` and `follow_up_notes`, resolve completed Support parent-task lineage before execution, add a structured `lineage` and `escalation_packet` result shape, upgrade the Support panel with continue-case actions and escalation-packet inspection, archive `stage-c-12`, and move the active Stage C task to `stage-c-13`
+- Why: the second Stage C wave should push Support beyond single-run grounded outputs into a more reusable multi-step case workflow without inventing a separate persistence layer or bypassing the shared task runtime
+- Impact: collaborators can continue a completed Support case without copying raw JSON by hand, Support follow-up runs now preserve parent-case lineage and reviewer-ready escalation packets, and limited-context runs stay explicit about missing grounding in the handoff output
+- Related Task: `tasks/archive/stage-c/stage-c-12-support-escalation-and-follow-up-workflow.md`
+- Supersedes:

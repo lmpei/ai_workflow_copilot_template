@@ -274,6 +274,9 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `severity`
   - `desired_outcome`
   - `reproduction_steps`
+  - optional follow-up fields:
+    - `parent_task_id`
+    - `follow_up_notes`
 - Support task results now carry both the normalized `input` and a structured case workflow alongside the shared
   scenario envelope
 - canonical Support result fields now include:
@@ -283,12 +286,22 @@ Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
   - `open_questions`
   - `next_steps`
   - optional `reply_draft`
+  - optional `lineage`
+  - `escalation_packet`
 - Support evidence honesty should remain explicit through:
   - `grounded_matches`
   - `documents_only`
   - `no_documents`
 - `reply_draft` remains a Support task type, but the customer-facing draft now sits beside the case workflow output
   instead of hiding inside `artifacts`
+- Support follow-up runs can now continue from a completed Support task and inherit the prior case context through a
+  structured lineage object instead of relying on copied raw input JSON
+- the Support escalation packet is reviewer-facing and should preserve:
+  - recommended owner signals
+  - evidence-linked findings
+  - unresolved questions
+  - recommended next steps
+  - honest grounding status for the handoff
 - limited-context Support runs should still return a bounded result with explicit escalation and knowledge-gap signals
   instead of pretending the case is grounded
 

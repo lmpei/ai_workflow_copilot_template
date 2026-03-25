@@ -101,7 +101,7 @@ Use these when you need deeper reference material:
 The latest live state is maintained in `STATUS.md`.
 
 At a high level, the repository has a Phase 5 baseline implemented, has completed `Stage A`, has completed and closed
-`Stage B`, and has completed the first `Stage C` wave under the three-track roadmap model in
+`Stage B`, has completed the first `Stage C` wave, and is now executing the second `Stage C` wave under the three-track roadmap model in
 `docs/prd/STAGE_C_PLAN.md`.
 
 ## Runtime Services

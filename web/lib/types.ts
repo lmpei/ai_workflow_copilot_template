@@ -127,6 +127,8 @@ export type SupportTaskInput = {
   severity?: SupportSeverity;
   desired_outcome?: string;
   reproduction_steps: string[];
+  parent_task_id?: string;
+  follow_up_notes?: string;
 };
 
 export type ResearchDocumentSummary = {
@@ -316,22 +318,54 @@ export type SupportTriageDecision = {
   rationale: string;
 };
 
+export type SupportCaseLineage = {
+  parent_task_id: string;
+  parent_task_type: SupportTaskType;
+  parent_title: string;
+  parent_summary: string;
+  parent_customer_issue?: string | null;
+  parent_product_area?: string | null;
+  parent_severity?: SupportSeverity | null;
+  parent_desired_outcome?: string | null;
+  parent_reproduction_steps: string[];
+  parent_recommended_owner?: string | null;
+  parent_evidence_status?: SupportEvidenceStatus | null;
+  follow_up_notes?: string | null;
+};
+
 export type SupportReplyDraft = {
   subject_line: string;
   body: string;
   confidence_note: string;
 };
 
+export type SupportEscalationPacket = {
+  recommended_owner: string;
+  needs_manual_review: boolean;
+  should_escalate: boolean;
+  evidence_status: SupportEvidenceStatus;
+  escalation_reason: string;
+  case_summary: string;
+  findings: SupportFinding[];
+  unresolved_questions: string[];
+  recommended_next_steps: string[];
+  evidence_ref_ids: string[];
+  follow_up_notes?: string | null;
+  handoff_note: string;
+};
+
 export type SupportTaskResult = ScenarioTaskResult & {
   module_type: "support";
   task_type: SupportTaskType;
   input: SupportTaskInput;
+  lineage?: SupportCaseLineage;
   case_brief: SupportCaseBrief;
   findings: SupportFinding[];
   triage: SupportTriageDecision;
   open_questions: string[];
   next_steps: string[];
   reply_draft?: SupportReplyDraft;
+  escalation_packet?: SupportEscalationPacket;
   artifacts: SupportArtifacts;
 };
 

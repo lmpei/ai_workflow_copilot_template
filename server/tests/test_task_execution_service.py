@@ -566,6 +566,112 @@ def test_run_task_execution_executes_support_reply_draft_and_persists_output(
 
 
 
+def test_run_task_execution_carries_support_follow_up_lineage_and_escalation_packet(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeRetriever:
+        def retrieve(self, *, workspace_id: str, question: str) -> list[RetrievedChunk]:
+            assert workspace_id
+            assert question == (
+                "Continue the prior support case 'Grounded Reply Draft'. "
+                "Prior summary: Grounded password reset guidance was found for the case. "
+                "Prior recommended owner: support_escalation "
+                "Follow-up guidance: Confirm whether the reset link can be reissued safely. "
+                "Current request: Customer cannot reset their password | Product area: Authentication | Severity: high"
+            )
+            return [
+                RetrievedChunk(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="support-guide.md",
+                    chunk_index=0,
+                    snippet="Reset links can be reissued safely after identity verification.",
+                    content="Reset links can be reissued safely after identity verification.",
+                ),
+            ]
+
+    monkeypatch.setattr("app.agents.tool_registry.get_retriever", lambda: FakeRetriever())
+
+    unique_suffix = uuid4().hex
+    user = create_user(
+        email=f"support-follow-up-worker-{unique_suffix}@example.com",
+        password_hash="not-used-in-this-test",
+        name="Support Follow Up Worker",
+    )
+    workspace = create_workspace(
+        WorkspaceCreate(name="Support Follow Up Workspace", module_type="support"),
+        owner_id=user.id,
+    )
+    document_repository.create_document(
+        document_id=str(uuid4()),
+        workspace_id=workspace.id,
+        title="support-guide.md",
+        file_path="uploads/support-guide.md",
+        mime_type="text/markdown",
+        created_by=user.id,
+        status=DOCUMENT_STATUS_INDEXED,
+    )
+    parent_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="reply_draft",
+        created_by=user.id,
+        input_json={
+            "customer_issue": "Customer cannot reset their password",
+            "product_area": "Authentication",
+            "severity": "high",
+        },
+    )
+    running_parent = task_repository.update_task_status(parent_task.id, next_status="running")
+    assert running_parent is not None
+    completed_parent = task_repository.update_task_status(
+        parent_task.id,
+        next_status="done",
+        output_json={
+            "result": {
+                "module_type": "support",
+                "task_type": "reply_draft",
+                "title": "Grounded Reply Draft",
+                "summary": "Grounded password reset guidance was found for the case.",
+                "input": {
+                    "customer_issue": "Customer cannot reset their password",
+                    "product_area": "Authentication",
+                    "severity": "high",
+                },
+                "triage": {
+                    "evidence_status": "grounded_matches",
+                    "needs_manual_review": True,
+                    "should_escalate": True,
+                    "recommended_owner": "support_escalation",
+                    "rationale": "Human review is required before updating the customer.",
+                },
+            },
+        },
+    )
+    assert completed_parent is not None
+    follow_up_task = task_repository.create_task(
+        workspace_id=workspace.id,
+        task_type="reply_draft",
+        created_by=user.id,
+        input_json={
+            "parent_task_id": parent_task.id,
+            "follow_up_notes": "Confirm whether the reset link can be reissued safely.",
+        },
+    )
+
+    output = task_execution_service.run_task_execution(follow_up_task.id)
+    persisted_task = task_repository.get_task(follow_up_task.id)
+
+    assert output["result"]["lineage"]["parent_task_id"] == parent_task.id
+    assert output["result"]["input"]["customer_issue"] == "Customer cannot reset their password"
+    assert output["result"]["metadata"]["is_follow_up"] is True
+    assert output["result"]["metadata"]["parent_task_id"] == parent_task.id
+    assert output["result"]["reply_draft"]["body"].startswith("We continued review")
+    assert output["result"]["escalation_packet"]["follow_up_notes"] == "Confirm whether the reset link can be reissued safely."
+    assert output["result"]["escalation_packet"]["evidence_status"] == "grounded_matches"
+    assert persisted_task is not None
+    assert persisted_task.status == "done"
+
+
 def test_run_task_execution_completes_support_ticket_summary_with_limited_context() -> None:
     task_id = _create_task_fixture(
         task_type="ticket_summary",
@@ -589,6 +695,9 @@ def test_run_task_execution_completes_support_ticket_summary_with_limited_contex
     assert output["result"]["artifacts"]["document_count"] == 0
     assert output["result"]["artifacts"]["matches"] == []
     assert output["result"]["artifacts"]["evidence_status"] == "no_documents"
+    assert output["result"]["escalation_packet"]["evidence_status"] == "no_documents"
+    assert output["result"]["escalation_packet"]["should_escalate"] is True
+    assert "No indexed support knowledge was available" in output["result"]["escalation_packet"]["handoff_note"]
     assert (
         output["result"]["summary"]
         == "No support knowledge documents are available for this workspace."

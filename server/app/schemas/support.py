@@ -28,6 +28,8 @@ class SupportTaskInput(BaseModel):
     severity: SupportSeverity | None = None
     desired_outcome: str | None = None
     reproduction_steps: list[str] = Field(default_factory=list)
+    parent_task_id: str | None = None
+    follow_up_notes: str | None = None
 
 
 class SupportCaseBrief(BaseModel):
@@ -53,6 +55,21 @@ class SupportTriageDecision(BaseModel):
     rationale: str
 
 
+class SupportCaseLineage(BaseModel):
+    parent_task_id: str
+    parent_task_type: SupportTaskType
+    parent_title: str
+    parent_summary: str
+    parent_customer_issue: str | None = None
+    parent_product_area: str | None = None
+    parent_severity: SupportSeverity | None = None
+    parent_desired_outcome: str | None = None
+    parent_reproduction_steps: list[str] = Field(default_factory=list)
+    parent_recommended_owner: str | None = None
+    parent_evidence_status: SupportEvidenceStatus | None = None
+    follow_up_notes: str | None = None
+
+
 class SupportReplyDraft(BaseModel):
     subject_line: str
     body: str
@@ -68,17 +85,34 @@ class SupportArtifacts(BaseModel):
     evidence_status: SupportEvidenceStatus
 
 
+class SupportEscalationPacket(BaseModel):
+    recommended_owner: str
+    needs_manual_review: bool
+    should_escalate: bool
+    evidence_status: SupportEvidenceStatus
+    escalation_reason: str
+    case_summary: str
+    findings: list[SupportFinding] = Field(default_factory=list)
+    unresolved_questions: list[str] = Field(default_factory=list)
+    recommended_next_steps: list[str] = Field(default_factory=list)
+    evidence_ref_ids: list[str] = Field(default_factory=list)
+    follow_up_notes: str | None = None
+    handoff_note: str
+
+
 class SupportCopilotResult(BaseModel):
     module_type: Literal["support"] = "support"
     task_type: SupportTaskType
     title: str
     input: SupportTaskInput = Field(default_factory=SupportTaskInput)
+    lineage: SupportCaseLineage | None = None
     case_brief: SupportCaseBrief
     findings: list[SupportFinding] = Field(default_factory=list)
     triage: SupportTriageDecision
     open_questions: list[str] = Field(default_factory=list)
     next_steps: list[str] = Field(default_factory=list)
     reply_draft: SupportReplyDraft | None = None
+    escalation_packet: SupportEscalationPacket
     summary: str
     highlights: list[str] = Field(default_factory=list)
     evidence: list[ScenarioEvidenceItem] = Field(default_factory=list)

@@ -40,6 +40,7 @@ class WorkspaceSupportState(TypedDict, total=False):
     task_type: SupportTaskType
     goal: str
     support_input: dict[str, object]
+    support_lineage: dict[str, object]
     should_search: bool
     documents: list[dict[str, object]]
     document_count: int
@@ -136,6 +137,7 @@ def _compose_support_result(state: WorkspaceSupportState) -> WorkspaceSupportSta
         "final_output": build_support_task_result(
             task_type=state["task_type"],
             support_input=state.get("support_input"),
+            lineage=state.get("support_lineage"),
             documents=documents,
             matches=matches,
             tool_call_ids=state.get("tool_call_ids", []),

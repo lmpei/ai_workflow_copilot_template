@@ -127,6 +127,29 @@ def _validate_research_task_lineage(
                 raise TaskValidationError("Parent research task is linked to a different Research asset")
 
 
+def _validate_support_task_lineage(
+    *,
+    workspace_id: str,
+    user_id: str,
+    normalized_input: dict[str, object],
+) -> None:
+    parent_task_id = normalized_input.get("parent_task_id")
+    if not isinstance(parent_task_id, str) or not parent_task_id:
+        return
+
+    parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
+    if parent_task is None or parent_task.workspace_id != workspace_id:
+        raise TaskValidationError("Parent support task not found in this workspace")
+    if _resolve_task_module_type(parent_task.task_type) != MODULE_TYPE_SUPPORT:
+        raise TaskValidationError("Parent task must be a completed Support task")
+    if parent_task.status != "done":
+        raise TaskValidationError("Parent support task must be completed before follow-up")
+
+    result = parent_task.output_json.get("result")
+    if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_SUPPORT:
+        raise TaskValidationError("Parent support task does not contain a structured Support result")
+
+
 def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
@@ -161,6 +184,12 @@ async def create_task(
 
     if task_module_type == MODULE_TYPE_RESEARCH:
         _validate_research_task_lineage(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            normalized_input=normalized_input,
+        )
+    elif task_module_type == MODULE_TYPE_SUPPORT:
+        _validate_support_task_lineage(
             workspace_id=workspace_id,
             user_id=user_id,
             normalized_input=normalized_input,

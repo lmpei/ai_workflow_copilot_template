@@ -26,7 +26,9 @@ from app.services.research_assistant_service import (
 from app.services.support_copilot_service import (
     SupportCopilotContractError,
     build_support_task_search_query,
+    merge_support_task_input_with_lineage,
     resolve_support_task_input,
+    resolve_support_task_lineage,
     validate_support_task_contract,
 )
 
@@ -186,9 +188,20 @@ def run_workspace_support_agent(
     support_input: dict[str, object] | None = None,
     graph_runner: GraphRunner | None = None,
 ) -> AgentExecutionResult:
-    resolved_support_input = support_input or {"customer_issue": customer_issue}
+    normalized_support_input = resolve_support_task_input(
+        support_input or {"customer_issue": customer_issue},
+    )
+    support_lineage = resolve_support_task_lineage(
+        workspace_id=workspace_id,
+        support_input=normalized_support_input,
+    )
+    effective_support_input = merge_support_task_input_with_lineage(
+        support_input=normalized_support_input,
+        lineage=support_lineage,
+    )
     support_query = build_support_task_search_query(
-        resolve_support_task_input(resolved_support_input),
+        effective_support_input,
+        lineage=support_lineage,
     )
     return _run_workspace_agent(
         task_id=task_id,
@@ -200,7 +213,12 @@ def run_workspace_support_agent(
         validate_contract=validate_support_task_contract,
         graph_runner=graph_runner,
         extra_state={
-            "support_input": resolved_support_input,
+            "support_input": effective_support_input.model_dump(exclude_none=True),
+            "support_lineage": (
+                support_lineage.model_dump(exclude_none=True)
+                if support_lineage is not None
+                else {}
+            ),
         },
     )
 

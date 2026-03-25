@@ -1,7 +1,9 @@
 from collections.abc import Sequence
+from typing import cast
 
 from pydantic import ValidationError
 
+from app.repositories import task_repository
 from app.schemas.scenario import (
     MODULE_TYPE_SUPPORT,
     ScenarioEvidenceItem,
@@ -11,7 +13,9 @@ from app.schemas.scenario import (
 from app.schemas.support import (
     SupportArtifacts,
     SupportCaseBrief,
+    SupportCaseLineage,
     SupportCopilotResult,
+    SupportEscalationPacket,
     SupportEvidenceStatus,
     SupportFinding,
     SupportReplyDraft,
@@ -26,6 +30,8 @@ _SUPPORT_TASK_TITLES = {
     "ticket_summary": "Support Ticket Summary",
     "reply_draft": "Grounded Reply Draft",
 }
+_SUPPORT_EVIDENCE_STATUSES = {"grounded_matches", "documents_only", "no_documents"}
+_SUPPORT_SEVERITIES = {"low", "medium", "high", "critical"}
 
 
 class SupportCopilotContractError(ValueError):
@@ -67,6 +73,24 @@ def _normalize_string_list(values: Sequence[str]) -> list[str]:
     return normalized
 
 
+def _coerce_string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return _normalize_string_list([item for item in value if isinstance(item, str)])
+
+
+def _coerce_support_severity(value: object) -> SupportSeverity | None:
+    if isinstance(value, str) and value in _SUPPORT_SEVERITIES:
+        return cast(SupportSeverity, value)
+    return None
+
+
+def _coerce_support_evidence_status(value: object) -> SupportEvidenceStatus | None:
+    if isinstance(value, str) and value in _SUPPORT_EVIDENCE_STATUSES:
+        return cast(SupportEvidenceStatus, value)
+    return None
+
+
 def normalize_support_task_input(input_json: dict[str, object] | None) -> dict[str, object]:
     raw_input = input_json or {}
     if raw_input.get("customer_issue") is None and isinstance(raw_input.get("goal"), str):
@@ -80,6 +104,8 @@ def normalize_support_task_input(input_json: dict[str, object] | None) -> dict[s
         "severity": raw_input.get("severity"),
         "desired_outcome": raw_input.get("desired_outcome"),
         "reproduction_steps": raw_input.get("reproduction_steps", []),
+        "parent_task_id": raw_input.get("parent_task_id"),
+        "follow_up_notes": raw_input.get("follow_up_notes"),
     }
     try:
         payload = SupportTaskInput.model_validate(payload_input)
@@ -106,6 +132,14 @@ def normalize_support_task_input(input_json: dict[str, object] | None) -> dict[s
     if normalized_steps:
         normalized_payload["reproduction_steps"] = normalized_steps
 
+    normalized_parent_task_id = _normalize_optional_string(payload.parent_task_id)
+    if normalized_parent_task_id:
+        normalized_payload["parent_task_id"] = normalized_parent_task_id
+
+    normalized_follow_up_notes = _normalize_optional_string(payload.follow_up_notes)
+    if normalized_follow_up_notes:
+        normalized_payload["follow_up_notes"] = normalized_follow_up_notes
+
     return normalized_payload
 
 
@@ -116,7 +150,88 @@ def resolve_support_task_input(input_json: dict[str, object] | None) -> SupportT
         raise SupportCopilotContractError("Invalid support task input") from error
 
 
-def build_support_task_search_query(support_input: SupportTaskInput) -> str:
+def resolve_support_task_lineage(
+    *,
+    workspace_id: str,
+    support_input: SupportTaskInput,
+) -> SupportCaseLineage | None:
+    if not support_input.parent_task_id:
+        return None
+
+    parent_task = task_repository.get_task(support_input.parent_task_id)
+    if parent_task is None or parent_task.workspace_id != workspace_id:
+        raise SupportCopilotContractError("Parent support task not found in this workspace")
+    if get_scenario_task_module_type(parent_task.task_type) != MODULE_TYPE_SUPPORT:
+        raise SupportCopilotContractError("Parent task must be a completed Support task")
+    if parent_task.status != "done":
+        raise SupportCopilotContractError("Parent support task must be completed before follow-up")
+
+    result = parent_task.output_json.get("result")
+    if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_SUPPORT:
+        raise SupportCopilotContractError("Parent support task does not contain a structured Support result")
+
+    title = result.get("title")
+    summary = result.get("summary")
+    if not isinstance(title, str) or not title.strip():
+        raise SupportCopilotContractError("Parent support task is missing a Support title")
+    if not isinstance(summary, str) or not summary.strip():
+        raise SupportCopilotContractError("Parent support task is missing a Support summary")
+
+    parent_input = result.get("input")
+    parent_input_json = parent_input if isinstance(parent_input, dict) else {}
+    triage = result.get("triage")
+    triage_json = triage if isinstance(triage, dict) else {}
+
+    return SupportCaseLineage(
+        parent_task_id=parent_task.id,
+        parent_task_type=cast(SupportTaskType, parent_task.task_type),
+        parent_title=title.strip(),
+        parent_summary=summary.strip(),
+        parent_customer_issue=_normalize_optional_string(
+            cast(str | None, parent_input_json.get("customer_issue")),
+        ),
+        parent_product_area=_normalize_optional_string(
+            cast(str | None, parent_input_json.get("product_area")),
+        ),
+        parent_severity=_coerce_support_severity(parent_input_json.get("severity")),
+        parent_desired_outcome=_normalize_optional_string(
+            cast(str | None, parent_input_json.get("desired_outcome")),
+        ),
+        parent_reproduction_steps=_coerce_string_list(parent_input_json.get("reproduction_steps")),
+        parent_recommended_owner=_normalize_optional_string(
+            cast(str | None, triage_json.get("recommended_owner")),
+        ),
+        parent_evidence_status=_coerce_support_evidence_status(triage_json.get("evidence_status")),
+        follow_up_notes=support_input.follow_up_notes,
+    )
+
+
+def merge_support_task_input_with_lineage(
+    *,
+    support_input: SupportTaskInput,
+    lineage: SupportCaseLineage | None,
+) -> SupportTaskInput:
+    if lineage is None:
+        return support_input
+
+    return SupportTaskInput(
+        customer_issue=support_input.customer_issue or lineage.parent_customer_issue,
+        product_area=support_input.product_area or lineage.parent_product_area,
+        severity=support_input.severity or lineage.parent_severity,
+        desired_outcome=support_input.desired_outcome or lineage.parent_desired_outcome,
+        reproduction_steps=list(
+            support_input.reproduction_steps or lineage.parent_reproduction_steps,
+        ),
+        parent_task_id=support_input.parent_task_id,
+        follow_up_notes=support_input.follow_up_notes,
+    )
+
+
+def build_support_task_search_query(
+    support_input: SupportTaskInput,
+    *,
+    lineage: SupportCaseLineage | None = None,
+) -> str:
     query_parts: list[str] = []
     if support_input.customer_issue:
         query_parts.append(support_input.customer_issue)
@@ -130,7 +245,23 @@ def build_support_task_search_query(support_input: SupportTaskInput) -> str:
         query_parts.append(
             "Reproduction steps: " + "; ".join(support_input.reproduction_steps),
         )
-    return " | ".join(query_parts)
+    base_query = " | ".join(query_parts)
+    if not base_query:
+        base_query = "Review the current support case and recommend the next grounded action."
+
+    if lineage is None:
+        return base_query
+
+    follow_up_parts = [
+        f"Continue the prior support case '{lineage.parent_title}'.",
+        f"Prior summary: {lineage.parent_summary}",
+    ]
+    if lineage.parent_recommended_owner:
+        follow_up_parts.append(f"Prior recommended owner: {lineage.parent_recommended_owner}")
+    if lineage.follow_up_notes:
+        follow_up_parts.append(f"Follow-up guidance: {lineage.follow_up_notes}")
+    follow_up_parts.append(f"Current request: {base_query}")
+    return " ".join(follow_up_parts)
 
 
 def _derive_evidence_status(
@@ -276,8 +407,11 @@ def _build_next_steps(
     findings: list[SupportFinding],
     triage: SupportTriageDecision,
     evidence_status: SupportEvidenceStatus,
+    lineage: SupportCaseLineage | None,
 ) -> list[str]:
     next_steps: list[str] = []
+    if lineage is not None:
+        next_steps.append(f"Compare this follow-up with parent support task {lineage.parent_task_id}.")
     if evidence_status == "grounded_matches" and findings:
         next_steps.append(f"Use the grounded guidance from '{findings[0].title}' when updating the case.")
     if evidence_status == "documents_only":
@@ -296,6 +430,7 @@ def _build_reply_draft(
     support_input: SupportTaskInput,
     findings: list[SupportFinding],
     triage: SupportTriageDecision,
+    lineage: SupportCaseLineage | None,
 ) -> SupportReplyDraft:
     issue_summary = support_input.customer_issue or "your reported issue"
     if findings and triage.evidence_status == "grounded_matches":
@@ -318,6 +453,12 @@ def _build_reply_draft(
         )
         confidence_note = "No indexed support knowledge is available for this case."
 
+    if lineage is not None:
+        body = (
+            f"We continued review of {issue_summary}. "
+            + body
+        )
+
     if triage.should_escalate:
         body += " Because the case needs escalation, please wait for a reviewed update before action is taken."
 
@@ -328,10 +469,86 @@ def _build_reply_draft(
     )
 
 
+def _flatten_support_evidence_ref_ids(
+    *,
+    findings: list[SupportFinding],
+    evidence: list[ScenarioEvidenceItem],
+) -> list[str]:
+    ref_ids: list[str] = []
+    seen: set[str] = set()
+    for finding in findings:
+        for ref_id in finding.evidence_ref_ids:
+            if ref_id in seen:
+                continue
+            seen.add(ref_id)
+            ref_ids.append(ref_id)
+    for item in evidence:
+        if item.ref_id in seen:
+            continue
+        seen.add(item.ref_id)
+        ref_ids.append(item.ref_id)
+    return ref_ids
+
+
+def _build_escalation_packet(
+    *,
+    summary: str,
+    findings: list[SupportFinding],
+    triage: SupportTriageDecision,
+    open_questions: list[str],
+    next_steps: list[str],
+    evidence: list[ScenarioEvidenceItem],
+    lineage: SupportCaseLineage | None,
+) -> SupportEscalationPacket:
+    if triage.should_escalate:
+        escalation_reason = triage.rationale
+    elif triage.needs_manual_review:
+        escalation_reason = (
+            "Escalation is not mandatory yet, but human review is still required before the case proceeds. "
+            + triage.rationale
+        )
+    else:
+        escalation_reason = "Grounded evidence is strong enough for frontline handling without escalation."
+
+    if triage.evidence_status == "grounded_matches":
+        grounding_note = "Grounded support matches were found in indexed support knowledge."
+    elif triage.evidence_status == "documents_only":
+        grounding_note = (
+            "Support documents were available, but no direct grounded match was found for the case."
+        )
+    else:
+        grounding_note = (
+            "No indexed support knowledge was available, so this handoff is based on visible gaps rather than grounded guidance."
+        )
+
+    handoff_note = (
+        f"Route this case to {triage.recommended_owner}. "
+        f"{grounding_note} {triage.rationale}"
+    )
+    if lineage is not None and lineage.follow_up_notes:
+        handoff_note += f" Follow-up focus: {lineage.follow_up_notes}"
+
+    return SupportEscalationPacket(
+        recommended_owner=triage.recommended_owner,
+        needs_manual_review=triage.needs_manual_review,
+        should_escalate=triage.should_escalate,
+        evidence_status=triage.evidence_status,
+        escalation_reason=escalation_reason,
+        case_summary=summary,
+        findings=findings[:3],
+        unresolved_questions=open_questions,
+        recommended_next_steps=next_steps,
+        evidence_ref_ids=_flatten_support_evidence_ref_ids(findings=findings, evidence=evidence),
+        follow_up_notes=lineage.follow_up_notes if lineage is not None else None,
+        handoff_note=handoff_note,
+    )
+
+
 def build_support_task_result(
     *,
     task_type: SupportTaskType,
     support_input: dict[str, object] | None,
+    lineage: dict[str, object] | None = None,
     documents: list[dict[str, object]],
     matches: list[dict[str, object]],
     tool_call_ids: list[str],
@@ -342,6 +559,11 @@ def build_support_task_result(
     )
 
     resolved_input = resolve_support_task_input(support_input)
+    resolved_lineage = SupportCaseLineage.model_validate(lineage) if lineage else None
+    effective_input = merge_support_task_input_with_lineage(
+        support_input=resolved_input,
+        lineage=resolved_lineage,
+    )
     document_models = [ToolDocumentSummary.model_validate(document) for document in documents]
     match_models = [SearchDocumentMatch.model_validate(match) for match in matches]
     evidence_status = _derive_evidence_status(
@@ -349,7 +571,7 @@ def build_support_task_result(
         has_matches=bool(match_models),
     )
     case_brief = _build_case_brief(
-        support_input=resolved_input,
+        support_input=effective_input,
         evidence_status=evidence_status,
     )
     findings = _build_support_findings(
@@ -359,11 +581,11 @@ def build_support_task_result(
     )
     triage = _build_triage_decision(
         task_type=task_type,
-        severity=resolved_input.severity,
+        severity=effective_input.severity,
         evidence_status=evidence_status,
     )
     open_questions = _build_open_questions(
-        support_input=resolved_input,
+        support_input=effective_input,
         evidence_status=evidence_status,
     )
     next_steps = _build_next_steps(
@@ -371,12 +593,14 @@ def build_support_task_result(
         findings=findings,
         triage=triage,
         evidence_status=evidence_status,
+        lineage=resolved_lineage,
     )
     reply_draft = (
         _build_reply_draft(
-            support_input=resolved_input,
+            support_input=effective_input,
             findings=findings,
             triage=triage,
+            lineage=resolved_lineage,
         )
         if task_type == "reply_draft"
         else None
@@ -384,27 +608,38 @@ def build_support_task_result(
 
     if evidence_status == "grounded_matches":
         summary = (
-            f"Found grounded support guidance for the case after reviewing "
-            f"{len(document_models)} document(s) and {len(match_models)} relevant match(es)."
+            f"{'Continued the support case' if resolved_lineage is not None else 'Found grounded support guidance'} "
+            f"after reviewing {len(document_models)} document(s) and {len(match_models)} relevant match(es)."
         )
     elif evidence_status == "documents_only":
+        summary_prefix = (
+            "Continued the support case and reviewed"
+            if resolved_lineage is not None
+            else "Reviewed"
+        )
         summary = (
-            f"Reviewed {len(document_models)} indexed support document(s), but no confident grounded "
-            "answer was found for this case."
+            f"{summary_prefix} {len(document_models)} indexed support document(s), "
+            "but no confident grounded answer was found for this case."
         )
     else:
-        summary = "No support knowledge documents are available for this workspace."
+        summary = (
+            "No support knowledge documents are available for this workspace."
+            if resolved_lineage is None
+            else "Continued the support case, but no support knowledge documents are available for this workspace."
+        )
 
     highlights = [
         f"Issue: {case_brief.issue_summary}",
         f"Evidence status: {evidence_status}",
     ]
-    if resolved_input.product_area:
-        highlights.append(f"Product area: {resolved_input.product_area}")
-    if resolved_input.severity:
-        highlights.append(f"Severity: {resolved_input.severity}")
-    if resolved_input.desired_outcome:
-        highlights.append(f"Desired outcome: {resolved_input.desired_outcome}")
+    if effective_input.product_area:
+        highlights.append(f"Product area: {effective_input.product_area}")
+    if effective_input.severity:
+        highlights.append(f"Severity: {effective_input.severity}")
+    if effective_input.desired_outcome:
+        highlights.append(f"Desired outcome: {effective_input.desired_outcome}")
+    if resolved_lineage is not None:
+        highlights.append(f"Follow-up from: {resolved_lineage.parent_title}")
     highlights.extend(finding.title for finding in findings[:2])
 
     if match_models:
@@ -443,31 +678,47 @@ def build_support_task_result(
         tool_call_ids=tool_call_ids,
         evidence_status=evidence_status,
     )
+    escalation_packet = _build_escalation_packet(
+        summary=summary,
+        findings=findings,
+        triage=triage,
+        open_questions=open_questions,
+        next_steps=next_steps,
+        evidence=evidence,
+        lineage=resolved_lineage,
+    )
     result = SupportCopilotResult(
         task_type=task_type,
         title=_SUPPORT_TASK_TITLES[task_type],
-        input=resolved_input,
+        input=effective_input,
+        lineage=resolved_lineage,
         case_brief=case_brief,
         findings=findings,
         triage=triage,
         open_questions=open_questions,
         next_steps=next_steps,
         reply_draft=reply_draft,
+        escalation_packet=escalation_packet,
         summary=summary,
         highlights=highlights,
         evidence=evidence,
         artifacts=artifacts,
         metadata={
-            "customer_issue": resolved_input.customer_issue,
-            "product_area": resolved_input.product_area,
-            "severity": resolved_input.severity,
-            "desired_outcome": resolved_input.desired_outcome,
-            "reproduction_step_count": len(resolved_input.reproduction_steps),
+            "customer_issue": effective_input.customer_issue,
+            "product_area": effective_input.product_area,
+            "severity": effective_input.severity,
+            "desired_outcome": effective_input.desired_outcome,
+            "reproduction_step_count": len(effective_input.reproduction_steps),
             "document_count": len(document_models),
             "match_count": len(match_models),
             "evidence_status": evidence_status,
+            "is_follow_up": resolved_lineage is not None,
+            "parent_task_id": resolved_lineage.parent_task_id if resolved_lineage is not None else None,
+            "follow_up_notes": effective_input.follow_up_notes,
             "manual_review_required": triage.needs_manual_review,
             "should_escalate": triage.should_escalate,
+            "escalation_owner": triage.recommended_owner,
+            "escalation_packet_ready": True,
         },
     )
     return result.model_dump(exclude_none=True)
