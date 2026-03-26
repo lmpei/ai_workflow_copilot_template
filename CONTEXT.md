@@ -19,7 +19,7 @@ the earlier guardrail contract.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D first task wave active
+- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D active with its second task wave open
 
 ## Success Criteria
 
@@ -80,7 +80,7 @@ workflow when deeper scenario-module structure is being evaluated.
 
 ## Verification
 
-- Backend: `cd server` then `..\\.venv\\Scripts\\python.exe -m pytest tests`
+- Backend: `cd server` then `..\.venv\Scripts\python.exe -m pytest tests`
 - Frontend: `npm --prefix web run verify`
 
 ## Risk Areas

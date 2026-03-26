@@ -65,6 +65,8 @@ It returns:
 - `max_upload_bytes`
 
 The guided showcase path built on top of this baseline is documented in `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`.
+The bounded operator routine for restart, refresh, smoke, and rollback decisions is documented in
+`docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`.
 
 ## What This Baseline Does Not Promise
 

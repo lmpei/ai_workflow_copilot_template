@@ -16,19 +16,19 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage A complete and closed
 - Stage B complete and closed
 - Stage C complete and closed
-- Stage D first task wave active
+- Stage D active with second task wave active
 
 ## Current Objective
 
-- execute the Stage D public-demo operator routine after establishing guardrails and a backend-owned guided showcase path in `stage-d-02` and `stage-d-03`
+- execute the second bounded Stage D wave so the public-demo baseline can turn into a real internet-accessible rollout path
 
 ## Active Task
 
-- `tasks/stage-d-04-public-demo-ops-readiness.md`
+- `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
 
 ## Verification Status
 
-- Summary: Stage D now has bounded public-demo guardrails plus backend-owned guided demo templates, seeded demo workspaces, and workspace-level showcase guidance; the next step is to make that public-demo path restartable, refreshable, and operator-friendly.
+- Summary: Stage D wave one already established guardrails, guided showcase paths, and a bounded operator routine; wave two now has a fixed first deployment target and moves next into repo-side deployment wiring.
 - Last Verified At: 2026-03-26
 
 ## Current Blockers
@@ -43,13 +43,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- what the minimum honest operator routine should be for demo refresh, restart, rollback, and failure recovery once the seeded showcase path is live
+- which repo-side deployment wiring changes are strictly necessary for the chosen single-VM rollout shape, and which can stay outside the repo for now
 
 ## Ready Now
 
-1. execute `tasks/stage-d-04-public-demo-ops-readiness.md`
-2. build the operator path on top of the new guided-demo contract instead of reintroducing hidden tribal knowledge
-3. preserve the Stage C cross-module coverage and rehearsal evidence routine as the baseline public-demo quality path
+1. execute `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
+2. keep the deployment path aligned with the single-VM Compose-style contract fixed in `stage-d-06`
+3. preserve the current public-demo showcase and operator path as the baseline while rollout work proceeds
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md`
+- `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md`
 
 ## Recent Decisions
 
@@ -90,3 +90,6 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-26-040` clarify the AI capability roadmap into explicit adoption waves while keeping that roadmap separate from the bounded Stage D plan
 - `DEC-2026-03-26-041` complete `stage-d-02`, add explicit public-demo guardrails and a `/api/v1/public-demo` settings surface, and move the active Stage D task to `stage-d-03`
 - `DEC-2026-03-26-042` complete `stage-d-03`, add backend-owned guided demo templates plus seeded workspace creation and showcase-path UI, and move the active Stage D task to `stage-d-04`
+- `DEC-2026-03-26-043` complete `stage-d-04`, add bounded public-demo smoke and refresh scripts plus an operator runbook, and leave the next Stage D direction open for human confirmation
+- `DEC-2026-03-26-044` define the second Stage D wave as `stage-d-06`, `stage-d-07`, and `stage-d-08`, with `stage-d-06` as the next active task
+- `DEC-2026-03-26-045` complete `stage-d-06`, choose a single public Linux VM plus Docker Compose-style stack as the first hosting target, and move the active Stage D task to `stage-d-07`

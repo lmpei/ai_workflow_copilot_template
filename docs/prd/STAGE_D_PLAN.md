@@ -8,7 +8,8 @@
 
 - Status: active
 - Opened At: 2026-03-26
-- First Task Wave: active
+- First Task Wave: complete
+- Second Task Wave: active
 
 ## Position In The Project
 
@@ -129,20 +130,44 @@ Stage D is successful when:
 - the operator has a bounded routine for deploy, restart, rollback, and demo refresh
 - the repository is ready to shift the next stage toward Support and Job workbench productization
 
+## Current Result
+
+The first Stage D wave now provides:
+
+- explicit public-demo guardrails and user-visible limits
+- backend-owned guided demo templates for Research, Support, and Job
+- seeded demo workspace creation through the real ingest path
+- workspace-level showcase guidance for first-time collaborators
+- a bounded public-demo operator runbook with smoke and refresh scripts
+
+The second Stage D wave now has one fixed deployment contract:
+
+- the first public target is one small Linux VM running the existing Docker Compose-style stack
+- public access is split between `app.<domain>` and `api.<domain>`
+- the repo keeps the internal `server`, `worker`, `db`, `redis`, and `chroma` shape instead of rewriting for a new platform first
+
 ## Next Step
 
-Execute `tasks/stage-d-04-public-demo-ops-readiness.md` as the next active Stage D task.
+Execute `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md` as the next active Stage D task.
 
 ## First Task Wave
 
-The first executable Stage D wave is:
+The first executable Stage D wave is complete:
 
-- `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md` (complete)
-- `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md` (complete)
-- `tasks/stage-d-04-public-demo-ops-readiness.md` (active)
+- `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md`
+- `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md`
+- `tasks/archive/stage-d/stage-d-04-public-demo-ops-readiness.md`
 
-This wave keeps the stage narrowly focused on public demo access, demo-safe content and paths, and the minimum
-operator discipline needed to keep that public baseline usable.
+## Second Task Wave
+
+The second executable Stage D wave is:
+
+- `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md` (complete)
+- `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md` (active)
+- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` (queued)
+
+This wave keeps Stage D focused on one bounded outcome: a real internet-accessible rollout path instead of a
+well-prepared local baseline.
 
 ## Relationship To The Long-Term Roadmap
 

@@ -8,6 +8,8 @@ expectations.
 
 For the concrete Stage B staging rehearsal sequence, also read `docs/development/STAGING_RELEASE_PATH.md`.
 For the Stage C cross-module demo baseline, also read `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`.
+For the Stage D public-demo operator routine, also read `docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`.
+For the first public hosting target and rollout contract, also read `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`.
 For the reusable Stage C evidence shape, also read `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`.
 
 ## Environment Intent

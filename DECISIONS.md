@@ -680,3 +680,45 @@ Append-only log. Add new entries at the bottom.
 - Impact: the repo now has one backend source of truth for public-demo templates, first-time users can reach grounded module value quickly after login, and Stage D can move on to operator restart, refresh, and rollback readiness
 - Related Task: `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-043
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-04 public-demo ops readiness
+- Context: after `stage-d-03`, the public demo had honest guardrails and guided showcase paths, but the operator still lacked one bounded restart, refresh, smoke, and rollback routine tailored to the public-demo baseline instead of the older Stage B staging path
+- Choice: add Windows helper scripts for public-demo smoke and bounded refresh, document the public-demo operator runbook, cross-link that routine from the existing public-demo and delivery docs, archive `stage-d-04`, and leave the next Stage D direction open for human confirmation
+- Why: the public demo should be operable without hidden tribal knowledge while still staying honest about its limited operational maturity
+- Impact: operators now have one repo-native path for public-demo preflight, restart/refresh, smoke, and manual rollback expectations, and the first Stage D wave is complete
+- Related Task: `tasks/archive/stage-d/stage-d-04-public-demo-ops-readiness.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-044
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: define the second Stage D wave for real public rollout
+- Context: the first Stage D wave completed the bounded public-demo baseline with guardrails, guided showcase paths, and an operator routine, but the repository still lacked the next bounded task stack that would turn that baseline into a real internet-accessible rollout path
+- Choice: keep Stage D open, define the second Stage D wave as `stage-d-06`, `stage-d-07`, and `stage-d-08`, focus that wave on hosting-target selection, deployment-path wiring, and one public rollout rehearsal, archive the planning task as `stage-d-05`, and move the active Stage D task to `stage-d-06`
+- Why: the next meaningful step is not more feature work; it is the bounded rollout path that makes the demo reachable through a real public URL
+- Impact: the control plane now points at one execution-ready Stage D wave for real internet rollout, while the earlier public-demo baseline remains preserved as the first Stage D wave
+- Related Task: `tasks/archive/stage-d/stage-d-05-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-045
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-06 public hosting target and deployment contract
+- Context: the second Stage D wave needed one explicit deployment target before repo-side wiring or rollout rehearsal could proceed, but the project priority remained speed-to-demo rather than infrastructure sophistication
+- Choice: choose a single small public Linux VM running the existing Docker Compose-style stack as the first hosting target, document the public URL model as `app.<domain>` plus `api.<domain>`, fix the env, persistence, smoke, and rollback contract in `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`, archive `stage-d-06`, and move the active Stage D task to `stage-d-07`
+- Why: this is the shortest path to a real public rollout that still matches the current repository architecture honestly
+- Impact: the next deployment task can now wire one bounded target instead of reasoning abstractly about many platforms at once
+- Related Task: `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md`
+- Supersedes:
