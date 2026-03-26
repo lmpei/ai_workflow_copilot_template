@@ -190,6 +190,7 @@ The Stage B rollback decision path is:
 
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`
+- `docs/development/PUBLIC_DEPLOYMENT_PATH.md`
 - `docs/development/STAGING_RELEASE_EVIDENCE_TEMPLATE.md`
 - `docs/development/STAGING_HANDOFF_TEMPLATE.md`
 - `docs/development/STAGE_C_CROSS_MODULE_READINESS.md`

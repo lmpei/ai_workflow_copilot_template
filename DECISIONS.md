@@ -722,3 +722,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the next deployment task can now wire one bounded target instead of reasoning abstractly about many platforms at once
 - Related Task: `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-046
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-07 public demo deployment path and env wiring
+- Context: the hosting target for the first public rollout was fixed in `stage-d-06`, but the repo still only had local-development Compose wiring and could not honestly claim one bounded deployment path for the chosen VM target
+- Choice: add `docker-compose.public-demo.yml`, public-demo deploy Dockerfiles, a Caddy reverse-proxy config, `.env.public-demo.example`, `scripts/public-demo-deploy-windows.cmd`, and related deployment docs; also align the app config with `APP_ENV` and comma-delimited `CORS_ORIGINS`, archive `stage-d-07`, and move the active Stage D task to `stage-d-08`
+- Why: the public rollout rehearsal needs one concrete repo-side path before any real VM deployment can be attempted
+- Impact: the repository now contains one honest first-deployment path for the public demo, while the final remaining Stage D step is to execute and record the rollout rehearsal rather than design the path abstractly
+- Related Task: `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
+- Supersedes:

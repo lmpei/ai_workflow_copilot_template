@@ -1,16 +1,24 @@
+import json
 import os
 from functools import lru_cache
+from typing import Annotated
 
-from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AliasChoices, Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "AI Workflow Copilot API"
     app_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
-    environment: str = "development"
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    environment: str = Field(
+        default="development",
+        validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
+    )
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
     database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/ai_workflow"
     redis_url: str = "redis://redis:6379/0"
     task_queue_name: str = "platform_tasks"
@@ -41,6 +49,27 @@ class Settings(BaseSettings):
     public_demo_max_upload_bytes: int = 5 * 1024 * 1024
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+
+        normalized = value.strip()
+        if normalized == "":
+            return []
+
+        if normalized.startswith("["):
+            try:
+                parsed = json.loads(normalized)
+            except json.JSONDecodeError:
+                pass
+            else:
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+
+        return [item.strip() for item in normalized.split(",") if item.strip()]
 
     @field_validator("auth_secret_key")
     @classmethod

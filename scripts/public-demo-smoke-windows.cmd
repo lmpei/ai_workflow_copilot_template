@@ -13,6 +13,7 @@ if not exist "%ENV_FILE%" (
 
 for /f "usebackq tokens=1,* delims==" %%A in (`findstr /R "^[A-Za-z_][A-Za-z0-9_]*=" "%ENV_FILE%"`) do (
   if /I "%%A"=="NEXT_PUBLIC_API_BASE_URL" set "API_BASE_URL=%%B"
+  if /I "%%A"=="PUBLIC_WEB_URL" set "PUBLIC_WEB_URL=%%B"
   if /I "%%A"=="STAGING_WEB_URL" set "WEB_URL=%%B"
 )
 
@@ -21,10 +22,13 @@ if "%API_BASE_URL%"=="" (
   exit /b 1
 )
 
+if "%WEB_URL%"=="" set "WEB_URL=%PUBLIC_WEB_URL%"
 if "%WEB_URL%"=="" set "WEB_URL=%API_BASE_URL:/api/v1=%"
 set "HEALTH_URL=%API_BASE_URL%/health"
 set "PUBLIC_DEMO_URL=%API_BASE_URL%/public-demo"
 set "TEMPLATES_URL=%API_BASE_URL%/public-demo/templates"
+set "LOGIN_URL=%WEB_URL%/login"
+set "WORKSPACES_URL=%WEB_URL%/workspaces"
 
 curl.exe -fsS "%HEALTH_URL%" | findstr /C:"\"status\"" >nul || (
   echo API health check failed for %HEALTH_URL%.
@@ -46,14 +50,27 @@ curl.exe -fsS "%WEB_URL%" >nul || (
   exit /b 1
 )
 
+curl.exe -fsS "%LOGIN_URL%" >nul || (
+  echo Login page check failed for %LOGIN_URL%.
+  exit /b 1
+)
+
+curl.exe -fsS "%WORKSPACES_URL%" >nul || (
+  echo Workspace page check failed for %WORKSPACES_URL%.
+  exit /b 1
+)
+
 echo Public demo smoke passed for %ENV_FILE%.
 echo API health: %HEALTH_URL%
 echo Public demo settings: %PUBLIC_DEMO_URL%
 echo Demo templates: %TEMPLATES_URL%
 echo Web root: %WEB_URL%
+echo Login page: %LOGIN_URL%
+echo Workspace page: %WORKSPACES_URL%
 exit /b 0
 
 :usage
 echo Usage: scripts\public-demo-smoke-windows.cmd [env-file]
-echo Checks the public-demo health, settings, template catalog, and web root derived from the provided env file.
+echo Checks the public-demo health, settings, template catalog, web root, login page, and workspace page.
+echo Prefers PUBLIC_WEB_URL when it is defined; otherwise falls back to STAGING_WEB_URL or the API-host-derived default.
 echo Defaults to .env when no env file is provided.

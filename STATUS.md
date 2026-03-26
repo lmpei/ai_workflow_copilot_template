@@ -24,16 +24,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
+- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
 
 ## Verification Status
 
-- Summary: Stage D wave one already established guardrails, guided showcase paths, and a bounded operator routine; wave two now has a fixed first deployment target and moves next into repo-side deployment wiring.
+- Summary: Stage D wave two now has a fixed hosting target plus a bounded repo-side deployment path; the next remaining step is one honest public rollout rehearsal.
 - Last Verified At: 2026-03-26
 
 ## Current Blockers
 
-- none
+- none inside the repo; the remaining rollout work depends on external VM, DNS, TLS, and env-file preparation
 
 ## Assumptions
 
@@ -43,13 +43,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which repo-side deployment wiring changes are strictly necessary for the chosen single-VM rollout shape, and which can stay outside the repo for now
+- the exact public URL, VM host, and live env file that will be used for the first rollout rehearsal
 
 ## Ready Now
 
-1. execute `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
-2. keep the deployment path aligned with the single-VM Compose-style contract fixed in `stage-d-06`
-3. preserve the current public-demo showcase and operator path as the baseline while rollout work proceeds
+1. execute `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
+2. keep the rollout evidence honest about which checks were automated versus manual
+3. preserve the current public-demo showcase and operator path while the first public URL is rehearsed
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md`
+- `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
 
 ## Recent Decisions
 
@@ -93,3 +93,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-26-043` complete `stage-d-04`, add bounded public-demo smoke and refresh scripts plus an operator runbook, and leave the next Stage D direction open for human confirmation
 - `DEC-2026-03-26-044` define the second Stage D wave as `stage-d-06`, `stage-d-07`, and `stage-d-08`, with `stage-d-06` as the next active task
 - `DEC-2026-03-26-045` complete `stage-d-06`, choose a single public Linux VM plus Docker Compose-style stack as the first hosting target, and move the active Stage D task to `stage-d-07`
+- `DEC-2026-03-26-046` complete `stage-d-07`, add a bounded repo-side public deployment path, and move the active Stage D task to `stage-d-08`

@@ -13,8 +13,8 @@ AI Workflow Copilot is a shared platform core for knowledge-work AI workflows. I
 grounded chat, async tasks, agent execution, evaluation, and observability so multiple scenario modules can run on the
 same primitives.
 
-The Stage D public-demo baseline now includes backend-owned guided demo templates and seeded workspace paths on top of
-the earlier guardrail contract.
+The Stage D public-demo baseline now includes backend-owned guided demo templates, seeded workspace paths, a bounded
+operator routine, and a repository-side public deployment path for the first rollout target.
 
 ## Current Phase
 
@@ -32,7 +32,7 @@ workflow when deeper scenario-module structure is being evaluated.
 
 - Backend: FastAPI, SQLAlchemy, PostgreSQL, ARQ
 - Frontend: Next.js App Router, TypeScript
-- Infrastructure: Docker Compose, Redis, Chroma
+- Infrastructure: Docker Compose, Redis, Chroma, Caddy for the bounded public-demo rollout path
 - Tooling: pytest, mypy, ruff, Next.js lint/build
 
 ## Repository Overview
@@ -64,7 +64,8 @@ workflow when deeper scenario-module structure is being evaluated.
 
 ## Runtime Entrypoints
 
-- Full stack: `docker compose up --build`
+- Full stack local dev: `docker compose up --build`
+- Public demo deployment path: `docker compose -f docker-compose.public-demo.yml --env-file <env-file> ...`
 - Frontend: `http://localhost:3000`
 - API base: `http://localhost:8000/api/v1`
 - Health: `http://localhost:8000/api/v1/health`
@@ -77,6 +78,8 @@ workflow when deeper scenario-module structure is being evaluated.
   - shared internal validation with environment-specific secrets and service URLs
 - `staging`
   - release-like validation with explicit migration, smoke, rollback, release evidence, and handoff discipline
+- `public-demo`
+  - one public Linux VM using `docker-compose.public-demo.yml`, one reverse proxy, and a git-external env file
 
 ## Verification
 
@@ -88,7 +91,7 @@ workflow when deeper scenario-module structure is being evaluated.
 - document ingest and reindex lifecycle
 - retrieval quality and grounded citation behavior
 - task and eval worker execution guarantees
-- staging rehearsal drift between scripts, env conventions, release evidence, and docs
+- deployment drift between env templates, Compose config, reverse proxy routing, smoke scripts, and docs
 - cross-module consistency across research, support, and job
 - documentation drift between current state, decisions, and archived task history
 

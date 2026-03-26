@@ -2,14 +2,14 @@
 
 ## Purpose
 
-This document defines the bounded operator routine added in `stage-d-04`.
+This document defines the bounded operator routine added in `stage-d-04` and extended in `stage-d-07`.
 
 It is not a production operations manual. It is the smallest honest routine for keeping the public demo reachable,
 refreshable, and recoverable without relying on hidden tribal knowledge.
 
 ## Current Operator Contract
 
-The public demo baseline now has three layers:
+The public demo baseline now has four layers:
 
 1. `stage-d-02`
    - public-demo guardrails and a backend-owned settings contract
@@ -17,6 +17,8 @@ The public demo baseline now has three layers:
    - backend-owned guided demo templates plus seeded workspace creation
 3. `stage-d-04`
    - a repeatable operator path for restart, refresh, smoke, and rollback decisions
+4. `stage-d-07`
+   - one bounded deployment path for the chosen public VM target
 
 ## Scripts
 
@@ -25,14 +27,31 @@ Use these scripts for public-demo operations on Windows:
 - `scripts\release-check-windows.cmd <env-file>`
   - validates env-file alignment and rejects placeholder secrets
 - `scripts\public-demo-smoke-windows.cmd <env-file>`
-  - checks API health, the public-demo settings endpoint, the template catalog, and the web root
+  - checks API health, the public-demo settings endpoint, the template catalog, the web root, the login page, and the workspace page
 - `scripts\public-demo-refresh-windows.cmd <env-file> [service-mode]`
-  - runs preflight, compose config validation, startup, migration, force-recreate, and public-demo smoke
+  - runs preflight, compose config validation, startup, migration, force-recreate, and public-demo smoke for the existing local-style Compose stack
+- `scripts\public-demo-deploy-windows.cmd <env-file> [service-mode]`
+  - runs the bounded public rollout path through `docker-compose.public-demo.yml`
 
 `service-mode` can be:
 
 - `app-tier`
 - `full-stack`
+
+For the chosen first public rollout target, prefer `full-stack` unless the backing services have already been moved out
+of the VM-hosted Compose stack.
+
+## Deploy Path
+
+Use this when you want the repository-side public rollout path rather than a local refresh routine:
+
+```powershell
+cmd /c scripts\release-check-windows.cmd .env.public-demo
+cmd /c scripts\public-demo-deploy-windows.cmd .env.public-demo full-stack
+```
+
+This path assumes the VM, DNS, TLS reachability, and the real env file already exist.
+Those prerequisites remain manual.
 
 ## Restart Path
 
@@ -129,6 +148,7 @@ the environment outside this repo's bounded automation when a clean slate is req
 - `docs/development/PUBLIC_DEMO_BASELINE.md`
 - `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`
 - `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`
+- `docs/development/PUBLIC_DEPLOYMENT_PATH.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
 - `docs/prd/STAGE_D_PLAN.md`

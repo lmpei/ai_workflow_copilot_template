@@ -1,0 +1,9 @@
+{$PUBLIC_WEB_HOST} {
+    encode gzip
+    reverse_proxy web:3000
+}
+
+{$PUBLIC_API_HOST} {
+    encode gzip
+    reverse_proxy server:8000
+}

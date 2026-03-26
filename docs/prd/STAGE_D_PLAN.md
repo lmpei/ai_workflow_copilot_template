@@ -140,15 +140,22 @@ The first Stage D wave now provides:
 - workspace-level showcase guidance for first-time collaborators
 - a bounded public-demo operator runbook with smoke and refresh scripts
 
-The second Stage D wave now has one fixed deployment contract:
+The second Stage D wave now provides:
 
-- the first public target is one small Linux VM running the existing Docker Compose-style stack
-- public access is split between `app.<domain>` and `api.<domain>`
-- the repo keeps the internal `server`, `worker`, `db`, `redis`, and `chroma` shape instead of rewriting for a new platform first
+- one fixed first hosting target: a small Linux VM plus Docker Compose-style stack
+- one fixed public URL model: `app.<domain>` plus `api.<domain>`
+- one bounded repository-side deployment path:
+  - `docker-compose.public-demo.yml`
+  - `server/Dockerfile.deploy`
+  - `web/Dockerfile.deploy`
+  - `deploy/public-demo/Caddyfile`
+  - `.env.public-demo.example`
+  - `scripts/public-demo-deploy-windows.cmd`
+- explicit env parsing support for `APP_ENV` and comma-delimited `CORS_ORIGINS`
 
 ## Next Step
 
-Execute `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md` as the next active Stage D task.
+Execute `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` as the next active Stage D task.
 
 ## First Task Wave
 
@@ -163,8 +170,8 @@ The first executable Stage D wave is complete:
 The second executable Stage D wave is:
 
 - `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md` (complete)
-- `tasks/stage-d-07-public-demo-deployment-path-and-env-wiring.md` (active)
-- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` (queued)
+- `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md` (complete)
+- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` (active)
 
 This wave keeps Stage D focused on one bounded outcome: a real internet-accessible rollout path instead of a
 well-prepared local baseline.

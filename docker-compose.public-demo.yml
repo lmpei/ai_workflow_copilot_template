@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ai_workflow}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+
+  chroma:
+    image: chromadb/chroma:0.5.5
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.deploy
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-.env.public-demo.example}
+    depends_on:
+      - db
+      - redis
+      - chroma
+    volumes:
+      - server_uploads:/app/storage/uploads
+
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.deploy
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-.env.public-demo.example}
+    command: ["python", "-m", "arq", "app.workers.task_worker.WorkerSettings"]
+    depends_on:
+      - db
+      - redis
+      - chroma
+    volumes:
+      - server_uploads:/app/storage/uploads
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.deploy
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-.env.public-demo.example}
+    environment:
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://server:8000/api/v1}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+    depends_on:
+      - server
+
+  reverse-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file:
+      - ${APP_ENV_FILE:-.env.public-demo.example}
+    depends_on:
+      - web
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/public-demo/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  chroma_data:
+  server_uploads:
+  caddy_data:
+  caddy_config:
