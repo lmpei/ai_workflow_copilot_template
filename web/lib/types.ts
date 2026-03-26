@@ -24,6 +24,38 @@ export type PublicDemoSettingsRecord = {
   max_upload_bytes: number;
 };
 
+export type PublicDemoSeedDocumentRecord = {
+  title: string;
+  summary: string;
+};
+
+export type PublicDemoShowcaseStepRecord = {
+  title: string;
+  description: string;
+  route_suffix: string;
+  cta_label: string;
+  sample_prompt?: string | null;
+  sample_task_type?: TaskType | null;
+  sample_task_input: JsonObject;
+};
+
+export type PublicDemoTemplateRecord = {
+  template_id: string;
+  module_type: ModuleType;
+  title: string;
+  summary: string;
+  workspace_name: string;
+  workspace_description: string;
+  seeded_documents: PublicDemoSeedDocumentRecord[];
+  showcase_steps: PublicDemoShowcaseStepRecord[];
+};
+
+export type PublicDemoWorkspaceSeedRecord = {
+  workspace: Workspace;
+  documents: DocumentRecord[];
+  template: PublicDemoTemplateRecord;
+};
+
 export type RecoveryHistoryEntryRecord = {
   event: string;
   at: string;

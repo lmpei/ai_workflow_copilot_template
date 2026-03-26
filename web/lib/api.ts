@@ -11,6 +11,8 @@ import type {
   LoginRequestPayload,
   LoginResponsePayload,
   PublicDemoSettingsRecord,
+  PublicDemoTemplateRecord,
+  PublicDemoWorkspaceSeedRecord,
   RegisterRequestPayload,
   ResearchAssetComparisonRecord,
   ResearchAssetRecord,
@@ -89,6 +91,11 @@ export async function getPublicDemoSettings(): Promise<
 > {
   return fetchApiJson<PublicDemoSettingsRecord>("/public-demo");
 }
+export async function getPublicDemoTemplates(): Promise<
+  PublicDemoTemplateRecord[] | ApiErrorResponse | ApiUnreachableResponse
+> {
+  return fetchApiJson<PublicDemoTemplateRecord[]>("/public-demo/templates");
+}
 
 async function parseErrorDetail(response: Response): Promise<string> {
   try {
@@ -157,6 +164,23 @@ export async function loginUser(payload: LoginRequestPayload): Promise<LoginResp
 
 export async function readPublicDemoSettings(): Promise<PublicDemoSettingsRecord> {
   return fetchBrowserApiJson<PublicDemoSettingsRecord>("/public-demo");
+}
+
+export async function listPublicDemoTemplates(): Promise<PublicDemoTemplateRecord[]> {
+  return fetchBrowserApiJson<PublicDemoTemplateRecord[]>("/public-demo/templates");
+}
+
+export async function createPublicDemoWorkspaceFromTemplate(
+  accessToken: string,
+  templateId: string,
+): Promise<PublicDemoWorkspaceSeedRecord> {
+  return fetchBrowserApiJson<PublicDemoWorkspaceSeedRecord>(
+    `/public-demo/templates/${templateId}/workspaces`,
+    {
+      method: "POST",
+    },
+    accessToken,
+  );
 }
 
 export async function listScenarioModules(): Promise<ScenarioModuleRecord[]> {

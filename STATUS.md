@@ -1,4 +1,4 @@
-﻿# Status
+# Status
 
 Current state only. Keep this file short, current, and action-oriented.
 
@@ -20,15 +20,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the Stage D public internet demo path after establishing the bounded public-demo access baseline in `stage-d-02`
+- execute the Stage D public-demo operator routine after establishing guardrails and a backend-owned guided showcase path in `stage-d-02` and `stage-d-03`
 
 ## Active Task
 
-- `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md`
+- `tasks/stage-d-04-public-demo-ops-readiness.md`
 
 ## Verification Status
 
-- Summary: Stage D now has a backend-owned public-demo settings surface plus bounded registration, workspace, document, task, and upload guardrails; the next step is to seed demo-safe content and a clearer showcase path on top of that baseline.
+- Summary: Stage D now has bounded public-demo guardrails plus backend-owned guided demo templates, seeded demo workspaces, and workspace-level showcase guidance; the next step is to make that public-demo path restartable, refreshable, and operator-friendly.
 - Last Verified At: 2026-03-26
 
 ## Current Blockers
@@ -43,12 +43,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which sample workspace, seeded content, and guided showcase path will best demonstrate the public demo without hidden operator setup
+- what the minimum honest operator routine should be for demo refresh, restart, rollback, and failure recovery once the seeded showcase path is live
 
 ## Ready Now
 
-1. execute `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md`
-2. build the demo path on top of the new `/api/v1/public-demo` guardrail contract instead of reintroducing hidden assumptions
+1. execute `tasks/stage-d-04-public-demo-ops-readiness.md`
+2. build the operator path on top of the new guided-demo contract instead of reintroducing hidden tribal knowledge
 3. preserve the Stage C cross-module coverage and rehearsal evidence routine as the baseline public-demo quality path
 
 ## Parked / Later
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md`
+- `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md`
 
 ## Recent Decisions
 
@@ -89,3 +89,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-26-039` define `Stage D` as `Public Internet Demo Baseline` and open the first Stage D task wave with `stage-d-02` through `stage-d-04`
 - `DEC-2026-03-26-040` clarify the AI capability roadmap into explicit adoption waves while keeping that roadmap separate from the bounded Stage D plan
 - `DEC-2026-03-26-041` complete `stage-d-02`, add explicit public-demo guardrails and a `/api/v1/public-demo` settings surface, and move the active Stage D task to `stage-d-03`
+- `DEC-2026-03-26-042` complete `stage-d-03`, add backend-owned guided demo templates plus seeded workspace creation and showcase-path UI, and move the active Stage D task to `stage-d-04`

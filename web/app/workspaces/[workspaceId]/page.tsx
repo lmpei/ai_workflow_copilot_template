@@ -1,4 +1,5 @@
-﻿import ModuleHubPanel from "../../../components/workspace/module-hub-panel";
+import GuidedWorkspaceShowcase from "../../../components/public-demo/guided-workspace-showcase";
+import ModuleHubPanel from "../../../components/workspace/module-hub-panel";
 import SectionCard from "../../../components/ui/section-card";
 import WorkspaceNav from "../../../components/workspace/workspace-nav";
 
@@ -13,11 +14,12 @@ export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
 
   return (
     <main>
-      <h1>Workspace: {workspaceId}</h1>
+      <h1>Workspace Overview</h1>
       <WorkspaceNav workspaceId={workspaceId} />
+      <GuidedWorkspaceShowcase workspaceId={workspaceId} />
       <SectionCard
-        title="Workspace Overview"
-        description="A workspace will host scenario-specific flows on top of one shared platform core."
+        title="Shared workspace surfaces"
+        description="Every module keeps its documents, chat traces, tasks, and analytics inside one shared workspace scope."
       >
         <ul>
           <li>Documents and retrieval state</li>
@@ -30,5 +32,3 @@ export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
     </main>
   );
 }
-
-

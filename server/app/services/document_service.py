@@ -154,6 +154,63 @@ async def upload_document(
     return ingest_document(document_id=document.id, user_id=user_id)
 
 
+def create_text_document(
+    *,
+    workspace_id: str,
+    user_id: str,
+    title: str,
+    text_content: str,
+    source_type: str = "seed",
+    embedding_provider: EmbeddingProvider | None = None,
+    vector_store: VectorStoreClient | None = None,
+) -> DocumentResponse:
+    has_access = document_repository.user_has_workspace_access(
+        workspace_id=workspace_id,
+        user_id=user_id,
+    )
+    if not has_access:
+        raise DocumentAccessError("Workspace not found")
+
+    normalized_text = text_content.strip()
+    if not normalized_text:
+        raise DocumentUploadError("Seeded document content cannot be empty")
+
+    filename = _sanitize_filename(title if title.lower().endswith(".txt") else f"{title}.txt")
+    encoded_content = normalized_text.encode("utf-8")
+    ensure_document_upload_allowed(
+        workspace_id=workspace_id,
+        user_id=user_id,
+        file_size_bytes=len(encoded_content),
+    )
+
+    document_id = str(uuid4())
+    relative_path = Path("uploads") / workspace_id / document_id / filename
+    full_path = UPLOAD_ROOT / workspace_id / document_id / filename
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    full_path.write_text(normalized_text, encoding="utf-8")
+
+    try:
+        document = document_repository.create_document(
+            document_id=document_id,
+            workspace_id=workspace_id,
+            title=filename,
+            file_path=relative_path.as_posix(),
+            mime_type="text/plain",
+            created_by=user_id,
+            source_type=source_type,
+        )
+    except Exception:
+        full_path.unlink(missing_ok=True)
+        raise
+
+    return ingest_document(
+        document_id=document.id,
+        user_id=user_id,
+        embedding_provider=embedding_provider,
+        vector_store=vector_store,
+    )
+
+
 def list_documents(*, workspace_id: str, user_id: str) -> list[DocumentResponse]:
     has_access = document_repository.user_has_workspace_access(
         workspace_id=workspace_id,

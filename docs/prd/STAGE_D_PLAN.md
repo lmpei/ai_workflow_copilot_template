@@ -52,7 +52,7 @@ showing infrastructure plumbing.
 
 ### Focus Areas
 
-- seeded or documented showcase paths across Research, Support, and Job
+- backend-owned guided demo templates and seeded showcase paths across Research, Support, and Job
 - one stable module-reference path that remains deep enough to demonstrate real workflow value
 - honest public-facing explanation of what is grounded, what is degraded, and what remains demo-only
 
@@ -131,15 +131,15 @@ Stage D is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-d-02-public-demo-foundation-and-guardrails.md` as the next active Stage D task.
+Execute `tasks/stage-d-04-public-demo-ops-readiness.md` as the next active Stage D task.
 
 ## First Task Wave
 
 The first executable Stage D wave is:
 
-- `tasks/stage-d-02-public-demo-foundation-and-guardrails.md` (active)
-- `tasks/stage-d-03-demo-content-seeding-and-showcase-path.md` (queued)
-- `tasks/stage-d-04-public-demo-ops-readiness.md` (queued)
+- `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md` (complete)
+- `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md` (complete)
+- `tasks/stage-d-04-public-demo-ops-readiness.md` (active)
 
 This wave keeps the stage narrowly focused on public demo access, demo-safe content and paths, and the minimum
 operator discipline needed to keep that public baseline usable.

@@ -1,4 +1,4 @@
-﻿# Public Demo Baseline
+# Public Demo Baseline
 
 ## Purpose
 
@@ -18,6 +18,7 @@ The public-demo foundation now includes:
 - bounded task creation per workspace
 - bounded upload size checks
 - matching public-demo notices in the home, auth, and workspace entry surfaces
+- backend-owned guided demo templates and seeded workspace creation paths added in `stage-d-03`
 
 ## Current Guardrails
 
@@ -51,6 +52,8 @@ Use this baseline for public-demo operation:
 The operator-visible public-demo contract is:
 
 - `GET /api/v1/public-demo`
+- `GET /api/v1/public-demo/templates`
+- `POST /api/v1/public-demo/templates/{template_id}/workspaces`
 
 It returns:
 
@@ -60,6 +63,8 @@ It returns:
 - `max_documents_per_workspace`
 - `max_tasks_per_workspace`
 - `max_upload_bytes`
+
+The guided showcase path built on top of this baseline is documented in `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`.
 
 ## What This Baseline Does Not Promise
 

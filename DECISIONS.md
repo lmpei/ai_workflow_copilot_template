@@ -666,3 +666,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the repository now has one operator-visible contract for public-demo guardrails, self-serve registration can be paused cleanly, public-demo users see the current limits before creating work, and the next Stage D task can focus on seeded content and showcase-path clarity rather than basic access control
 - Related Task: `tasks/archive/stage-d/stage-d-02-public-demo-foundation-and-guardrails.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-26-042
+- Date: 2026-03-26
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-03 demo content seeding and showcase path
+- Context: `stage-d-02` established the public-demo guardrail contract, but first-time users still had to start from empty workspaces and infer which documents, prompts, or module inputs would demonstrate the system honestly
+- Choice: add backend-owned public-demo templates, allow authenticated creation of seeded guided-demo workspaces, seed demo-safe documents through the real ingest path, expose the templates in home and workspace entry UI, add a workspace-level guided showcase panel, document the repeatable showcase path, archive `stage-d-03`, and move the active Stage D task to `stage-d-04`
+- Why: a public demo needs a repeatable first-time-user path that shows real workflow depth without hidden operator setup or fake product polish
+- Impact: the repo now has one backend source of truth for public-demo templates, first-time users can reach grounded module value quickly after login, and Stage D can move on to operator restart, refresh, and rollback readiness
+- Related Task: `tasks/archive/stage-d/stage-d-03-demo-content-seeding-and-showcase-path.md`
+- Supersedes:

@@ -13,6 +13,9 @@ AI Workflow Copilot is a shared platform core for knowledge-work AI workflows. I
 grounded chat, async tasks, agent execution, evaluation, and observability so multiple scenario modules can run on the
 same primitives.
 
+The Stage D public-demo baseline now includes backend-owned guided demo templates and seeded workspace paths on top of
+the earlier guardrail contract.
+
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
