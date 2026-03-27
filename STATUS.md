@@ -1,10 +1,10 @@
-# Status
+﻿# Status
 
 Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-26
+- Last Updated: 2026-03-27
 
 ## Project Mode
 
@@ -16,24 +16,24 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage A complete and closed
 - Stage B complete and closed
 - Stage C complete and closed
-- Stage D active with second task wave active
+- Stage D active with second task wave complete
 
 ## Current Objective
 
-- execute the second bounded Stage D wave so the public-demo baseline can turn into a real internet-accessible rollout path
+- preserve the first live public-demo baseline and decide the next bounded Stage D direction without overstating production readiness
 
 ## Active Task
 
-- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
+- none; waiting for human confirmation on whether to close Stage D or define another bounded wave
 
 ## Verification Status
 
-- Summary: Stage D wave two now has a fixed hosting target plus a bounded repo-side deployment path; the next remaining step is one honest public rollout rehearsal.
-- Last Verified At: 2026-03-26
+- Summary: the first bounded public rollout rehearsal succeeded at `https://app.lmpai.online`, the public API at `https://api.lmpai.online/api/v1` responded successfully, and the guided demo path reached `Documents -> Chat -> Tasks`.
+- Last Verified At: 2026-03-27
 
 ## Current Blockers
 
-- none inside the repo; the remaining rollout work depends on external VM, DNS, TLS, and env-file preparation
+- none inside the repo; the remaining questions are stage-direction and ongoing operator capacity, not rollout feasibility
 
 ## Assumptions
 
@@ -43,13 +43,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact public URL, VM host, and live env file that will be used for the first rollout rehearsal
+- whether Stage D should close after the completed second wave or continue into another bounded public-demo hardening wave
 
 ## Ready Now
 
-1. execute `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
-2. keep the rollout evidence honest about which checks were automated versus manual
-3. preserve the current public-demo showcase and operator path while the first public URL is rehearsed
+1. preserve the live public-demo baseline at `app.lmpai.online` and the deployed revision `9c68935`
+2. use the refresh, smoke, and rollback routine before future demos or interviews
+3. decide whether to close Stage D or open another bounded wave
 
 ## Parked / Later
 
@@ -59,7 +59,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
+- `tasks/archive/stage-d/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
 
 ## Recent Decisions
 
@@ -94,3 +94,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-26-044` define the second Stage D wave as `stage-d-06`, `stage-d-07`, and `stage-d-08`, with `stage-d-06` as the next active task
 - `DEC-2026-03-26-045` complete `stage-d-06`, choose a single public Linux VM plus Docker Compose-style stack as the first hosting target, and move the active Stage D task to `stage-d-07`
 - `DEC-2026-03-26-046` complete `stage-d-07`, add a bounded repo-side public deployment path, and move the active Stage D task to `stage-d-08`
+- `DEC-2026-03-27-047` complete `stage-d-08`, record the first bounded public rollout rehearsal at `app.lmpai.online`, and leave Stage D open pending human confirmation on the next bounded step

@@ -1,4 +1,4 @@
-# Decisions
+﻿# Decisions
 
 Append-only log. Add new entries at the bottom.
 
@@ -735,4 +735,18 @@ Append-only log. Add new entries at the bottom.
 - Why: the public rollout rehearsal needs one concrete repo-side path before any real VM deployment can be attempted
 - Impact: the repository now contains one honest first-deployment path for the public demo, while the final remaining Stage D step is to execute and record the rollout rehearsal rather than design the path abstractly
 - Related Task: `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-27-047
+- Date: 2026-03-27
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-d-08 public internet rollout and rehearsal evidence
+- Context: `stage-d-07` fixed the first bounded public deployment path, but Stage D still lacked one honest live rehearsal record showing a real public URL, real smoke results, and a preserved rollback baseline
+- Choice: execute the first bounded public rollout on the chosen single-VM target, verify the live public URLs `https://app.lmpai.online` and `https://api.lmpai.online/api/v1`, record the rollout evidence and handoff under `docs/development/`, archive `stage-d-08`, and leave Stage D open pending human confirmation on the next bounded direction
+- Why: the public-demo baseline is not meaningfully complete until one real outside-facing rehearsal proves the system can be reached, used, and described honestly
+- Impact: the repository now has one durable public rollout record, one known-good deployed revision `9c68935`, and one live demo baseline that can be refreshed or rolled back with bounded operator expectations
+- Related Task: `tasks/archive/stage-d/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
 - Supersedes:

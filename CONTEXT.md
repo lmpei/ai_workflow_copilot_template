@@ -1,10 +1,10 @@
-# Context
+﻿# Context
 
 Stable project facts only. Keep this file concise and update it when the project baseline changes.
 
 ## Metadata
 
-- Last Updated: 2026-03-26
+- Last Updated: 2026-03-27
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -14,12 +14,13 @@ grounded chat, async tasks, agent execution, evaluation, and observability so mu
 same primitives.
 
 The Stage D public-demo baseline now includes backend-owned guided demo templates, seeded workspace paths, a bounded
-operator routine, and a repository-side public deployment path for the first rollout target.
+operator routine, a repository-side public deployment path for the first rollout target, and one live public rehearsal
+record at `https://app.lmpai.online`.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D active with its second task wave open
+- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D active after completing its second task wave
 
 ## Success Criteria
 
@@ -66,6 +67,8 @@ workflow when deeper scenario-module structure is being evaluated.
 
 - Full stack local dev: `docker compose up --build`
 - Public demo deployment path: `docker compose -f docker-compose.public-demo.yml --env-file <env-file> ...`
+- Live public demo web: `https://app.lmpai.online`
+- Live public demo API: `https://api.lmpai.online/api/v1`
 - Frontend: `http://localhost:3000`
 - API base: `http://localhost:8000/api/v1`
 - Health: `http://localhost:8000/api/v1/health`

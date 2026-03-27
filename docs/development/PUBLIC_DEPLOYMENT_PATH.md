@@ -97,6 +97,16 @@ cmd /c scripts\public-demo-rehearse-windows.cmd .env.public-demo <rollback-targe
 
 This helper wraps the bounded deploy path and writes a public-demo rollout evidence record plus a handoff note.
 
+The first bounded public rehearsal was completed against:
+
+- `https://app.lmpai.online`
+- `https://api.lmpai.online/api/v1`
+
+See:
+
+- `docs/development/PUBLIC_DEMO_ROLLOUT_EVIDENCE_2026-03-27.md`
+- `docs/development/PUBLIC_DEMO_ROLLOUT_HANDOFF_2026-03-27.md`
+
 ### 4. Human Smoke Still Required
 
 The deployment path is not complete until a human confirms:

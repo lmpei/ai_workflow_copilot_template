@@ -9,7 +9,7 @@
 - Status: active
 - Opened At: 2026-03-26
 - First Task Wave: complete
-- Second Task Wave: active
+- Second Task Wave: complete
 
 ## Position In The Project
 
@@ -152,10 +152,15 @@ The second Stage D wave now provides:
   - `.env.public-demo.example`
   - `scripts/public-demo-deploy-windows.cmd`
 - explicit env parsing support for `APP_ENV` and comma-delimited `CORS_ORIGINS`
+- one real public-demo rehearsal record against:
+  - `https://app.lmpai.online`
+  - `https://api.lmpai.online/api/v1`
+  - deployed revision `9c68935`
 
 ## Next Step
 
-Execute `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` as the next active Stage D task.
+Preserve the live public-demo baseline and get human confirmation on whether Stage D should close or open another bounded
+wave.
 
 ## First Task Wave
 
@@ -171,7 +176,7 @@ The second executable Stage D wave is:
 
 - `tasks/archive/stage-d/stage-d-06-public-hosting-target-and-deployment-contract.md` (complete)
 - `tasks/archive/stage-d/stage-d-07-public-demo-deployment-path-and-env-wiring.md` (complete)
-- `tasks/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` (active)
+- `tasks/archive/stage-d/stage-d-08-public-internet-rollout-and-operator-rehearsal.md` (complete)
 
 This wave keeps Stage D focused on one bounded outcome: a real internet-accessible rollout path instead of a
 well-prepared local baseline.
