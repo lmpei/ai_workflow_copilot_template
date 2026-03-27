@@ -24,6 +24,8 @@ Stage D-07 adds one bounded deployment path made of these files:
   - tracked scaffold showing the expected env shape for the public rollout
 - `scripts/public-demo-deploy-windows.cmd`
   - bounded Windows helper for preflight, Compose validation, startup, migration, recreate, and public-demo smoke
+- `scripts/public-demo-rehearse-windows.cmd`
+  - bounded Windows helper for deploy plus rollout evidence and handoff capture
 
 These files exist to support the first rollout target only:
 
@@ -87,7 +89,15 @@ This helper now performs:
 - force-recreate of `server`, `worker`, `web`, and `reverse-proxy`
 - `scripts\public-demo-smoke-windows.cmd`
 
-### 3. Human Smoke Still Required
+### 3. Rehearsal Helper
+
+```powershell
+cmd /c scripts\public-demo-rehearse-windows.cmd .env.public-demo <rollback-target> full-stack
+```
+
+This helper wraps the bounded deploy path and writes a public-demo rollout evidence record plus a handoff note.
+
+### 4. Human Smoke Still Required
 
 The deployment path is not complete until a human confirms:
 
@@ -124,5 +134,7 @@ This path still does not promise:
 - `docs/development/PUBLIC_DEMO_BASELINE.md`
 - `docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`
 - `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`
+- `docs/development/PUBLIC_DEMO_ROLLOUT_EVIDENCE_TEMPLATE.md`
+- `docs/development/PUBLIC_DEMO_ROLLOUT_HANDOFF_TEMPLATE.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/prd/STAGE_D_PLAN.md`

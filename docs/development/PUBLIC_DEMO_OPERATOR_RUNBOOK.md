@@ -2,14 +2,15 @@
 
 ## Purpose
 
-This document defines the bounded operator routine added in `stage-d-04` and extended in `stage-d-07`.
+This document defines the bounded operator routine added in `stage-d-04`, extended in `stage-d-07`, and prepared for
+the rollout-evidence path in `stage-d-08`.
 
 It is not a production operations manual. It is the smallest honest routine for keeping the public demo reachable,
 refreshable, and recoverable without relying on hidden tribal knowledge.
 
 ## Current Operator Contract
 
-The public demo baseline now has four layers:
+The public demo baseline now has five layers:
 
 1. `stage-d-02`
    - public-demo guardrails and a backend-owned settings contract
@@ -19,6 +20,8 @@ The public demo baseline now has four layers:
    - a repeatable operator path for restart, refresh, smoke, and rollback decisions
 4. `stage-d-07`
    - one bounded deployment path for the chosen public VM target
+5. `stage-d-08`
+   - one bounded rollout-evidence and handoff path for the first public rehearsal
 
 ## Scripts
 
@@ -32,6 +35,10 @@ Use these scripts for public-demo operations on Windows:
   - runs preflight, compose config validation, startup, migration, force-recreate, and public-demo smoke for the existing local-style Compose stack
 - `scripts\public-demo-deploy-windows.cmd <env-file> [service-mode]`
   - runs the bounded public rollout path through `docker-compose.public-demo.yml`
+- `scripts\write-public-demo-rollout-evidence-windows.cmd <env-file> <rollback-target> [service-mode] [evidence-file] [handoff-file]`
+  - writes the rollout evidence artifact for the public-demo rehearsal
+- `scripts\public-demo-rehearse-windows.cmd <env-file> <rollback-target> [service-mode] [handoff-file] [evidence-file]`
+  - runs the bounded public-demo deploy path and writes rollout evidence plus a handoff note
 
 `service-mode` can be:
 
@@ -52,6 +59,12 @@ cmd /c scripts\public-demo-deploy-windows.cmd .env.public-demo full-stack
 
 This path assumes the VM, DNS, TLS reachability, and the real env file already exist.
 Those prerequisites remain manual.
+
+When you want to capture the rollout rehearsal and its artifacts in one pass:
+
+```powershell
+cmd /c scripts\public-demo-rehearse-windows.cmd .env.public-demo <rollback-target> full-stack
+```
 
 ## Restart Path
 
@@ -149,6 +162,8 @@ the environment outside this repo's bounded automation when a clean slate is req
 - `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`
 - `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`
 - `docs/development/PUBLIC_DEPLOYMENT_PATH.md`
+- `docs/development/PUBLIC_DEMO_ROLLOUT_EVIDENCE_TEMPLATE.md`
+- `docs/development/PUBLIC_DEMO_ROLLOUT_HANDOFF_TEMPLATE.md`
 - `docs/development/DELIVERY_BASELINE.md`
 - `docs/development/STAGING_RELEASE_PATH.md`
 - `docs/prd/STAGE_D_PLAN.md`
