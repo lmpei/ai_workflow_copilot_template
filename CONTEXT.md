@@ -14,24 +14,28 @@ grounded chat, async tasks, agent execution, evaluation, and observability so mu
 same primitives.
 
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
-public-demo delivery into Support and Job persistent workbench productization. Support now has a persistent case
-workbench layer and a direct case-action loop: a user can continue a case from the case itself while still going
-through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue shortlist
-or candidate-review work from the packet itself while still going through the shared task runtime. The live public demo
-now also has one bounded entry story: new viewers should start from a fresh guided demo workspace, while existing
-Support or Job work should continue from the visible case or hiring-packet workbench.
+public-demo delivery and non-Research workbench productization into a user-facing experience reset. Support now has a
+persistent case workbench layer and a direct case-action loop: a user can continue a case from the case itself while
+still going through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue
+shortlist or candidate-review work from the packet itself while still going through the shared task runtime. The live
+public demo now has one bounded entry story: new viewers should start from a fresh guided demo workspace, while
+existing Support or Job work should continue from the visible case or hiring-packet workbench. The active planning
+question has shifted to how the user-facing surface should be simplified so those capabilities are easier to understand
+and demonstrate. The home page and workspace center now expose a clearer first-contact path: first-time users are
+guided toward one demo-start path, while existing work is pushed toward reopening an existing workspace instead of
+rebuilding context from scratch.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, and Stage E active
+- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, and Stage F active
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
 forking the architecture. The active stage should be executed through the three-track roadmap model, with one primary
 track chosen for the stage, the other two treated as required parallel investment, and Research kept as the reference
-workflow when deeper scenario-module structure is being evaluated.
+workflow when user-facing module differences and workbench depth need to be explained more clearly.
 
 ## Technology Stack
 
@@ -59,11 +63,13 @@ workflow when deeper scenario-module structure is being evaluated.
 - `docs/prd/STAGE_D_PLAN.md`
   - closed Stage D planning document
 - `docs/prd/STAGE_E_PLAN.md`
-  - active Stage E planning document
+  - closed Stage E planning document
+- `docs/prd/STAGE_F_PLAN.md`
+  - active Stage F planning document
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage E work uses `stage-e-*`
+  - active Stage F work uses `stage-f-*`
 - Phase 5 task history
   - archived under `tasks/archive/phase5/`
 - root control-plane docs
@@ -103,6 +109,7 @@ workflow when deeper scenario-module structure is being evaluated.
 - deployment drift between env templates, Compose config, reverse proxy routing, smoke scripts, and docs
 - cross-module consistency across research, support, and job
 - continuity expectations for persisted workbench state in the live public demo
+- front-end information overload, navigation ambiguity, and unclear module boundaries on the public demo path
 - documentation drift between current state, decisions, and archived task history
 
 ## Boundaries

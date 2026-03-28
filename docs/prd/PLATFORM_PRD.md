@@ -117,13 +117,14 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`, is now complete and closed.
 `Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`, is now complete and closed.
 `Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`.
+`Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage D`,
-and is now executing the second `Stage E` wave.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage E`,
+and is now executing `Stage F`.
 
 The current implemented platform increment includes:
 
@@ -144,6 +145,11 @@ The current implemented platform increment includes:
 - cross-module workspace navigation and entry surfaces
 - a frontend demo path that connects auth -> workspace -> indexed documents -> module discovery -> grounded chat -> scenario tasks -> scenario evals -> observability review
 - a validated live provider path using Alibaba Cloud Model Studio's OpenAI-compatible APIs with `qwen-plus` for chat/judge flows and `text-embedding-v4` for embeddings
+- first persistent non-Research workbench surfaces through Support cases and Job hiring packets
+- direct case-first and hiring-packet-first continuation loops on top of the shared task runtime
+- one honest public-demo rule that distinguishes fresh guided workspaces from existing workbench continuation
+- a clearer first-contact user path on the home page and workspace center that separates first-time guided-demo entry
+  from existing-work continuation
 
 The repository does not yet implement:
 
@@ -151,7 +157,9 @@ The repository does not yet implement:
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
 - full production-grade hardening beyond the current bounded public-demo baseline
-- deeper non-Research persistent workbench layers beyond the first bounded Stage E workbench foundation
+- a simplified user-facing information architecture and navigation model that makes the public demo easy for first-time viewers to understand
+- clear first-surface differentiation between the three scenario modules without relying on deep workbench knowledge
+- a showcase-ready visual system across the highest-traffic public-demo and workspace pages
 - the staged AI capability expansions described in `docs/prd/LONG_TERM_ROADMAP.md`
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
@@ -160,8 +168,9 @@ complete and closed.
 `Stage C: Multi-Module Workflow Expansion With Cross-Module Readiness`, documented in `docs/prd/STAGE_C_PLAN.md`, is
 complete and closed.
 `Stage D: Public Internet Demo Baseline`, documented in `docs/prd/STAGE_D_PLAN.md`, is complete and closed.
-The active formal planning unit is `Stage E: Support and Job Workbench Productization`, documented in
-`docs/prd/STAGE_E_PLAN.md`.
+`Stage E: Support and Job Workbench Productization`, documented in `docs/prd/STAGE_E_PLAN.md`, is complete and closed.
+The active formal planning unit is `Stage F: Public Demo Experience Clarification and UX Reset`, documented in
+`docs/prd/STAGE_F_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

@@ -1,10 +1,10 @@
-import WorkspaceManager from "../../components/workspace/workspace-manager";
+﻿import WorkspaceCenterPanel from "../../components/workspace/workspace-center-panel";
 
 export default function WorkspacesPage() {
   return (
     <main>
-      <h1>工作区</h1>
-      <WorkspaceManager />
+      <h1>工作区中心</h1>
+      <WorkspaceCenterPanel />
     </main>
   );
 }

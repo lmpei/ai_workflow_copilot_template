@@ -17,52 +17,56 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage B complete and closed
 - Stage C complete and closed
 - Stage D complete and closed
-- Stage E active with second task wave complete
+- Stage E complete and closed
+- Stage F active with first task wave defined
 
 ## Current Objective
 
-- review the Stage E closeout boundary and choose the next bounded direction after the public-demo walkthrough story,
-  Support case action loop, and Job hiring-packet action loop have all landed
+- continue the Stage F UX reset by simplifying workspace hierarchy and primary flow now that the home page and workspace
+  center expose a clearer first-contact path
 
 ## Active Task
 
-- none; waiting for the next bounded Stage E direction
+- `tasks/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
 
 ## Verification Status
 
-- Summary: the first Stage E wave is complete, the second Stage E wave is complete, and the live public demo now explains
-  both the fresh guided-workspace path and the workbench-first Support / Job continuation path.
+- Summary: Stage E is complete, Stage F is active, and the first Stage F task has already reduced first-contact
+  information overload on the home page and workspace center while keeping the Support / Job continuation story visible.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
 
-- none inside the repo; the next work is a human decision about whether to close Stage E or define another bounded wave
+- none inside the repo; the main challenge is keeping the Stage F UX reset structural and bounded instead of mixing
+  navigation, module positioning, and visual polish into one unfocused rewrite
 
 ## Assumptions
 
 - module product names remain unchanged for now
-- Research remains the reference workflow for deeper workbench reuse decisions
-- the live public demo should remain demo-grade and operator-bounded during Stage E
+- Research remains the reference workflow when module differences and entry explanations are being clarified
+- the live public demo should remain demo-grade and operator-bounded during Stage F
+- Stage F should simplify the surface before it beautifies the surface
 
 ## Information Gaps
 
-- the exact Stage E closeout boundary after the second wave is now complete
+- the exact shape of the new workspace hierarchy and whether overview, modules, and task entry should remain separate
+  top-level surfaces after `stage-f-03`
 
 ## Ready Now
 
-1. decide whether to close Stage E or define a third bounded Stage E wave
-2. keep the public-demo walkthrough aligned with the live Support case and Job hiring-packet action surfaces
-3. preserve the Chinese-first live public demo baseline while the next Stage E direction is chosen
+1. execute `stage-f-03` and simplify workspace hierarchy, return paths, and the main flow across documents, chat, and tasks
+2. keep the new home/workspace entry path stable while deeper navigation changes land
+3. preserve the Chinese-first live public demo baseline while Stage F keeps clarifying module explanation and surface polish
 
 ## Parked / Later
 
 1. staged AI capability expansion from `docs/prd/LONG_TERM_ROADMAP.md`
-2. deeper trust and eval flywheel work beyond the current public-demo baseline
+2. deeper trust and eval flywheel work beyond the current public-demo UX reset
 3. product-name redesign for the three scenario modules
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+- `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
 
 ## Recent Decisions
 
@@ -78,3 +82,7 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-28-057` complete `stage-e-07`, turn Support cases into direct follow-up surfaces through case-level action-loop guidance and case-driven task seeding, archive the task, and move the active Stage E task to `stage-e-08`
 - `DEC-2026-03-28-058` complete `stage-e-08`, turn Job hiring packets into direct work surfaces through packet-level action-loop guidance and packet-driven task seeding, archive the task, and move the active Stage E task to `stage-e-09`
 - `DEC-2026-03-28-059` complete `stage-e-09`, clarify the public-demo entry rule for fresh guided workspaces versus existing Support case / Job hiring-packet continuation, archive the task, and leave the next Stage E direction open for human confirmation
+- `DEC-2026-03-28-060` close Stage E after both workbench waves land and the public-demo walkthrough rule becomes explicit
+- `DEC-2026-03-28-061` define `Stage F` as `Public Demo Experience Clarification and UX Reset`
+- `DEC-2026-03-28-062` define the first Stage F wave as `stage-f-02`, `stage-f-03`, `stage-f-04`, and `stage-f-05`, with `stage-f-02` as the active task
+- `DEC-2026-03-28-063` complete `stage-f-02`, reduce first-contact cognitive load on the home page and workspace center, archive the task, and move the active Stage F task to `stage-f-03`

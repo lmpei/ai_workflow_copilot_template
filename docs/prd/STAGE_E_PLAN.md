@@ -6,7 +6,7 @@
 
 ## Status
 
-- Status: active
+- Status: closed
 - Opened At: 2026-03-27
 - First Task Wave: complete
 - Second Task Wave: complete
@@ -127,10 +127,17 @@ Stage E is successful when:
 - the live public demo remains usable and understandable after those workbench layers are introduced
 - the operator has a bounded refresh and continuity story for the new workbench state
 
-## Next Step
+## Closeout
 
-Execute `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md` as the next Stage E task. The second wave
-should now close by making the live public demo explain the new Support and Job workbench actions honestly.
+Stage E is now closed. It completed two bounded waves plus one inserted localization pass:
+
+- durable Support case workbench foundation
+- durable Job hiring-packet workbench foundation
+- public-demo continuity and walkthrough rules for persistent workbench state
+- direct case-action and hiring-packet-action loops
+- one Chinese-first static surface pass across the live demo
+
+The next formal planning unit is `docs/prd/STAGE_F_PLAN.md`.
 
 ## First Task Wave
 
@@ -149,7 +156,7 @@ The second executable Stage E wave is:
 
 - `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md` (complete)
 - `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md` (complete)
-- `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+- `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md` (complete)
 
 This wave keeps Stage E focused on the next bounded outcome: direct workbench actions on top of the Support case and
 Job hiring-packet foundations, while preserving one honest demo walkthrough story.

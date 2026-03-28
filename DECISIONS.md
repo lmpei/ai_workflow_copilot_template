@@ -923,3 +923,59 @@ Append-only log. Add new entries at the bottom.
 - Impact: the live public demo now explains the fresh-workspace path and the workbench-first continuation path consistently, and Stage E can now be reviewed for closeout or another bounded wave.
 - Related Task: `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-060
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: close Stage E after the second workbench wave
+- Context: Stage E opened to turn Support and Job from isolated task-result workflows into persistent workbench surfaces. After `stage-e-07`, `stage-e-08`, and `stage-e-09`, both non-Research modules now have durable work objects, direct workbench action loops, and an honest public-demo continuation story.
+- Choice: close Stage E as complete, preserve its Support case and Job hiring-packet workbench depth as the current platform baseline, and move the next planning focus away from additional Stage E workbench depth.
+- Why: Stage E's bounded goal has been met; keeping it open would blur the stage boundary and mix workbench productization with a separate user-experience restructuring problem.
+- Impact: Support cases, Job hiring packets, and the public-demo continuity rule now become baseline platform behavior instead of active Stage E experiments, and the next stage can focus on the user-facing surface without reopening Stage E scope.
+- Related Task: `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-061
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define Stage F as a public-demo experience reset
+- Context: the project now has a working live public demo and durable Support / Job workbench objects, but the user-facing surface still exposes too much internal structure, has weak hierarchy, and does not clearly explain where a first-time viewer should start or how the three scenario modules differ.
+- Choice: open `Stage F: Public Demo Experience Clarification and UX Reset` as a separate planning unit focused on information architecture, navigation clarity, module positioning, and showcase-ready front-end presentation without renaming the three module products.
+- Why: these user-facing problems are real product-surface problems, not just cosmetic polish, and they should be treated as a bounded stage before the roadmap returns to deeper trust, eval, and AI-capability work.
+- Impact: the project now has one explicit stage for reducing cognitive load, clarifying hierarchy, and making the demo easier to understand and present, while leaving the long-term roadmap and module names intact.
+- Related Task: `tasks/archive/stage-f/stage-f-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-062
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the first Stage F task wave
+- Context: Stage F should improve the user-facing experience in a bounded order instead of starting with one broad front-end rewrite that mixes hierarchy, module explanation, and visual polish all at once.
+- Choice: define the first Stage F wave as `stage-f-02`, `stage-f-03`, `stage-f-04`, and `stage-f-05`, start with home/workspace information architecture, then simplify workspace navigation and primary flow, then clarify module entry surfaces, and leave visual-system polish as the final step in the wave.
+- Why: structure and hierarchy should be fixed before visual styling; otherwise the project would produce a nicer-looking but still confusing demo.
+- Impact: Stage F now has one explicit, ordered UX-reset wave with `stage-f-02` as the active task, and the control plane can track the experience redesign without losing scope discipline.
+- Related Task: `tasks/archive/stage-f/stage-f-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-063
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-02 home and workspace information-architecture reset
+- Context: Stage F opened because the live public demo and workspace center exposed too much platform structure too early. First-time users had to simultaneously parse demo limits, templates, deep links, workspaces, and module explanations instead of being shown one primary start path.
+- Choice: simplify the home page into a clearer first-time versus returning-user split, demote public-demo limits and deeper platform detail behind lighter disclosure, rebuild the workspace center around first-time guided-demo creation versus existing-work continuation, archive `stage-f-02`, and move the active Stage F task to `stage-f-03`.
+- Why: the user-facing surface needed structural simplification before any deeper navigation or visual redesign could be trustworthy.
+- Impact: first contact with the live demo is now more legible, the workspace center no longer treats deep links and raw workspace lists as equal entry points, and Stage F can move on to workspace hierarchy and primary-flow simplification.
+- Related Task: `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
+- Supersedes:
