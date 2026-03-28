@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -12,8 +12,9 @@ import type {
   JsonObject,
   SupportArtifacts,
   SupportCaseBrief,
-  SupportEvidenceStatus,
+  SupportCaseContinuationDraft,
   SupportEscalationPacket,
+  SupportEvidenceStatus,
   SupportFinding,
   SupportReplyDraft,
   SupportSeverity,
@@ -29,6 +30,16 @@ import SectionCard from "../ui/section-card";
 
 type SupportCopilotPanelProps = {
   workspaceId: string;
+  continuationDraft?: SupportCaseContinuationDraft | null;
+  onContinuationHandled?: () => void;
+};
+
+type ContinuationContext = {
+  source: "case" | "task";
+  title: string;
+  guidance: string;
+  suggestedFollowUpPrompt?: string | null;
+  caseStatusLabel?: string;
 };
 
 const TASK_OPTIONS: Record<
@@ -46,7 +57,7 @@ const TASK_OPTIONS: Record<
   },
   reply_draft: {
     label: "回复草稿",
-    description: "基于当前工作区知识生成一版 grounded 客服回复草稿。",
+    description: "基于当前工作区知识生成一版 grounded 的客服回复草稿。",
     placeholder: "示例：客户询问过期的密码重置链接应该如何处理。",
   },
 };
@@ -58,6 +69,13 @@ const SEVERITY_OPTIONS: Array<{ value: "" | SupportSeverity; label: string }> = 
   { value: "high", label: "高" },
   { value: "critical", label: "严重" },
 ];
+
+const CASE_STATUS_LABELS: Record<SupportCaseContinuationDraft["case_status"], string> = {
+  open: "处理中",
+  needs_customer_input: "待客户补充",
+  ready_for_reply: "可直接回复",
+  escalated: "已升级",
+};
 
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -94,14 +112,9 @@ function normalizeStringList(value: unknown): string[] {
 
 function parseSupportTaskResult(task: TaskRecord): SupportTaskResult | null {
   const result = task.output_json.result;
-  if (!isJsonObject(result)) {
+  if (!isJsonObject(result) || result.module_type !== "support") {
     return null;
   }
-
-  if (result.module_type !== "support") {
-    return null;
-  }
-
   return result as unknown as SupportTaskResult;
 }
 
@@ -294,7 +307,10 @@ function renderFindings(findings: SupportFinding[]) {
   return (
     <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: 0, padding: 0 }}>
       {findings.map((finding) => (
-        <li key={`${finding.title}-${finding.summary}`} style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
+        <li
+          key={`${finding.title}-${finding.summary}`}
+          style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}
+        >
           <div style={{ fontWeight: 600 }}>{finding.title}</div>
           <p style={{ color: "#475569", marginBottom: 0 }}>{finding.summary}</p>
           {finding.evidence_ref_ids.length > 0 ? (
@@ -370,7 +386,11 @@ function renderEscalationPacket(packet?: SupportEscalationPacket) {
   );
 }
 
-export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanelProps) {
+export default function SupportCopilotPanel({
+  workspaceId,
+  continuationDraft,
+  onContinuationHandled,
+}: SupportCopilotPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
@@ -383,6 +403,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
   const [reproductionStepsText, setReproductionStepsText] = useState("");
   const [parentTaskId, setParentTaskId] = useState<string | null>(null);
   const [followUpNotes, setFollowUpNotes] = useState("");
+  const [continuationContext, setContinuationContext] = useState<ContinuationContext | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(false);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
@@ -463,11 +484,6 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     };
   }, [loadTasks, session]);
 
-  const selectedTask = useMemo(
-    () => tasks.find((task) => task.id === selectedTaskId) ?? null,
-    [selectedTaskId, tasks],
-  );
-
   useEffect(() => {
     if (typeof window === "undefined") {
       return undefined;
@@ -491,6 +507,45 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     };
   }, [tasks]);
 
+  useEffect(() => {
+    if (!continuationDraft) {
+      return;
+    }
+
+    setParentTaskId(continuationDraft.continue_from_task_id);
+    setTaskType(continuationDraft.suggested_task_type);
+    setCustomerIssue(continuationDraft.customer_issue);
+    setProductArea(continuationDraft.product_area ?? "");
+    setSeverity(continuationDraft.severity ?? "");
+    setDesiredOutcome(continuationDraft.desired_outcome ?? "");
+    setReproductionStepsText(formatReproductionSteps(continuationDraft.reproduction_steps));
+    setFollowUpNotes(continuationDraft.suggested_follow_up_prompt ?? "");
+    setContinuationContext({
+      source: "case",
+      title: `正在从 case「${continuationDraft.case_title}」继续跟进`,
+      guidance: continuationDraft.status_guidance,
+      suggestedFollowUpPrompt: continuationDraft.suggested_follow_up_prompt,
+      caseStatusLabel: CASE_STATUS_LABELS[continuationDraft.case_status],
+    });
+    setSelectedTaskId(continuationDraft.continue_from_task_id);
+    setErrorMessage(null);
+
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("support-follow-up-form-anchor")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    }
+
+    onContinuationHandled?.();
+  }, [continuationDraft, onContinuationHandled]);
+
+  const selectedTask = useMemo(
+    () => tasks.find((task) => task.id === selectedTaskId) ?? null,
+    [selectedTaskId, tasks],
+  );
   const selectedResult = useMemo(
     () => (selectedTask ? parseSupportTaskResult(selectedTask) : null),
     [selectedTask],
@@ -517,19 +572,36 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     const input = parseSupportTaskInput(task, result);
 
     setParentTaskId(task.id);
-    setTaskType(task.task_type as SupportTaskType);
+    setTaskType((task.task_type as SupportTaskType) ?? "ticket_summary");
     setCustomerIssue(input.customer_issue ?? "");
     setProductArea(input.product_area ?? "");
     setSeverity(input.severity ?? "");
     setDesiredOutcome(input.desired_outcome ?? "");
     setReproductionStepsText(formatReproductionSteps(input.reproduction_steps));
     setFollowUpNotes("");
+    setContinuationContext({
+      source: "task",
+      title: "正在基于已完成任务继续跟进",
+      guidance:
+        "新的 Support 任务会把这条已完成任务作为父任务，并继续写回同一个 case（如果该任务已经关联 case）。",
+    });
     setSelectedTaskId(task.id);
+    setErrorMessage(null);
+
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        document.getElementById("support-follow-up-form-anchor")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    }
   }, []);
 
   const handleClearFollowUp = useCallback(() => {
     setParentTaskId(null);
     setFollowUpNotes("");
+    setContinuationContext(null);
   }, []);
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -585,6 +657,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
       setReproductionStepsText("");
       setParentTaskId(null);
       setFollowUpNotes("");
+      setContinuationContext(null);
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "无法启动 Support 任务");
     } finally {
@@ -604,7 +677,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     <>
       <SectionCard
         title="Support Copilot"
-        description="运行 grounded 支持 case 流程，查看证据质量、分诊建议和升级交接包。"
+        description="运行 grounded 的支持 case 流程，查看依据质量、分诊建议、回复草稿和升级交接包。"
       >
         {isLoadingWorkspace ? <p>正在加载工作区配置...</p> : null}
         {workspace ? (
@@ -626,138 +699,158 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
 
       <SectionCard
         title="启动 Support case"
-        description="填写 case 信息并基于当前工作区知识运行 grounded Support 任务。"
+        description="填写 case 信息，或直接从已有 case / 已完成任务继续跟进。新的任务仍然走共享 task runtime。"
       >
-        <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 760 }}>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>任务类型</span>
-            <select
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-              onChange={(event) => setTaskType(event.target.value as SupportTaskType)}
-              value={taskType}
-            >
-              {availableTaskTypes.map((availableTaskType) => (
-                <option key={availableTaskType} value={availableTaskType}>
-                  {TASK_OPTIONS[availableTaskType].label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
-
-          {parentTask ? (
-            <div
-              style={{
-                backgroundColor: "#eff6ff",
-                border: "1px solid #bfdbfe",
-                borderRadius: 12,
-                display: "grid",
-                gap: 8,
-                padding: 12,
-              }}
-            >
-              <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
-                <strong>继续跟进 Support case</strong>
-                <button onClick={handleClearFollowUp} type="button">
-                  清除
-                </button>
-              </div>
-              <div>
-                <strong>父任务：</strong> {parentTask.id}
-              </div>
-              <div>
-                <strong>上一轮摘要：</strong> {parentResult?.summary ?? "已完成的 Support 任务"}
-              </div>
-              {parentInput?.customer_issue ? (
-                <div>
-                  <strong>继承问题：</strong> {parentInput.customer_issue}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>客户问题</span>
-            <textarea
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-              onChange={(event) => setCustomerIssue(event.target.value)}
-              placeholder={TASK_OPTIONS[taskType].placeholder}
-              rows={4}
-              value={customerIssue}
-            />
-          </label>
-
-          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+        <div id="support-follow-up-form-anchor" style={{ display: "grid", gap: 12, maxWidth: 760 }}>
+          <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12 }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span>产品范围</span>
-              <input
-                disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-                onChange={(event) => setProductArea(event.target.value)}
-                placeholder="认证、计费、后台管理等"
-                type="text"
-                value={productArea}
-              />
-            </label>
-
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>严重级别</span>
+              <span>任务类型</span>
               <select
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-                onChange={(event) => setSeverity(event.target.value as "" | SupportSeverity)}
-                value={severity}
+                onChange={(event) => setTaskType(event.target.value as SupportTaskType)}
+                value={taskType}
               >
-                {SEVERITY_OPTIONS.map((option) => (
-                  <option key={option.label} value={option.value}>
-                    {option.label}
+                {availableTaskTypes.map((availableTaskType) => (
+                  <option key={availableTaskType} value={availableTaskType}>
+                    {TASK_OPTIONS[availableTaskType].label}
                   </option>
                 ))}
               </select>
             </label>
-          </div>
+            <p style={{ color: "#475569", margin: 0 }}>{TASK_OPTIONS[taskType].description}</p>
 
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>期望结果</span>
-            <input
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-              onChange={(event) => setDesiredOutcome(event.target.value)}
-              placeholder="示例：恢复登录能力，同时避免客户走完整账号找回流程。"
-              type="text"
-              value={desiredOutcome}
-            />
-          </label>
+            {parentTask ? (
+              <div
+                style={{
+                  backgroundColor: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: 12,
+                  display: "grid",
+                  gap: 8,
+                  padding: 12,
+                }}
+              >
+                <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
+                  <strong>{continuationContext?.title ?? "继续跟进 Support case"}</strong>
+                  <button onClick={handleClearFollowUp} type="button">
+                    清除
+                  </button>
+                </div>
+                {continuationContext?.caseStatusLabel ? (
+                  <div>
+                    <strong>当前 case 状态：</strong> {continuationContext.caseStatusLabel}
+                  </div>
+                ) : null}
+                <div>
+                  <strong>父任务：</strong> {parentTask.id}
+                </div>
+                <div>
+                  <strong>上一轮摘要：</strong> {parentResult?.summary ?? "已完成的 Support 任务"}
+                </div>
+                {parentInput?.customer_issue ? (
+                  <div>
+                    <strong>继承问题：</strong> {parentInput.customer_issue}
+                  </div>
+                ) : null}
+                {continuationContext?.guidance ? (
+                  <div>
+                    <strong>当前推进建议：</strong> {continuationContext.guidance}
+                  </div>
+                ) : null}
+                {continuationContext?.suggestedFollowUpPrompt ? (
+                  <div>
+                    <strong>建议补充到跟进备注：</strong> {continuationContext.suggestedFollowUpPrompt}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>复现步骤</span>
-            <textarea
-              disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-              onChange={(event) => setReproductionStepsText(event.target.value)}
-              placeholder={"每行一个步骤\n1. 打开重置邮件\n2. 点击链接\n3. 页面提示链接已过期"}
-              rows={5}
-              value={reproductionStepsText}
-            />
-          </label>
-
-          {parentTask ? (
             <label style={{ display: "grid", gap: 6 }}>
-              <span>跟进备注</span>
+              <span>客户问题</span>
               <textarea
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
-                onChange={(event) => setFollowUpNotes(event.target.value)}
-                placeholder="示例：客户补充说链接失败了两次，且影响多个账号。"
-                rows={3}
-                value={followUpNotes}
+                onChange={(event) => setCustomerIssue(event.target.value)}
+                placeholder={TASK_OPTIONS[taskType].placeholder}
+                rows={4}
+                value={customerIssue}
               />
             </label>
-          ) : null}
 
-          {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-          <button disabled={isCreating || workspace?.module_type === "research" || workspace?.module_type === "job"} type="submit">
-            {isCreating ? "正在启动..." : "启动 Support 任务"}
-          </button>
-        </form>
+            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <label style={{ display: "grid", gap: 6 }}>
+                <span>产品范围</span>
+                <input
+                  disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                  onChange={(event) => setProductArea(event.target.value)}
+                  placeholder="认证、计费、后台管理等"
+                  type="text"
+                  value={productArea}
+                />
+              </label>
+
+              <label style={{ display: "grid", gap: 6 }}>
+                <span>严重级别</span>
+                <select
+                  disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                  onChange={(event) => setSeverity(event.target.value as "" | SupportSeverity)}
+                  value={severity}
+                >
+                  {SEVERITY_OPTIONS.map((option) => (
+                    <option key={option.label} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>期望结果</span>
+              <input
+                disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                onChange={(event) => setDesiredOutcome(event.target.value)}
+                placeholder="示例：恢复登录能力，同时避免客户走完整账户找回流程。"
+                type="text"
+                value={desiredOutcome}
+              />
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>复现步骤</span>
+              <textarea
+                disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                onChange={(event) => setReproductionStepsText(event.target.value)}
+                placeholder={"每行一个步骤\n1. 打开重置邮件\n2. 点击链接\n3. 页面提示链接已过期"}
+                rows={5}
+                value={reproductionStepsText}
+              />
+            </label>
+
+            {parentTask ? (
+              <label style={{ display: "grid", gap: 6 }}>
+                <span>跟进备注</span>
+                <textarea
+                  disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
+                  onChange={(event) => setFollowUpNotes(event.target.value)}
+                  placeholder="示例：客户补充说明链接失败了两次，并且影响多个账户。"
+                  rows={3}
+                  value={followUpNotes}
+                />
+              </label>
+            ) : null}
+
+            {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
+            <button
+              disabled={isCreating || workspace?.module_type === "research" || workspace?.module_type === "job"}
+              type="submit"
+            >
+              {isCreating ? "正在启动..." : "启动 Support 任务"}
+            </button>
+          </form>
+        </div>
       </SectionCard>
 
-      <SectionCard title="Support 任务记录" description="任务每 2 秒自动刷新一次，便于观察 case 如何收敛成 grounded 分诊结论。">
+      <SectionCard title="Support 任务记录" description="任务每 2 秒自动刷新一次，方便观察 case 如何从 grounded 分诊推进到持续跟进。">
         {isLoadingTasks ? <p>正在加载 Support 任务...</p> : null}
         {!isLoadingTasks && tasks.length === 0 ? <p>还没有 Support 任务。先启动一个任务来生成结构化 case 流程。</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -792,7 +885,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                   </button>
                   {task.status === "completed" ? (
                     <button onClick={() => handleContinueFromTask(task)} type="button">
-                      继续跟进
+                      从这个任务继续
                     </button>
                   ) : null}
                 </div>

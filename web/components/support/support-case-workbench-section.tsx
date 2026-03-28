@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getSupportCase, isApiClientError, listWorkspaceSupportCases } from "../../lib/api";
 import type {
+  SupportCaseContinuationDraft,
   SupportCaseEventRecord,
   SupportCaseRecord,
   SupportCaseStatus,
   SupportCaseSummaryRecord,
   SupportEvidenceStatus,
+  SupportTaskType,
 } from "../../lib/types";
 import SectionCard from "../ui/section-card";
 
@@ -16,10 +18,11 @@ type SupportCaseWorkbenchSectionProps = {
   workspaceId: string;
   accessToken: string;
   onOpenTask: (taskId: string) => void;
+  onContinueCase: (draft: SupportCaseContinuationDraft) => void;
 };
 
 const CASE_STATUS_LABELS: Record<SupportCaseStatus, string> = {
-  open: "进行中",
+  open: "处理中",
   needs_customer_input: "待客户补充",
   ready_for_reply: "可直接回复",
   escalated: "已升级",
@@ -29,6 +32,16 @@ const EVIDENCE_STATUS_LABELS: Record<SupportEvidenceStatus, string> = {
   grounded_matches: "已命中依据",
   documents_only: "仅有文档",
   no_documents: "无文档",
+};
+
+const EVENT_KIND_LABELS: Record<string, string> = {
+  case_created: "创建 case",
+  follow_up: "继续跟进",
+};
+
+const TASK_TYPE_LABELS: Record<SupportTaskType, string> = {
+  ticket_summary: "工单摘要",
+  reply_draft: "回复草稿",
 };
 
 function renderBadge(label: string, color: string) {
@@ -71,6 +84,10 @@ function renderEvidenceStatus(status?: SupportEvidenceStatus | null) {
   return renderBadge(EVIDENCE_STATUS_LABELS[status], colorByStatus[status]);
 }
 
+function renderTaskType(taskType: SupportTaskType) {
+  return renderBadge(TASK_TYPE_LABELS[taskType], "#334155");
+}
+
 function renderList(items: string[], emptyText: string) {
   if (items.length === 0) {
     return <p style={{ color: "#64748b", margin: 0 }}>{emptyText}</p>;
@@ -83,6 +100,29 @@ function renderList(items: string[], emptyText: string) {
       ))}
     </ul>
   );
+}
+
+function buildContinuationDraft(supportCase: SupportCaseRecord): SupportCaseContinuationDraft | null {
+  const continueFromTaskId = supportCase.action_loop.continue_from_task_id;
+  if (!continueFromTaskId) {
+    return null;
+  }
+
+  return {
+    request_id: Date.now(),
+    case_id: supportCase.id,
+    case_title: supportCase.title,
+    case_status: supportCase.status,
+    continue_from_task_id: continueFromTaskId,
+    suggested_task_type: supportCase.action_loop.suggested_task_type,
+    status_guidance: supportCase.action_loop.status_guidance,
+    suggested_follow_up_prompt: supportCase.action_loop.suggested_follow_up_prompt,
+    customer_issue: supportCase.latest_case_brief.issue_summary,
+    product_area: supportCase.latest_case_brief.product_area,
+    severity: supportCase.latest_case_brief.severity,
+    desired_outcome: supportCase.latest_case_brief.desired_outcome,
+    reproduction_steps: supportCase.latest_case_brief.reproduction_steps,
+  };
 }
 
 function renderEventCard(event: SupportCaseEventRecord, onOpenTask: (taskId: string) => void) {
@@ -104,7 +144,7 @@ function renderEventCard(event: SupportCaseEventRecord, onOpenTask: (taskId: str
       </div>
       <div style={{ color: "#475569" }}>{event.summary}</div>
       <div style={{ color: "#64748b", fontSize: 13 }}>
-        {new Date(event.created_at).toLocaleString()} · {event.event_kind}
+        {new Date(event.created_at).toLocaleString()} · {EVENT_KIND_LABELS[event.event_kind] ?? event.event_kind}
       </div>
       {event.follow_up_notes ? (
         <div>
@@ -124,6 +164,7 @@ export default function SupportCaseWorkbenchSection({
   workspaceId,
   accessToken,
   onOpenTask,
+  onContinueCase,
 }: SupportCaseWorkbenchSectionProps) {
   const [cases, setCases] = useState<SupportCaseSummaryRecord[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
@@ -202,7 +243,7 @@ export default function SupportCaseWorkbenchSection({
   return (
     <SectionCard
       title="Support case 工作台"
-      description="这里沉淀的是持久化的 Support case，而不是一次性任务结果。你可以直接查看 case 状态、最新分诊快照和事件时间线。"
+      description="这里沉淀的是持久化的 Support case。现在你不仅能看 case 历史，还能直接从 case 继续跟进。"
     >
       {errorMessage ? <p style={{ color: "#b91c1c", marginTop: 0 }}>{errorMessage}</p> : null}
       {isLoadingCases ? <p>正在加载 Support case 工作台...</p> : null}
@@ -236,6 +277,12 @@ export default function SupportCaseWorkbenchSection({
                 </div>
                 <div style={{ color: "#475569" }}>{supportCase.latest_summary}</div>
                 <div style={{ color: "#334155", fontSize: 13 }}>
+                  <strong>当前推进建议：</strong> {supportCase.action_loop.status_guidance}
+                </div>
+                <div style={{ color: "#334155", fontSize: 13 }}>
+                  <strong>建议下一步：</strong> {TASK_TYPE_LABELS[supportCase.action_loop.suggested_task_type]}
+                </div>
+                <div style={{ color: "#334155", fontSize: 13 }}>
                   <strong>最新负责人：</strong> {supportCase.latest_recommended_owner ?? "待确定"}
                 </div>
                 <div style={{ color: "#64748b", fontSize: 12 }}>
@@ -244,6 +291,29 @@ export default function SupportCaseWorkbenchSection({
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => setSelectedCaseId(supportCase.id)} type="button">
                     打开 case
+                  </button>
+                  <button
+                    disabled={!supportCase.action_loop.can_continue}
+                    onClick={() => {
+                      const draft = selectedCase && selectedCase.id === supportCase.id
+                        ? buildContinuationDraft(selectedCase)
+                        : null;
+                      if (draft) {
+                        onContinueCase(draft);
+                        return;
+                      }
+                      void getSupportCase(accessToken, supportCase.id)
+                        .then((fullCase) => {
+                          const nextDraft = buildContinuationDraft(fullCase);
+                          if (nextDraft) {
+                            onContinueCase(nextDraft);
+                          }
+                        })
+                        .catch(() => undefined);
+                    }}
+                    type="button"
+                  >
+                    继续这个 case
                   </button>
                   {supportCase.latest_task_id ? (
                     <button onClick={() => onOpenTask(supportCase.latest_task_id!)} type="button">
@@ -298,11 +368,50 @@ export default function SupportCaseWorkbenchSection({
                   <div>
                     <strong>是否需人工复核：</strong> {selectedCase.latest_triage.needs_manual_review ? "是" : "否"}
                   </div>
-                  {selectedCase.latest_task_id ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {renderTaskType(selectedCase.action_loop.suggested_task_type)}
+                    {selectedCase.latest_task_id ? (
                       <button onClick={() => onOpenTask(selectedCase.latest_task_id!)} type="button">
                         打开最新任务结果
                       </button>
+                    ) : null}
+                    <button
+                      disabled={!selectedCase.action_loop.can_continue}
+                      onClick={() => {
+                        const draft = buildContinuationDraft(selectedCase);
+                        if (draft) {
+                          onContinueCase(draft);
+                        }
+                      }}
+                      type="button"
+                    >
+                      从这个 case 继续跟进
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 14,
+                    display: "grid",
+                    gap: 12,
+                    padding: 14,
+                  }}
+                >
+                  <strong>状态推进说明</strong>
+                  <div>
+                    <strong>当前状态：</strong> {CASE_STATUS_LABELS[selectedCase.status]}
+                  </div>
+                  <div>
+                    <strong>为什么现在是这个状态：</strong> {selectedCase.action_loop.status_guidance}
+                  </div>
+                  <div>
+                    <strong>建议下一步动作：</strong> {TASK_TYPE_LABELS[selectedCase.action_loop.suggested_task_type]}
+                  </div>
+                  {selectedCase.action_loop.suggested_follow_up_prompt ? (
+                    <div>
+                      <strong>建议在跟进备注里补充：</strong> {selectedCase.action_loop.suggested_follow_up_prompt}
                     </div>
                   ) : null}
                 </div>

@@ -113,6 +113,14 @@ class SupportCaseLink(BaseModel):
     case_status: SupportCaseStatus
 
 
+class SupportCaseActionLoop(BaseModel):
+    can_continue: bool
+    continue_from_task_id: str | None = None
+    suggested_task_type: SupportTaskType
+    status_guidance: str
+    suggested_follow_up_prompt: str | None = None
+
+
 class SupportCaseEventResponse(BaseModel):
     id: str
     support_case_id: str
@@ -136,6 +144,7 @@ class SupportCaseSummaryResponse(BaseModel):
     created_by: str
     title: str
     status: SupportCaseStatus
+    action_loop: SupportCaseActionLoop
     latest_task_id: str | None = None
     latest_task_type: SupportTaskType
     latest_summary: str

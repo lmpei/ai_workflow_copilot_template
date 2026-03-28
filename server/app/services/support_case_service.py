@@ -6,12 +6,14 @@ from typing import cast
 from app.models.task import TASK_STATUS_DONE, Task
 from app.repositories import support_case_repository, task_repository, workspace_repository
 from app.schemas.support import (
+    SupportCaseActionLoop,
     SupportCaseEventResponse,
     SupportCaseLink,
     SupportCaseResponse,
     SupportCaseStatus,
     SupportCaseSummaryResponse,
     SupportCopilotResult,
+    SupportTaskType,
 )
 
 
@@ -25,13 +27,13 @@ class SupportCaseValidationError(Exception):
 
 def _extract_support_result(task: Task) -> SupportCopilotResult:
     if task.task_type not in {"ticket_summary", "reply_draft"}:
-        raise SupportCaseValidationError("Task must be a completed Support task")
+        raise SupportCaseValidationError("任务必须是已完成的 Support 任务")
     if task.status != TASK_STATUS_DONE:
-        raise SupportCaseValidationError("Support case source task must be completed")
+        raise SupportCaseValidationError("Support case 来源任务必须已经完成")
 
     result = task.output_json.get("result")
     if not isinstance(result, dict) or result.get("module_type") != "support":
-        raise SupportCaseValidationError("Task does not contain a structured Support result")
+        raise SupportCaseValidationError("任务中不包含结构化的 Support 结果")
     return SupportCopilotResult.model_validate(result)
 
 
@@ -84,6 +86,43 @@ def _write_case_metadata_to_task(
     task_repository.update_task_status(task.id, next_status=task.status, output_json=output_json)
 
 
+def _derive_case_action_loop(
+    *,
+    case_status: SupportCaseStatus,
+    latest_task_id: str | None,
+    latest_result: SupportCopilotResult,
+) -> SupportCaseActionLoop:
+    suggested_task_type: SupportTaskType
+    if case_status == "ready_for_reply":
+        suggested_task_type = "reply_draft"
+        status_guidance = "当前 case 已经具备回复条件，下一步更适合继续生成或刷新回复草稿。"
+    elif case_status == "needs_customer_input":
+        suggested_task_type = "ticket_summary"
+        status_guidance = "当前 case 还缺客户补充信息，下一步应记录新反馈并刷新 case 摘要。"
+    elif case_status == "escalated":
+        suggested_task_type = "ticket_summary"
+        status_guidance = "当前 case 已进入升级处理，下一步应记录人工跟进结果，再决定是否需要新的回复草稿。"
+    else:
+        suggested_task_type = "ticket_summary"
+        status_guidance = "当前 case 仍在处理中，下一步应继续核实信息并推进分诊。"
+
+    suggested_follow_up_prompt: str | None = None
+    if case_status == "needs_customer_input" and latest_result.open_questions:
+        suggested_follow_up_prompt = latest_result.open_questions[0]
+    elif latest_result.next_steps:
+        suggested_follow_up_prompt = latest_result.next_steps[0]
+    elif latest_result.open_questions:
+        suggested_follow_up_prompt = latest_result.open_questions[0]
+
+    return SupportCaseActionLoop(
+        can_continue=isinstance(latest_task_id, str) and bool(latest_task_id),
+        continue_from_task_id=latest_task_id,
+        suggested_task_type=suggested_task_type,
+        status_guidance=status_guidance,
+        suggested_follow_up_prompt=suggested_follow_up_prompt,
+    )
+
+
 def _build_case_summary_response(case) -> SupportCaseSummaryResponse:
     latest_result = SupportCopilotResult.model_validate(case.latest_result_json)
     return SupportCaseSummaryResponse(
@@ -92,6 +131,11 @@ def _build_case_summary_response(case) -> SupportCaseSummaryResponse:
         created_by=case.created_by,
         title=case.title,
         status=cast(SupportCaseStatus, case.status),
+        action_loop=_derive_case_action_loop(
+            case_status=cast(SupportCaseStatus, case.status),
+            latest_task_id=case.latest_task_id,
+            latest_result=latest_result,
+        ),
         latest_task_id=case.latest_task_id,
         latest_task_type=latest_result.task_type,
         latest_summary=case.latest_summary,
@@ -130,7 +174,7 @@ def _build_case_event_response(event) -> SupportCaseEventResponse:
 def _build_case_response(case_id: str) -> SupportCaseResponse:
     case = support_case_repository.get_support_case(case_id)
     if case is None:
-        raise SupportCaseValidationError("Support case not found")
+        raise SupportCaseValidationError("未找到 Support case")
     events = support_case_repository.list_support_case_events(case_id)
     summary = _build_case_summary_response(case)
     return SupportCaseResponse(
@@ -222,7 +266,7 @@ def sync_support_case_from_task(*, task: Task, result_json: dict[str, object]) -
 def list_workspace_support_cases(*, workspace_id: str, user_id: str) -> list[SupportCaseSummaryResponse]:
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
-        raise SupportCaseAccessError("Workspace not found")
+        raise SupportCaseAccessError("未找到工作区")
 
     cases = support_case_repository.list_workspace_support_cases(workspace_id, user_id)
     return [_build_case_summary_response(case) for case in cases]

@@ -123,7 +123,7 @@ The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_R
 ## Current Status
 
 The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage D`,
-and is now executing the first `Stage E` wave.
+and is now executing the second `Stage E` wave.
 
 The current implemented platform increment includes:
 

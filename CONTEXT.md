@@ -14,11 +14,11 @@ grounded chat, async tasks, agent execution, evaluation, and observability so mu
 same primitives.
 
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
-public-demo delivery into Support and Job persistent workbench productization. Support now has a first persistent case
-workbench layer, and Job now has a first persistent hiring-packet workbench layer, both built on top of the shared task
-runtime. The first Stage E wave now also defines one bounded public-demo continuity contract: existing workspace state
-may accumulate durable Support case and Job hiring-packet history, while a clean walkthrough should come from a fresh
-guided demo workspace instead of hidden in-place cleanup.
+public-demo delivery into Support and Job persistent workbench productization. Support now has a persistent case
+workbench layer and a direct case-action loop: a user can continue a case from the case itself while still going
+through the shared task runtime. Job already has a first persistent hiring-packet workbench layer, and the remaining
+active Stage E direction now focuses on making Job hiring packets equally actionable and keeping the public demo's
+workbench walkthrough clear.
 
 ## Current Phase
 

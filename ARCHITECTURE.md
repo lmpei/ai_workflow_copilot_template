@@ -55,7 +55,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor
 - `server/app/services/support_case_service.py`
-  - owns persistent Support case and case-timeline synchronization on top of completed Support task results
+  - owns persistent Support case synchronization, case timeline assembly, and case-action-loop guidance on top of
+    completed Support task results
 - `server/app/services/job_hiring_packet_service.py`
   - owns persistent Job hiring packet and hiring-timeline synchronization on top of completed Job task results
 - `server/app/repositories/support_case_repository.py`

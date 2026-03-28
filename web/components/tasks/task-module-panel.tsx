@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 
 import { getWorkspace, isApiClientError } from "../../lib/api";
-import type { Workspace } from "../../lib/types";
+import type { SupportCaseContinuationDraft, Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import JobAssistantPanel from "../job/job-assistant-panel";
@@ -33,6 +33,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [supportContinuationDraft, setSupportContinuationDraft] = useState<SupportCaseContinuationDraft | null>(null);
 
   const loadWorkspace = useCallback(async () => {
     if (!session) {
@@ -45,7 +46,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区模块");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区模块信息");
     } finally {
       setIsLoading(false);
     }
@@ -87,8 +88,13 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
               window.location.hash = `task-${taskId}`;
             }
           }}
+          onContinueCase={(draft) => setSupportContinuationDraft(draft)}
         />
-        <SupportCopilotPanel workspaceId={workspaceId} />
+        <SupportCopilotPanel
+          workspaceId={workspaceId}
+          continuationDraft={supportContinuationDraft}
+          onContinuationHandled={() => setSupportContinuationDraft(null)}
+        />
       </>
     );
   }
@@ -116,7 +122,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   return (
-    <SectionCard title="模块任务" description="随着各场景继续深化，这里会逐步收成更明确的模块专属任务体验。">
+    <SectionCard title="模块任务" description="这里会根据工作区模块显示对应的任务与工作台入口。">
       <p>
         当前工作区配置的是 <strong>{getModuleDisplayName(workspace?.module_type ?? "unknown")}</strong>。
         这个模块的专属任务面板暂时还不可用。

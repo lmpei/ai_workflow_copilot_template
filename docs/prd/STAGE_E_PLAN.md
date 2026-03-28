@@ -1,4 +1,4 @@
-# Stage E Plan
+﻿# Stage E Plan
 
 ## Stage Name
 
@@ -9,6 +9,7 @@
 - Status: active
 - Opened At: 2026-03-27
 - First Task Wave: complete
+- Second Task Wave: active
 
 ## Position In The Project
 
@@ -128,8 +129,8 @@ Stage E is successful when:
 
 ## Next Step
 
-The first Stage E wave is now complete. The next bounded Stage E direction should be chosen explicitly rather than
-opened by default.
+Execute `tasks/stage-e-07-support-case-action-loop.md` as the next Stage E task. The second wave should turn Support
+cases and Job hiring packets into direct work surfaces rather than stopping at readable persistence.
 
 ## First Task Wave
 
@@ -141,6 +142,17 @@ The first executable Stage E wave is:
 
 This wave keeps Stage E focused on one bounded outcome: persistent non-Research workbench depth that can coexist with
 the live public demo baseline instead of being trapped in isolated task-result flows.
+
+## Second Task Wave
+
+The second executable Stage E wave is:
+
+- `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md` (complete)
+- `tasks/stage-e-08-job-hiring-packet-action-loop.md`
+- `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+
+This wave keeps Stage E focused on the next bounded outcome: direct workbench actions on top of the Support case and
+Job hiring-packet foundations, while preserving one honest demo walkthrough story.
 
 ## Completed Pre-Wave Insert
 

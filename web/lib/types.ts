@@ -1,4 +1,4 @@
-export const moduleTypes = ["job", "support", "research"] as const;
+﻿export const moduleTypes = ["job", "support", "research"] as const;
 export const workspaceTypes = moduleTypes;
 export const scenarioTaskTypes = [
   "research_summary",
@@ -418,6 +418,14 @@ export type SupportCaseLink = {
   case_status: SupportCaseStatus;
 };
 
+export type SupportCaseActionLoopRecord = {
+  can_continue: boolean;
+  continue_from_task_id?: string | null;
+  suggested_task_type: SupportTaskType;
+  status_guidance: string;
+  suggested_follow_up_prompt?: string | null;
+};
+
 export type SupportCaseEventRecord = {
   id: string;
   support_case_id: string;
@@ -441,6 +449,7 @@ export type SupportCaseSummaryRecord = {
   created_by: string;
   title: string;
   status: SupportCaseStatus;
+  action_loop: SupportCaseActionLoopRecord;
   latest_task_id?: string | null;
   latest_task_type: SupportTaskType;
   latest_summary: string;
@@ -458,6 +467,22 @@ export type SupportCaseSummaryRecord = {
 
 export type SupportCaseRecord = SupportCaseSummaryRecord & {
   events: SupportCaseEventRecord[];
+};
+
+export type SupportCaseContinuationDraft = {
+  request_id: number;
+  case_id: string;
+  case_title: string;
+  case_status: SupportCaseStatus;
+  continue_from_task_id: string;
+  suggested_task_type: SupportTaskType;
+  status_guidance: string;
+  suggested_follow_up_prompt?: string | null;
+  customer_issue: string;
+  product_area?: string | null;
+  severity?: SupportSeverity | null;
+  desired_outcome?: string | null;
+  reproduction_steps: string[];
 };
 export type JobTaskType = Extract<TaskType, "jd_summary" | "resume_match">;
 export type JobEvidenceStatus = "grounded_matches" | "documents_only" | "no_documents";

@@ -867,3 +867,31 @@ Append-only log. Add new entries at the bottom.
 - Impact: operators now have one explicit rule for when to preserve versus replace workspaces in the public demo, Support and Job workbench persistence no longer relies on unwritten cleanup assumptions, and outside viewers get a clear explanation that a clean walkthrough should come from a fresh guided demo workspace rather than an implied page-level reset.
 - Related Task: `tasks/archive/stage-e/stage-e-04-public-demo-workbench-continuity.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-056
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the second Stage E task wave
+- Context: the first Stage E wave completed the foundation layer for Support cases, Job hiring packets, and bounded public-demo continuity, but those workbench objects are still closer to readable persistence than to direct work surfaces.
+- Choice: keep Stage E open, define the second Stage E wave as `stage-e-07`, `stage-e-08`, and `stage-e-09`, focus that wave on Support case action loops, Job hiring-packet action loops, and workbench-first public-demo walkthrough clarity, archive the planning task as `stage-e-06`, and move the active Stage E task to `stage-e-07`.
+- Why: the next meaningful bounded step is to make the new workbench objects directly usable without expanding Stage E into a broad ticketing or ATS product.
+- Impact: Stage E now has an explicit second wave aimed at actionable workbench behavior, and the control plane points at one concrete next task instead of an open-ended continuation.
+- Related Task: `tasks/archive/stage-e/stage-e-06-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-057
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-07 Support case action loop
+- Context: the first Stage E wave introduced persistent Support cases, but users still had to remember task history and manually reconstruct the next follow-up instead of working from the case object itself.
+- Choice: add one bounded Support case action-loop contract, expose case-level action guidance in Support case responses, let the Support workbench seed the next follow-up task directly from a case, rewrite the Support module task surface in clean Chinese-first UTF-8 copy, archive `stage-e-07`, and move the active Stage E task to `stage-e-08`.
+- Why: Stage E should make Support cases directly usable without bypassing the shared task runtime or drifting into a broader ticketing product.
+- Impact: Support cases can now drive the next follow-up action directly, case-status progression is visible at the case surface instead of being inferred from raw task history, and the live public demo can explain the Support action loop honestly from the case workbench itself.
+- Related Task: `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md`
+- Supersedes:

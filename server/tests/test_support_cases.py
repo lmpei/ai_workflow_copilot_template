@@ -222,6 +222,9 @@ def test_run_task_execution_syncs_support_case_metadata_and_creates_case(
     assert support_cases[0].id == support_case_link["case_id"]
     assert support_cases[0].event_count == 1
     assert support_cases[0].latest_task_id == task.id
+    assert support_cases[0].action_loop.can_continue is True
+    assert support_cases[0].action_loop.continue_from_task_id == task.id
+    assert support_cases[0].action_loop.suggested_task_type == "ticket_summary"
 
     support_case = support_case_service.get_support_case(
         case_id=support_cases[0].id,
@@ -230,6 +233,8 @@ def test_run_task_execution_syncs_support_case_metadata_and_creates_case(
     assert support_case is not None
     assert len(support_case.events) == 1
     assert support_case.events[0].task_id == task.id
+    assert support_case.action_loop.can_continue is True
+    assert support_case.action_loop.continue_from_task_id == task.id
     assert persisted_task.output_json["result"]["metadata"]["support_case"]["case_id"] == support_case.id
 
 
@@ -347,6 +352,9 @@ def test_support_case_routes_list_and_get_follow_up_case(client: TestClient) -> 
     assert listed_cases[0]["id"] == case_id
     assert listed_cases[0]["event_count"] == 2
     assert listed_cases[0]["latest_task_id"] == follow_up_task_id
+    assert listed_cases[0]["action_loop"]["can_continue"] is True
+    assert listed_cases[0]["action_loop"]["continue_from_task_id"] == follow_up_task_id
+    assert listed_cases[0]["action_loop"]["suggested_task_type"] == "ticket_summary"
 
     detail_response = client.get(f"/api/v1/support-cases/{case_id}", headers=headers)
     assert detail_response.status_code == 200
@@ -354,6 +362,9 @@ def test_support_case_routes_list_and_get_follow_up_case(client: TestClient) -> 
     assert support_case["id"] == case_id
     assert support_case["status"] == "escalated"
     assert support_case["latest_summary"] == "Follow-up review confirmed the case still needs escalation."
+    assert support_case["action_loop"]["can_continue"] is True
+    assert support_case["action_loop"]["continue_from_task_id"] == follow_up_task_id
+    assert support_case["action_loop"]["suggested_task_type"] == "ticket_summary"
     assert len(support_case["events"]) == 2
     assert support_case["events"][0]["task_id"] == follow_up_task_id
     assert support_case["events"][0]["event_kind"] == "follow_up"
