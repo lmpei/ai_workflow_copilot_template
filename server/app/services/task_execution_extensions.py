@@ -1,8 +1,9 @@
-﻿"""Explicit task-execution extensions for module-specific runtime behavior.
+"""Explicit task-execution extensions for module-specific runtime behavior.
 
 The generic task executor should stop at lifecycle boundaries. Anything that is
 specific to one module, such as Research lineage resolution, Research trace
-records, or Support case synchronization, lives here.
+records, Support case synchronization, or Job hiring-packet synchronization,
+lives here.
 """
 
 from dataclasses import dataclass
@@ -13,11 +14,17 @@ from app.models.task import TASK_STATUS_DONE, Task
 from app.repositories import task_repository
 from app.schemas.research import ResearchLineage, ResearchTaskInput, ResearchTaskType
 from app.schemas.scenario import (
+    MODULE_TYPE_JOB,
     MODULE_TYPE_RESEARCH,
     MODULE_TYPE_SUPPORT,
     get_scenario_task_module_type,
 )
-from app.services import research_asset_service, support_case_service, trace_service
+from app.services import (
+    job_hiring_packet_service,
+    research_asset_service,
+    support_case_service,
+    trace_service,
+)
 from app.services.agent_service import AgentExecutionResult
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
@@ -384,9 +391,34 @@ class SupportTaskExecutionExtension(NoopTaskExecutionExtension):
         result_metadata.update(case_metadata)
 
 
+class JobTaskExecutionExtension(NoopTaskExecutionExtension):
+    """Job-only hooks that sync completed runs into the persistent hiring workbench."""
+
+    def enrich_execution_result(
+        self,
+        *,
+        task: Task,
+        execution_result: AgentExecutionResult,
+    ) -> None:
+        try:
+            packet_metadata = job_hiring_packet_service.sync_job_hiring_packet_from_task(
+                task=task,
+                result_json=execution_result.final_output,
+            )
+        except Exception as error:
+            raise TaskExecutionExtensionError(str(error)) from error
+
+        result_metadata = execution_result.final_output.get("metadata")
+        if not isinstance(result_metadata, dict):
+            result_metadata = {}
+            execution_result.final_output["metadata"] = result_metadata
+        result_metadata.update(packet_metadata)
+
+
 _NOOP_TASK_EXECUTION_EXTENSION = NoopTaskExecutionExtension()
 _RESEARCH_TASK_EXECUTION_EXTENSION = ResearchTaskExecutionExtension()
 _SUPPORT_TASK_EXECUTION_EXTENSION = SupportTaskExecutionExtension()
+_JOB_TASK_EXECUTION_EXTENSION = JobTaskExecutionExtension()
 
 
 def get_task_execution_extension(module_type: str) -> TaskExecutionExtension:
@@ -394,4 +426,6 @@ def get_task_execution_extension(module_type: str) -> TaskExecutionExtension:
         return _RESEARCH_TASK_EXECUTION_EXTENSION
     if module_type == MODULE_TYPE_SUPPORT:
         return _SUPPORT_TASK_EXECUTION_EXTENSION
+    if module_type == MODULE_TYPE_JOB:
+        return _JOB_TASK_EXECUTION_EXTENSION
     return _NOOP_TASK_EXECUTION_EXTENSION

@@ -15,7 +15,8 @@ same primitives.
 
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
 public-demo delivery into Support and Job persistent workbench productization. Support now has a first persistent case
-workbench layer on top of the shared task runtime, while Job workbench depth remains the next Stage E focus.
+workbench layer, and Job now has a first persistent hiring-packet workbench layer, both built on top of the shared task
+runtime. The remaining first-wave Stage E focus is public-demo continuity once those two new workbench surfaces coexist.
 
 ## Current Phase
 
@@ -98,6 +99,7 @@ workflow when deeper scenario-module structure is being evaluated.
 - task and eval worker execution guarantees
 - deployment drift between env templates, Compose config, reverse proxy routing, smoke scripts, and docs
 - cross-module consistency across research, support, and job
+- continuity expectations for persisted workbench state in the live public demo
 - documentation drift between current state, decisions, and archived task history
 
 ## Boundaries

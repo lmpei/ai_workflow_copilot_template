@@ -567,6 +567,61 @@ export type JobTaskResult = ScenarioTaskResult & {
   artifacts: JobArtifacts;
 };
 
+export type JobHiringPacketStatus = "collecting_materials" | "needs_alignment" | "review_ready" | "shortlist_ready";
+
+export type JobHiringPacketLink = {
+  packet_id: string;
+  event_id: string;
+  packet_status: JobHiringPacketStatus;
+};
+
+export type JobHiringPacketEventRecord = {
+  id: string;
+  job_hiring_packet_id: string;
+  task_id: string;
+  task_type: JobTaskType;
+  event_kind: string;
+  title: string;
+  summary: string;
+  packet_status: JobHiringPacketStatus;
+  candidate_label?: string | null;
+  target_role?: string | null;
+  fit_signal?: JobFitSignal | null;
+  evidence_status?: JobEvidenceStatus | null;
+  recommended_outcome?: string | null;
+  comparison_task_ids: string[];
+  shortlist_entry_count: number;
+  created_at: string;
+};
+
+export type JobHiringPacketSummaryRecord = {
+  id: string;
+  workspace_id: string;
+  created_by: string;
+  title: string;
+  status: JobHiringPacketStatus;
+  target_role?: string | null;
+  seniority?: string | null;
+  latest_task_id?: string | null;
+  latest_task_type: JobTaskType;
+  latest_summary: string;
+  latest_review_brief: JobReviewBrief;
+  latest_assessment: JobFitAssessment;
+  latest_shortlist?: JobShortlistResult | null;
+  latest_next_steps: string[];
+  latest_candidate_labels: string[];
+  latest_recommended_outcome?: string | null;
+  latest_evidence_status?: JobEvidenceStatus | null;
+  latest_fit_signal?: JobFitSignal | null;
+  comparison_history_count: number;
+  event_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type JobHiringPacketRecord = JobHiringPacketSummaryRecord & {
+  events: JobHiringPacketEventRecord[];
+};
 export type User = {
   id: string;
   email: string;

@@ -20,6 +20,12 @@ JobFitSignal = Literal[
     "insufficient_grounding",
     "no_documents_available",
 ]
+JobHiringPacketStatus = Literal[
+    "collecting_materials",
+    "needs_alignment",
+    "review_ready",
+    "shortlist_ready",
+]
 
 
 class JobTaskInput(BaseModel):
@@ -108,6 +114,12 @@ class JobArtifacts(BaseModel):
     recommended_next_step: str
 
 
+class JobHiringPacketLink(BaseModel):
+    packet_id: str
+    event_id: str
+    packet_status: JobHiringPacketStatus
+
+
 class JobAssistantResult(BaseModel):
     module_type: Literal["job"] = "job"
     task_type: JobTaskType
@@ -126,3 +138,51 @@ class JobAssistantResult(BaseModel):
     evidence: list[ScenarioEvidenceItem] = Field(default_factory=list)
     artifacts: JobArtifacts
     metadata: dict[str, object] = Field(default_factory=dict)
+
+
+class JobHiringPacketEventResponse(BaseModel):
+    id: str
+    job_hiring_packet_id: str
+    task_id: str
+    task_type: JobTaskType
+    event_kind: str
+    title: str
+    summary: str
+    packet_status: JobHiringPacketStatus
+    candidate_label: str | None = None
+    target_role: str | None = None
+    fit_signal: JobFitSignal | None = None
+    evidence_status: JobEvidenceStatus | None = None
+    recommended_outcome: str | None = None
+    comparison_task_ids: list[str] = Field(default_factory=list)
+    shortlist_entry_count: int = 0
+    created_at: str
+
+
+class JobHiringPacketSummaryResponse(BaseModel):
+    id: str
+    workspace_id: str
+    created_by: str
+    title: str
+    status: JobHiringPacketStatus
+    target_role: str | None = None
+    seniority: str | None = None
+    latest_task_id: str | None = None
+    latest_task_type: JobTaskType
+    latest_summary: str
+    latest_review_brief: JobReviewBrief
+    latest_assessment: JobFitAssessment
+    latest_shortlist: JobShortlistResult | None = None
+    latest_next_steps: list[str] = Field(default_factory=list)
+    latest_candidate_labels: list[str] = Field(default_factory=list)
+    latest_recommended_outcome: str | None = None
+    latest_evidence_status: JobEvidenceStatus | None = None
+    latest_fit_signal: JobFitSignal | None = None
+    comparison_history_count: int = 0
+    event_count: int = 0
+    created_at: str
+    updated_at: str
+
+
+class JobHiringPacketResponse(JobHiringPacketSummaryResponse):
+    events: list[JobHiringPacketEventResponse] = Field(default_factory=list)

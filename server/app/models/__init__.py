@@ -1,4 +1,4 @@
-﻿from app.models.agent_run import AgentRun
+from app.models.agent_run import AgentRun
 from app.models.base import Base
 from app.models.conversation import Conversation
 from app.models.document import Document
@@ -8,6 +8,8 @@ from app.models.eval_case import EvalCase
 from app.models.eval_dataset import EvalDataset
 from app.models.eval_result import EvalResult
 from app.models.eval_run import EvalRun
+from app.models.job_hiring_packet import JobHiringPacket
+from app.models.job_hiring_packet_event import JobHiringPacketEvent
 from app.models.message import Message
 from app.models.research_asset import ResearchAsset
 from app.models.research_asset_revision import ResearchAssetRevision
@@ -31,6 +33,8 @@ __all__ = [
     "EvalDataset",
     "EvalResult",
     "EvalRun",
+    "JobHiringPacket",
+    "JobHiringPacketEvent",
     "Message",
     "ResearchAsset",
     "ResearchAssetRevision",

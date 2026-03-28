@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -7,6 +7,7 @@ import type { Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import JobAssistantPanel from "../job/job-assistant-panel";
+import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
 import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
 import SupportCopilotPanel from "../support/support-copilot-panel";
@@ -91,7 +92,20 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   if (workspace?.module_type === "job") {
-    return <JobAssistantPanel workspaceId={workspaceId} />;
+    return (
+      <>
+        <JobHiringWorkbenchSection
+          workspaceId={workspaceId}
+          accessToken={session.accessToken}
+          onOpenTask={(taskId) => {
+            if (typeof window !== "undefined") {
+              window.location.hash = `job-task-${taskId}`;
+            }
+          }}
+        />
+        <JobAssistantPanel workspaceId={workspaceId} />
+      </>
+    );
   }
 
   if (workspace?.module_type === "research") {
@@ -101,7 +115,8 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   return (
     <SectionCard title="模块任务" description="随着各场景继续深化，这里会逐步收成更明确的模块专属任务体验。">
       <p>
-        当前工作区配置的是 <strong>{getModuleDisplayName(workspace?.module_type ?? "unknown")}</strong>。这个模块的专属任务面板暂时还不可用。
+        当前工作区配置的是 <strong>{getModuleDisplayName(workspace?.module_type ?? "unknown")}</strong>。
+        这个模块的专属任务面板暂时还不可用。
       </p>
     </SectionCard>
   );

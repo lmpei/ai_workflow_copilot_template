@@ -8,6 +8,8 @@ import type {
   EvalResultRecord,
   EvalRunCreatePayload,
   EvalRunRecord,
+  JobHiringPacketRecord,
+  JobHiringPacketSummaryRecord,
   LoginRequestPayload,
   LoginResponsePayload,
   PublicDemoSettingsRecord,
@@ -435,6 +437,23 @@ export async function getSupportCase(
   return fetchBrowserApiJson<SupportCaseRecord>(`/support-cases/${caseId}`, {}, accessToken);
 }
 
+export async function listWorkspaceJobHiringPackets(
+  accessToken: string,
+  workspaceId: string,
+): Promise<JobHiringPacketSummaryRecord[]> {
+  return fetchBrowserApiJson<JobHiringPacketSummaryRecord[]>(
+    `/workspaces/${workspaceId}/job-hiring-packets`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getJobHiringPacket(
+  accessToken: string,
+  packetId: string,
+): Promise<JobHiringPacketRecord> {
+  return fetchBrowserApiJson<JobHiringPacketRecord>(`/job-hiring-packets/${packetId}`, {}, accessToken);
+}
 export async function cancelTask(
   accessToken: string,
   taskId: string,

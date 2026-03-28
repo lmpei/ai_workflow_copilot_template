@@ -839,3 +839,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the platform now preserves one durable Support case object with case-level history, latest summary, owner guidance, evidence status, and task-linked timeline entries; the live public demo can now show Support workbench depth beyond raw task history; and Stage E can move on to Job hiring workbench depth while keeping the Support case baseline in place.
 - Related Task: `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-054
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-03 Job hiring workbench foundation
+- Context: Stage E opened to turn non-Research modules into persistent workbench surfaces, but Job Assistant still stored durable hiring context mainly inside isolated task outputs and comparison chains instead of in one reusable hiring object.
+- Choice: add persistent `job_hiring_packet` and `job_hiring_packet_event` primitives, synchronize completed Job tasks into durable packet timelines and bounded shortlist history, expose Job hiring-packet APIs and a Job workbench section in the UI, archive `stage-e-03`, and move the active Stage E task to `stage-e-04`.
+- Why: Job needed a first persistent workbench surface that keeps candidate comparison and shortlist state readable without pretending the shared task runtime should be replaced by a full ATS product.
+- Impact: the platform now preserves one durable Job hiring packet with packet-level history, candidate-pool continuity, shortlist refresh history, and task-linked timeline entries; the live public demo can now show Job workbench depth beyond raw task history; and Stage E can move on to public-demo continuity once both Support and Job workbench foundations exist.
+- Related Task: `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md`
+- Supersedes:

@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
@@ -30,8 +30,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 ## State and Persistence
 
 - PostgreSQL is the system of record for product and workflow state.
-- PostgreSQL now also persists the first non-Research workbench state through Support case and Support case event
-  records.
+- PostgreSQL now also persists the first non-Research workbench state through Support case / Support case event and Job
+  hiring packet / Job hiring packet event records.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime.
@@ -53,11 +53,15 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns generic task lifecycle only: pending -> running -> completed or failed
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
-    behavior live here instead of in the generic executor
+    and Job hiring-packet sync behavior live here instead of in the generic executor
 - `server/app/services/support_case_service.py`
   - owns persistent Support case and case-timeline synchronization on top of completed Support task results
+- `server/app/services/job_hiring_packet_service.py`
+  - owns persistent Job hiring packet and hiring-timeline synchronization on top of completed Job task results
 - `server/app/repositories/support_case_repository.py`
   - owns Support case and Support case event persistence
+- `server/app/repositories/job_hiring_packet_repository.py`
+  - owns Job hiring packet and Job hiring packet event persistence
 - `server/app/agents/graph.py`
   - owns one shared workspace-agent execution skeleton with module-specific compose steps
 - `server/app/workers/task_worker.py`

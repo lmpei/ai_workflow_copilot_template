@@ -128,14 +128,14 @@ Stage E is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-e-03-job-hiring-workbench-foundation.md` as the next persistent non-Research workbench task while preserving the now Chinese-first public demo surface and the new Support case workbench baseline.
+Execute `tasks/stage-e-04-public-demo-workbench-continuity.md` as the next continuity task now that both Support and Job workbench foundations exist on the Chinese-first public demo surface.
 
 ## First Task Wave
 
 The first executable Stage E wave is:
 
 - `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md` (complete)
-- `tasks/stage-e-03-job-hiring-workbench-foundation.md`
+- `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md` (complete)
 - `tasks/stage-e-04-public-demo-workbench-continuity.md`
 
 This wave keeps Stage E focused on one bounded outcome: persistent non-Research workbench depth that can coexist with
@@ -151,13 +151,12 @@ This task did not change Stage E's goal. It converted the live public demo's use
 
 ## Completed Workbench Foundation So Far
 
-One first-wave persistent workbench task is now complete:
+Two first-wave persistent workbench tasks are now complete:
 
 - `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
+- `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md`
 
-This task introduced the first persistent Support case workbench layer, including durable case identity, a case
-timeline linked to completed Support tasks, bounded case status and escalation continuity, and one demo-visible Support
-workbench section that sits alongside the shared task runtime instead of replacing it.
+These tasks introduced the first persistent Support case workbench layer and the first persistent Job hiring-packet workbench layer, including durable object identity, task-linked timeline history, bounded status metadata, and one demo-visible workbench section for each non-Research module.
 
 ## Relationship To The Long-Term Roadmap
 

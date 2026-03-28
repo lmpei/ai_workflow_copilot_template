@@ -21,20 +21,20 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the first Stage E workbench wave after landing the Support case workbench foundation on top of the now Chinese-first live public demo surface
+- continue the first Stage E workbench wave after landing both Support and Job persistent workbench foundations on top of the Chinese-first live public demo surface
 
 ## Active Task
 
-- `tasks/stage-e-03-job-hiring-workbench-foundation.md`
+- `tasks/stage-e-04-public-demo-workbench-continuity.md`
 
 ## Verification Status
 
-- Summary: `stage-e-02` completed the first persistent Support case workbench layer with case APIs, case timeline state, and a demo-visible Support workbench surface while preserving the Chinese-first live public demo baseline.
+- Summary: `stage-e-03` completed the first persistent Job hiring workbench layer with hiring-packet APIs, packet timeline state, shortlist history, and a demo-visible Job workbench surface while preserving the shared runtime and live public demo baseline.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
 
-- none inside the repo; the next work is bounded productization, not infrastructure recovery
+- none inside the repo; the next work is bounded continuity and operator clarity for the live public demo
 
 ## Assumptions
 
@@ -44,13 +44,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact first persistent-object contract details that will be chosen for the Job hiring workbench and Stage E public-demo continuity work
+- the exact continuity and reset contract that Stage E should present once both Support case state and Job hiring-packet state exist in the live public demo
 
 ## Ready Now
 
-1. execute `tasks/stage-e-03-job-hiring-workbench-foundation.md`
-2. keep `tasks/stage-e-04-public-demo-workbench-continuity.md` queued behind the Support and Job workbench path
-3. preserve the Chinese-first live public demo baseline and the new Support case workbench surface while Stage E depth increases
+1. execute `tasks/stage-e-04-public-demo-workbench-continuity.md`
+2. preserve the Chinese-first live public demo baseline while making workbench persistence continuity explicit
+3. keep Research as the reference workflow while Support and Job workbench depth stabilizes
 
 ## Parked / Later
 
@@ -60,14 +60,14 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
+- `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md`
 
 ## Recent Decisions
 
-- `DEC-2026-03-27-047` complete `stage-d-08`, record the first bounded public rollout rehearsal at `app.lmpai.online`, and leave Stage D open pending human confirmation on the next bounded step
 - `DEC-2026-03-27-048` close Stage D as complete after the successful first bounded public rollout rehearsal
 - `DEC-2026-03-27-049` define `Stage E` as `Support and Job Workbench Productization`
 - `DEC-2026-03-27-050` define the first Stage E wave as `stage-e-02`, `stage-e-03`, and `stage-e-04`, with `stage-e-02` as the active task
 - `DEC-2026-03-28-051` insert `stage-e-05` as a bounded Chinese-localization pass over the live demo's user-visible static surface before resuming the Stage E workbench wave
 - `DEC-2026-03-28-052` complete `stage-e-05`, archive the bounded localization pass, and restore `stage-e-02` as the active Stage E task
 - `DEC-2026-03-28-053` complete `stage-e-02`, add the first persistent Support case workbench layer, archive the Support workbench foundation task, and move the active Stage E task to `stage-e-03`
+- `DEC-2026-03-28-054` complete `stage-e-03`, add the first persistent Job hiring workbench layer, archive the Job workbench foundation task, and move the active Stage E task to `stage-e-04`
