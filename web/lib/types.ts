@@ -410,6 +410,55 @@ export type SupportTaskResult = ScenarioTaskResult & {
   artifacts: SupportArtifacts;
 };
 
+export type SupportCaseStatus = "open" | "needs_customer_input" | "ready_for_reply" | "escalated";
+
+export type SupportCaseLink = {
+  case_id: string;
+  event_id: string;
+  case_status: SupportCaseStatus;
+};
+
+export type SupportCaseEventRecord = {
+  id: string;
+  support_case_id: string;
+  task_id: string;
+  task_type: SupportTaskType;
+  event_kind: string;
+  title: string;
+  summary: string;
+  case_status: SupportCaseStatus;
+  recommended_owner?: string | null;
+  evidence_status?: SupportEvidenceStatus | null;
+  should_escalate: boolean;
+  needs_manual_review: boolean;
+  follow_up_notes?: string | null;
+  created_at: string;
+};
+
+export type SupportCaseSummaryRecord = {
+  id: string;
+  workspace_id: string;
+  created_by: string;
+  title: string;
+  status: SupportCaseStatus;
+  latest_task_id?: string | null;
+  latest_task_type: SupportTaskType;
+  latest_summary: string;
+  latest_case_brief: SupportCaseBrief;
+  latest_triage: SupportTriageDecision;
+  latest_escalation_packet: SupportEscalationPacket;
+  latest_open_questions: string[];
+  latest_next_steps: string[];
+  latest_recommended_owner?: string | null;
+  latest_evidence_status?: SupportEvidenceStatus | null;
+  event_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportCaseRecord = SupportCaseSummaryRecord & {
+  events: SupportCaseEventRecord[];
+};
 export type JobTaskType = Extract<TaskType, "jd_summary" | "resume_match">;
 export type JobEvidenceStatus = "grounded_matches" | "documents_only" | "no_documents";
 export type JobFitSignal =

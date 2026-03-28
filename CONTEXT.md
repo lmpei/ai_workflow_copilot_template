@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-27
+- Last Updated: 2026-03-28
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -14,7 +14,8 @@ grounded chat, async tasks, agent execution, evaluation, and observability so mu
 same primitives.
 
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
-public-demo delivery into Support and Job persistent workbench productization.
+public-demo delivery into Support and Job persistent workbench productization. Support now has a first persistent case
+workbench layer on top of the shared task runtime, while Job workbench depth remains the next Stage E focus.
 
 ## Current Phase
 

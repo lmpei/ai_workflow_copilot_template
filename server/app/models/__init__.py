@@ -1,4 +1,4 @@
-from app.models.agent_run import AgentRun
+﻿from app.models.agent_run import AgentRun
 from app.models.base import Base
 from app.models.conversation import Conversation
 from app.models.document import Document
@@ -11,6 +11,8 @@ from app.models.eval_run import EvalRun
 from app.models.message import Message
 from app.models.research_asset import ResearchAsset
 from app.models.research_asset_revision import ResearchAssetRevision
+from app.models.support_case import SupportCase
+from app.models.support_case_event import SupportCaseEvent
 from app.models.task import Task
 from app.models.tool_call import ToolCall
 from app.models.trace import Trace
@@ -32,6 +34,8 @@ __all__ = [
     "Message",
     "ResearchAsset",
     "ResearchAssetRevision",
+    "SupportCase",
+    "SupportCaseEvent",
     "Task",
     "Trace",
     "ToolCall",

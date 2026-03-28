@@ -1,4 +1,4 @@
-from app.api.routes import (
+﻿from app.api.routes import (
     agents,
     auth,
     chat,
@@ -7,6 +7,7 @@ from app.api.routes import (
     health,
     metrics,
     public_demo,
+    support_cases,
     tasks,
     workspaces,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "health",
     "metrics",
     "public_demo",
+    "support_cases",
     "tasks",
     "workspaces",
 ]

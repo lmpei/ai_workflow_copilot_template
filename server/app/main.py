@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import (
@@ -12,6 +12,7 @@ from app.api.routes import (
     public_demo,
     research_assets,
     scenarios,
+    support_cases,
     tasks,
     workspaces,
 )
@@ -40,6 +41,7 @@ app.include_router(documents.router, prefix=settings.api_prefix, tags=["document
 app.include_router(chat.router, prefix=settings.api_prefix, tags=["chat"])
 app.include_router(tasks.router, prefix=settings.api_prefix, tags=["tasks"])
 app.include_router(research_assets.router, prefix=settings.api_prefix, tags=["research-assets"])
+app.include_router(support_cases.router, prefix=settings.api_prefix, tags=["support-cases"])
 app.include_router(agents.router, prefix=settings.api_prefix, tags=["agents"])
 app.include_router(evals.router, prefix=settings.api_prefix, tags=["evals"])
 app.include_router(metrics.router, prefix=settings.api_prefix, tags=["metrics"])

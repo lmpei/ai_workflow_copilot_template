@@ -128,13 +128,13 @@ Stage E is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-e-02-support-case-workbench-foundation.md` as the first persistent Support workbench task while preserving the now Chinese-first public demo surface.
+Execute `tasks/stage-e-03-job-hiring-workbench-foundation.md` as the next persistent non-Research workbench task while preserving the now Chinese-first public demo surface and the new Support case workbench baseline.
 
 ## First Task Wave
 
 The first executable Stage E wave is:
 
-- `tasks/stage-e-02-support-case-workbench-foundation.md`
+- `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md` (complete)
 - `tasks/stage-e-03-job-hiring-workbench-foundation.md`
 - `tasks/stage-e-04-public-demo-workbench-continuity.md`
 
@@ -148,6 +148,16 @@ One bounded Stage E support task was inserted ahead of the first workbench wave 
 - `tasks/archive/stage-e/stage-e-05-static-surface-chinese-localization.md`
 
 This task did not change Stage E's goal. It converted the live public demo's user-visible static surface to a Chinese-first baseline before deeper Support and Job workbench productization resumed.
+
+## Completed Workbench Foundation So Far
+
+One first-wave persistent workbench task is now complete:
+
+- `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
+
+This task introduced the first persistent Support case workbench layer, including durable case identity, a case
+timeline linked to completed Support tasks, bounded case status and escalation continuity, and one demo-visible Support
+workbench section that sits alongside the shared task runtime instead of replacing it.
 
 ## Relationship To The Long-Term Roadmap
 

@@ -21,15 +21,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- resume the first Stage E workbench wave on top of the now Chinese-first live public demo surface
+- continue the first Stage E workbench wave after landing the Support case workbench foundation on top of the now Chinese-first live public demo surface
 
 ## Active Task
 
-- `tasks/stage-e-02-support-case-workbench-foundation.md`
+- `tasks/stage-e-03-job-hiring-workbench-foundation.md`
 
 ## Verification Status
 
-- Summary: the bounded Chinese-localization pass completed on top of the live public demo baseline, and Stage E can now resume Support and Job workbench productization on a Chinese-first static surface.
+- Summary: `stage-e-02` completed the first persistent Support case workbench layer with case APIs, case timeline state, and a demo-visible Support workbench surface while preserving the Chinese-first live public demo baseline.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
@@ -44,13 +44,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact first persistent-object contract details that will be chosen for Support cases and Job hiring workbenches during Stage E workbench implementation
+- the exact first persistent-object contract details that will be chosen for the Job hiring workbench and Stage E public-demo continuity work
 
 ## Ready Now
 
-1. execute `tasks/stage-e-02-support-case-workbench-foundation.md`
-2. keep `tasks/stage-e-03-job-hiring-workbench-foundation.md` and `tasks/stage-e-04-public-demo-workbench-continuity.md` queued behind the Stage E workbench path
-3. preserve the Chinese-first live public demo baseline while Stage E workbench depth increases
+1. execute `tasks/stage-e-03-job-hiring-workbench-foundation.md`
+2. keep `tasks/stage-e-04-public-demo-workbench-continuity.md` queued behind the Support and Job workbench path
+3. preserve the Chinese-first live public demo baseline and the new Support case workbench surface while Stage E depth increases
 
 ## Parked / Later
 
@@ -60,7 +60,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-05-static-surface-chinese-localization.md`
+- `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
 
 ## Recent Decisions
 
@@ -70,3 +70,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-27-050` define the first Stage E wave as `stage-e-02`, `stage-e-03`, and `stage-e-04`, with `stage-e-02` as the active task
 - `DEC-2026-03-28-051` insert `stage-e-05` as a bounded Chinese-localization pass over the live demo's user-visible static surface before resuming the Stage E workbench wave
 - `DEC-2026-03-28-052` complete `stage-e-05`, archive the bounded localization pass, and restore `stage-e-02` as the active Stage E task
+- `DEC-2026-03-28-053` complete `stage-e-02`, add the first persistent Support case workbench layer, archive the Support workbench foundation task, and move the active Stage E task to `stage-e-03`

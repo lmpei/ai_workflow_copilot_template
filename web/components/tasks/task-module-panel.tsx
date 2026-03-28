@@ -8,6 +8,7 @@ import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import JobAssistantPanel from "../job/job-assistant-panel";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
+import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
 import SupportCopilotPanel from "../support/support-copilot-panel";
 import SectionCard from "../ui/section-card";
 
@@ -73,7 +74,20 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   if (workspace?.module_type === "support") {
-    return <SupportCopilotPanel workspaceId={workspaceId} />;
+    return (
+      <>
+        <SupportCaseWorkbenchSection
+          workspaceId={workspaceId}
+          accessToken={session.accessToken}
+          onOpenTask={(taskId) => {
+            if (typeof window !== "undefined") {
+              window.location.hash = `task-${taskId}`;
+            }
+          }}
+        />
+        <SupportCopilotPanel workspaceId={workspaceId} />
+      </>
+    );
   }
 
   if (workspace?.module_type === "job") {

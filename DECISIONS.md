@@ -825,3 +825,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the public demo's main path is now Chinese-first at the static-surface level, major backend errors shown directly to users are localized, built-in demo templates and seeded content are localized, and Stage E workbench execution can now resume on a cleaner showcase baseline.
 - Related Task: `tasks/archive/stage-e/stage-e-05-static-surface-chinese-localization.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-053
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-02 Support case workbench foundation
+- Context: Stage E opened to turn non-Research modules into persistent workbench surfaces, but Support still stored most durable collaboration value in follow-up task chains and per-task results instead of in a reusable case object.
+- Choice: add persistent `support_case` and `support_case_event` primitives, synchronize completed Support tasks into durable case timelines and bounded case status metadata, expose Support case APIs and a Support workbench section in the UI, archive `stage-e-02`, and move the active Stage E task to `stage-e-03`.
+- Why: Support needed a first persistent workbench surface that makes follow-up and escalation continuity readable without pretending the shared task runtime should be replaced by a separate ticketing product.
+- Impact: the platform now preserves one durable Support case object with case-level history, latest summary, owner guidance, evidence status, and task-linked timeline entries; the live public demo can now show Support workbench depth beyond raw task history; and Stage E can move on to Job hiring workbench depth while keeping the Support case baseline in place.
+- Related Task: `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md`
+- Supersedes:

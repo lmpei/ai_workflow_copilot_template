@@ -1,3 +1,4 @@
+﻿from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -19,6 +20,12 @@ SupportEvidenceStatus = Literal[
     "grounded_matches",
     "documents_only",
     "no_documents",
+]
+SupportCaseStatus = Literal[
+    "open",
+    "needs_customer_input",
+    "ready_for_reply",
+    "escalated",
 ]
 
 
@@ -98,6 +105,54 @@ class SupportEscalationPacket(BaseModel):
     evidence_ref_ids: list[str] = Field(default_factory=list)
     follow_up_notes: str | None = None
     handoff_note: str
+
+
+class SupportCaseLink(BaseModel):
+    case_id: str
+    event_id: str
+    case_status: SupportCaseStatus
+
+
+class SupportCaseEventResponse(BaseModel):
+    id: str
+    support_case_id: str
+    task_id: str
+    task_type: SupportTaskType
+    event_kind: str
+    title: str
+    summary: str
+    case_status: SupportCaseStatus
+    recommended_owner: str | None = None
+    evidence_status: SupportEvidenceStatus | None = None
+    should_escalate: bool
+    needs_manual_review: bool
+    follow_up_notes: str | None = None
+    created_at: datetime
+
+
+class SupportCaseSummaryResponse(BaseModel):
+    id: str
+    workspace_id: str
+    created_by: str
+    title: str
+    status: SupportCaseStatus
+    latest_task_id: str | None = None
+    latest_task_type: SupportTaskType
+    latest_summary: str
+    latest_case_brief: SupportCaseBrief
+    latest_triage: SupportTriageDecision
+    latest_escalation_packet: SupportEscalationPacket
+    latest_open_questions: list[str] = Field(default_factory=list)
+    latest_next_steps: list[str] = Field(default_factory=list)
+    latest_recommended_owner: str | None = None
+    latest_evidence_status: SupportEvidenceStatus | None = None
+    event_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class SupportCaseResponse(SupportCaseSummaryResponse):
+    events: list[SupportCaseEventResponse] = Field(default_factory=list)
 
 
 class SupportCopilotResult(BaseModel):

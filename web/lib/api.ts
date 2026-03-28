@@ -18,6 +18,8 @@ import type {
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
   ScenarioModuleRecord,
+  SupportCaseRecord,
+  SupportCaseSummaryRecord,
   TaskCreatePayload,
   TaskRecord,
   TraceRecord,
@@ -413,6 +415,24 @@ export async function listWorkspaceTasks(
 
 export async function getTask(accessToken: string, taskId: string): Promise<TaskRecord> {
   return fetchBrowserApiJson<TaskRecord>(`/tasks/${taskId}`, {}, accessToken);
+}
+
+export async function listWorkspaceSupportCases(
+  accessToken: string,
+  workspaceId: string,
+): Promise<SupportCaseSummaryRecord[]> {
+  return fetchBrowserApiJson<SupportCaseSummaryRecord[]>(
+    `/workspaces/${workspaceId}/support-cases`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getSupportCase(
+  accessToken: string,
+  caseId: string,
+): Promise<SupportCaseRecord> {
+  return fetchBrowserApiJson<SupportCaseRecord>(`/support-cases/${caseId}`, {}, accessToken);
 }
 
 export async function cancelTask(

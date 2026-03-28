@@ -1,8 +1,8 @@
-"""Explicit task-execution extensions for module-specific runtime behavior.
+﻿"""Explicit task-execution extensions for module-specific runtime behavior.
 
 The generic task executor should stop at lifecycle boundaries. Anything that is
 specific to one module, such as Research lineage resolution, Research trace
-records, or Research asset synchronization, lives here.
+records, or Support case synchronization, lives here.
 """
 
 from dataclasses import dataclass
@@ -12,8 +12,12 @@ from typing import Protocol, cast
 from app.models.task import TASK_STATUS_DONE, Task
 from app.repositories import task_repository
 from app.schemas.research import ResearchLineage, ResearchTaskInput, ResearchTaskType
-from app.schemas.scenario import MODULE_TYPE_RESEARCH, get_scenario_task_module_type
-from app.services import research_asset_service, trace_service
+from app.schemas.scenario import (
+    MODULE_TYPE_RESEARCH,
+    MODULE_TYPE_SUPPORT,
+    get_scenario_task_module_type,
+)
+from app.services import research_asset_service, support_case_service, trace_service
 from app.services.agent_service import AgentExecutionResult
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
@@ -356,11 +360,38 @@ class ResearchTaskExecutionExtension:
         )
 
 
+class SupportTaskExecutionExtension(NoopTaskExecutionExtension):
+    """Support-only hooks that sync completed runs into the persistent case workbench."""
+
+    def enrich_execution_result(
+        self,
+        *,
+        task: Task,
+        execution_result: AgentExecutionResult,
+    ) -> None:
+        try:
+            case_metadata = support_case_service.sync_support_case_from_task(
+                task=task,
+                result_json=execution_result.final_output,
+            )
+        except Exception as error:
+            raise TaskExecutionExtensionError(str(error)) from error
+
+        result_metadata = execution_result.final_output.get("metadata")
+        if not isinstance(result_metadata, dict):
+            result_metadata = {}
+            execution_result.final_output["metadata"] = result_metadata
+        result_metadata.update(case_metadata)
+
+
 _NOOP_TASK_EXECUTION_EXTENSION = NoopTaskExecutionExtension()
 _RESEARCH_TASK_EXECUTION_EXTENSION = ResearchTaskExecutionExtension()
+_SUPPORT_TASK_EXECUTION_EXTENSION = SupportTaskExecutionExtension()
 
 
 def get_task_execution_extension(module_type: str) -> TaskExecutionExtension:
     if module_type == MODULE_TYPE_RESEARCH:
         return _RESEARCH_TASK_EXECUTION_EXTENSION
+    if module_type == MODULE_TYPE_SUPPORT:
+        return _SUPPORT_TASK_EXECUTION_EXTENSION
     return _NOOP_TASK_EXECUTION_EXTENSION
