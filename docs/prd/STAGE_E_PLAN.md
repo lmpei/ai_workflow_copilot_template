@@ -1,4 +1,4 @@
-﻿# Stage E Plan
+# Stage E Plan
 
 ## Stage Name
 
@@ -8,7 +8,7 @@
 
 - Status: active
 - Opened At: 2026-03-27
-- First Task Wave: active
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -128,7 +128,8 @@ Stage E is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-e-04-public-demo-workbench-continuity.md` as the next continuity task now that both Support and Job workbench foundations exist on the Chinese-first public demo surface.
+The first Stage E wave is now complete. The next bounded Stage E direction should be chosen explicitly rather than
+opened by default.
 
 ## First Task Wave
 
@@ -136,7 +137,7 @@ The first executable Stage E wave is:
 
 - `tasks/archive/stage-e/stage-e-02-support-case-workbench-foundation.md` (complete)
 - `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md` (complete)
-- `tasks/stage-e-04-public-demo-workbench-continuity.md`
+- `tasks/archive/stage-e/stage-e-04-public-demo-workbench-continuity.md` (complete)
 
 This wave keeps Stage E focused on one bounded outcome: persistent non-Research workbench depth that can coexist with
 the live public demo baseline instead of being trapped in isolated task-result flows.

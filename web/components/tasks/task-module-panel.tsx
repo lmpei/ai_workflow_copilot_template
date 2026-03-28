@@ -8,6 +8,7 @@ import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import JobAssistantPanel from "../job/job-assistant-panel";
 import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
+import PublicDemoWorkbenchContinuityNote from "../public-demo/public-demo-workbench-continuity-note";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
 import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
 import SupportCopilotPanel from "../support/support-copilot-panel";
@@ -44,7 +45,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区模块");
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +78,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   if (workspace?.module_type === "support") {
     return (
       <>
+        <PublicDemoWorkbenchContinuityNote moduleType="support" />
         <SupportCaseWorkbenchSection
           workspaceId={workspaceId}
           accessToken={session.accessToken}
@@ -94,6 +96,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   if (workspace?.module_type === "job") {
     return (
       <>
+        <PublicDemoWorkbenchContinuityNote moduleType="job" />
         <JobHiringWorkbenchSection
           workspaceId={workspaceId}
           accessToken={session.accessToken}

@@ -107,6 +107,13 @@ See:
 - `docs/development/PUBLIC_DEMO_ROLLOUT_EVIDENCE_2026-03-27.md`
 - `docs/development/PUBLIC_DEMO_ROLLOUT_HANDOFF_2026-03-27.md`
 
+Stage E adds one more operator assumption on top of that baseline:
+
+- if the same persistent volumes are preserved, existing Support case and Job hiring-packet state may still be present
+  inside an older workspace after restart, deploy, or recreate
+- a clean viewer path should therefore come from a fresh guided demo workspace, not from an implied in-place object
+  reset
+
 ### 4. Human Smoke Still Required
 
 The deployment path is not complete until a human confirms:
@@ -143,6 +150,7 @@ This path still does not promise:
 
 - `docs/development/PUBLIC_DEMO_BASELINE.md`
 - `docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`
+- `docs/development/PUBLIC_DEMO_WORKBENCH_CONTINUITY.md`
 - `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`
 - `docs/development/PUBLIC_DEMO_ROLLOUT_EVIDENCE_TEMPLATE.md`
 - `docs/development/PUBLIC_DEMO_ROLLOUT_HANDOFF_TEMPLATE.md`

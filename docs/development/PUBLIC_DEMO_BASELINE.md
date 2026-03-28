@@ -21,6 +21,7 @@ The public-demo baseline now includes:
 - backend-owned guided demo templates and seeded workspace creation paths added in `stage-d-03`
 - a bounded operator routine for restart, refresh, smoke, and rollback decisions added in `stage-d-04`
 - a bounded repository-side public deployment path added in `stage-d-07`
+- a bounded Stage E continuity contract for persistent Support case and Job hiring-packet state
 
 ## Current Guardrails
 
@@ -46,8 +47,10 @@ Use this baseline for public-demo operation:
 1. keep public-demo limits explicit and user-visible
 2. disable self-serve registration if the demo environment becomes unstable or overloaded
 3. treat demo accounts and demo data as bounded disposable surfaces, not as durable production commitments
-4. prefer clear failure messages over silent degradation when limits are hit
-5. keep later Stage D work responsible for content seeding, showcase paths, deployment wiring, and operator runbooks
+4. treat accumulated Support case and Job hiring-packet state as workspace-local continuity, not as hidden cleanup debt
+5. prefer a fresh guided demo workspace when a clean walkthrough matters
+6. prefer clear failure messages over silent degradation when limits are hit
+7. keep later Stage D work responsible for content seeding, showcase paths, deployment wiring, and operator runbooks
    rather than overloading this baseline
 
 ## Public API Surface
@@ -70,6 +73,8 @@ It returns:
 The guided showcase path built on top of this baseline is documented in `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`.
 The bounded operator routine for restart, refresh, smoke, and rollback decisions is documented in
 `docs/development/PUBLIC_DEMO_OPERATOR_RUNBOOK.md`.
+The bounded Stage E continuity contract for Support cases and Job hiring packets is documented in
+`docs/development/PUBLIC_DEMO_WORKBENCH_CONTINUITY.md`.
 The repository-side deployment path for the first public rollout target is documented in
 `docs/development/PUBLIC_DEPLOYMENT_PATH.md`.
 

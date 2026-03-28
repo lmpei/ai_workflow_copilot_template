@@ -7,6 +7,7 @@ import { getWorkspace, isApiClientError, listPublicDemoTemplates } from "../../l
 import type { PublicDemoTemplateRecord, Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
+import PublicDemoWorkbenchContinuityNote from "./public-demo-workbench-continuity-note";
 import SectionCard from "../ui/section-card";
 
 type GuidedWorkspaceShowcaseProps = {
@@ -123,6 +124,8 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
             <strong>预置文档：</strong> {template.seeded_documents.map((document) => document.title).join("，")}
           </div>
         </div>
+
+        <PublicDemoWorkbenchContinuityNote />
 
         <ol style={{ display: "grid", gap: 16, margin: 0, paddingLeft: 20 }}>
           {template.showcase_steps.map((step) => (

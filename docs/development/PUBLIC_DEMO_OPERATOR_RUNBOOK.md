@@ -2,15 +2,15 @@
 
 ## Purpose
 
-This document defines the bounded operator routine added in `stage-d-04`, extended in `stage-d-07`, and prepared for
-the rollout-evidence path in `stage-d-08`.
+This document defines the bounded operator routine added in `stage-d-04`, extended in `stage-d-07`, prepared for the
+rollout-evidence path in `stage-d-08`, and clarified for persistent Stage E workbench continuity.
 
 It is not a production operations manual. It is the smallest honest routine for keeping the public demo reachable,
 refreshable, and recoverable without relying on hidden tribal knowledge.
 
 ## Current Operator Contract
 
-The public demo baseline now has five layers:
+The public demo baseline now has six layers:
 
 1. `stage-d-02`
    - public-demo guardrails and a backend-owned settings contract
@@ -22,6 +22,8 @@ The public demo baseline now has five layers:
    - one bounded deployment path for the chosen public VM target
 5. `stage-d-08`
    - one bounded rollout-evidence and handoff path for the first public rehearsal
+6. `stage-e-04`
+   - one bounded continuity contract for Support cases and Job hiring packets in the live public demo
 
 ## Scripts
 
@@ -93,10 +95,15 @@ cmd /c scripts\public-demo-refresh-windows.cmd .env app-tier
    - a reserved operator demo account with free workspace slots, or
    - a fresh demo account if self-serve registration is enabled
 3. create a new guided demo workspace from `Workspace Hub`
-4. confirm the seeded walkthrough still works in this order:
+4. treat old workspaces as allowed to keep accumulated Support case and Job hiring-packet state; do not rely on hidden
+   in-place cleanup before a walkthrough
+5. confirm the seeded walkthrough still works in this order:
    - `Documents`
    - `Chat`
    - `Tasks`
+
+If a new viewer needs a clean story, the honest Stage E path is to use a fresh guided demo workspace rather than to
+quietly scrub existing workbench objects.
 
 ## Smoke Checklist
 
@@ -109,6 +116,13 @@ A human still needs to confirm:
 - a guided demo workspace can be created
 - the seeded workspace overview shows the guided showcase panel
 - one module workflow can be exercised end to end without hidden operator setup
+
+When Stage E workbench continuity matters for the walkthrough, also confirm:
+
+- a Support demo path can generate or reopen at least one visible Support case
+- the latest Support case event can still link back to the task that produced it
+- a Job demo path can generate or reopen at least one visible Job hiring packet
+- the latest Job hiring-packet event can still link back to the task that produced it
 
 ## Registration and Abuse Response
 
@@ -151,14 +165,16 @@ This runbook does not promise:
 - zero-downtime deployment
 - production-grade rollback orchestration
 - automatic cleanup of user-created demo workspaces
+- automatic cleanup of Support case or Job hiring-packet state inside an existing workspace
 - permanent refresh of showcase data without operator judgment
 
-Today, the honest refresh path is to create a fresh guided demo workspace with a reserved or fresh account, or to reset
-the environment outside this repo's bounded automation when a clean slate is required.
+Today, the honest refresh path is to create a fresh guided demo workspace with a reserved or fresh account. If a true
+clean slate is required, reset the environment outside this repo's bounded automation.
 
 ## Related Docs
 
 - `docs/development/PUBLIC_DEMO_BASELINE.md`
+- `docs/development/PUBLIC_DEMO_WORKBENCH_CONTINUITY.md`
 - `docs/development/PUBLIC_DEMO_SHOWCASE_PATH.md`
 - `docs/development/PUBLIC_DEPLOYMENT_CONTRACT.md`
 - `docs/development/PUBLIC_DEPLOYMENT_PATH.md`

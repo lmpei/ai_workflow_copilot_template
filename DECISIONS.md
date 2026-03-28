@@ -853,3 +853,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the platform now preserves one durable Job hiring packet with packet-level history, candidate-pool continuity, shortlist refresh history, and task-linked timeline entries; the live public demo can now show Job workbench depth beyond raw task history; and Stage E can move on to public-demo continuity once both Support and Job workbench foundations exist.
 - Related Task: `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-055
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-04 public-demo workbench continuity
+- Context: once Support cases and Job hiring packets became persistent public-demo-visible objects, the live demo no longer had an honest continuity story if operators or viewers assumed old workbench state would be silently cleaned up between walkthroughs.
+- Choice: define one bounded continuity contract for the live public demo, document that existing workspace state may keep accumulated Support case and Job hiring-packet history, extend the operator refresh and smoke guidance accordingly, add user-visible continuity notes on the guided-workspace and module-task surfaces, archive `stage-e-04`, and leave the next Stage E direction open for human confirmation.
+- Why: Stage E needed an honest demo-continuity story before opening another workbench wave, and that story had to avoid hidden manual cleanup or vague operator memory.
+- Impact: operators now have one explicit rule for when to preserve versus replace workspaces in the public demo, Support and Job workbench persistence no longer relies on unwritten cleanup assumptions, and outside viewers get a clear explanation that a clean walkthrough should come from a fresh guided demo workspace rather than an implied page-level reset.
+- Related Task: `tasks/archive/stage-e/stage-e-04-public-demo-workbench-continuity.md`
+- Supersedes:

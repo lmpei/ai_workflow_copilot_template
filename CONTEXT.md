@@ -16,7 +16,9 @@ same primitives.
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
 public-demo delivery into Support and Job persistent workbench productization. Support now has a first persistent case
 workbench layer, and Job now has a first persistent hiring-packet workbench layer, both built on top of the shared task
-runtime. The remaining first-wave Stage E focus is public-demo continuity once those two new workbench surfaces coexist.
+runtime. The first Stage E wave now also defines one bounded public-demo continuity contract: existing workspace state
+may accumulate durable Support case and Job hiring-packet history, while a clean walkthrough should come from a fresh
+guided demo workspace instead of hidden in-place cleanup.
 
 ## Current Phase
 

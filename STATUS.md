@@ -17,24 +17,24 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage B complete and closed
 - Stage C complete and closed
 - Stage D complete and closed
-- Stage E active with first task wave active
+- Stage E active with first task wave complete
 
 ## Current Objective
 
-- continue the first Stage E workbench wave after landing both Support and Job persistent workbench foundations on top of the Chinese-first live public demo surface
+- close the first Stage E workbench wave cleanly now that the live public demo has an explicit continuity story for Support case and Job hiring-packet persistence
 
 ## Active Task
 
-- `tasks/stage-e-04-public-demo-workbench-continuity.md`
+- none; awaiting the next bounded Stage E direction
 
 ## Verification Status
 
-- Summary: `stage-e-03` completed the first persistent Job hiring workbench layer with hiring-packet APIs, packet timeline state, shortlist history, and a demo-visible Job workbench surface while preserving the shared runtime and live public demo baseline.
+- Summary: `stage-e-04` defines one explicit public-demo continuity contract for Support cases and Job hiring packets, extends the operator refresh and smoke story, and adds user-visible continuity guidance on the guided-workspace and module-task surfaces.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
 
-- none inside the repo; the next work is bounded continuity and operator clarity for the live public demo
+- none inside the repo; the next bounded Stage E direction now needs human confirmation
 
 ## Assumptions
 
@@ -44,12 +44,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact continuity and reset contract that Stage E should present once both Support case state and Job hiring-packet state exist in the live public demo
+- the next bounded Stage E direction after the first workbench wave closes
 
 ## Ready Now
 
-1. execute `tasks/stage-e-04-public-demo-workbench-continuity.md`
-2. preserve the Chinese-first live public demo baseline while making workbench persistence continuity explicit
+1. preserve the Chinese-first live public demo baseline while the next Stage E direction is chosen
+2. decide whether Stage E should open a second bounded wave or close after this first wave
 3. keep Research as the reference workflow while Support and Job workbench depth stabilizes
 
 ## Parked / Later
@@ -60,7 +60,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-03-job-hiring-workbench-foundation.md`
+- `tasks/archive/stage-e/stage-e-04-public-demo-workbench-continuity.md`
 
 ## Recent Decisions
 
@@ -71,3 +71,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-28-052` complete `stage-e-05`, archive the bounded localization pass, and restore `stage-e-02` as the active Stage E task
 - `DEC-2026-03-28-053` complete `stage-e-02`, add the first persistent Support case workbench layer, archive the Support workbench foundation task, and move the active Stage E task to `stage-e-03`
 - `DEC-2026-03-28-054` complete `stage-e-03`, add the first persistent Job hiring workbench layer, archive the Job workbench foundation task, and move the active Stage E task to `stage-e-04`
+- `DEC-2026-03-28-055` complete `stage-e-04`, define one bounded public-demo continuity contract for persistent Support and Job workbench state, archive the continuity task, and leave the next Stage E direction open for human confirmation
