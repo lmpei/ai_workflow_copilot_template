@@ -129,8 +129,8 @@ Stage E is successful when:
 
 ## Next Step
 
-Execute `tasks/stage-e-07-support-case-action-loop.md` as the next Stage E task. The second wave should turn Support
-cases and Job hiring packets into direct work surfaces rather than stopping at readable persistence.
+Execute `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md` as the next Stage E task. The second wave
+should now close by making the live public demo explain the new Support and Job workbench actions honestly.
 
 ## First Task Wave
 
@@ -148,7 +148,7 @@ the live public demo baseline instead of being trapped in isolated task-result f
 The second executable Stage E wave is:
 
 - `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md` (complete)
-- `tasks/stage-e-08-job-hiring-packet-action-loop.md`
+- `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md` (complete)
 - `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
 
 This wave keeps Stage E focused on the next bounded outcome: direct workbench actions on top of the Support case and

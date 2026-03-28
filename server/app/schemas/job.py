@@ -120,6 +120,14 @@ class JobHiringPacketLink(BaseModel):
     packet_status: JobHiringPacketStatus
 
 
+class JobHiringPacketActionLoop(BaseModel):
+    can_continue: bool
+    suggested_task_type: JobTaskType
+    comparison_mode: bool = False
+    status_guidance: str
+    suggested_note_prompt: str | None = None
+
+
 class JobAssistantResult(BaseModel):
     module_type: Literal["job"] = "job"
     task_type: JobTaskType
@@ -165,6 +173,7 @@ class JobHiringPacketSummaryResponse(BaseModel):
     created_by: str
     title: str
     status: JobHiringPacketStatus
+    action_loop: JobHiringPacketActionLoop
     target_role: str | None = None
     seniority: str | None = None
     latest_task_id: str | None = None
@@ -175,6 +184,7 @@ class JobHiringPacketSummaryResponse(BaseModel):
     latest_shortlist: JobShortlistResult | None = None
     latest_next_steps: list[str] = Field(default_factory=list)
     latest_candidate_labels: list[str] = Field(default_factory=list)
+    latest_packet_note: str | None = None
     latest_recommended_outcome: str | None = None
     latest_evidence_status: JobEvidenceStatus | None = None
     latest_fit_signal: JobFitSignal | None = None

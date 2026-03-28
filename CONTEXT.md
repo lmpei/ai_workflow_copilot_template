@@ -16,9 +16,9 @@ same primitives.
 The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
 public-demo delivery into Support and Job persistent workbench productization. Support now has a persistent case
 workbench layer and a direct case-action loop: a user can continue a case from the case itself while still going
-through the shared task runtime. Job already has a first persistent hiring-packet workbench layer, and the remaining
-active Stage E direction now focuses on making Job hiring packets equally actionable and keeping the public demo's
-workbench walkthrough clear.
+through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue shortlist
+or candidate-review work from the packet itself while still going through the shared task runtime. The remaining
+active Stage E direction now focuses on keeping the public demo's workbench walkthrough clear.
 
 ## Current Phase
 

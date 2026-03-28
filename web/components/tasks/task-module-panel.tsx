@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getWorkspace, isApiClientError } from "../../lib/api";
-import type { SupportCaseContinuationDraft, Workspace } from "../../lib/types";
+import type {
+  JobHiringPacketContinuationDraft,
+  SupportCaseContinuationDraft,
+  Workspace,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
-import JobAssistantPanel from "../job/job-assistant-panel";
+import JobAssistantActionPanel from "../job/job-assistant-action-panel";
 import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
 import PublicDemoWorkbenchContinuityNote from "../public-demo/public-demo-workbench-continuity-note";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
@@ -34,6 +38,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [supportContinuationDraft, setSupportContinuationDraft] = useState<SupportCaseContinuationDraft | null>(null);
+  const [jobContinuationDraft, setJobContinuationDraft] = useState<JobHiringPacketContinuationDraft | null>(null);
 
   const loadWorkspace = useCallback(async () => {
     if (!session) {
@@ -111,8 +116,13 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
               window.location.hash = `job-task-${taskId}`;
             }
           }}
+          onContinuePacket={(draft) => setJobContinuationDraft(draft)}
         />
-        <JobAssistantPanel workspaceId={workspaceId} />
+        <JobAssistantActionPanel
+          workspaceId={workspaceId}
+          continuationDraft={jobContinuationDraft}
+          onContinuationHandled={() => setJobContinuationDraft(null)}
+        />
       </>
     );
   }

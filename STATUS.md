@@ -26,13 +26,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-e-08-job-hiring-packet-action-loop.md`
+- `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
 
 ## Verification Status
 
-- Summary: the first Stage E wave is complete, and `stage-e-07` has now turned Support cases into direct follow-up
-  surfaces on top of the shared task runtime. The remaining second-wave work now shifts to Job hiring-packet actions and
-  public-demo walkthrough clarity.
+- Summary: the first Stage E wave is complete, and `stage-e-08` has now turned Job hiring packets into direct action surfaces
+  on top of the shared task runtime. The remaining second-wave work now narrows to public-demo walkthrough clarity.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
@@ -51,7 +50,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. execute `tasks/stage-e-08-job-hiring-packet-action-loop.md`
+1. execute `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
 2. preserve the Chinese-first live public demo baseline while Job workbench actions deepen
 3. keep Research as the reference workflow while the remaining Stage E workbench actions stabilize
 
@@ -63,7 +62,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md`
+- `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md`
 
 ## Recent Decisions
 
@@ -77,3 +76,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-28-055` complete `stage-e-04`, define one bounded public-demo continuity contract for persistent Support and Job workbench state, archive the continuity task, and leave the next Stage E direction open for human confirmation
 - `DEC-2026-03-28-056` define the second Stage E wave as `stage-e-07`, `stage-e-08`, and `stage-e-09`, with `stage-e-07` as the active task
 - `DEC-2026-03-28-057` complete `stage-e-07`, turn Support cases into direct follow-up surfaces through case-level action-loop guidance and case-driven task seeding, archive the task, and move the active Stage E task to `stage-e-08`
+- `DEC-2026-03-28-058` complete `stage-e-08`, turn Job hiring packets into direct work surfaces through packet-level action-loop guidance and packet-driven task seeding, archive the task, and move the active Stage E task to `stage-e-09`

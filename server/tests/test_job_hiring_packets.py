@@ -1,4 +1,4 @@
-from uuid import uuid4
+﻿from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -215,6 +215,9 @@ def test_run_task_execution_syncs_job_hiring_packet_metadata_and_creates_packet(
     assert packets[0].id == packet_link["packet_id"]
     assert packets[0].latest_candidate_labels == ["Candidate A"]
     assert packets[0].comparison_history_count == 0
+    assert packets[0].action_loop.suggested_task_type == "resume_match"
+    assert packets[0].action_loop.comparison_mode is False
+    assert packets[0].latest_packet_note == "The workspace contains direct grounded evidence that should be reviewed before deciding the next hiring step."
 
     packet = job_hiring_packet_service.get_job_hiring_packet(
         packet_id=packets[0].id,
@@ -224,6 +227,8 @@ def test_run_task_execution_syncs_job_hiring_packet_metadata_and_creates_packet(
     assert len(packet.events) == 1
     assert packet.events[0].task_id == task.id
     assert packet.events[0].event_kind == "candidate_review"
+    assert packet.action_loop.suggested_task_type == "resume_match"
+    assert packet.action_loop.comparison_mode is False
     assert persisted_task.output_json["result"]["metadata"]["job_hiring_packet"]["packet_id"] == packet.id
 
 
@@ -434,12 +439,16 @@ def test_job_hiring_packet_routes_list_and_get_shortlist_history(client: TestCli
     assert listed_packets[0]["id"] == packet_id
     assert listed_packets[0]["comparison_history_count"] == 1
     assert listed_packets[0]["latest_candidate_labels"] == ["Candidate A", "Candidate B"]
+    assert listed_packets[0]["action_loop"]["suggested_task_type"] == "resume_match"
+    assert listed_packets[0]["action_loop"]["comparison_mode"] is True
+    assert listed_packets[0]["latest_packet_note"] == "Prioritize backend ownership and readiness."
 
     detail_response = client.get(f"/api/v1/job-hiring-packets/{packet_id}", headers=headers)
     assert detail_response.status_code == 200
     packet = detail_response.json()
     assert packet["id"] == packet_id
     assert packet["status"] == "shortlist_ready"
+    assert packet["action_loop"]["comparison_mode"] is True
     assert packet["latest_shortlist"]["entries"][0]["candidate_label"] == "Candidate A"
     assert packet["latest_shortlist"]["entries"][1]["candidate_label"] == "Candidate B"
     assert len(packet["events"]) == 3

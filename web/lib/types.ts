@@ -600,6 +600,14 @@ export type JobHiringPacketLink = {
   packet_status: JobHiringPacketStatus;
 };
 
+export type JobHiringPacketActionLoopRecord = {
+  can_continue: boolean;
+  suggested_task_type: JobTaskType;
+  comparison_mode: boolean;
+  status_guidance: string;
+  suggested_note_prompt?: string | null;
+};
+
 export type JobHiringPacketEventRecord = {
   id: string;
   job_hiring_packet_id: string;
@@ -625,6 +633,7 @@ export type JobHiringPacketSummaryRecord = {
   created_by: string;
   title: string;
   status: JobHiringPacketStatus;
+  action_loop: JobHiringPacketActionLoopRecord;
   target_role?: string | null;
   seniority?: string | null;
   latest_task_id?: string | null;
@@ -635,6 +644,7 @@ export type JobHiringPacketSummaryRecord = {
   latest_shortlist?: JobShortlistResult | null;
   latest_next_steps: string[];
   latest_candidate_labels: string[];
+  latest_packet_note?: string | null;
   latest_recommended_outcome?: string | null;
   latest_evidence_status?: JobEvidenceStatus | null;
   latest_fit_signal?: JobFitSignal | null;
@@ -647,6 +657,25 @@ export type JobHiringPacketSummaryRecord = {
 export type JobHiringPacketRecord = JobHiringPacketSummaryRecord & {
   events: JobHiringPacketEventRecord[];
 };
+
+export type JobHiringPacketContinuationDraft = {
+  request_id: number;
+  packet_id: string;
+  packet_title: string;
+  packet_status: JobHiringPacketStatus;
+  suggested_task_type: JobTaskType;
+  comparison_mode: boolean;
+  status_guidance: string;
+  suggested_note_prompt?: string | null;
+  target_role?: string | null;
+  seniority?: string | null;
+  must_have_skills: string[];
+  preferred_skills: string[];
+  hiring_context?: string | null;
+  comparison_task_ids: string[];
+  comparison_notes?: string | null;
+};
+
 export type User = {
   id: string;
   email: string;

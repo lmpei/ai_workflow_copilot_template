@@ -6,10 +6,12 @@ import { getJobHiringPacket, isApiClientError, listWorkspaceJobHiringPackets } f
 import type {
   JobEvidenceStatus,
   JobFitSignal,
+  JobHiringPacketContinuationDraft,
   JobHiringPacketEventRecord,
   JobHiringPacketRecord,
   JobHiringPacketStatus,
   JobHiringPacketSummaryRecord,
+  JobTaskType,
 } from "../../lib/types";
 import SectionCard from "../ui/section-card";
 
@@ -17,6 +19,7 @@ type JobHiringWorkbenchSectionProps = {
   workspaceId: string;
   accessToken: string;
   onOpenTask: (taskId: string) => void;
+  onContinuePacket: (draft: JobHiringPacketContinuationDraft) => void;
 };
 
 const PACKET_STATUS_LABELS: Record<JobHiringPacketStatus, string> = {
@@ -24,6 +27,16 @@ const PACKET_STATUS_LABELS: Record<JobHiringPacketStatus, string> = {
   needs_alignment: "待对齐",
   review_ready: "可评审",
   shortlist_ready: "短名单已就绪",
+};
+
+const TASK_TYPE_LABELS: Record<JobTaskType, string> = {
+  jd_summary: "岗位摘要",
+  resume_match: "候选人评审 / 短名单",
+};
+
+const EVENT_KIND_LABELS: Record<string, string> = {
+  candidate_review: "候选人评审",
+  shortlist_refresh: "短名单刷新",
 };
 
 const EVIDENCE_STATUS_LABELS: Record<JobEvidenceStatus, string> = {
@@ -67,6 +80,10 @@ function renderPacketStatus(status: JobHiringPacketStatus) {
   return renderBadge(PACKET_STATUS_LABELS[status], colorByStatus[status]);
 }
 
+function renderTaskType(taskType: JobTaskType) {
+  return renderBadge(TASK_TYPE_LABELS[taskType], "#334155");
+}
+
 function renderEvidenceStatus(status?: JobEvidenceStatus | null) {
   if (!status) {
     return null;
@@ -106,6 +123,44 @@ function renderStringList(items: string[], emptyText: string) {
   );
 }
 
+function buildContinuationDraft(packet: JobHiringPacketRecord): JobHiringPacketContinuationDraft | null {
+  if (!packet.action_loop.can_continue) {
+    return null;
+  }
+
+  const candidateReviewTaskIds = packet.events
+    .filter((event) => event.event_kind === "candidate_review")
+    .map((event) => event.task_id)
+    .filter((taskId, index, taskIds) => taskId.length > 0 && taskIds.indexOf(taskId) === index);
+
+  const shortlistTaskIds = packet.latest_shortlist?.comparison_task_ids ?? [];
+  const comparisonTaskIds = packet.action_loop.comparison_mode
+    ? (shortlistTaskIds.length > 0 ? shortlistTaskIds : candidateReviewTaskIds)
+    : [];
+
+  return {
+    request_id: Date.now(),
+    packet_id: packet.id,
+    packet_title: packet.title,
+    packet_status: packet.status,
+    suggested_task_type: packet.action_loop.suggested_task_type,
+    comparison_mode: packet.action_loop.comparison_mode,
+    status_guidance: packet.action_loop.status_guidance,
+    suggested_note_prompt: packet.action_loop.suggested_note_prompt,
+    target_role: packet.target_role,
+    seniority: packet.seniority,
+    must_have_skills: packet.latest_review_brief.must_have_skills,
+    preferred_skills: packet.latest_review_brief.preferred_skills,
+    hiring_context: packet.latest_review_brief.hiring_context,
+    comparison_task_ids: comparisonTaskIds,
+    comparison_notes:
+      packet.latest_shortlist?.comparison_notes ??
+      packet.latest_packet_note ??
+      packet.action_loop.suggested_note_prompt ??
+      undefined,
+  };
+}
+
 function renderEventCard(event: JobHiringPacketEventRecord, onOpenTask: (taskId: string) => void) {
   return (
     <li
@@ -126,7 +181,7 @@ function renderEventCard(event: JobHiringPacketEventRecord, onOpenTask: (taskId:
       </div>
       <div style={{ color: "#475569" }}>{event.summary}</div>
       <div style={{ color: "#64748b", fontSize: 13 }}>
-        {new Date(event.created_at).toLocaleString()} · {event.event_kind}
+        {new Date(event.created_at).toLocaleString()} · {EVENT_KIND_LABELS[event.event_kind] ?? event.event_kind}
       </div>
       {event.candidate_label ? (
         <div>
@@ -135,7 +190,7 @@ function renderEventCard(event: JobHiringPacketEventRecord, onOpenTask: (taskId:
       ) : null}
       {event.comparison_task_ids.length > 0 ? (
         <div>
-          <strong>对比任务数：</strong> {event.comparison_task_ids.length}
+          <strong>本次比较任务数：</strong> {event.comparison_task_ids.length}
         </div>
       ) : null}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -151,6 +206,7 @@ export default function JobHiringWorkbenchSection({
   workspaceId,
   accessToken,
   onOpenTask,
+  onContinuePacket,
 }: JobHiringWorkbenchSectionProps) {
   const [packets, setPackets] = useState<JobHiringPacketSummaryRecord[]>([]);
   const [selectedPacketId, setSelectedPacketId] = useState<string | null>(null);
@@ -174,7 +230,7 @@ export default function JobHiringWorkbenchSection({
           return loadedPackets[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "无法加载 Job hiring workbench");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载 Job hiring 工作台");
       } finally {
         if (!silent) {
           setIsLoadingPackets(false);
@@ -227,7 +283,7 @@ export default function JobHiringWorkbenchSection({
   return (
     <SectionCard
       title="Job hiring 工作台"
-      description="这里沉淀的是持久化的招聘 packet。候选人评审、短名单结果和比较历史不会只留在一次性 task 输出里。"
+      description="这里沉淀的是持久化的招聘 packet。现在你不仅能看 packet 历史，还能直接从 packet 继续下一轮招聘动作。"
     >
       {errorMessage ? <p style={{ color: "#b91c1c", marginTop: 0 }}>{errorMessage}</p> : null}
       {isLoadingPackets ? <p>正在加载 Job hiring 工作台...</p> : null}
@@ -261,14 +317,44 @@ export default function JobHiringWorkbenchSection({
                 </div>
                 <div style={{ color: "#475569" }}>{packet.latest_summary}</div>
                 <div style={{ color: "#334155", fontSize: 13 }}>
-                  <strong>候选池：</strong> {packet.latest_candidate_labels.length > 0 ? packet.latest_candidate_labels.join("，") : "暂未沉淀候选人"}
+                  <strong>当前推进建议：</strong> {packet.action_loop.status_guidance}
                 </div>
+                <div style={{ color: "#334155", fontSize: 13 }}>
+                  <strong>建议下一步：</strong> {TASK_TYPE_LABELS[packet.action_loop.suggested_task_type]}
+                  {packet.action_loop.comparison_mode ? "（直接刷新短名单）" : ""}
+                </div>
+                {packet.latest_packet_note ? (
+                  <div style={{ color: "#334155", fontSize: 13 }}>
+                    <strong>最近备注：</strong> {packet.latest_packet_note}
+                  </div>
+                ) : null}
                 <div style={{ color: "#64748b", fontSize: 12 }}>
-                  比较历史 {packet.comparison_history_count} · 事件数 {packet.event_count} · 更新于 {new Date(packet.updated_at).toLocaleString()}
+                  候选池 {packet.latest_candidate_labels.length} · 比较历史 {packet.comparison_history_count} · 更新于 {new Date(packet.updated_at).toLocaleString()}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => setSelectedPacketId(packet.id)} type="button">
                     打开 packet
+                  </button>
+                  <button
+                    disabled={!packet.action_loop.can_continue}
+                    onClick={() => {
+                      const draft = selectedPacket && selectedPacket.id === packet.id ? buildContinuationDraft(selectedPacket) : null;
+                      if (draft) {
+                        onContinuePacket(draft);
+                        return;
+                      }
+                      void getJobHiringPacket(accessToken, packet.id)
+                        .then((fullPacket) => {
+                          const nextDraft = buildContinuationDraft(fullPacket);
+                          if (nextDraft) {
+                            onContinuePacket(nextDraft);
+                          }
+                        })
+                        .catch(() => undefined);
+                    }}
+                    type="button"
+                  >
+                    继续这个 packet
                   </button>
                   {packet.latest_task_id ? (
                     <button onClick={() => onOpenTask(packet.latest_task_id!)} type="button">
@@ -317,17 +403,59 @@ export default function JobHiringWorkbenchSection({
                   <div>
                     <strong>最新摘要：</strong> {selectedPacket.latest_summary}
                   </div>
-                  <div>
-                    <strong>最近建议结论：</strong> {selectedPacket.latest_recommended_outcome ?? "待判断"}
-                  </div>
+                  {selectedPacket.latest_packet_note ? (
+                    <div>
+                      <strong>最近备注：</strong> {selectedPacket.latest_packet_note}
+                    </div>
+                  ) : null}
                   <div>
                     <strong>候选池：</strong> {selectedPacket.latest_candidate_labels.length > 0 ? selectedPacket.latest_candidate_labels.join("，") : "暂未沉淀候选人"}
                   </div>
-                  {selectedPacket.latest_task_id ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {renderTaskType(selectedPacket.action_loop.suggested_task_type)}
+                    <button
+                      disabled={!selectedPacket.action_loop.can_continue}
+                      onClick={() => {
+                        const draft = buildContinuationDraft(selectedPacket);
+                        if (draft) {
+                          onContinuePacket(draft);
+                        }
+                      }}
+                      type="button"
+                    >
+                      从这个 packet 继续
+                    </button>
+                    {selectedPacket.latest_task_id ? (
                       <button onClick={() => onOpenTask(selectedPacket.latest_task_id!)} type="button">
                         打开最新任务结果
                       </button>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 14,
+                    display: "grid",
+                    gap: 12,
+                    padding: 14,
+                  }}
+                >
+                  <strong>状态推进说明</strong>
+                  <div>
+                    <strong>当前状态：</strong> {PACKET_STATUS_LABELS[selectedPacket.status]}
+                  </div>
+                  <div>
+                    <strong>为什么现在是这个状态：</strong> {selectedPacket.action_loop.status_guidance}
+                  </div>
+                  <div>
+                    <strong>建议下一步动作：</strong> {TASK_TYPE_LABELS[selectedPacket.action_loop.suggested_task_type]}
+                    {selectedPacket.action_loop.comparison_mode ? "（将直接带入已有候选池）" : ""}
+                  </div>
+                  {selectedPacket.action_loop.suggested_note_prompt ? (
+                    <div>
+                      <strong>建议备注：</strong> {selectedPacket.action_loop.suggested_note_prompt}
                     </div>
                   ) : null}
                 </div>
@@ -352,7 +480,7 @@ export default function JobHiringWorkbenchSection({
                     <strong>加分技能：</strong> {selectedPacket.latest_review_brief.preferred_skills.length > 0 ? selectedPacket.latest_review_brief.preferred_skills.join("，") : "暂未指定"}
                   </div>
                   <div>
-                    <strong>比较历史数：</strong> {selectedPacket.comparison_history_count}
+                    <strong>最近建议结论：</strong> {selectedPacket.latest_recommended_outcome ?? "待判断"}
                   </div>
                   <div>
                     <strong>下一步建议</strong>
@@ -372,6 +500,11 @@ export default function JobHiringWorkbenchSection({
                   >
                     <strong>当前短名单</strong>
                     <div>{selectedPacket.latest_shortlist.shortlist_summary}</div>
+                    {selectedPacket.latest_shortlist.comparison_notes ? (
+                      <div>
+                        <strong>短名单备注：</strong> {selectedPacket.latest_shortlist.comparison_notes}
+                      </div>
+                    ) : null}
                     {selectedPacket.latest_shortlist.entries.map((entry) => (
                       <div
                         key={`${entry.task_id}-${entry.rank}`}
@@ -417,4 +550,3 @@ export default function JobHiringWorkbenchSection({
     </SectionCard>
   );
 }
-

@@ -9,12 +9,14 @@ from app.schemas.job import (
     JobAssistantResult,
     JobEvidenceStatus,
     JobFitSignal,
+    JobHiringPacketActionLoop,
     JobHiringPacketEventResponse,
     JobHiringPacketLink,
     JobHiringPacketResponse,
     JobHiringPacketStatus,
     JobHiringPacketSummaryResponse,
     JobShortlistResult,
+    JobTaskType,
 )
 
 
@@ -182,12 +184,24 @@ def _build_packet_summary_response(packet) -> JobHiringPacketSummaryResponse:
         if isinstance(packet.latest_shortlist_json, dict)
         else latest_result.shortlist
     )
+    candidate_labels = [
+        item
+        for item in packet.candidate_labels_json
+        if isinstance(item, str)
+    ]
     return JobHiringPacketSummaryResponse(
         id=packet.id,
         workspace_id=packet.workspace_id,
         created_by=packet.created_by,
         title=packet.title,
         status=_coerce_status(packet.status),
+        action_loop=_derive_packet_action_loop(
+            packet_status=_coerce_status(packet.status),
+            latest_task_id=packet.latest_task_id,
+            latest_result=latest_result,
+            latest_shortlist=latest_shortlist,
+            candidate_labels=candidate_labels,
+        ),
         target_role=packet.target_role,
         seniority=packet.seniority,
         latest_task_id=packet.latest_task_id,
@@ -197,11 +211,8 @@ def _build_packet_summary_response(packet) -> JobHiringPacketSummaryResponse:
         latest_assessment=latest_result.assessment,
         latest_shortlist=latest_shortlist,
         latest_next_steps=list(latest_result.next_steps),
-        latest_candidate_labels=[
-            item
-            for item in packet.candidate_labels_json
-            if isinstance(item, str)
-        ],
+        latest_candidate_labels=candidate_labels,
+        latest_packet_note=_derive_packet_note(latest_result=latest_result, latest_shortlist=latest_shortlist),
         latest_recommended_outcome=packet.latest_recommended_outcome,
         latest_evidence_status=_coerce_evidence_status(packet.latest_evidence_status),
         latest_fit_signal=_coerce_fit_signal(packet.latest_fit_signal),
@@ -234,6 +245,68 @@ def _build_packet_event_response(event) -> JobHiringPacketEventResponse:
         ],
         shortlist_entry_count=event.shortlist_entry_count,
         created_at=event.created_at.isoformat(),
+    )
+
+
+def _derive_packet_note(
+    *,
+    latest_result: JobAssistantResult,
+    latest_shortlist: JobShortlistResult | None,
+) -> str | None:
+    if latest_shortlist is not None and latest_shortlist.comparison_notes:
+        return latest_shortlist.comparison_notes
+    if latest_result.input.comparison_notes:
+        return latest_result.input.comparison_notes
+    rationale = _normalize_optional_string(latest_result.assessment.rationale)
+    if rationale:
+        return rationale
+    next_step = next(
+        (
+            _normalize_optional_string(item)
+            for item in latest_result.next_steps
+            if _normalize_optional_string(item) is not None
+        ),
+        None,
+    )
+    return next_step
+
+
+def _derive_packet_action_loop(
+    *,
+    packet_status: JobHiringPacketStatus,
+    latest_task_id: str | None,
+    latest_result: JobAssistantResult,
+    latest_shortlist: JobShortlistResult | None,
+    candidate_labels: list[str],
+) -> JobHiringPacketActionLoop:
+    if packet_status == "collecting_materials":
+        suggested_task_type: JobTaskType = "jd_summary"
+        comparison_mode = False
+        status_guidance = "当前 hiring packet 还在补齐岗位材料，下一步更适合先刷新岗位摘要，再继续候选人评审。"
+    elif packet_status == "needs_alignment":
+        suggested_task_type = "jd_summary"
+        comparison_mode = False
+        status_guidance = "当前 hiring packet 还需要对齐岗位要求，下一步更适合先更新岗位定义和 must-have 技能。"
+    elif latest_shortlist is not None or len(candidate_labels) >= 2:
+        suggested_task_type = "resume_match"
+        comparison_mode = True
+        status_guidance = "当前 hiring packet 已有可比较的候选池，下一步可以直接刷新短名单，或在补充新候选人后重新比较。"
+    else:
+        suggested_task_type = "resume_match"
+        comparison_mode = False
+        status_guidance = "当前 hiring packet 还在积累候选人评审，下一步更适合继续补一位候选人的 grounded 评审。"
+
+    suggested_note_prompt = _derive_packet_note(
+        latest_result=latest_result,
+        latest_shortlist=latest_shortlist,
+    )
+
+    return JobHiringPacketActionLoop(
+        can_continue=isinstance(latest_task_id, str) and bool(latest_task_id),
+        suggested_task_type=suggested_task_type,
+        comparison_mode=comparison_mode,
+        status_guidance=status_guidance,
+        suggested_note_prompt=suggested_note_prompt,
     )
 
 

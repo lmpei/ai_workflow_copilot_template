@@ -58,7 +58,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns persistent Support case synchronization, case timeline assembly, and case-action-loop guidance on top of
     completed Support task results
 - `server/app/services/job_hiring_packet_service.py`
-  - owns persistent Job hiring packet and hiring-timeline synchronization on top of completed Job task results
+  - owns persistent Job hiring packet synchronization, hiring-timeline assembly, and packet-action-loop guidance on top of
+    completed Job task results
 - `server/app/repositories/support_case_repository.py`
   - owns Support case and Support case event persistence
 - `server/app/repositories/job_hiring_packet_repository.py`

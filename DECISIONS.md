@@ -895,3 +895,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Support cases can now drive the next follow-up action directly, case-status progression is visible at the case surface instead of being inferred from raw task history, and the live public demo can explain the Support action loop honestly from the case workbench itself.
 - Related Task: `tasks/archive/stage-e/stage-e-07-support-case-action-loop.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-058
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-08 Job hiring packet action loop
+- Context: the first Stage E wave introduced persistent Job hiring packets, but users still had to remember task history and manually reconstruct the next shortlist refresh or candidate review instead of working from the packet object itself.
+- Choice: add one bounded Job hiring-packet action-loop contract, expose packet-level action guidance and recent note context in Job hiring-packet responses, let the Job workbench seed the next hiring task directly from a packet, archive `stage-e-08`, and move the active Stage E task to `stage-e-09`.
+- Why: Stage E should make Job hiring packets directly usable without bypassing the shared task runtime or drifting into a broader ATS product.
+- Impact: Job hiring packets can now drive shortlist refresh and follow-on candidate review directly, packet-level review notes are readable at the packet surface, and the live public demo can explain the Job action loop honestly from the packet workbench itself.
+- Related Task: `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md`
+- Supersedes:
