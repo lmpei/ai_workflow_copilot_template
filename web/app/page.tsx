@@ -1,9 +1,19 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import PublicDemoNotice from "../components/public-demo/public-demo-notice";
 import SectionCard from "../components/ui/section-card";
 import { getHealth, getPublicDemoSettings, getPublicDemoTemplates, getScenarioModules } from "../lib/api";
 import { platformCoreModule } from "../lib/navigation";
+
+const MODULE_PRODUCT_NAMES: Record<string, string> = {
+  research: "Research Assistant",
+  support: "Support Copilot",
+  job: "Job Assistant",
+};
+
+function getModuleDisplayName(moduleType: string): string {
+  return MODULE_PRODUCT_NAMES[moduleType] ?? moduleType;
+}
 
 export default async function Home() {
   const [health, publicDemoResponse, demoTemplatesResponse, scenarioModulesResponse] = await Promise.all([
@@ -26,33 +36,30 @@ export default async function Home() {
 
   return (
     <main>
-      <h1>AI Workflow Workbench</h1>
+      <h1>AI 工作流工作台</h1>
+      <p>一个基于共享运行时的 AI 工作流平台，提供文档 grounding、场景工作流、任务、评测与可观测能力。</p>
       <p>
-        Public-demo baseline for a shared AI workflow platform with document grounding, scenario workflows,
-        tasks, evals, and observability.
-      </p>
-      <p>
-        API health: <strong>{health.status}</strong>
+        API 健康状态：<strong>{health.status}</strong>
       </p>
 
       {publicDemoSettings ? <PublicDemoNotice settings={publicDemoSettings} /> : null}
 
       <SectionCard
-        title="30-Second Read"
-        description="This repo is no longer just a local sandbox. Stage D turns it into a public-facing demo with one shared runtime and three module workflows."
+        title="30 秒读懂"
+        description="这个仓库已经不只是本地实验环境。Stage D 已把它推进成一个共享运行时之上的公网 demo，并承载三个模块工作流。"
       >
         <ul>
-          <li>Research Assistant turns a seeded corpus into grounded synthesis and reports.</li>
-          <li>Support Copilot turns knowledge-base context into case triage, reply drafts, and escalation packets.</li>
-          <li>Job Assistant turns hiring materials into grounded fit reviews and shortlist-oriented workflow steps.</li>
+          <li>Research Assistant 会把预置资料库转成有依据的综合分析与报告。</li>
+          <li>Support Copilot 会把知识库上下文转成案例分诊、回复草稿和升级交接包。</li>
+          <li>Job Assistant 会把招聘材料转成有依据的匹配评估和候选人 shortlist 工作流。</li>
         </ul>
       </SectionCard>
 
       <SectionCard
-        title="Guided Demo Paths"
-        description="Use one of these seeded module paths when you want to understand the system quickly instead of starting from an empty workspace."
+        title="引导演示路径"
+        description="如果你想快速理解系统，而不是从空白工作区开始，可以直接选择下面这些带预置内容的模块路径。"
       >
-        {demoTemplates.length === 0 ? <p>Guided demo templates are not available right now.</p> : null}
+        {demoTemplates.length === 0 ? <p>当前暂时没有可用的引导演示模板。</p> : null}
         <div
           style={{
             display: "grid",
@@ -82,20 +89,20 @@ export default async function Home() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {template.module_type}
+                  {getModuleDisplayName(template.module_type)}
                 </span>
               </div>
               <p style={{ marginTop: 0 }}>{template.summary}</p>
               <p style={{ marginBottom: 8, marginTop: 0 }}>
-                <strong>Seeded documents:</strong> {template.seeded_documents.map((document) => document.title).join(", ")}
+                <strong>预置文档：</strong> {template.seeded_documents.map((document) => document.title).join("，")}
               </p>
               <p style={{ marginBottom: 12, marginTop: 0 }}>
-                <strong>Showcase steps:</strong> {template.showcase_steps.length}
+                <strong>演示步骤：</strong> {template.showcase_steps.length}
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                <Link href="/register">Register</Link>
-                <Link href="/login">Login</Link>
-                <Link href="/workspaces">Workspace Hub</Link>
+                <Link href="/register">注册</Link>
+                <Link href="/login">登录</Link>
+                <Link href="/workspaces">工作区中心</Link>
               </div>
             </div>
           ))}
@@ -103,40 +110,40 @@ export default async function Home() {
       </SectionCard>
 
       <SectionCard
-        title="What You Can Try"
-        description="Stage D is focused on making the public demo path explicit instead of assuming local operator setup."
+        title="你可以体验什么"
+        description="Stage D 的重点是把公网 demo 路径做清楚，而不是默认依赖本地运维者的隐式准备。"
       >
         <ul>
-          <li>Create an account or sign in when public self-serve registration is available.</li>
-          <li>Create a guided demo workspace or a manual workspace for Research, Support, or Job workflows.</li>
-          <li>Inspect seeded documents, ask grounded chat questions, and launch module-specific tasks.</li>
-          <li>Inspect eval, task, and module surfaces without relying on hidden operator-only steps.</li>
+          <li>当公网自助注册开放时，可以直接注册或登录。</li>
+          <li>可以创建引导演示工作区，也可以手动创建 Research、Support、Job 三类 workflow 的工作区。</li>
+          <li>查看预置文档、提出 grounded 问题，并启动模块任务。</li>
+          <li>直接查看评测、任务和模块页面，不依赖隐藏的运维专用步骤。</li>
         </ul>
       </SectionCard>
 
-      <SectionCard title="Platform Modules" description="These modules share one common workspace, runtime, and API core.">
+      <SectionCard title="平台模块" description="这些模块共享同一套工作区、运行时和 API 核心。">
         <ul>
           {platformModules.map((module) => (
             <li key={module.title}>
-              <strong>{module.title}</strong>: {module.description}
+              <strong>{module.title}</strong>：{module.description}
             </li>
           ))}
         </ul>
       </SectionCard>
 
-      <SectionCard title="Explore the Demo">
+      <SectionCard title="继续探索">
         <ul>
           <li>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/dashboard">仪表盘</Link>
           </li>
           <li>
-            <Link href="/workspaces">Workspace Hub</Link>
+            <Link href="/workspaces">工作区中心</Link>
           </li>
           <li>
-            <Link href="/register">Register</Link>
+            <Link href="/register">注册</Link>
           </li>
           <li>
-            <Link href="/login">Login</Link>
+            <Link href="/login">登录</Link>
           </li>
         </ul>
       </SectionCard>

@@ -83,26 +83,26 @@ function renderBrief(brief: ResearchBriefRecord, label: string) {
     >
       <div style={{ color: "#475569", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>{label}</div>
       <div>
-        <strong>Goal:</strong> {brief.goal ?? "Not specified"}
+        <strong>目标：</strong> {brief.goal ?? "未指定"}
       </div>
       <div>
-        <strong>Deliverable:</strong> {brief.deliverable ?? "Not specified"}
+        <strong>交付形式：</strong> {brief.deliverable ?? "未指定"}
       </div>
       <div>
-        <strong>Focus areas</strong>
-        <div style={{ marginTop: 8 }}>{renderBadgeList(brief.focus_areas, "No focus areas recorded.")}</div>
+        <strong>关注方向</strong>
+        <div style={{ marginTop: 8 }}>{renderBadgeList(brief.focus_areas, "没有记录关注方向。")}</div>
       </div>
       <div>
-        <strong>Key questions</strong>
-        {renderList(brief.key_questions, "No key questions recorded.")}
+        <strong>关键问题</strong>
+        {renderList(brief.key_questions, "没有记录关键问题。")}
       </div>
       <div>
-        <strong>Constraints</strong>
-        {renderList(brief.constraints, "No constraints recorded.")}
+        <strong>约束条件</strong>
+        {renderList(brief.constraints, "没有记录约束条件。")}
       </div>
       {brief.continuation_notes ? (
         <div>
-          <strong>Continuation notes:</strong> {brief.continuation_notes}
+          <strong>延续备注：</strong> {brief.continuation_notes}
         </div>
       ) : null}
     </div>
@@ -128,26 +128,26 @@ function renderComparisonColumn(
         <h4 style={{ margin: "6px 0 0" }}>{side.asset_title}</h4>
       </div>
       <div>
-        <strong>Revision:</strong> v{side.revision_number}
+        <strong>版本：</strong> v{side.revision_number}
       </div>
       <div>
-        <strong>Summary:</strong> {side.summary}
+        <strong>摘要：</strong> {side.summary}
       </div>
       {side.report_headline ? (
         <div>
-          <strong>Report headline:</strong> {side.report_headline}
+          <strong>报告标题：</strong> {side.report_headline}
         </div>
       ) : null}
-      {renderBrief(side.brief, `${title} brief`)}
+      {renderBrief(side.brief, `${title} 摘要`)}
       <div>
-        <strong>Open questions</strong>
-        {renderList(side.open_questions, "No open questions recorded.")}
+        <strong>开放问题</strong>
+        {renderList(side.open_questions, "没有记录开放问题。")}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-        <span>Findings: {side.findings_count}</span>
-        <span>Evidence: {side.evidence_count}</span>
-        <span>Documents: {side.document_count}</span>
-        <span>Matches: {side.match_count}</span>
+        <span>发现数：{side.findings_count}</span>
+        <span>证据数：{side.evidence_count}</span>
+        <span>文档数：{side.document_count}</span>
+        <span>命中数：{side.match_count}</span>
       </div>
     </div>
   );
@@ -178,12 +178,12 @@ export default function ResearchWorkbenchSection({
 
   return (
     <SectionCard
-      title="Research workbench"
-      description="Persistent research assets let you reopen a saved report, review revision history, compare related work, and continue the same investigation without losing lineage."
+      title="Research 工作台"
+      description="持久化的研究资产可以让你重新打开已保存报告、查看版本历史、比较相关工作，并在不丢失 lineage 的情况下继续同一项研究。"
     >
-      {isLoadingAssets ? <p>Loading research workbench...</p> : null}
+      {isLoadingAssets ? <p>正在加载 Research 工作台...</p> : null}
       {!isLoadingAssets && researchAssets.length === 0 ? (
-        <p>No saved research assets yet. Save a completed research run to start the workbench lifecycle.</p>
+        <p>还没有保存的研究资产。先保存一次已完成的 Research 运行，才能开始工作台生命周期。</p>
       ) : null}
       {researchAssets.length > 0 ? (
         <div
@@ -224,21 +224,21 @@ export default function ResearchWorkbenchSection({
                 ) : null}
                 <div style={{ color: "#475569", fontSize: 14 }}>{asset.latest_summary}</div>
                 <div style={{ color: "#334155", fontSize: 13 }}>
-                  <strong>Brief goal:</strong> {asset.latest_brief.goal ?? "Not specified"}
+                  <strong>摘要目标：</strong> {asset.latest_brief.goal ?? "未指定"}
                 </div>
                 <div style={{ color: "#64748b", fontSize: 12 }}>
-                  Updated {new Date(asset.updated_at).toLocaleString()}
+                  更新时间 {new Date(asset.updated_at).toLocaleString()}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => onSelectAsset(asset.id)} type="button">
-                    Open asset
+                    打开资产
                   </button>
                   <button onClick={() => onContinueAsset(asset)} type="button">
-                    Continue asset
+                    继续此资产
                   </button>
                   {asset.latest_task_id ? (
                     <button onClick={() => onOpenTask(asset.latest_task_id ?? null)} type="button">
-                      Open latest run
+                      打开最新运行结果
                     </button>
                   ) : null}
                 </div>
@@ -247,8 +247,8 @@ export default function ResearchWorkbenchSection({
           </div>
 
           <div>
-            {!selectedAsset && !isLoadingSelectedAsset ? <p>Select a saved asset to inspect its revision history.</p> : null}
-            {isLoadingSelectedAsset && selectedAssetId ? <p>Loading selected asset...</p> : null}
+            {!selectedAsset && !isLoadingSelectedAsset ? <p>请选择一个已保存资产来查看版本历史。</p> : null}
+            {isLoadingSelectedAsset && selectedAssetId ? <p>正在加载所选资产...</p> : null}
             {selectedAsset ? (
               <div style={{ display: "grid", gap: 16 }}>
                 <div
@@ -262,29 +262,29 @@ export default function ResearchWorkbenchSection({
                   }}
                 >
                   <div style={{ color: "#475569", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                    Workbench asset
+                    工作台资产
                   </div>
                   <h3 style={{ margin: 0 }}>{selectedAsset.title}</h3>
                   <div>
-                    <strong>Asset ID:</strong> {selectedAsset.id}
+                    <strong>资产 ID：</strong> {selectedAsset.id}
                   </div>
                   <div>
-                    <strong>Latest revision:</strong> v{selectedAsset.latest_revision_number}
+                    <strong>最新版本：</strong> v{selectedAsset.latest_revision_number}
                   </div>
                   {selectedAsset.latest_report_headline ? (
                     <div>
-                      <strong>Latest report:</strong> {selectedAsset.latest_report_headline}
+                      <strong>最新报告：</strong> {selectedAsset.latest_report_headline}
                     </div>
                   ) : null}
                   <p style={{ margin: 0 }}>{selectedAsset.latest_summary}</p>
-                  {renderBrief(selectedAsset.latest_brief, "Latest brief")}
+                  {renderBrief(selectedAsset.latest_brief, "最新摘要")}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     <button onClick={() => onContinueAsset(selectedAsset)} type="button">
-                      Continue from latest revision
+                      基于最新版本继续
                     </button>
                     {selectedAsset.latest_task_id ? (
                       <button onClick={() => onOpenTask(selectedAsset.latest_task_id ?? null)} type="button">
-                        Open latest task result
+                        打开最新任务结果
                       </button>
                     ) : null}
                   </div>
@@ -301,23 +301,23 @@ export default function ResearchWorkbenchSection({
                   }}
                 >
                   <div>
-                    <strong>Compare research assets</strong>
+                    <strong>比较研究资产</strong>
                     <p style={{ color: "#475569", margin: "6px 0 0" }}>
-                      Compare the current asset or one of its revisions against another saved research asset to inspect how the brief, open questions, and evidence changed over time.
+                      将当前资产或它的某个版本与另一个已保存研究资产进行比较，查看摘要、开放问题和证据如何随时间变化。
                     </p>
                   </div>
                   {compareCandidates.length === 0 ? (
-                    <p style={{ margin: 0 }}>Save another research asset to unlock comparison.</p>
+                    <p style={{ margin: 0 }}>再保存一个研究资产后即可启用比较。</p>
                   ) : (
                     <>
                       <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                         <label style={{ display: "grid", gap: 6 }}>
-                          <span>Left revision</span>
+                          <span>左侧版本</span>
                           <select
                             onChange={(event) => onSelectSelectedAssetCompareRevision(event.target.value)}
                             value={selectedAssetCompareRevisionId ?? ""}
                           >
-                            <option value="">Latest revision</option>
+                            <option value="">最新版本</option>
                             {selectedAsset.revisions.map((revision) => (
                               <option key={revision.id} value={revision.id}>
                                 v{revision.revision_number} - {revision.title}
@@ -326,12 +326,12 @@ export default function ResearchWorkbenchSection({
                           </select>
                         </label>
                         <label style={{ display: "grid", gap: 6 }}>
-                          <span>Right asset</span>
+                          <span>右侧资产</span>
                           <select
                             onChange={(event) => onSelectCompareAsset(event.target.value || null)}
                             value={compareAssetId ?? ""}
                           >
-                            <option value="">Select an asset</option>
+                            <option value="">选择一个资产</option>
                             {compareCandidates.map((asset) => (
                               <option key={asset.id} value={asset.id}>
                                 {asset.title}
@@ -340,13 +340,13 @@ export default function ResearchWorkbenchSection({
                           </select>
                         </label>
                         <label style={{ display: "grid", gap: 6 }}>
-                          <span>Right revision</span>
+                          <span>右侧版本</span>
                           <select
                             disabled={!compareAsset}
                             onChange={(event) => onSelectCompareAssetRevision(event.target.value)}
                             value={compareAssetRevisionId ?? ""}
                           >
-                            <option value="">Latest revision</option>
+                            <option value="">最新版本</option>
                             {(compareAsset?.revisions ?? []).map((revision) => (
                               <option key={revision.id} value={revision.id}>
                                 v{revision.revision_number} - {revision.title}
@@ -357,7 +357,7 @@ export default function ResearchWorkbenchSection({
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         <button disabled={!compareAssetId || isComparing} onClick={onRunComparison} type="button">
-                          {isComparing ? "Comparing..." : "Compare assets"}
+                          {isComparing ? "正在比较..." : "比较资产"}
                         </button>
                       </div>
                     </>
@@ -365,8 +365,8 @@ export default function ResearchWorkbenchSection({
                   {comparison ? (
                     <div style={{ display: "grid", gap: 16 }}>
                       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-                        {renderComparisonColumn("Left", comparison.left)}
-                        {renderComparisonColumn("Right", comparison.right)}
+                        {renderComparisonColumn("左侧", comparison.left)}
+                        {renderComparisonColumn("右侧", comparison.right)}
                       </div>
                       <div
                         style={{
@@ -377,52 +377,52 @@ export default function ResearchWorkbenchSection({
                           padding: 14,
                         }}
                       >
-                        <strong>Comparison diff</strong>
+                        <strong>比较差异</strong>
                         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                           <div>
-                            <strong>Shared focus areas</strong>
-                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.shared_focus_areas, "No shared focus areas.")}</div>
+                            <strong>共同关注方向</strong>
+                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.shared_focus_areas, "没有共同关注方向。")}</div>
                           </div>
                           <div>
-                            <strong>Left-only focus areas</strong>
-                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.left_only_focus_areas, "No left-only focus areas.")}</div>
+                            <strong>仅左侧关注方向</strong>
+                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.left_only_focus_areas, "没有仅左侧关注方向。")}</div>
                           </div>
                           <div>
-                            <strong>Right-only focus areas</strong>
-                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.right_only_focus_areas, "No right-only focus areas.")}</div>
+                            <strong>仅右侧关注方向</strong>
+                            <div style={{ marginTop: 8 }}>{renderBadgeList(comparison.diff.right_only_focus_areas, "没有仅右侧关注方向。")}</div>
                           </div>
                           <div>
-                            <strong>Shared key questions</strong>
-                            {renderList(comparison.diff.shared_key_questions, "No shared key questions.")}
+                            <strong>共同关键问题</strong>
+                            {renderList(comparison.diff.shared_key_questions, "没有共同关键问题。")}
                           </div>
                           <div>
-                            <strong>Left-only key questions</strong>
-                            {renderList(comparison.diff.left_only_key_questions, "No left-only key questions.")}
+                            <strong>仅左侧关键问题</strong>
+                            {renderList(comparison.diff.left_only_key_questions, "没有仅左侧关键问题。")}
                           </div>
                           <div>
-                            <strong>Right-only key questions</strong>
-                            {renderList(comparison.diff.right_only_key_questions, "No right-only key questions.")}
+                            <strong>仅右侧关键问题</strong>
+                            {renderList(comparison.diff.right_only_key_questions, "没有仅右侧关键问题。")}
                           </div>
                           <div>
-                            <strong>Shared constraints</strong>
-                            {renderList(comparison.diff.shared_constraints, "No shared constraints.")}
+                            <strong>共同约束条件</strong>
+                            {renderList(comparison.diff.shared_constraints, "没有共同约束条件。")}
                           </div>
                           <div>
-                            <strong>Left-only open questions</strong>
-                            {renderList(comparison.diff.left_only_open_questions, "No left-only open questions.")}
+                            <strong>仅左侧开放问题</strong>
+                            {renderList(comparison.diff.left_only_open_questions, "没有仅左侧开放问题。")}
                           </div>
                           <div>
-                            <strong>Right-only open questions</strong>
-                            {renderList(comparison.diff.right_only_open_questions, "No right-only open questions.")}
+                            <strong>仅右侧开放问题</strong>
+                            {renderList(comparison.diff.right_only_open_questions, "没有仅右侧开放问题。")}
                           </div>
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                          <span>Summary changed: {comparison.diff.summary_changed ? "yes" : "no"}</span>
-                          <span>Headline changed: {comparison.diff.report_headline_changed ? "yes" : "no"}</span>
-                          <span>Findings delta: {comparison.diff.finding_count_delta}</span>
-                          <span>Evidence delta: {comparison.diff.evidence_count_delta}</span>
-                          <span>Documents delta: {comparison.diff.document_count_delta}</span>
-                          <span>Matches delta: {comparison.diff.match_count_delta}</span>
+                          <span>摘要变化：{comparison.diff.summary_changed ? "是" : "否"}</span>
+                          <span>标题变化：{comparison.diff.report_headline_changed ? "是" : "否"}</span>
+                          <span>发现差值：{comparison.diff.finding_count_delta}</span>
+                          <span>证据差值：{comparison.diff.evidence_count_delta}</span>
+                          <span>文档差值：{comparison.diff.document_count_delta}</span>
+                          <span>命中差值：{comparison.diff.match_count_delta}</span>
                         </div>
                       </div>
                     </div>
@@ -430,7 +430,7 @@ export default function ResearchWorkbenchSection({
                 </div>
 
                 <div>
-                  <strong>Revision history</strong>
+                  <strong>版本历史</strong>
                   {selectedAsset.revisions.length > 0 ? (
                     <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
                       {selectedAsset.revisions.map((revision) => (
@@ -445,31 +445,31 @@ export default function ResearchWorkbenchSection({
                           }}
                         >
                           <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
-                            <strong>Revision {revision.revision_number}</strong>
+                            <strong>版本 {revision.revision_number}</strong>
                             <span style={{ color: "#64748b", fontSize: 12 }}>
                               {new Date(revision.created_at).toLocaleString()}
                             </span>
                           </div>
                           <div>{revision.summary}</div>
                           <div style={{ color: "#334155", fontSize: 13 }}>
-                            <strong>Brief goal:</strong> {revision.brief.goal ?? "Not specified"}
+                            <strong>摘要目标：</strong> {revision.brief.goal ?? "未指定"}
                           </div>
                           {revision.report_headline ? (
                             <div style={{ color: "#334155", fontSize: 14 }}>{revision.report_headline}</div>
                           ) : null}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                             <button onClick={() => onOpenTask(revision.task_id)} type="button">
-                              Open task result
+                              打开任务结果
                             </button>
                             <button onClick={() => onContinueRevision(selectedAsset, revision)} type="button">
-                              Continue from this revision
+                              基于此版本继续
                             </button>
                           </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No revisions have been recorded for this asset yet.</p>
+                    <p>这个资产还没有记录任何版本。</p>
                   )}
                 </div>
               </div>

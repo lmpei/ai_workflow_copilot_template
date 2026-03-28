@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
@@ -50,7 +50,7 @@ def test_register_rejects_duplicate_email(client: TestClient) -> None:
 
     duplicate_response = client.post("/api/v1/auth/register", json=payload)
     assert duplicate_response.status_code == 409
-    assert duplicate_response.json()["detail"] == "Email already registered"
+    assert duplicate_response.json()["detail"] == "该邮箱已被注册"
 
 
 def test_login_rejects_wrong_password(client: TestClient) -> None:
@@ -72,7 +72,7 @@ def test_login_rejects_wrong_password(client: TestClient) -> None:
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid email or password"
+    assert response.json()["detail"] == "邮箱或密码不正确"
 
 
 def test_me_rejects_invalid_or_missing_token(client: TestClient) -> None:
@@ -104,7 +104,7 @@ def test_public_demo_registration_can_be_disabled(
     )
 
     assert response.status_code == 403
-    assert "registration is currently disabled" in response.json()["detail"]
+    assert "当前已关闭 public demo 自助注册" in response.json()["detail"]
 
 
 def test_public_demo_settings_endpoint_exposes_limits(

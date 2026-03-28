@@ -12,14 +12,10 @@ export default function WorkspaceTasksPage({ params }: WorkspacePageProps) {
 
   return (
     <main>
-      <h1>Scenario Tasks</h1>
+      <h1>场景任务</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <p>
-        Phase 5 turns the shared task runtime into module-specific copilots, while keeping tasks,
-        agents, evals, and traces on the same platform primitives.
-      </p>
+      <p>这里把共享任务运行时包装成模块专属的 copilot 任务面板，同时保留统一的任务、评测和 trace 基础能力。</p>
       <TaskModulePanel workspaceId={workspaceId} />
     </main>
   );
 }
-

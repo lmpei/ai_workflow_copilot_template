@@ -37,23 +37,23 @@ type EvalManagerProps = {
 const ACTIVE_RUN_STATUSES = new Set<EvalRunRecord["status"]>(["pending", "running"]);
 const STORAGE_KEY_PREFIX = "ai_workflow_eval_runs:";
 const SHARED_READINESS_CHECKS = [
-  "Workspace access, documents view, and task history must load without hidden setup steps.",
-  "Each module should show either grounded output or an explicit degraded result instead of pretending confidence.",
-  "Each module should have at least one scenario-aware eval dataset or a documented reason why eval coverage is pending.",
-  "Release evidence and handoff notes should name which module surfaces were checked during the candidate rehearsal.",
+  "工作区访问、文档页和任务历史必须在没有隐藏前置步骤的情况下正常加载。",
+  "每个模块都应展示 grounded 输出，或明确给出降级结果，而不是假装有把握。",
+  "每个模块都应至少有一个场景感知的评测数据集，或明确记录为什么评测覆盖仍在等待。",
+  "发布证据和交接记录应明确写出候选演练时检查了哪些模块界面。",
 ] as const;
 const MODULE_READINESS_CHECKS: Record<ModuleType, string[]> = {
   research: [
-    "Run a Research task that produces either a structured report or an honest no-documents output.",
-    "Inspect traces or task history to confirm evidence and regression metadata remain visible.",
+    "运行一个 Research 任务，确认它能生成结构化报告，或在无文档时给出诚实结果。",
+    "检查 trace 或任务历史，确认仍能看到证据和回归元数据。",
   ],
   support: [
-    "Run a Support task and verify case brief, triage, and reply guidance stay grounded or explicitly degraded.",
-    "Confirm limited-context support runs escalate honestly instead of implying a grounded fix.",
+    "运行一个 Support 任务，确认案例摘要、分诊和回复建议保持 grounded，或明确降级。",
+    "确认上下文不足时，Support 会诚实升级，而不是暗示已经有 grounded 解决方案。",
   ],
   job: [
-    "Run a Job task and verify hiring brief, fit assessment, and next steps stay grounded or explicitly degraded.",
-    "Confirm limited-context hiring runs surface role-definition or materials gaps instead of implying a hiring decision.",
+    "运行一个 Job 任务，确认招聘摘要、匹配评估和下一步建议保持 grounded，或明确降级。",
+    "确认上下文不足时，Job 会明确暴露岗位定义或材料缺口，而不是暗示招聘结论。",
   ],
 };
 
@@ -135,10 +135,10 @@ function getDatasetScenarioTaskType(dataset: EvalDatasetRecord): TaskType | null
 
 function getCoverageStatusBadge(status: CoverageStatus) {
   const styles: Record<CoverageStatus, { label: string; color: string }> = {
-    covered: { label: "Covered", color: "#166534" },
-    template_only: { label: "Template only", color: "#92400e" },
-    missing: { label: "Coverage missing", color: "#b91c1c" },
-    no_workspace: { label: "No workspace", color: "#475569" },
+    covered: { label: "已覆盖", color: "#166534" },
+    template_only: { label: "仅模板", color: "#92400e" },
+    missing: { label: "缺少覆盖", color: "#b91c1c" },
+    no_workspace: { label: "无工作区", color: "#475569" },
   };
   const style = styles[status];
 
@@ -205,18 +205,18 @@ function buildModuleCoverage(
           ? "template_only"
           : "missing";
 
-  let summary = "Cross-module eval coverage is pending for this module.";
-  let knownGap = "No default-task eval dataset is visible yet.";
+  let summary = "这个模块的跨模块评测覆盖仍在等待中。";
+  let knownGap = "目前还看不到默认任务的评测数据集。";
 
   if (status === "covered") {
-    summary = `Found ${defaultTaskDatasetCount} default-task dataset(s) with ${defaultTaskCaseCount} total case(s).`;
-    knownGap = "No blocking default-task coverage gap is currently visible.";
+    summary = `发现 ${defaultTaskDatasetCount} 个默认任务数据集，共 ${defaultTaskCaseCount} 个 case。`;
+    knownGap = "目前没有可见的默认任务覆盖阻塞项。";
   } else if (status === "template_only") {
-    summary = `Default-task datasets exist, but they still have ${defaultTaskCaseCount} visible case(s).`;
-    knownGap = "A template dataset exists, but it still needs real module-specific eval cases.";
+    summary = `默认任务数据集已存在，但当前只有 ${defaultTaskCaseCount} 个可见 case。`;
+    knownGap = "已经有模板数据集，但仍需要真实的模块级评测 case。";
   } else if (status === "no_workspace") {
-    summary = "No workspace for this module is visible to the current collaborator.";
-    knownGap = "Create or expose a workspace before claiming cross-module eval coverage.";
+    summary = "当前协作者看不到这个模块对应的工作区。";
+    knownGap = "在宣称跨模块评测覆盖之前，先创建或暴露一个工作区。";
   }
 
   return {
@@ -235,10 +235,10 @@ function buildModuleCoverage(
 
 function renderRunStatus(status: EvalRunRecord["status"]) {
   const statusStyles: Record<EvalRunRecord["status"], { label: string; color: string }> = {
-    pending: { label: "pending", color: "#92400e" },
-    running: { label: "running", color: "#1d4ed8" },
-    completed: { label: "completed", color: "#15803d" },
-    failed: { label: "failed", color: "#b91c1c" },
+    pending: { label: "待处理", color: "#92400e" },
+    running: { label: "运行中", color: "#1d4ed8" },
+    completed: { label: "已完成", color: "#15803d" },
+    failed: { label: "失败", color: "#b91c1c" },
   };
   const style = statusStyles[status];
 
@@ -262,9 +262,10 @@ function renderRunStatus(status: EvalRunRecord["status"]) {
 
 function renderResultStatus(status: EvalResultRecord["status"]) {
   const color = status === "completed" ? "#15803d" : status === "failed" ? "#b91c1c" : "#1d4ed8";
+  const label = status === "completed" ? "已完成" : status === "failed" ? "失败" : "运行中";
   return (
     <span style={{ color, fontWeight: 600, textTransform: "uppercase" }}>
-      {status}
+      {label}
     </span>
   );
 }
@@ -411,7 +412,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       setWorkspace(loadedWorkspace);
       setScenarioModules(loadedScenarioModules);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
     }
   }, [session, workspaceId]);
 
@@ -435,7 +436,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       );
       setCoverageDatasetsByWorkspaceId(Object.fromEntries(coverageEntries));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load cross-module eval coverage");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载跨模块评测覆盖信息");
     }
   }, [session]);
 
@@ -450,7 +451,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       const loadedDatasets = await listEvalDatasets(session.accessToken, workspaceId);
       setDatasets(sortDatasets(loadedDatasets));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load eval datasets");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载评测数据集");
     } finally {
       setIsLoading(false);
     }
@@ -469,7 +470,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
           [runId]: results,
         }));
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load eval results");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载评测结果");
       }
     },
     [session],
@@ -494,7 +495,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
           await loadRunResults(refreshedRun.id);
         }
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to refresh eval run");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法刷新评测运行");
       }
     },
     [loadRunResults, session],
@@ -581,52 +582,52 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   );
   const rehearsalEvidenceDraft = useMemo(() => {
     const lines = [
-      "# Stage C Cross-Module Rehearsal Evidence",
+      "# 跨模块演练证据记录",
       "",
-      "## Metadata",
-      "- Completed At:",
-      "- Release Owner:",
-      "- Candidate Workspace:",
-      `- Current Workspace: ${workspace?.name ?? workspaceId}`,
-      "- Change Ref:",
-      "- Rollback Target:",
+      "## 元数据",
+      "- 完成时间：",
+      "- 发布负责人：",
+      "- 候选工作区：",
+      `- 当前工作区：${workspace?.name ?? workspaceId}`,
+      "- 变更引用：",
+      "- 回滚目标：",
       "",
-      "## Coverage Snapshot",
+      "## 覆盖快照",
     ];
 
     for (const coverage of moduleCoverage) {
       lines.push(
         `- ${coverage.module.title}: ${coverage.summary}`,
-        `  - Status: ${coverage.status}`,
-        `  - Default eval task: ${getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}`,
-        `  - Quality baseline: ${coverage.module.quality_baseline}`,
-        `  - Pass threshold: ${formatThreshold(coverage.module.pass_threshold)}`,
-        `  - Known gap: ${coverage.known_gap}`,
+        `  - 状态：${coverage.status}`,
+        `  - 默认评测任务：${getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}`,
+        `  - 质量基线：${coverage.module.quality_baseline}`,
+        `  - 通过阈值：${formatThreshold(coverage.module.pass_threshold)}`,
+        `  - 已知缺口：${coverage.known_gap}`,
       );
       if (coverage.workspaces.length > 0) {
         for (const workspaceCoverage of coverage.workspaces) {
           lines.push(
-            `  - Workspace ${workspaceCoverage.workspace_name}: ${workspaceCoverage.default_task_dataset_count} default-task dataset(s), ${workspaceCoverage.default_task_case_count} case(s), status ${workspaceCoverage.status}`,
+            `  - 工作区 ${workspaceCoverage.workspace_name}：${workspaceCoverage.default_task_dataset_count} 个默认评测数据集，${workspaceCoverage.default_task_case_count} 个 case，状态 ${workspaceCoverage.status}`,
           );
         }
       } else {
-        lines.push("  - Workspace coverage: none visible to the current collaborator");
+        lines.push("  - 工作区覆盖：当前协作者不可见");
       }
     }
 
     lines.push(
       "",
-      "## Manual Module Checks",
-      "- Research surface checked:",
-      "- Support surface checked:",
-      "- Job surface checked:",
-      "- Eval datasets or runs inspected:",
-      "- Honest degraded output confirmed where context was thin:",
+      "## 手动模块检查",
+      "- Research 界面检查：",
+      "- Support 界面检查：",
+      "- Job 界面检查：",
+      "- 已检查的评测数据集或运行：",
+      "- 已确认在上下文不足时会诚实降级输出：",
       "",
-      "## Known Gaps / Follow-up",
-      "- Remaining missing eval coverage:",
-      "- Out-of-scope module surfaces:",
-      "- Follow-up before wider use:",
+      "## 已知缺口 / 后续",
+      "- 剩余缺失的评测覆盖：",
+      "- 当前不在范围内的模块界面：",
+      "- 扩大使用前的后续事项：",
     );
 
     return lines.join("\n");
@@ -676,7 +677,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       setDatasetDescription("");
       setDatasetQuestions("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to create eval dataset");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法创建评测数据集");
     } finally {
       setIsCreatingDataset(false);
     }
@@ -700,7 +701,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         await loadRunResults(createdRun.id);
       }
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to create eval run");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法创建评测运行");
     } finally {
       setIsCreatingRunId(null);
     }
@@ -722,7 +723,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         await loadRunResults(updatedRun.id);
       }
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to cancel eval run");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法取消评测运行");
     } finally {
       setIsControllingRunId(null);
     }
@@ -754,7 +755,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         ),
       );
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to retry eval run");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法重试评测运行");
     } finally {
       setIsControllingRunId(null);
     }
@@ -763,9 +764,9 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   const handleCopyEvidenceDraft = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(rehearsalEvidenceDraft);
-      setCopyFeedback("Evidence draft copied to clipboard.");
+      setCopyFeedback("证据草稿已复制到剪贴板。");
     } catch {
-      setCopyFeedback("Clipboard copy failed. Select the draft manually.");
+      setCopyFeedback("复制到剪贴板失败，请手动选择草稿内容。");
     }
   }, [rehearsalEvidenceDraft]);
 
@@ -784,22 +785,22 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
   }, [copyFeedback]);
 
   if (!isReady) {
-    return <SectionCard title="Evaluations">Loading session...</SectionCard>;
+    return <SectionCard title="评测">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to create eval datasets and inspect run outcomes." />;
+    return <AuthRequired description="登录后才能创建评测数据集并查看运行结果。" />;
   }
 
   return (
     <>
       <SectionCard
-        title="Cross-module readiness baseline"
-        description="Use one shared readiness standard across Research, Support, and Job so demo candidates are checked the same way before handoff."
+        title="跨模块 readiness 基线"
+        description="用一套共享 readiness 标准覆盖 Research、Support 和 Job，确保演示候选版本在交接前按同一标准检查。"
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div>
-            <strong>Shared candidate checks</strong>
+            <strong>共享候选检查项</strong>
             <ul>
               {SHARED_READINESS_CHECKS.map((check) => (
                 <li key={check}>{check}</li>
@@ -836,14 +837,14 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                         textTransform: "uppercase",
                       }}
                     >
-                      active workspace
+                      当前工作区
                     </span>
                   ) : null}
                 </div>
-                <div>Baseline: {module.quality_baseline}</div>
-                <div>Pass threshold: {formatThreshold(module.pass_threshold)}</div>
+                <div>基线：{module.quality_baseline}</div>
+                <div>通过阈值：{formatThreshold(module.pass_threshold)}</div>
                 <div>
-                  Default eval task: {getScenarioTaskLabel(scenarioModules, module.default_eval_task_type)}
+                  默认评测任务：{getScenarioTaskLabel(scenarioModules, module.default_eval_task_type)}
                 </div>
                 <ul style={{ marginBottom: 0, marginTop: 10 }}>
                   {MODULE_READINESS_CHECKS[module.module_type].map((check) => (
@@ -857,8 +858,8 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       </SectionCard>
 
       <SectionCard
-        title="Cross-module eval coverage"
-        description="Aggregate visible workspaces and eval datasets so collaborators can tell which default module evals exist, which are still template-only, and which remain missing."
+        title="跨模块评测覆盖"
+        description="聚合当前可见的工作区和评测数据集，让协作者知道哪些模块默认评测已存在、哪些仍停留在模板、哪些仍然缺失。"
       >
         <div style={{ display: "grid", gap: 12 }}>
           {moduleCoverage.map((coverage) => (
@@ -875,25 +876,25 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                 {getCoverageStatusBadge(coverage.status)}
               </div>
               <div>
-                Default eval task: {getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}
+                默认评测任务：{getScenarioTaskLabel(scenarioModules, coverage.module.default_eval_task_type)}
               </div>
               <div>
-                Coverage snapshot: {coverage.default_task_dataset_count} default-task dataset(s) / {coverage.default_task_case_count} case(s)
+                覆盖快照：{coverage.default_task_dataset_count} 个默认任务数据集 / {coverage.default_task_case_count} 个 case
               </div>
               <div>{coverage.summary}</div>
               <div style={{ color: "#475569", marginTop: 8 }}>
-                <strong>Known gap:</strong> {coverage.known_gap}
+                <strong>已知缺口：</strong> {coverage.known_gap}
               </div>
               {coverage.workspaces.length > 0 ? (
                 <ul style={{ marginBottom: 0, marginTop: 10 }}>
                   {coverage.workspaces.map((workspaceCoverage) => (
                     <li key={workspaceCoverage.workspace_id}>
-                      {workspaceCoverage.workspace_name}: {workspaceCoverage.default_task_dataset_count} default-task dataset(s), {workspaceCoverage.default_task_case_count} case(s), status {workspaceCoverage.status}
+                      {workspaceCoverage.workspace_name}: {workspaceCoverage.default_task_dataset_count} 个默认任务数据集，{workspaceCoverage.default_task_case_count} 个 case, status {workspaceCoverage.status}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p style={{ marginBottom: 0, marginTop: 10 }}>No visible workspace currently represents this module.</p>
+                <p style={{ marginBottom: 0, marginTop: 10 }}>当前没有可见工作区代表这个模块。</p>
               )}
             </div>
           ))}
@@ -901,15 +902,15 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       </SectionCard>
 
       <SectionCard
-        title="Cross-module rehearsal evidence draft"
-        description="Use this lightweight draft as the durable record for Stage C rehearsal evidence. It stays explicit about module checks, default eval coverage, and known gaps without pretending stronger operational guarantees."
+        title="跨模块演练证据草稿"
+        description="用这份轻量草稿作为跨模块演练证据记录。它会明确写出模块检查项、默认评测覆盖和已知缺口，而不会夸大运行保障。"
       >
         <div style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <button onClick={() => void handleCopyEvidenceDraft()} type="button">
-              Copy evidence draft
+              复制证据草稿
             </button>
-            <span style={{ color: "#475569" }}>Template doc: `docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`</span>
+            <span style={{ color: "#475569" }}>模板文档：`docs/development/STAGE_C_REHEARSAL_EVIDENCE_TEMPLATE.md`</span>
           </div>
           {copyFeedback ? <p style={{ color: "#0369a1", margin: 0 }}>{copyFeedback}</p> : null}
           <pre style={{ margin: 0, overflowX: "auto", whiteSpace: "pre-wrap" }}>{rehearsalEvidenceDraft}</pre>
@@ -917,29 +918,29 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
       </SectionCard>
 
       <SectionCard
-        title="Eval datasets"
-        description={`Workspace: ${workspace?.name ?? workspaceId}. Create scenario-aware retrieval eval datasets and launch eval runs.`}
+        title="评测数据集"
+        description={`工作区：${workspace?.name ?? workspaceId}。创建场景感知的检索评测数据集，并启动评测运行。`}
       >
         <form onSubmit={handleCreateDataset} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Dataset name</span>
+            <span>数据集名称</span>
             <input
               onChange={(event) => setDatasetName(event.target.value)}
-              placeholder="Phase 4 retrieval chat dataset"
+              placeholder="示例：阶段四检索对话数据集"
               required
               value={datasetName}
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Description</span>
+            <span>描述</span>
             <input
               onChange={(event) => setDatasetDescription(event.target.value)}
-              placeholder="Optional description for this eval dataset"
+              placeholder="可选：为这个评测数据集补充描述"
               value={datasetDescription}
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Scenario focus</span>
+            <span>场景焦点</span>
             <select
               onChange={(event) => setScenarioTaskType(event.target.value as TaskType)}
               value={scenarioTaskType}
@@ -955,21 +956,21 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
             <span>{getScenarioInputLabel(workspace, scenarioModules)}</span>
             <textarea
               onChange={(event) => setDatasetQuestions(event.target.value)}
-              placeholder={`${getScenarioInputPlaceholder(scenarioModules, scenarioTaskType)}. Leave empty if you want to create an empty dataset to test failure handling.`}
+              placeholder={`${getScenarioInputPlaceholder(scenarioModules, scenarioTaskType)}。如果你想创建空数据集来测试失败处理，可以留空。`}
               rows={5}
               value={datasetQuestions}
             />
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button disabled={isCreatingDataset} type="submit">
-            {isCreatingDataset ? "Creating dataset..." : "Create eval dataset"}
+            {isCreatingDataset ? "正在创建数据集..." : "创建评测数据集"}
           </button>
         </form>
       </SectionCard>
 
-      <SectionCard title="Dataset list" description="Launch eval runs from any dataset in this workspace.">
-        {isLoading ? <p>Loading datasets...</p> : null}
-        {!isLoading && datasets.length === 0 ? <p>No eval datasets yet.</p> : null}
+      <SectionCard title="数据集列表" description="可以从当前工作区中的任意数据集启动评测运行。">
+        {isLoading ? <p>正在加载数据集...</p> : null}
+        {!isLoading && datasets.length === 0 ? <p>还没有评测数据集。</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {datasets.map((dataset) => (
             <li
@@ -984,18 +985,18 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div>
                   <strong>{dataset.name}</strong>
-                  <div>Type: {dataset.eval_type}</div>
+                  <div>类型：{dataset.eval_type}</div>
                   <div>
                     Module: {String(dataset.config_json.module_type ?? "research")} / Task:{" "}
                     {String(dataset.config_json.scenario_task_type ?? "research_summary")}
                   </div>
-                  <div>Baseline: {String(dataset.config_json.quality_baseline ?? "n/a")}</div>
-                  <div>Cases: {dataset.cases.length}</div>
-                  <div>Created: {new Date(dataset.created_at).toLocaleString()}</div>
+                  <div>基线：{String(dataset.config_json.quality_baseline ?? "n/a")}</div>
+                  <div>Case 数：{dataset.cases.length}</div>
+                  <div>创建时间：{new Date(dataset.created_at).toLocaleString()}</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <button onClick={() => void handleCreateRun(dataset.id)} type="button">
-                    {isCreatingRunId === dataset.id ? "Launching..." : "Run eval"}
+                    {isCreatingRunId === dataset.id ? "正在启动..." : "运行评测"}
                   </button>
                 </div>
               </div>
@@ -1005,8 +1006,8 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         </ul>
       </SectionCard>
 
-      <SectionCard title="Eval runs" description="Runs created here are remembered in local storage for this workspace.">
-        {runs.length === 0 ? <p>No eval runs yet.</p> : null}
+      <SectionCard title="评测运行" description="这里创建的运行会记录在当前工作区的本地存储中。">
+        {runs.length === 0 ? <p>还没有评测运行。</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {runs.map((run) => (
             <li
@@ -1022,16 +1023,16 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                 <strong>{datasetNameById[run.dataset_id] ?? run.dataset_id}</strong>
                 {renderRunStatus(run.status)}
               </div>
-              <div>Run ID: {run.id}</div>
-              <div>Created: {new Date(run.created_at).toLocaleString()}</div>
-              <div>Recovery: {run.recovery_state}</div>
+              <div>运行 ID：{run.id}</div>
+              <div>创建时间：{new Date(run.created_at).toLocaleString()}</div>
+              <div>恢复状态：{run.recovery_state}</div>
               <div>
-                Summary: {getSummaryMetric(run.summary_json, "completed_cases")} completed / {" "}
-                {getSummaryMetric(run.summary_json, "total_cases")} total
+                摘要：{getSummaryMetric(run.summary_json, "completed_cases")} 已完成 / {" "}
+                {getSummaryMetric(run.summary_json, "total_cases")} 总数
               </div>
               <div style={{ marginTop: 8 }}>
                 <button onClick={() => void refreshRun(run.id)} type="button">
-                  {ACTIVE_RUN_STATUSES.has(run.status) ? "Refresh / Poll" : "Open"}
+                  {ACTIVE_RUN_STATUSES.has(run.status) ? "刷新 / 轮询" : "打开"}
                 </button>
                 {run.status === "pending" || run.status === "running" ? (
                   <button
@@ -1039,7 +1040,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                     onClick={() => void handleCancelRun(run)}
                     type="button"
                   >
-                    {isControllingRunId === run.id ? "Cancelling..." : "Cancel run"}
+                    {isControllingRunId === run.id ? "正在取消..." : "取消运行"}
                   </button>
                 ) : null}
                 {run.status === "failed" ? (
@@ -1048,7 +1049,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                     onClick={() => void handleRetryRun(run)}
                     type="button"
                   >
-                    {isControllingRunId === run.id ? "Retrying..." : "Retry run"}
+                    {isControllingRunId === run.id ? "正在重试..." : "重试运行"}
                   </button>
                 ) : null}
               </div>
@@ -1057,33 +1058,33 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
         </ul>
       </SectionCard>
 
-      <SectionCard title="Eval run detail" description="Inspect summary metrics and per-case results.">
-        {!selectedRun ? <p>Select or create an eval run to inspect it.</p> : null}
+      <SectionCard title="评测运行详情" description="查看汇总指标和逐 case 结果。">
+        {!selectedRun ? <p>请选择或创建一个评测运行来查看详情。</p> : null}
         {selectedRun ? (
           <div style={{ display: "grid", gap: 12 }}>
             <div>
-              <strong>Run ID:</strong> {selectedRun.id}
+              <strong>运行 ID：</strong> {selectedRun.id}
             </div>
             <div>
-              <strong>Status:</strong> {renderRunStatus(selectedRun.status)}
+              <strong>状态：</strong> {renderRunStatus(selectedRun.status)}
             </div>
             <div>
-              <strong>Recovery:</strong> {selectedRun.recovery_state}
+              <strong>恢复状态：</strong> {selectedRun.recovery_state}
             </div>
             <div>
-              <strong>Dataset:</strong> {datasetNameById[selectedRun.dataset_id] ?? selectedRun.dataset_id}
+              <strong>数据集：</strong> {datasetNameById[selectedRun.dataset_id] ?? selectedRun.dataset_id}
             </div>
             <div>
-              <strong>Scenario:</strong> {String(selectedRun.summary_json.module_type ?? "research")} /{" "}
+              <strong>场景：</strong> {String(selectedRun.summary_json.module_type ?? "research")} /{" "}
               {String(selectedRun.summary_json.scenario_task_type ?? "research_summary")}
             </div>
             <div>
-              <strong>Baseline:</strong> {String(selectedRun.summary_json.quality_baseline ?? "n/a")} (
-              threshold {getSummaryMetric(selectedRun.summary_json, "pass_threshold")})
+              <strong>基线：</strong> {String(selectedRun.summary_json.quality_baseline ?? "n/a")} (
+              阈值 {getSummaryMetric(selectedRun.summary_json, "pass_threshold")})
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <button onClick={() => void refreshRun(selectedRun.id)} type="button">
-                {ACTIVE_RUN_STATUSES.has(selectedRun.status) ? "Refresh / Poll" : "Refresh run"}
+                {ACTIVE_RUN_STATUSES.has(selectedRun.status) ? "刷新 / 轮询" : "刷新运行"}
               </button>
               {selectedRun.status === "pending" || selectedRun.status === "running" ? (
                 <button
@@ -1091,7 +1092,7 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                   onClick={() => void handleCancelRun(selectedRun)}
                   type="button"
                 >
-                  {isControllingRunId === selectedRun.id ? "Cancelling..." : "Cancel run"}
+                  {isControllingRunId === selectedRun.id ? "正在取消..." : "取消运行"}
                 </button>
               ) : null}
               {selectedRun.status === "failed" ? (
@@ -1100,14 +1101,14 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                   onClick={() => void handleRetryRun(selectedRun)}
                   type="button"
                 >
-                  {isControllingRunId === selectedRun.id ? "Retrying..." : "Retry run"}
+                  {isControllingRunId === selectedRun.id ? "正在重试..." : "重试运行"}
                 </button>
               ) : null}
             </div>
             <RecoveryDetailCard
               detail={selectedRun.recovery_detail}
-              emptyText="This eval run has not recorded any cancel or retry lineage yet."
-              title="Eval run recovery detail"
+              emptyText="这个评测运行目前还没有记录任何取消或重试历史。"
+              title="评测运行恢复详情"
             />
             <div
               style={{
@@ -1117,45 +1118,45 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
               }}
             >
               <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-                <strong>Total cases</strong>
+                <strong>总 Case 数</strong>
                 <div>{getSummaryMetric(selectedRun.summary_json, "total_cases")}</div>
               </div>
               <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-                <strong>Completed</strong>
+                <strong>已完成</strong>
                 <div>{getSummaryMetric(selectedRun.summary_json, "completed_cases")}</div>
               </div>
               <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-                <strong>Passed</strong>
+                <strong>通过数</strong>
                 <div>{getSummaryMetric(selectedRun.summary_json, "passed_cases")}</div>
               </div>
               <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-                <strong>Pass rate</strong>
+                <strong>通过率</strong>
                 <div>{getSummaryMetric(selectedRun.summary_json, "pass_rate")}</div>
               </div>
               <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-                <strong>Avg score</strong>
+                <strong>平均分</strong>
                 <div>{getSummaryMetric(selectedRun.summary_json, "avg_score")}</div>
               </div>
             </div>
             <div>
-              <strong>Summary JSON:</strong>
+              <strong>汇总 JSON：</strong>
               <pre style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
                 {JSON.stringify(selectedRun.summary_json, null, 2)}
               </pre>
             </div>
             {selectedRun.error_message ? (
               <div>
-                <strong style={{ color: "#b91c1c" }}>Run error:</strong>
+                <strong style={{ color: "#b91c1c" }}>运行错误：</strong>
                 <p style={{ color: "#b91c1c", marginTop: 8 }}>{selectedRun.error_message}</p>
               </div>
             ) : null}
             <div>
-              <strong>Per-case results</strong>
+              <strong>逐 Case 结果</strong>
               {selectedRunResults.length === 0 ? (
                 <p style={{ marginTop: 8 }}>
                   {ACTIVE_RUN_STATUSES.has(selectedRun.status)
-                    ? "Results will appear once the run completes."
-                    : "No results were recorded for this run."}
+                    ? "运行完成后会显示结果。"
+                    : "这个运行没有记录任何结果。"}
                 </p>
               ) : (
                 <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0 }}>
@@ -1183,24 +1184,24 @@ export default function EvalManager({ workspaceId }: EvalManagerProps) {
                         </div>
                         {casePrompt ? (
                           <p style={{ marginBottom: 8, marginTop: 8 }}>
-                            <strong>Prompt:</strong> {casePrompt}
+                            <strong>提示词：</strong> {casePrompt}
                           </p>
                         ) : null}
-                        <div>Score: {result.score ?? "n/a"}</div>
-                        <div>Passed: {result.passed == null ? "n/a" : result.passed ? "yes" : "no"}</div>
-                        <div>Source count: {sources.length}</div>
+                        <div>分数：{result.score ?? "n/a"}</div>
+                        <div>是否通过：{result.passed == null ? "n/a" : result.passed ? "是" : "否"}</div>
+                        <div>来源数量：{sources.length}</div>
                         {answer ? (
                           <p style={{ marginTop: 8 }}>
-                            <strong>Answer:</strong> {answer}
+                            <strong>答案：</strong> {answer}
                           </p>
                         ) : null}
                         {result.error_message ? (
                           <p style={{ color: "#b91c1c", marginTop: 8 }}>
-                            <strong>Error:</strong> {result.error_message}
+                            <strong>错误：</strong> {result.error_message}
                           </p>
                         ) : null}
                         <details style={{ marginTop: 8 }}>
-                          <summary>Raw result</summary>
+                          <summary>原始结果</summary>
                           <pre style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
                             {JSON.stringify(result, null, 2)}
                           </pre>

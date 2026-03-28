@@ -750,3 +750,78 @@ Append-only log. Add new entries at the bottom.
 - Impact: the repository now has one durable public rollout record, one known-good deployed revision `9c68935`, and one live demo baseline that can be refreshed or rolled back with bounded operator expectations
 - Related Task: `tasks/archive/stage-d/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-27-048
+- Date: 2026-03-27
+- Status: Confirmed
+- Source: Human
+- Topic: close Stage D as complete
+- Context: Stage D reached its bounded goal once the first live public-demo rehearsal succeeded through `app.lmpai.online` and the repo captured rollout evidence, handoff notes, and a rollback baseline.
+- Choice: close Stage D as complete instead of extending it into public-demo hardening or later workbench productization.
+- Why: the Stage D goal was a real public internet demo baseline, not indefinite deployment iteration.
+- Impact: the next bounded planning unit can focus on persistent Support and Job workbench depth instead of continuing to overload Stage D.
+- Related Task: `tasks/archive/stage-d/stage-d-08-public-internet-rollout-and-operator-rehearsal.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-27-049
+- Date: 2026-03-27
+- Status: Confirmed
+- Source: Human
+- Topic: define Stage E as the next bounded planning unit
+- Context: after Stage D closed, the next most valuable bounded step is to move Support and Job from structured task-result workflows into persistent workbench surfaces while preserving the live demo baseline.
+- Choice: create `docs/prd/STAGE_E_PLAN.md` for `Stage E: Support and Job Workbench Productization` and adopt `stage-e-*` naming for Stage E tasks.
+- Why: the next work is broader than a single task but narrower than the long-term roadmap, and it should not be mixed back into Stage D.
+- Impact: Stage E becomes the active planning unit and the root `tasks/` directory can now hold the first Stage E execution wave.
+- Related Task: `tasks/archive/stage-e/stage-e-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-27-050
+- Date: 2026-03-27
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the first Stage E task wave
+- Context: Stage E needs one explicit first execution wave so Support and Job workbench depth can advance without losing public-demo continuity.
+- Choice: define the first Stage E wave as `stage-e-02`, `stage-e-03`, and `stage-e-04`, with `stage-e-02` as the active task.
+- Why: this keeps Stage E focused on Support case workbench depth, Job hiring workbench depth, and public-demo continuity as one bounded package.
+- Impact: Stage E now has an execution-ready task stack instead of a plan with no queue.
+- Related Task: `tasks/archive/stage-e/stage-e-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-051
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human
+- Topic: insert a bounded Stage E localization pass before workbench productization continues
+- Context: Stage E has already opened its first workbench wave, but the live public demo still exposes a large amount
+  of English static copy across the frontend, public-demo templates, and directly surfaced backend error messages.
+- Choice: add `tasks/stage-e-05-static-surface-chinese-localization.md` as a bounded active task that converts the
+  live demo's user-visible static surface to Chinese while keeping module product names, model outputs, and runtime
+  contracts unchanged.
+- Why: the public demo should present a coherent Chinese-first experience before deeper Support and Job workbench work
+  continues, but that polish pass is smaller than a new stage and does not justify changing Stage E's core goal.
+- Impact: Stage E stays active with the same long-term outcome, but the immediate active task temporarily shifts from
+  `stage-e-02` to `stage-e-05` until the bounded localization pass completes.
+- Related Task: `tasks/stage-e-05-static-surface-chinese-localization.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-052
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-05 bounded Chinese-localization pass
+- Context: Stage E was already opened for Support and Job workbench productization, but the live public demo still exposed a mixed Chinese-English static surface across the frontend, public-demo templates, scenario display copy, and directly surfaced backend errors.
+- Choice: complete `stage-e-05` as one bounded localization pass, convert the live public demo's user-visible static copy to a Chinese-first baseline without renaming module product names or changing model-output behavior, archive `stage-e-05`, and restore `stage-e-02` as the active Stage E task.
+- Why: the live public demo needed a coherent Chinese-first presentation before deeper Support and Job workbench state was added on top of it.
+- Impact: the public demo's main path is now Chinese-first at the static-surface level, major backend errors shown directly to users are localized, built-in demo templates and seeded content are localized, and Stage E workbench execution can now resume on a cleaner showcase baseline.
+- Related Task: `tasks/archive/stage-e/stage-e-05-static-surface-chinese-localization.md`
+- Supersedes:

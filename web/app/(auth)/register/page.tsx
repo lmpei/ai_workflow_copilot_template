@@ -1,4 +1,4 @@
-﻿import RegisterForm from "../../../components/auth/register-form";
+import RegisterForm from "../../../components/auth/register-form";
 import { getPublicDemoSettings } from "../../../lib/api";
 
 export default async function RegisterPage() {
@@ -8,7 +8,7 @@ export default async function RegisterPage() {
 
   return (
     <main>
-      <h1>Register</h1>
+      <h1>注册</h1>
       <RegisterForm publicDemoSettings={publicDemoSettings} />
     </main>
   );

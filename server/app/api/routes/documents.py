@@ -69,7 +69,7 @@ async def get_workspace_document(
 ) -> DocumentResponse:
     document = get_document(document_id=document_id, user_id=current_user.id)
     if document is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到文档")
     return document
 
 
@@ -81,7 +81,7 @@ async def reindex_workspace_document(
     try:
         document = reindex_document(document_id=document_id, user_id=current_user.id)
         if document is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到文档")
         return document
     except DocumentAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error

@@ -92,7 +92,7 @@ async def get_task(
 ) -> TaskResponse:
     task = task_service.get_task(task_id=task_id, user_id=current_user.id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到任务")
     return task
 
 

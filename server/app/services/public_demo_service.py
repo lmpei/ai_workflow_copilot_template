@@ -1,4 +1,4 @@
-﻿from app.core.config import get_settings
+from app.core.config import get_settings
 from app.repositories import document_repository, task_repository, workspace_repository
 from app.schemas.public_demo import PublicDemoSettingsResponse
 
@@ -22,8 +22,8 @@ def _format_upload_limit(max_upload_bytes: int) -> str:
             return f"{megabytes:.0f} MB"
         return f"{megabytes:.1f} MB"
     if max_upload_bytes == 1:
-        return "1 byte"
-    return f"{max_upload_bytes} bytes"
+        return "1 字节"
+    return f"{max_upload_bytes} 字节"
 
 
 def get_public_demo_settings() -> PublicDemoSettingsResponse:
@@ -44,7 +44,7 @@ def ensure_registration_allowed() -> None:
         return
     if not settings.public_demo_registration_enabled:
         raise PublicDemoAccessError(
-            "Public demo registration is currently disabled. Use an operator-provided account or try again later.",
+            "当前已关闭 public demo 自助注册。请使用运营方提供的账号，或稍后再试。",
         )
 
 
@@ -56,7 +56,7 @@ def ensure_workspace_creation_allowed(*, user_id: str) -> None:
     workspace_count = len(workspace_repository.list_workspaces(user_id=user_id))
     if workspace_count >= settings.public_demo_max_workspaces_per_user:
         raise PublicDemoLimitError(
-            f"Public demo limit reached: up to {settings.public_demo_max_workspaces_per_user} workspaces per account.",
+            f"已达到 public demo 限额：每个账号最多可创建 {settings.public_demo_max_workspaces_per_user} 个工作区。",
         )
 
 
@@ -72,8 +72,7 @@ def ensure_document_upload_allowed(
 
     if file_size_bytes > settings.public_demo_max_upload_bytes:
         raise PublicDemoUploadLimitError(
-            "Public demo upload limit reached: "
-            f"files must be {_format_upload_limit(settings.public_demo_max_upload_bytes)} or smaller.",
+            f"已达到 public demo 上传限额：单个文件不能超过 {_format_upload_limit(settings.public_demo_max_upload_bytes)}。",
         )
 
     document_count = len(
@@ -81,7 +80,7 @@ def ensure_document_upload_allowed(
     )
     if document_count >= settings.public_demo_max_documents_per_workspace:
         raise PublicDemoLimitError(
-            f"Public demo limit reached: up to {settings.public_demo_max_documents_per_workspace} documents per workspace.",
+            f"已达到 public demo 限额：每个工作区最多可上传 {settings.public_demo_max_documents_per_workspace} 个文档。",
         )
 
 
@@ -93,5 +92,5 @@ def ensure_task_creation_allowed(*, workspace_id: str, user_id: str) -> None:
     task_count = len(task_repository.list_workspace_tasks(workspace_id, user_id))
     if task_count >= settings.public_demo_max_tasks_per_workspace:
         raise PublicDemoLimitError(
-            f"Public demo limit reached: up to {settings.public_demo_max_tasks_per_workspace} tasks per workspace.",
+            f"已达到 public demo 限额：每个工作区最多可创建 {settings.public_demo_max_tasks_per_workspace} 个任务。",
         )

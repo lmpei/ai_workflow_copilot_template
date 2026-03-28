@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -30,19 +30,15 @@ function filterTaskTypes(values: unknown, module: ScenarioModuleRecord | null): 
 
   const supportedTaskTypes = new Set(module.tasks.map((task) => task.task_type));
   return values.filter(
-    (value): value is TaskType =>
-      typeof value === "string" && supportedTaskTypes.has(value as TaskType),
+    (value): value is TaskType => typeof value === "string" && supportedTaskTypes.has(value as TaskType),
   );
 }
 
 function renderTaskTypeList(module: ScenarioModuleRecord, taskTypes: TaskType[]) {
-  return taskTypes.map((taskType) => getTaskLabel(module, taskType)).join(" 路 ");
+  return taskTypes.map((taskType) => getTaskLabel(module, taskType)).join(" -> ");
 }
 
-export default function ModuleHubPanel({
-  workspaceId,
-  selectedModuleType,
-}: ModuleHubPanelProps) {
+export default function ModuleHubPanel({ workspaceId, selectedModuleType }: ModuleHubPanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [scenarioModules, setScenarioModules] = useState<ScenarioModuleRecord[]>([]);
@@ -66,7 +62,7 @@ export default function ModuleHubPanel({
       setWorkspace(loadedWorkspace);
       setScenarioModules(loadedScenarioModules);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace module settings");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区模块配置");
     } finally {
       setIsLoading(false);
     }
@@ -84,28 +80,28 @@ export default function ModuleHubPanel({
   }, [selectedModuleType]);
 
   const scenarioModuleMap = useMemo(
-    () => Object.fromEntries(scenarioModules.map((module) => [module.module_type, module])) as Partial<Record<ModuleType, ScenarioModuleRecord>>,
+    () =>
+      Object.fromEntries(scenarioModules.map((module) => [module.module_type, module])) as Partial<
+        Record<ModuleType, ScenarioModuleRecord>
+      >,
     [scenarioModules],
   );
 
   if (!isReady) {
-    return <SectionCard title="Scenario Modules">Loading session...</SectionCard>;
+    return <SectionCard title="模块中心">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to browse scenario module entry points." />;
+    return <AuthRequired description="登录后才能查看场景模块入口。" />;
   }
 
   if (isLoading) {
-    return <SectionCard title="Scenario Modules">Loading workspace module settings...</SectionCard>;
+    return <SectionCard title="模块中心">正在加载工作区模块配置...</SectionCard>;
   }
 
   if (errorMessage) {
     return (
-      <SectionCard
-        title="Scenario Modules"
-        description="Module entry points depend on workspace configuration."
-      >
+      <SectionCard title="模块中心" description="模块入口依赖工作区配置。">
         <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p>
       </SectionCard>
     );
@@ -113,13 +109,10 @@ export default function ModuleHubPanel({
 
   if (requestedModule === "invalid") {
     return (
-      <SectionCard
-        title="Module Not Found"
-        description="This route does not match a supported scenario module."
-      >
-        <p>Choose one of the supported modules from the workspace module hub.</p>
+      <SectionCard title="未找到模块" description="当前路由没有匹配到受支持的场景模块。">
+        <p>请从工作区模块中心选择一个受支持的模块。</p>
         <p style={{ marginBottom: 0 }}>
-          <Link href={`/workspaces/${workspaceId}/modules`}>Back to module hub</Link>
+          <Link href={`/workspaces/${workspaceId}/modules`}>返回模块中心</Link>
         </p>
       </SectionCard>
     );
@@ -129,60 +122,56 @@ export default function ModuleHubPanel({
   const activeModule = scenarioModuleMap[activeModuleType] ?? scenarioModules[0] ?? null;
 
   if (!activeModule) {
-    return <SectionCard title="Scenario Modules">Scenario registry is unavailable.</SectionCard>;
+    return <SectionCard title="模块中心">当前无法读取场景注册表。</SectionCard>;
   }
 
   if (requestedModule) {
     const moduleInfo = scenarioModuleMap[requestedModule] ?? activeModule;
     const isActiveModule = moduleInfo.module_type === activeModuleType;
     const configuredTaskTypes = filterTaskTypes(workspace?.module_config_json.entry_task_types, moduleInfo);
-    const entryTaskTypes = isActiveModule && configuredTaskTypes.length > 0
-      ? configuredTaskTypes
-      : moduleInfo.entry_task_types;
+    const entryTaskTypes = isActiveModule && configuredTaskTypes.length > 0 ? configuredTaskTypes : moduleInfo.entry_task_types;
 
     return (
       <SectionCard
         title={moduleInfo.title}
-        description={`${moduleInfo.description} Workspace scope remains shared across documents, tasks, chat, and analytics.`}
+        description={`${moduleInfo.description} 当前工作区仍会共享文档、任务、对话与分析基础面板。`}
       >
         <div style={{ display: "grid", gap: 10 }}>
           <div>
-            <strong>Workspace:</strong> {workspace?.name ?? workspaceId}
+            <strong>工作区：</strong> {workspace?.name ?? workspaceId}
           </div>
           <div>
-            <strong>Status:</strong> {isActiveModule ? "active in this workspace" : "not configured for this workspace"}
+            <strong>状态：</strong> {isActiveModule ? "当前工作区已启用该模块" : "当前工作区尚未启用该模块"}
           </div>
           <div>
-            <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, entryTaskTypes)}
+            <strong>入口任务：</strong> {renderTaskTypeList(moduleInfo, entryTaskTypes)}
           </div>
           <div>
-            <strong>Quality baseline:</strong> {moduleInfo.quality_baseline}
+            <strong>质量基线：</strong> {moduleInfo.quality_baseline}
           </div>
           <div>
-            <strong>Eval pass threshold:</strong> {Math.round(moduleInfo.pass_threshold * 100)}%
+            <strong>评测通过阈值：</strong> {Math.round(moduleInfo.pass_threshold * 100)}%
           </div>
           {isActiveModule ? (
             <>
               <p style={{ margin: 0 }}>
-                This module is active here. Use the shared workspace surfaces below to run tasks, inspect documents,
-                and review analytics without leaving workspace scope.
+                这个模块已经在当前工作区启用。你可以直接用下面这些共享面板运行任务、查看文档并检查分析信息。
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href={`/workspaces/${workspaceId}/tasks`}>Open module tasks</Link>
-                <Link href={`/workspaces/${workspaceId}/documents`}>Review documents</Link>
-                <Link href={`/workspaces/${workspaceId}/chat`}>Open chat</Link>
-                <Link href={`/workspaces/${workspaceId}/analytics`}>Inspect analytics</Link>
+                <Link href={`/workspaces/${workspaceId}/tasks`}>打开模块任务</Link>
+                <Link href={`/workspaces/${workspaceId}/documents`}>查看文档</Link>
+                <Link href={`/workspaces/${workspaceId}/chat`}>打开对话</Link>
+                <Link href={`/workspaces/${workspaceId}/analytics`}>查看分析</Link>
               </div>
             </>
           ) : (
             <>
               <p style={{ margin: 0 }}>
-                This workspace is currently configured for <strong>{activeModule.title}</strong>. We keep this module
-                discoverable here, but its full surface stays gated until the workspace is configured for it.
+                当前工作区目前配置的是 <strong>{activeModule.title}</strong>。这里仍然保留该模块的介绍入口，但完整能力会保持受限，直到工作区切换到该模块。
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href={moduleHref(workspaceId, activeModuleType)}>Open active module</Link>
-                <Link href={`/workspaces/${workspaceId}/modules`}>Back to module hub</Link>
+                <Link href={moduleHref(workspaceId, activeModuleType)}>打开当前激活模块</Link>
+                <Link href={`/workspaces/${workspaceId}/modules`}>返回模块中心</Link>
               </div>
             </>
           )}
@@ -192,12 +181,9 @@ export default function ModuleHubPanel({
   }
 
   return (
-    <SectionCard
-      title="Scenario Modules"
-      description="Discover each module from one shared workspace entry point, then move into the existing tasks, docs, chat, and analytics surfaces."
-    >
+    <SectionCard title="模块中心" description="从同一个工作区入口了解各模块，再进入共享的任务、文档、对话与分析面板。">
       <p style={{ marginTop: 0 }}>
-        <strong>Active workspace module:</strong> {activeModule.title}
+        <strong>当前工作区模块：</strong> {activeModule.title}
       </p>
       <div
         style={{
@@ -231,20 +217,19 @@ export default function ModuleHubPanel({
                     textTransform: "uppercase",
                   }}
                 >
-                  {isActiveModule ? "active" : "preview"}
+                  {isActiveModule ? "当前模块" : "可预览"}
                 </span>
               </div>
               <p style={{ marginTop: 0 }}>{moduleInfo.description}</p>
               <p style={{ marginTop: 0 }}>
-                <strong>Entry tasks:</strong> {renderTaskTypeList(moduleInfo, moduleInfo.entry_task_types)}
+                <strong>入口任务：</strong> {renderTaskTypeList(moduleInfo, moduleInfo.entry_task_types)}
               </p>
               <p style={{ marginTop: 0 }}>
-                <strong>Quality baseline:</strong> {moduleInfo.quality_baseline} /{" "}
-                {Math.round(moduleInfo.pass_threshold * 100)}% pass threshold
+                <strong>质量基线：</strong> {moduleInfo.quality_baseline} / {Math.round(moduleInfo.pass_threshold * 100)}% 通过阈值
               </p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href={moduleHref(workspaceId, moduleInfo.module_type)}>Open module</Link>
-                {isActiveModule ? <Link href={`/workspaces/${workspaceId}/tasks`}>Go to tasks</Link> : null}
+                <Link href={moduleHref(workspaceId, moduleInfo.module_type)}>打开模块</Link>
+                {isActiveModule ? <Link href={`/workspaces/${workspaceId}/tasks`}>前往任务页</Link> : null}
               </div>
             </div>
           );

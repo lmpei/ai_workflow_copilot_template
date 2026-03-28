@@ -39,7 +39,9 @@ Use these files for detailed reference material:
 - `docs/prd/STAGE_C_PLAN.md`
   - closed Stage C planning document for multi-module workflow expansion and cross-module readiness
 - `docs/prd/STAGE_D_PLAN.md`
-  - active Stage D planning document for the public internet demo baseline
+  - closed Stage D planning document for the public internet demo baseline
+- `docs/prd/STAGE_E_PLAN.md`
+  - active Stage E planning document for Support and Job workbench productization
 - `docs/architecture/PLATFORM_ARCHITECTURE.md`
   - detailed system architecture and target boundaries
 - `docs/development/DELIVERY_BASELINE.md`
@@ -80,8 +82,9 @@ Stage A work should use `stage-a-*` task naming and remain archived under `tasks
 Stage B work should remain archived under `tasks/archive/stage-b/`.
 Stage C work should use `stage-c-*` task naming while active under `tasks/`, then archive under
 `tasks/archive/stage-c/`.
-Stage D work should use `stage-d-*` task naming while active under `tasks/`, then archive under
-`tasks/archive/stage-d/`.
+Stage D work should remain archived under `tasks/archive/stage-d/`.
+Stage E work should use `stage-e-*` task naming while active under `tasks/`, then archive under
+`tasks/archive/stage-e/`.
 Phase 5 tasks should remain archived under `tasks/archive/phase5/`.
 
 ### Workflow and Prompting
@@ -435,4 +438,3 @@ task. Use `DECISIONS.md` for confirmed choices. Use `CONTEXT.md` for stable fact
 - the original failed record keeps a link to the retry target, and the retry attempt keeps a link back to the source record
 - the Research and eval surfaces now render operator-visible recovery history instead of requiring manual inspection of raw `control_json`
 - Stage B still does not claim full checkpoint/resume support; this increment improves inspectability and control lineage, not durable resume semantics
-

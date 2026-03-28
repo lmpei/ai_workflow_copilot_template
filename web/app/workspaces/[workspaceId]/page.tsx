@@ -1,4 +1,4 @@
-import GuidedWorkspaceShowcase from "../../../components/public-demo/guided-workspace-showcase";
+﻿import GuidedWorkspaceShowcase from "../../../components/public-demo/guided-workspace-showcase";
 import ModuleHubPanel from "../../../components/workspace/module-hub-panel";
 import SectionCard from "../../../components/ui/section-card";
 import WorkspaceNav from "../../../components/workspace/workspace-nav";
@@ -14,18 +14,18 @@ export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
 
   return (
     <main>
-      <h1>Workspace Overview</h1>
+      <h1>工作区概览</h1>
       <WorkspaceNav workspaceId={workspaceId} />
       <GuidedWorkspaceShowcase workspaceId={workspaceId} />
       <SectionCard
-        title="Shared workspace surfaces"
-        description="Every module keeps its documents, chat traces, tasks, and analytics inside one shared workspace scope."
+        title="共享工作区面板"
+        description="每个模块都会把文档、对话痕迹、任务和分析统一收在同一个工作区范围内。"
       >
         <ul>
-          <li>Documents and retrieval state</li>
-          <li>Conversations and citations</li>
-          <li>Tasks, agent runs, and tool traces</li>
-          <li>Quality metrics and cost tracking</li>
+          <li>文档与检索状态</li>
+          <li>对话与引用来源</li>
+          <li>任务、agent 执行与工具痕迹</li>
+          <li>质量指标与成本跟踪</li>
         </ul>
       </SectionCard>
       <ModuleHubPanel workspaceId={workspaceId} />

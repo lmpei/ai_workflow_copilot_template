@@ -42,14 +42,14 @@ const TASK_OPTIONS: Record<
   }
 > = {
   jd_summary: {
-    label: "JD Summary",
-    description: "Summarize role requirements, hiring signals, and reviewer-facing next steps.",
-    placeholder: "Example: Senior backend engineer role focused on APIs, reliability, and Python.",
+    label: "JD 摘要",
+    description: "总结岗位要求、招聘信号和面向评审者的下一步建议。",
+    placeholder: "示例：负责 API、稳定性与 Python 的高级后端工程师岗位。",
   },
   resume_match: {
-    label: "Resume Match",
-    description: "Assess grounded fit between indexed hiring materials and the target role.",
-    placeholder: "Example: Platform engineer role with Python, systems design, and reliability focus.",
+    label: "简历匹配",
+    description: "基于已索引的招聘材料，评估候选人与目标岗位的 grounded 匹配度。",
+    placeholder: "示例：偏 Python、系统设计和稳定性的基础平台工程师岗位。",
   },
 };
 
@@ -149,10 +149,10 @@ function sortTasks(tasks: TaskRecord[]): TaskRecord[] {
 
 function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
-    pending: { label: "pending", color: "#92400e" },
-    running: { label: "running", color: "#1d4ed8" },
-    completed: { label: "completed", color: "#15803d" },
-    failed: { label: "failed", color: "#b91c1c" },
+    pending: { label: "待处理", color: "#92400e" },
+    running: { label: "运行中", color: "#1d4ed8" },
+    completed: { label: "已完成", color: "#15803d" },
+    failed: { label: "失败", color: "#b91c1c" },
   };
   const style = statusStyles[status];
 
@@ -176,9 +176,9 @@ function renderStatus(status: TaskRecord["status"]) {
 
 function renderEvidenceStatusBadge(evidenceStatus: JobEvidenceStatus) {
   const styles: Record<JobEvidenceStatus, { label: string; color: string }> = {
-    grounded_matches: { label: "Grounded matches", color: "#166534" },
-    documents_only: { label: "Documents only", color: "#92400e" },
-    no_documents: { label: "No documents", color: "#b91c1c" },
+    grounded_matches: { label: "已命中依据", color: "#166534" },
+    documents_only: { label: "仅有文档", color: "#92400e" },
+    no_documents: { label: "无文档", color: "#b91c1c" },
   };
   const style = styles[evidenceStatus];
 
@@ -201,10 +201,10 @@ function renderEvidenceStatusBadge(evidenceStatus: JobEvidenceStatus) {
 
 function renderFitSignalBadge(fitSignal: JobFitSignal) {
   const styles: Record<JobFitSignal, { label: string; color: string }> = {
-    grounded_match_found: { label: "Grounded match", color: "#166534" },
-    role_requirements_grounded: { label: "Role grounded", color: "#0369a1" },
-    insufficient_grounding: { label: "Needs more grounding", color: "#92400e" },
-    no_documents_available: { label: "No materials", color: "#b91c1c" },
+    grounded_match_found: { label: "已有 grounded 匹配", color: "#166534" },
+    role_requirements_grounded: { label: "岗位要求已对齐", color: "#0369a1" },
+    insufficient_grounding: { label: "需要更多依据", color: "#92400e" },
+    no_documents_available: { label: "无材料", color: "#b91c1c" },
   };
   const style = styles[fitSignal];
 
@@ -227,9 +227,9 @@ function renderFitSignalBadge(fitSignal: JobFitSignal) {
 
 function renderArtifactStats(artifacts: JobArtifacts) {
   const cards = [
-    { label: "Documents", value: artifacts.document_count },
-    { label: "Matches", value: artifacts.match_count },
-    { label: "Tool calls", value: artifacts.tool_call_ids.length },
+    { label: "文档", value: artifacts.document_count },
+    { label: "命中片段", value: artifacts.match_count },
+    { label: "工具调用", value: artifacts.tool_call_ids.length },
   ];
 
   return (
@@ -266,16 +266,16 @@ function extractTargetRole(task: TaskRecord, result: JobTaskResult | null = null
 function formatRoleSnapshot(input: JobTaskInput): string {
   const segments: string[] = [];
   if (input.candidate_label) {
-    segments.push(`Candidate: ${input.candidate_label}`);
+    segments.push(`候选人：${input.candidate_label}`);
   }
   if (input.seniority) {
-    segments.push(`Seniority ${input.seniority}`);
+    segments.push(`级别：${input.seniority}`);
   }
   if (input.must_have_skills.length > 0) {
-    segments.push(`Must-have: ${input.must_have_skills.slice(0, 2).join(", ")}`);
+    segments.push(`必备：${input.must_have_skills.slice(0, 2).join(", ")}`);
   }
   if (input.comparison_task_ids.length > 0) {
-    segments.push(`Comparison tasks: ${input.comparison_task_ids.length}`);
+    segments.push(`对比任务：${input.comparison_task_ids.length}`);
   }
   return segments.join(" | ");
 }
@@ -307,7 +307,7 @@ function renderListSection({ title, items, emptyText }: { title: string; items: 
 function renderFindings(findings: JobFinding[]) {
   return (
     <div>
-      <strong>Grounded findings</strong>
+      <strong>有依据的发现</strong>
       {findings.length > 0 ? (
         <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
           {findings.map((finding) => (
@@ -323,14 +323,14 @@ function renderFindings(findings: JobFinding[]) {
               <p style={{ color: "#475569", marginBottom: 0, marginTop: 8 }}>{finding.summary}</p>
               {finding.evidence_ref_ids.length > 0 ? (
                 <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
-                  Evidence refs: {finding.evidence_ref_ids.join(", ")}
+                  证据引用：{finding.evidence_ref_ids.join(", ")}
                 </div>
               ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p>No grounded hiring findings were produced for this run.</p>
+        <p>这次运行没有产出有依据的招聘发现。</p>
       )}
     </div>
   );
@@ -346,39 +346,39 @@ function renderReviewBrief(reviewBrief: JobReviewBrief) {
       }}
     >
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <strong>Hiring brief</strong>
+        <strong>招聘摘要</strong>
         {renderEvidenceStatusBadge(reviewBrief.evidence_status)}
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <div>
-          <strong>Role summary:</strong> {reviewBrief.role_summary}
+          <strong>岗位摘要：</strong> {reviewBrief.role_summary}
         </div>
         {reviewBrief.candidate_label ? (
           <div>
-            <strong>Candidate:</strong> {reviewBrief.candidate_label}
+            <strong>候选人：</strong> {reviewBrief.candidate_label}
           </div>
         ) : null}
         {reviewBrief.seniority ? (
           <div>
-            <strong>Seniority:</strong> {reviewBrief.seniority}
+            <strong>级别：</strong> {reviewBrief.seniority}
           </div>
         ) : null}
         <div>
-          <strong>Must-have skills:</strong>{" "}
-          {reviewBrief.must_have_skills.length > 0 ? reviewBrief.must_have_skills.join(", ") : "Not specified"}
+          <strong>必备技能：</strong>{" "}
+          {reviewBrief.must_have_skills.length > 0 ? reviewBrief.must_have_skills.join(", ") : "未指定"}
         </div>
         <div>
-          <strong>Preferred skills:</strong>{" "}
-          {reviewBrief.preferred_skills.length > 0 ? reviewBrief.preferred_skills.join(", ") : "Not specified"}
+          <strong>加分技能：</strong>{" "}
+          {reviewBrief.preferred_skills.length > 0 ? reviewBrief.preferred_skills.join(", ") : "未指定"}
         </div>
         {reviewBrief.hiring_context ? (
           <div>
-            <strong>Hiring context:</strong> {reviewBrief.hiring_context}
+            <strong>招聘背景：</strong> {reviewBrief.hiring_context}
           </div>
         ) : null}
         {reviewBrief.comparison_task_count > 0 ? (
           <div>
-            <strong>Comparison tasks:</strong> {reviewBrief.comparison_task_count}
+            <strong>对比任务数：</strong> {reviewBrief.comparison_task_count}
           </div>
         ) : null}
       </div>
@@ -396,22 +396,22 @@ function renderAssessment(assessment: JobFitAssessment, recommendedNextStep: str
       }}
     >
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <strong>Fit assessment</strong>
+        <strong>匹配评估</strong>
         {renderEvidenceStatusBadge(assessment.evidence_status)}
         {renderFitSignalBadge(assessment.fit_signal)}
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <div>
-          <strong>Recommended outcome:</strong> {assessment.recommended_outcome}
+          <strong>建议结论：</strong> {assessment.recommended_outcome}
         </div>
         <div>
-          <strong>Confidence note:</strong> {assessment.confidence_note}
+          <strong>置信说明：</strong> {assessment.confidence_note}
         </div>
         <div>
-          <strong>Rationale:</strong> {assessment.rationale}
+          <strong>判断依据：</strong> {assessment.rationale}
         </div>
         <div>
-          <strong>Recommended next step:</strong> {recommendedNextStep}
+          <strong>建议下一步：</strong> {recommendedNextStep}
         </div>
       </div>
     </div>
@@ -425,7 +425,7 @@ function renderComparisonCandidates(candidates: JobComparisonCandidate[]) {
 
   return (
     <div>
-      <strong>Compared candidate reviews</strong>
+      <strong>对比候选人评审</strong>
       <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
         {candidates.map((candidate) => (
           <li
@@ -444,17 +444,17 @@ function renderComparisonCandidates(candidates: JobComparisonCandidate[]) {
             <div style={{ color: "#475569", marginBottom: 8 }}>{candidate.summary}</div>
             {candidate.target_role ? (
               <div>
-                <strong>Role:</strong> {candidate.target_role}
+                <strong>岗位：</strong> {candidate.target_role}
               </div>
             ) : null}
             {candidate.highlights.length > 0 ? (
               <div style={{ marginTop: 8 }}>
-                <strong>Highlights:</strong> {candidate.highlights.join(" | ")}
+                <strong>亮点：</strong> {candidate.highlights.join(" | ")}
               </div>
             ) : null}
             {candidate.evidence_ref_ids.length > 0 ? (
               <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
-                Evidence refs: {candidate.evidence_ref_ids.join(", ")}
+                证据引用：{candidate.evidence_ref_ids.join(", ")}
               </div>
             ) : null}
             <div style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Source task: {candidate.task_id}</div>
@@ -481,11 +481,11 @@ function renderShortlist(
         padding: 16,
       }}
     >
-      <strong>Shortlist output</strong>
+      <strong>候选短名单输出</strong>
       <p style={{ marginBottom: 12, marginTop: 12 }}>{shortlist.shortlist_summary}</p>
       {shortlist.comparison_notes ? (
         <div style={{ marginBottom: 12 }}>
-          <strong>Shortlist focus:</strong> {shortlist.comparison_notes}
+          <strong>短名单关注点：</strong> {shortlist.comparison_notes}
         </div>
       ) : null}
 
@@ -510,25 +510,25 @@ function renderShortlist(
               </div>
               {candidate ? <p style={{ color: "#475569", marginTop: 0 }}>{candidate.summary}</p> : null}
               <div>
-                <strong>Recommendation:</strong> {entry.recommendation}
+                <strong>建议：</strong> {entry.recommendation}
               </div>
               <div style={{ marginTop: 8 }}>
-                <strong>Rationale:</strong> {entry.rationale}
+                <strong>判断依据：</strong> {entry.rationale}
               </div>
               {entry.evidence_ref_ids.length > 0 ? (
                 <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
-                  Evidence refs: {entry.evidence_ref_ids.join(", ")}
+                  证据引用：{entry.evidence_ref_ids.join(", ")}
                 </div>
               ) : null}
               {renderListSection({
-                title: "Risks",
+                title: "风险",
                 items: entry.risks,
-                emptyText: "No explicit shortlist risks were recorded for this candidate.",
+                emptyText: "该候选人没有记录额外短名单风险。",
               })}
               {renderListSection({
-                title: "Interview focus",
+                title: "面试关注点",
                 items: entry.interview_focus,
-                emptyText: "No interview focus areas were recorded for this candidate.",
+                emptyText: "该候选人没有记录额外面试关注点。",
               })}
             </div>
           );
@@ -536,19 +536,19 @@ function renderShortlist(
       </div>
 
       {renderListSection({
-        title: "Shortlist-wide risks",
+        title: "短名单整体风险",
         items: shortlist.risks,
-        emptyText: "No shortlist-wide risks were recorded.",
+        emptyText: "没有记录短名单整体风险。",
       })}
       {renderListSection({
         title: "Shared interview focus",
         items: shortlist.interview_focus,
-        emptyText: "No shared interview focus areas were recorded.",
+        emptyText: "没有记录共通的面试关注点。",
       })}
       {renderListSection({
         title: "Grounding gaps",
         items: shortlist.gaps,
-        emptyText: "No additional shortlist gaps were recorded.",
+        emptyText: "没有记录额外短名单缺口。",
       })}
     </div>
   );
@@ -598,7 +598,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
     } finally {
       setIsLoadingWorkspace(false);
     }
@@ -626,7 +626,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
           return loadedTasks[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load job tasks");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载招聘任务");
       } finally {
         if (!silent) {
           setIsLoadingTasks(false);
@@ -778,14 +778,14 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
       setComparisonTaskIds([]);
       setComparisonNotes("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch job task");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法启动招聘任务");
     } finally {
       setIsCreating(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Job Assistant">Loading session...</SectionCard>;
+    return <SectionCard title="Job Assistant">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
@@ -796,39 +796,39 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
     <>
       <SectionCard
         title="Job Assistant"
-        description="Launch structured hiring workflows, inspect evidence quality, and review grounded fit assessments from indexed hiring materials."
+        description="启动结构化招聘流程，查看证据质量，并基于已索引材料审阅 grounded 匹配评估。"
       >
-        {isLoadingWorkspace ? <p>Loading workspace configuration...</p> : null}
+        {isLoadingWorkspace ? <p>正在加载工作区配置...</p> : null}
         {workspace ? (
           <div style={{ display: "grid", gap: 8 }}>
             <div>
-              <strong>Workspace:</strong> {workspace.name}
+              <strong>工作区：</strong> {workspace.name}
             </div>
             <div>
-              <strong>Module:</strong> {workspace.module_type}
+              <strong>模块：</strong> {workspace.module_type}
             </div>
             <div>
-              <strong>Features:</strong>{" "}
+              <strong>能力：</strong>{" "}
               {Array.isArray(workspace.module_config_json.features)
                 ? workspace.module_config_json.features.join(", ")
-                : "document_intake, structured_extraction, tasks, evals"}
+                : "文档摄取、结构化提取、任务、评测"}
             </div>
           </div>
         ) : null}
         {workspace?.module_type && workspace.module_type !== "job" ? (
           <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 12 }}>
-            This surface is only available for job workspaces. Current module: {workspace.module_type}.
+            这个界面只对 Job 工作区开放。当前模块：{workspace.module_type}.
           </p>
         ) : null}
       </SectionCard>
 
       <SectionCard
-        title="Launch hiring review"
-        description="Capture the role focus, skills, and hiring context you already know, then run a grounded job task against the indexed workspace materials."
+        title="启动招聘评审"
+        description="填写你已知的岗位重点、技能要求和招聘背景，再基于当前工作区已索引材料运行 grounded 招聘任务。"
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 760 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Task type</span>
+            <span>任务类型</span>
             <select
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
               onChange={(event) => {
@@ -862,17 +862,17 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
               }}
             >
               <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
-                <strong>Building shortlist comparison</strong>
+                <strong>构建候选短名单对比</strong>
                 <button onClick={handleClearComparison} type="button">
                   Clear
                 </button>
               </div>
               <div>
-                <strong>Selected candidate reviews:</strong> {selectedComparisonTasks.length}
+                <strong>已选候选人评审：</strong> {selectedComparisonTasks.length}
               </div>
               {comparisonRole ? (
                 <div>
-                  <strong>Shared role context:</strong> {comparisonRole}
+                  <strong>共享岗位上下文：</strong> {comparisonRole}
                 </div>
               ) : null}
               <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -890,7 +890,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
           ) : null}
 
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Target role</span>
+            <span>目标岗位</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
               onChange={(event) => setTargetRole(event.target.value)}
@@ -902,11 +902,11 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
           {taskType === "resume_match" && !isShortlistMode ? (
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Candidate label</span>
+              <span>候选人标识</span>
               <input
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setCandidateLabel(event.target.value)}
-                placeholder="Example: Candidate A / Alex Chen"
+                placeholder="示例：候选人 A / Alex Chen"
                 type="text"
                 value={candidateLabel}
               />
@@ -915,7 +915,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Seniority</span>
+              <span>级别</span>
               <select
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setSeniority(event.target.value as SeniorityOption)}
@@ -923,18 +923,18 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
               >
                 {SENIORITY_OPTIONS.map((option) => (
                   <option key={option || "none"} value={option}>
-                    {option || "Not specified"}
+                    {option || "未指定"}
                   </option>
                 ))}
               </select>
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Hiring context</span>
+              <span>招聘背景</span>
               <input
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setHiringContext(event.target.value)}
-                placeholder="Platform team, API modernization, internal tooling..."
+                placeholder="平台团队、API 现代化、内部工具建设等"
                 type="text"
                 value={hiringContext}
               />
@@ -943,22 +943,22 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Must-have skills</span>
+              <span>必备技能</span>
               <textarea
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setMustHaveSkillsText(event.target.value)}
-                placeholder={"One skill per line or comma separated\nPython\nAPI design\nSystem reliability"}
+                placeholder={"每行一个技能，或用逗号分隔\nPython\nAPI 设计\n系统稳定性"}
                 rows={5}
                 value={mustHaveSkillsText}
               />
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Preferred skills</span>
+              <span>加分技能</span>
               <textarea
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setPreferredSkillsText(event.target.value)}
-                placeholder={"One skill per line or comma separated\nDistributed systems\nData pipelines"}
+                placeholder={"每行一个技能，或用逗号分隔\n分布式系统\n数据管道"}
                 rows={5}
                 value={preferredSkillsText}
               />
@@ -967,11 +967,11 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
           {isShortlistMode ? (
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Shortlist focus</span>
+              <span>短名单关注点</span>
               <textarea
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "job"}
                 onChange={(event) => setComparisonNotes(event.target.value)}
-                placeholder="Example: prioritize candidates strongest on backend ownership and interview risk."
+                placeholder="示例：优先考虑后端 owner 能力强、面试风险更低的候选人。"
                 rows={3}
                 value={comparisonNotes}
               />
@@ -983,7 +983,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
             disabled={isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "job")}
             type="submit"
           >
-            {isCreating ? "Launching..." : isShortlistMode ? "Launch shortlist comparison" : "Launch job task"}
+            {isCreating ? "正在启动..." : isShortlistMode ? "启动短名单对比" : "启动招聘任务"}
           </button>
         </form>
       </SectionCard>
@@ -992,8 +992,8 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
         title="Job runs"
         description="Tasks refresh automatically every 2 seconds so you can watch hiring reviews settle into a grounded structured result."
       >
-        {isLoadingTasks ? <p>Loading job tasks...</p> : null}
-        {!isLoadingTasks && tasks.length === 0 ? <p>No job tasks yet. Launch one to generate a structured hiring workflow.</p> : null}
+        {isLoadingTasks ? <p>正在加载招聘任务...</p> : null}
+        {!isLoadingTasks && tasks.length === 0 ? <p>还没有招聘任务。先启动一个任务来生成结构化招聘流程。</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {tasks.map((task) => {
             const result = parseJobTaskResult(task);
@@ -1016,25 +1016,25 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
                   {renderStatus(task.status)}
                   {result ? renderFitSignalBadge(result.artifacts.fit_signal) : null}
                   {result?.shortlist ? (
-                    <span style={{ color: "#0369a1", fontSize: 12, fontWeight: 600 }}>Shortlist run</span>
+                    <span style={{ color: "#0369a1", fontSize: 12, fontWeight: 600 }}>短名单任务</span>
                   ) : null}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
-                  {result?.summary ?? extractTargetRole(task, result) ?? "No custom role focus provided."}
+                  {result?.summary ?? extractTargetRole(task, result) ?? "未提供自定义岗位重点。"}
                 </div>
                 {roleSnapshot ? (
                   <div style={{ color: "#64748b", fontSize: 14, marginBottom: 6 }}>{roleSnapshot}</div>
                 ) : null}
-                <div>Task ID: {task.id}</div>
-                <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
+                <div>任务 ID：{task.id}</div>
+                <div>更新时间：{new Date(task.updated_at).toLocaleString()}</div>
                 <div style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                      Open result
+                      查看结果
                     </button>
                     {canUseForComparison ? (
                       <button onClick={() => handleToggleComparisonTask(task)} type="button">
-                        {isSelectedForComparison ? "Remove from shortlist" : "Add to shortlist"}
+                        {isSelectedForComparison ? "移出短名单" : "加入短名单"}
                       </button>
                     ) : null}
                   </div>
@@ -1049,28 +1049,28 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
         title="Structured hiring result"
         description="Inspect the hiring brief, grounded findings, fit assessment, shortlist guidance, and follow-up decisions from the selected job task."
       >
-        {!selectedTask ? <p>Select a job task to inspect its output.</p> : null}
+        {!selectedTask ? <p>请选择一个招聘任务查看结果。</p> : null}
         {selectedTask ? (
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
               <div>
-                <strong>Task ID:</strong> {selectedTask.id}
+                <strong>任务 ID：</strong> {selectedTask.id}
               </div>
               <div>
-                <strong>Status:</strong> {renderStatus(selectedTask.status)}
+                <strong>状态：</strong> {renderStatus(selectedTask.status)}
               </div>
               <div>
-                <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as JobTaskType]?.label ?? selectedTask.task_type}
+                <strong>任务类型：</strong> {TASK_OPTIONS[selectedTask.task_type as JobTaskType]?.label ?? selectedTask.task_type}
               </div>
               {selectedInput?.target_role ? (
                 <div>
-                  <strong>Target role:</strong> {selectedInput.target_role}
+                  <strong>目标岗位：</strong> {selectedInput.target_role}
                 </div>
               ) : null}
               {selectedTask.status === "completed" && isSelectableComparisonTask(selectedTask, selectedResult) ? (
                 <div>
                   <button onClick={() => handleToggleComparisonTask(selectedTask)} type="button">
-                    {comparisonTaskIdSet.has(selectedTask.id) ? "Remove from shortlist" : "Use in shortlist"}
+                    {comparisonTaskIdSet.has(selectedTask.id) ? "移出短名单" : "用于短名单"}
                   </button>
                 </div>
               ) : null}
@@ -1078,7 +1078,7 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
 
             {selectedTask.error_message ? (
               <div>
-                <strong style={{ color: "#b91c1c" }}>Job task error</strong>
+                <strong style={{ color: "#b91c1c" }}>招聘任务错误</strong>
                 <p style={{ color: "#b91c1c", marginBottom: 0 }}>{selectedTask.error_message}</p>
               </div>
             ) : null}
@@ -1098,31 +1098,31 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
                 {renderFindings(selectedResult.findings)}
 
                 {renderListSection({
-                  title: "Gaps",
+                  title: "缺口",
                   items: selectedResult.gaps,
-                  emptyText: "No explicit hiring gaps were produced for this run.",
+                  emptyText: "这次运行没有产出明确的招聘缺口。",
                 })}
 
                 {renderListSection({
                   title: "Highlights",
                   items: selectedResult.highlights,
-                  emptyText: "No highlight bullets were produced for this run.",
+                  emptyText: "这次运行没有产出亮点摘要。",
                 })}
 
                 {renderListSection({
-                  title: "Open questions",
+                  title: "开放问题",
                   items: selectedResult.open_questions,
-                  emptyText: "No further open questions were produced for this run.",
+                  emptyText: "这次运行没有产出额外开放问题。",
                 })}
 
                 {renderListSection({
-                  title: "Next steps",
+                  title: "下一步建议",
                   items: selectedResult.next_steps,
-                  emptyText: "No next steps were produced for this run.",
+                  emptyText: "这次运行没有产出下一步建议。",
                 })}
 
                 <div>
-                  <strong>Linked evidence</strong>
+                  <strong>关联证据</strong>
                   {selectedResult.evidence.length > 0 ? (
                     <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
                       {selectedResult.evidence.map((evidence) => (
@@ -1138,17 +1138,17 @@ export default function JobAssistantPanel({ workspaceId }: JobAssistantPanelProp
                           {evidence.snippet ? (
                             <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>{evidence.snippet}</p>
                           ) : null}
-                          <div style={{ color: "#475569", fontSize: 14 }}>Ref ID: {evidence.ref_id}</div>
+                          <div style={{ color: "#475569", fontSize: 14 }}>引用 ID：{evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>Open hiring context</Link>
+                              <Link href={`/workspaces/${workspaceId}/documents`}>打开招聘上下文</Link>
                             </div>
                           ) : null}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No linked evidence was returned. This usually means the workspace had limited indexed hiring context.</p>
+                    <p>这次没有返回关联证据，通常说明工作区里的招聘材料或索引上下文还不充分。</p>
                   )}
                 </div>
               </>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,21 +38,21 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
       storeLoginSession(loginResponse);
       router.push("/workspaces");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Registration failed");
+      setErrorMessage(isApiClientError(error) ? error.message : "注册失败");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Register">Loading session...</SectionCard>;
+    return <SectionCard title="注册">正在加载会话...</SectionCard>;
   }
 
   if (session) {
     return (
-      <SectionCard title="Account already active" description={`Signed in as ${session.user.email}.`}>
+      <SectionCard title="账号已登录" description={`当前登录账号：${session.user.email}。`}>
         <p>
-          Continue to <Link href="/workspaces">workspaces</Link>.
+          前往 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );
@@ -64,13 +64,13 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
         {publicDemoSettings ? (
           <PublicDemoNotice
             settings={publicDemoSettings}
-            title="Public Demo Access"
-            description="Self-serve registration is temporarily disabled, so this public demo currently requires an operator-provided account."
+            title="公网 Demo 访问"
+            description="当前已关闭自助注册，因此这个公网 demo 目前需要使用运维侧提供的账号。"
           />
         ) : null}
-        <SectionCard title="Registration unavailable" description="Self-serve registration is disabled for the current public demo window.">
+        <SectionCard title="暂不开放注册" description="当前这轮公网 demo 暂时关闭了自助注册。">
           <p>
-            Use an operator-provided account to <Link href={authRoutes.login}>sign in</Link>, or try again later.
+            请使用运维侧提供的账号前往 <Link href={authRoutes.login}>登录</Link>，或稍后再试。
           </p>
         </SectionCard>
       </>
@@ -82,18 +82,18 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
       {publicDemoSettings ? (
         <PublicDemoNotice
           settings={publicDemoSettings}
-          title="Public Demo Limits"
-          description="Create an account to explore the public demo within the current bounded limits."
+          title="公网 Demo 限制"
+          description="你可以在当前限制范围内创建账号并体验公网 demo。"
         />
       ) : null}
-      <SectionCard title="Create account" description="Create a bounded public-demo account backed by browser-stored bearer auth.">
+      <SectionCard title="创建账号" description="创建一个受限的公网 demo 账号，登录态通过浏览器保存的 bearer 认证维持。">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Name</span>
+            <span>姓名</span>
             <input onChange={(event) => setName(event.target.value)} required type="text" value={name} />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Email</span>
+            <span>邮箱</span>
             <input
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
@@ -103,7 +103,7 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Password</span>
+            <span>密码</span>
             <input
               autoComplete="new-password"
               onChange={(event) => setPassword(event.target.value)}
@@ -114,11 +114,11 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Creating account..." : "Create account"}
+            {isSubmitting ? "正在创建账号..." : "创建账号"}
           </button>
         </form>
         <p>
-          Already registered? <Link href={authRoutes.login}>Sign in</Link>
+          已经注册过？前往 <Link href={authRoutes.login}>登录</Link>
         </p>
       </SectionCard>
     </>

@@ -336,7 +336,7 @@ def test_public_demo_rejects_oversized_upload(
     )
 
     assert response.status_code == 413
-    assert "files must be 8 bytes or smaller" in response.json()["detail"]
+    assert "单个文件不能超过 8 字节" in response.json()["detail"]
 
 
 def test_public_demo_limits_documents_per_workspace(
@@ -367,4 +367,4 @@ def test_public_demo_limits_documents_per_workspace(
         files={"file": ("second.txt", b"second body", "text/plain")},
     )
     assert second_response.status_code == 409
-    assert "up to 1 documents per workspace" in second_response.json()["detail"]
+    assert "每个工作区最多可上传 1 个文档" in second_response.json()["detail"]

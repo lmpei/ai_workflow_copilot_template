@@ -62,7 +62,7 @@ def ingest_document(
 ) -> DocumentResponse:
     document = document_repository.get_document(document_id=document_id, user_id=user_id)
     if document is None:
-        raise DocumentAccessError("Document not found")
+        raise DocumentAccessError("未找到文档")
 
     preserve_existing_index = reset_for_reindex and document.status == DOCUMENT_STATUS_INDEXED
 
@@ -102,9 +102,9 @@ def ingest_document(
         raise
     except Exception as error:
         if preserve_existing_index:
-            raise DocumentProcessingError(f"Document ingest failed: {error}") from error
+            raise DocumentProcessingError(f"文档入库失败：{error}") from error
         _mark_document_failed(document_id)
-        raise DocumentProcessingError(f"Document ingest failed: {error}") from error
+        raise DocumentProcessingError(f"文档入库失败：{error}") from error
 
 
 async def upload_document(
@@ -118,12 +118,12 @@ async def upload_document(
         user_id=user_id,
     )
     if not has_access:
-        raise DocumentAccessError("Workspace not found")
+        raise DocumentAccessError("未找到工作区")
 
     filename = _sanitize_filename(file.filename)
     content = await file.read()
     if not content:
-        raise DocumentUploadError("Uploaded file cannot be empty")
+        raise DocumentUploadError("上传文件不能为空")
     ensure_document_upload_allowed(
         workspace_id=workspace_id,
         user_id=user_id,
@@ -169,11 +169,11 @@ def create_text_document(
         user_id=user_id,
     )
     if not has_access:
-        raise DocumentAccessError("Workspace not found")
+        raise DocumentAccessError("未找到工作区")
 
     normalized_text = text_content.strip()
     if not normalized_text:
-        raise DocumentUploadError("Seeded document content cannot be empty")
+        raise DocumentUploadError("预置文档内容不能为空")
 
     filename = _sanitize_filename(title if title.lower().endswith(".txt") else f"{title}.txt")
     encoded_content = normalized_text.encode("utf-8")
@@ -217,7 +217,7 @@ def list_documents(*, workspace_id: str, user_id: str) -> list[DocumentResponse]
         user_id=user_id,
     )
     if not has_access:
-        raise DocumentAccessError("Workspace not found")
+        raise DocumentAccessError("未找到工作区")
 
     documents = document_repository.list_documents(workspace_id=workspace_id, user_id=user_id)
     return [DocumentResponse.from_model(document) for document in documents]
@@ -240,7 +240,7 @@ def reindex_document(*, document_id: str, user_id: str) -> DocumentResponse | No
 def parse_document_into_chunks(*, document_id: str, user_id: str) -> DocumentResponse:
     document = document_repository.get_document(document_id=document_id, user_id=user_id)
     if document is None:
-        raise DocumentAccessError("Document not found")
+        raise DocumentAccessError("未找到文档")
 
     document_path = _resolve_document_path(document.file_path)
     parsing_started = False
@@ -251,7 +251,7 @@ def parse_document_into_chunks(*, document_id: str, user_id: str) -> DocumentRes
             next_status=DOCUMENT_STATUS_PARSING,
         )
         if parsed_document is None:
-            raise DocumentAccessError("Document not found")
+            raise DocumentAccessError("未找到文档")
         parsing_started = True
 
         segments = _parse_document_segments(file_path=document_path, mime_type=document.mime_type)
@@ -263,7 +263,7 @@ def parse_document_into_chunks(*, document_id: str, user_id: str) -> DocumentRes
             next_status=DOCUMENT_STATUS_CHUNKED,
         )
         if parsed_document is None:
-            raise DocumentAccessError("Document not found")
+            raise DocumentAccessError("未找到文档")
         return DocumentResponse.from_model(parsed_document)
     except DocumentProcessingError:
         if parsing_started:
@@ -280,5 +280,3 @@ def parse_document_into_chunks(*, document_id: str, user_id: str) -> DocumentRes
             )
             raise DocumentProcessingError(str(error)) from error
         raise DocumentProcessingError(str(error)) from error
-
-

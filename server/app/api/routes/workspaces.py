@@ -34,7 +34,7 @@ async def get_workspace(
 ) -> WorkspaceResponse:
     workspace = workspace_service.get_workspace(workspace_id=workspace_id, user_id=current_user.id)
     if workspace is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到工作区")
     return workspace
 
 
@@ -50,5 +50,5 @@ async def update_workspace(
         payload=payload,
     )
     if workspace is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到工作区")
     return workspace

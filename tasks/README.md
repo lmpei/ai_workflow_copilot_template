@@ -1,4 +1,4 @@
-# Tasks
+﻿# Tasks
 
 This directory holds execution-ready task specs.
 
@@ -27,6 +27,8 @@ current state of the project.
 - Archive completed Stage C tasks under `tasks/archive/stage-c/`.
 - Use `stage-d-*` naming for Stage D work.
 - Archive completed Stage D tasks under `tasks/archive/stage-d/`.
+- Use `stage-e-*` naming for Stage E work.
+- Archive completed Stage E tasks under `tasks/archive/stage-e/`.
 - If the planning model changes again in a later stage, record that choice in `DECISIONS.md` before changing naming.
 
 ## Relationship to Other Docs

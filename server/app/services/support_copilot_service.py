@@ -110,7 +110,7 @@ def normalize_support_task_input(input_json: dict[str, object] | None) -> dict[s
     try:
         payload = SupportTaskInput.model_validate(payload_input)
     except ValidationError as error:
-        raise SupportCopilotContractError("Invalid support task input") from error
+        raise SupportCopilotContractError("Support 任务输入无效") from error
 
     normalized_payload: dict[str, object] = {}
     normalized_issue = _normalize_optional_string(payload.customer_issue)
@@ -147,7 +147,7 @@ def resolve_support_task_input(input_json: dict[str, object] | None) -> SupportT
     try:
         return SupportTaskInput.model_validate(normalize_support_task_input(input_json))
     except ValidationError as error:
-        raise SupportCopilotContractError("Invalid support task input") from error
+        raise SupportCopilotContractError("Support 任务输入无效") from error
 
 
 def resolve_support_task_lineage(
@@ -160,22 +160,22 @@ def resolve_support_task_lineage(
 
     parent_task = task_repository.get_task(support_input.parent_task_id)
     if parent_task is None or parent_task.workspace_id != workspace_id:
-        raise SupportCopilotContractError("Parent support task not found in this workspace")
+        raise SupportCopilotContractError("当前工作区中未找到父级 Support 任务")
     if get_scenario_task_module_type(parent_task.task_type) != MODULE_TYPE_SUPPORT:
-        raise SupportCopilotContractError("Parent task must be a completed Support task")
+        raise SupportCopilotContractError("父任务必须是已完成的 Support 任务")
     if parent_task.status != "done":
-        raise SupportCopilotContractError("Parent support task must be completed before follow-up")
+        raise SupportCopilotContractError("父级 Support 任务必须先完成后才能继续跟进")
 
     result = parent_task.output_json.get("result")
     if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_SUPPORT:
-        raise SupportCopilotContractError("Parent support task does not contain a structured Support result")
+        raise SupportCopilotContractError("父级 Support 任务不包含结构化 Support 结果")
 
     title = result.get("title")
     summary = result.get("summary")
     if not isinstance(title, str) or not title.strip():
-        raise SupportCopilotContractError("Parent support task is missing a Support title")
+        raise SupportCopilotContractError("父级 Support 任务缺少标题")
     if not isinstance(summary, str) or not summary.strip():
-        raise SupportCopilotContractError("Parent support task is missing a Support summary")
+        raise SupportCopilotContractError("父级 Support 任务缺少摘要")
 
     parent_input = result.get("input")
     parent_input_json = parent_input if isinstance(parent_input, dict) else {}

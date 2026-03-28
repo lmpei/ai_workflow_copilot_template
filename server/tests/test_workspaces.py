@@ -1,4 +1,4 @@
-﻿from app.core.config import get_settings
+from app.core.config import get_settings
 from fastapi.testclient import TestClient
 
 
@@ -214,4 +214,4 @@ def test_public_demo_limits_workspace_creation_per_user(
         headers=headers,
     )
     assert second_response.status_code == 409
-    assert "up to 1 workspaces per account" in second_response.json()["detail"]
+    assert "每个账号最多可创建 1 个工作区" in second_response.json()["detail"]

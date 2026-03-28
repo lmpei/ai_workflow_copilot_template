@@ -15,6 +15,16 @@ type TaskModulePanelProps = {
   workspaceId: string;
 };
 
+const MODULE_PRODUCT_NAMES: Record<string, string> = {
+  research: "Research Assistant",
+  support: "Support Copilot",
+  job: "Job Assistant",
+};
+
+function getModuleDisplayName(moduleType: string): string {
+  return MODULE_PRODUCT_NAMES[moduleType] ?? moduleType;
+}
+
 export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -32,7 +42,7 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
     } finally {
       setIsLoading(false);
     }
@@ -43,20 +53,20 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }, [loadWorkspace]);
 
   if (!isReady) {
-    return <SectionCard title="Module Tasks">Loading session...</SectionCard>;
+    return <SectionCard title="模块任务">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to run scenario tasks." />;
+    return <AuthRequired description="登录后才能运行场景任务。" />;
   }
 
   if (isLoading) {
-    return <SectionCard title="Module Tasks">Loading workspace module...</SectionCard>;
+    return <SectionCard title="模块任务">正在加载工作区模块...</SectionCard>;
   }
 
   if (errorMessage) {
     return (
-      <SectionCard title="Module Tasks" description="The task surface depends on workspace module settings.">
+      <SectionCard title="模块任务" description="任务面板依赖当前工作区的模块配置。">
         <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p>
       </SectionCard>
     );
@@ -75,16 +85,10 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   return (
-    <SectionCard
-      title="Module Tasks"
-      description="This task surface will grow module-specific UX as each scenario reaches MVP depth."
-    >
+    <SectionCard title="模块任务" description="随着各场景继续深化，这里会逐步收成更明确的模块专属任务体验。">
       <p>
-        The current workspace is configured for <strong>{workspace?.module_type ?? "unknown"}</strong>. A dedicated
-        task surface for this module is not available yet.
+        当前工作区配置的是 <strong>{getModuleDisplayName(workspace?.module_type ?? "unknown")}</strong>。这个模块的专属任务面板暂时还不可用。
       </p>
     </SectionCard>
   );
 }
-
-

@@ -12,11 +12,9 @@ export default function WorkspaceModulesPage({ params }: WorkspaceModulesPagePro
 
   return (
     <main>
-      <h1>Workspace Modules</h1>
+      <h1>工作区模块</h1>
       <WorkspaceNav workspaceId={workspaceId} />
       <ModuleHubPanel workspaceId={workspaceId} />
     </main>
   );
 }
-
-

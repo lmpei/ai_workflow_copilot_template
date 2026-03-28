@@ -1,4 +1,4 @@
-import ChatPanel from "../../../../components/chat/chat-panel";
+﻿import ChatPanel from "../../../../components/chat/chat-panel";
 import WorkspaceNav from "../../../../components/workspace/workspace-nav";
 
 type WorkspacePageProps = {
@@ -12,9 +12,9 @@ export default function WorkspaceChatPage({ params }: WorkspacePageProps) {
 
   return (
     <main>
-      <h1>Chat</h1>
+      <h1>对话</h1>
       <WorkspaceNav workspaceId={workspaceId} />
-      <p>Phase 2 returns grounded answers with source citations from indexed workspace documents.</p>
+      <p>这里会基于已索引的工作区文档返回 grounded 回答，并展示引用来源。</p>
       <ChatPanel workspaceId={workspaceId} />
     </main>
   );

@@ -135,7 +135,7 @@ async def get_eval_run(
 ) -> EvalRunResponse:
     eval_run = eval_service.get_eval_run(eval_run_id=eval_run_id, user_id=current_user.id)
     if eval_run is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Eval run not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到评测运行")
     return eval_run
 
 

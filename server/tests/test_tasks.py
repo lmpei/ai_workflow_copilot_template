@@ -424,7 +424,7 @@ def test_create_follow_up_research_task_rejects_incomplete_parent(
     )
 
     assert follow_up_response.status_code == 400
-    assert "Parent research task must be completed before follow-up" in follow_up_response.json()["detail"]
+    assert "父级研究任务必须先完成后才能继续跟进" in follow_up_response.json()["detail"]
 
 
 def test_create_support_task_for_support_workspace_member(
@@ -636,7 +636,7 @@ def test_create_follow_up_support_task_rejects_incomplete_parent(
     )
 
     assert follow_up_response.status_code == 400
-    assert "Parent support task must be completed before follow-up" in follow_up_response.json()["detail"]
+    assert "父级 Support 任务必须先完成后才能继续跟进" in follow_up_response.json()["detail"]
 
 
 def test_create_follow_up_support_task_rejects_cross_module_parent(
@@ -684,7 +684,7 @@ def test_create_follow_up_support_task_rejects_cross_module_parent(
     )
 
     assert follow_up_response.status_code == 400
-    assert "Parent task must be a completed Support task" in follow_up_response.json()["detail"]
+    assert "父任务必须是已完成的 Support 任务" in follow_up_response.json()["detail"]
 
 
 def test_create_task_rejects_invalid_support_task_input(
@@ -716,7 +716,7 @@ def test_create_task_rejects_invalid_support_task_input(
     )
 
     assert response.status_code == 400
-    assert "Invalid support task input" in response.json()["detail"]
+    assert "Support 任务输入无效" in response.json()["detail"]
 
 
 def test_create_job_task_for_job_workspace_member(
@@ -855,7 +855,7 @@ def test_create_job_shortlist_task_rejects_too_few_comparison_tasks(
     )
 
     assert response.status_code == 400
-    assert "At least two comparison job tasks are required" in response.json()["detail"]
+    assert "短名单评审至少需要两个对比招聘任务" in response.json()["detail"]
 
 
 def test_create_job_shortlist_task_rejects_prior_shortlist_as_comparison_source(
@@ -916,7 +916,7 @@ def test_create_job_shortlist_task_rejects_prior_shortlist_as_comparison_source(
     )
 
     assert response.status_code == 400
-    assert "single candidate review" in response.json()["detail"]
+    assert "单个候选人的评审结果" in response.json()["detail"]
 
 
 
@@ -1096,7 +1096,7 @@ def test_create_task_rejects_invalid_job_task_input(
     )
 
     assert response.status_code == 400
-    assert "Invalid job task input" in response.json()["detail"]
+    assert "Job 任务输入无效" in response.json()["detail"]
 
 
 
@@ -1126,7 +1126,7 @@ def test_create_task_rejects_invalid_research_task_input(
     )
 
     assert response.status_code == 400
-    assert "Invalid research task input" in response.json()["detail"]
+    assert "Research 任务输入无效" in response.json()["detail"]
 
 
 def test_create_task_returns_500_and_marks_failed_when_queueing_fails(
@@ -1353,4 +1353,4 @@ def test_public_demo_limits_tasks_per_workspace(
         headers=headers,
     )
     assert second_response.status_code == 409
-    assert "up to 1 tasks per workspace" in second_response.json()["detail"]
+    assert "每个工作区最多可创建 1 个任务" in second_response.json()["detail"]

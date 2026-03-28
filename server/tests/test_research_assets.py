@@ -297,7 +297,7 @@ def test_create_task_rejects_invalid_research_asset_reference(client: TestClient
     )
 
     assert response.status_code == 400
-    assert "Research asset not found in this workspace" in response.json()["detail"]
+    assert "当前工作区中未找到对应的研究资产" in response.json()["detail"]
 
 
 def test_create_task_rejects_parent_task_linked_to_different_research_asset(
@@ -365,7 +365,7 @@ def test_create_task_rejects_parent_task_linked_to_different_research_asset(
     )
 
     assert mismatched_follow_up_response.status_code == 400
-    assert "Parent research task is linked to a different Research asset" in mismatched_follow_up_response.json()["detail"]
+    assert "父级研究任务关联的是另一个 Research 资产" in mismatched_follow_up_response.json()["detail"]
 
 
 def test_compare_research_assets_and_revisions(client: TestClient, monkeypatch) -> None:

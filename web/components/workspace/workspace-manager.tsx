@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,6 +30,16 @@ function getDemoTemplateId(workspace: Workspace): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
+  research: "Research Assistant",
+  support: "Support Copilot",
+  job: "Job Assistant",
+};
+
+function getModuleDisplayName(moduleType: ModuleType): string {
+  return MODULE_PRODUCT_NAMES[moduleType];
+}
+
 export default function WorkspaceManager() {
   const router = useRouter();
   const { session, isReady } = useAuthSession();
@@ -47,10 +57,7 @@ export default function WorkspaceManager() {
   useEffect(() => {
     const loadPublicDemoContext = async () => {
       try {
-        const [settings, templates] = await Promise.all([
-          readPublicDemoSettings(),
-          listPublicDemoTemplates(),
-        ]);
+        const [settings, templates] = await Promise.all([readPublicDemoSettings(), listPublicDemoTemplates()]);
         setPublicDemoSettings(settings);
         setDemoTemplates(templates);
       } catch {
@@ -74,7 +81,7 @@ export default function WorkspaceManager() {
       try {
         setWorkspaces(await listWorkspaces(session.accessToken));
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspaces");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +95,11 @@ export default function WorkspaceManager() {
     workspaces.length >= publicDemoSettings.max_workspaces_per_user;
 
   const demoTemplateMap = useMemo(
-    () => Object.fromEntries(demoTemplates.map((template) => [template.template_id, template])) as Record<string, PublicDemoTemplateRecord>,
+    () =>
+      Object.fromEntries(demoTemplates.map((template) => [template.template_id, template])) as Record<
+        string,
+        PublicDemoTemplateRecord
+      >,
     [demoTemplates],
   );
 
@@ -114,7 +125,7 @@ export default function WorkspaceManager() {
       setDescription("");
       router.push(`/workspaces/${workspace.id}`);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to create workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法创建工作区");
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +144,7 @@ export default function WorkspaceManager() {
       setWorkspaces((currentWorkspaces) => [seededWorkspace.workspace, ...currentWorkspaces]);
       router.push(`/workspaces/${seededWorkspace.workspace.id}`);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to create the guided demo workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法创建引导演示工作区");
     } finally {
       setLaunchingTemplateId(null);
     }
@@ -145,43 +156,43 @@ export default function WorkspaceManager() {
   };
 
   if (!isReady) {
-    return <SectionCard title="Workspaces">Loading session...</SectionCard>;
+    return <SectionCard title="工作区">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to create and manage workspaces." />;
+    return <AuthRequired description="登录后才能创建和管理工作区。" />;
   }
 
   return (
     <>
-      <SectionCard title="Current session" description={`Signed in as ${session.user.email}.`}>
+      <SectionCard title="当前会话" description={`当前登录账号：${session.user.email}。`}>
         <button onClick={handleLogout} type="button">
-          Log out
+          退出登录
         </button>
       </SectionCard>
 
       {publicDemoSettings ? (
         <PublicDemoNotice
           settings={publicDemoSettings}
-          description="Public demo accounts are intentionally bounded so outside users can explore the system without hidden operator setup."
+          description="公网 demo 账号会被明确限制，方便外部用户在没有隐性运维准备的情况下体验系统。"
         />
       ) : null}
 
       <SectionCard
-        title="Guided demo workspaces"
-        description="Choose a seeded showcase path when you want to understand the platform quickly instead of starting from an empty workspace."
+        title="引导演示工作区"
+        description="如果你想快速理解平台，而不是从空白工作区开始，可以直接选择带预置内容的演示路径。"
       >
         {publicDemoSettings?.public_demo_mode ? (
           <p style={{ marginTop: 0 }}>
-            Current account usage: {workspaces.length} / {publicDemoSettings.max_workspaces_per_user} workspaces.
+            当前账号已使用：{workspaces.length} / {publicDemoSettings.max_workspaces_per_user} 个工作区。
           </p>
         ) : null}
         {workspaceLimitReached ? (
           <p style={{ color: "#b45309", marginTop: 0 }}>
-            This public-demo account has reached its workspace limit. Open an existing workspace or ask the operator to reset the account.
+            这个公网 demo 账号已达到工作区数量上限。请打开已有工作区，或联系运维重置账号。
           </p>
         ) : null}
-        {demoTemplates.length === 0 ? <p>No guided demo templates are available right now.</p> : null}
+        {demoTemplates.length === 0 ? <p>当前暂时没有可用的引导演示模板。</p> : null}
         <div
           style={{
             display: "grid",
@@ -211,22 +222,22 @@ export default function WorkspaceManager() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {template.module_type}
+                  {getModuleDisplayName(template.module_type)}
                 </span>
               </div>
               <p style={{ marginTop: 0 }}>{template.summary}</p>
               <p style={{ marginBottom: 8, marginTop: 0 }}>
-                <strong>Seeded documents:</strong> {template.seeded_documents.map((document) => document.title).join(", ")}
+                <strong>预置文档：</strong> {template.seeded_documents.map((document) => document.title).join("，")}
               </p>
               <p style={{ marginBottom: 12, marginTop: 0 }}>
-                <strong>Showcase path:</strong> {template.showcase_steps.map((step) => step.title).join(" -> ")}
+                <strong>演示路径：</strong> {template.showcase_steps.map((step) => step.title).join(" -> ")}
               </p>
               <button
                 disabled={workspaceLimitReached || launchingTemplateId !== null}
                 onClick={() => void handleCreateGuidedDemo(template.template_id)}
                 type="button"
               >
-                {launchingTemplateId === template.template_id ? "Creating guided demo..." : "Create guided demo"}
+                {launchingTemplateId === template.template_id ? "正在创建引导演示..." : "创建引导演示"}
               </button>
             </div>
           ))}
@@ -234,41 +245,38 @@ export default function WorkspaceManager() {
       </SectionCard>
 
       <SectionCard
-        title="Create workspace"
-        description="Each workspace owns documents, chat traces, tasks, evals, and module-specific workflow state."
+        title="创建工作区"
+        description="每个工作区都持有自己的文档、对话痕迹、任务、评测和模块工作流状态。"
       >
         <form onSubmit={handleCreateWorkspace} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Name</span>
+            <span>名称</span>
             <input onChange={(event) => setName(event.target.value)} required type="text" value={name} />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Module</span>
+            <span>模块</span>
             <select onChange={(event) => setModuleType(event.target.value as ModuleType)} value={moduleType}>
               {moduleTypes.map((value) => (
                 <option key={value} value={value}>
-                  {value}
+                  {getModuleDisplayName(value)}
                 </option>
               ))}
             </select>
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Description</span>
+            <span>说明</span>
             <textarea onChange={(event) => setDescription(event.target.value)} rows={3} value={description} />
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button disabled={isSubmitting || workspaceLimitReached} type="submit">
-            {isSubmitting ? "Creating..." : "Create workspace"}
+            {isSubmitting ? "正在创建..." : "创建工作区"}
           </button>
         </form>
       </SectionCard>
 
-      <SectionCard
-        title="Workspace list"
-        description="Open a workspace to manage documents, grounded chat, scenario tasks, and demo-ready module surfaces."
-      >
-        {isLoading ? <p>Loading workspaces...</p> : null}
-        {!isLoading && workspaces.length === 0 ? <p>No workspaces yet.</p> : null}
+      <SectionCard title="工作区列表" description="打开工作区后，可以管理文档、grounded chat、场景任务和演示模块页面。">
+        {isLoading ? <p>正在加载工作区...</p> : null}
+        {!isLoading && workspaces.length === 0 ? <p>还没有工作区。</p> : null}
         <ul>
           {workspaces.map((workspace) => {
             const demoTemplate = demoTemplateMap[getDemoTemplateId(workspace) ?? ""];
@@ -278,14 +286,14 @@ export default function WorkspaceManager() {
                 <div>
                   <Link href={`/workspaces/${workspace.id}`}>{workspace.name}</Link>
                 </div>
-                <div>Active module: {workspace.module_type}</div>
-                {demoTemplate ? <div>Guided demo: {demoTemplate.title}</div> : null}
+                <div>当前模块：{getModuleDisplayName(workspace.module_type)}</div>
+                {demoTemplate ? <div>引导演示：{demoTemplate.title}</div> : null}
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <Link href={`/workspaces/${workspace.id}/modules`}>Modules</Link>
-                  <Link href={`/workspaces/${workspace.id}/documents`}>Documents</Link>
-                  <Link href={`/workspaces/${workspace.id}/chat`}>Chat</Link>
-                  <Link href={`/workspaces/${workspace.id}/tasks`}>Tasks</Link>
-                  <Link href={`/workspaces/${workspace.id}/analytics`}>Analytics</Link>
+                  <Link href={`/workspaces/${workspace.id}/modules`}>模块</Link>
+                  <Link href={`/workspaces/${workspace.id}/documents`}>文档</Link>
+                  <Link href={`/workspaces/${workspace.id}/chat`}>对话</Link>
+                  <Link href={`/workspaces/${workspace.id}/tasks`}>任务</Link>
+                  <Link href={`/workspaces/${workspace.id}/analytics`}>分析</Link>
                 </div>
               </li>
             );

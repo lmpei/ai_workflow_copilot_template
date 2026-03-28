@@ -53,14 +53,14 @@ const TASK_OPTIONS: Record<
   }
 > = {
   research_summary: {
-    label: "Research Summary",
-    description: "Summarize the most relevant indexed findings for a focused question or goal.",
-    placeholder: "Optional. Example: Summarize the strongest findings about Project Apollo.",
+    label: "研究摘要",
+    description: "围绕一个明确问题或目标，总结最相关的已索引发现。",
+    placeholder: "可选。示例：总结关于 Project Apollo 的关键发现。",
   },
   workspace_report: {
-    label: "Workspace Report",
-    description: "Produce a broader report from the currently indexed workspace context.",
-    placeholder: "Optional. Example: Build a concise report on the current workspace knowledge base.",
+    label: "工作区报告",
+    description: "基于当前已索引的工作区上下文生成更完整的报告。",
+    placeholder: "可选。示例：围绕当前工作区知识库生成一份简洁报告。",
   },
 };
 
@@ -70,11 +70,11 @@ const DEFAULT_REQUESTED_SECTIONS: Record<ResearchTaskType, ResearchRequestedSect
 };
 
 const REQUESTED_SECTION_OPTIONS: Array<{ value: ResearchRequestedSection; label: string }> = [
-  { value: "summary", label: "Summary" },
-  { value: "findings", label: "Findings" },
-  { value: "evidence", label: "Evidence" },
-  { value: "open_questions", label: "Open questions" },
-  { value: "next_steps", label: "Next steps" },
+  { value: "summary", label: "摘要" },
+  { value: "findings", label: "发现" },
+  { value: "evidence", label: "证据" },
+  { value: "open_questions", label: "开放问题" },
+  { value: "next_steps", label: "下一步建议" },
 ];
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -185,7 +185,7 @@ function parseResearchSections(value: unknown, result: JsonObject): ResearchResu
         ? result.highlights
             .filter((highlight): highlight is string => typeof highlight === "string")
             .map((highlight, index) => ({
-              title: `Finding ${index + 1}`,
+              title: `发现 ${index + 1}`,
               summary: highlight,
               evidence_ref_ids: [],
             }))
@@ -200,7 +200,7 @@ function parseResearchSections(value: unknown, result: JsonObject): ResearchResu
     ? value.findings
         .filter((finding): finding is JsonObject => isJsonObject(finding))
         .map((finding, index) => ({
-          title: typeof finding.title === "string" ? finding.title : `Finding ${index + 1}`,
+          title: typeof finding.title === "string" ? finding.title : `发现 ${index + 1}`,
           summary: typeof finding.summary === "string" ? finding.summary : "",
           evidence_ref_ids: parseStringArray(finding.evidence_ref_ids),
         }))
@@ -225,7 +225,7 @@ function parseResearchReport(value: unknown): ResearchFormalReport | undefined {
         .filter((section): section is JsonObject => isJsonObject(section))
         .map((section, index) => ({
           slug: typeof section.slug === "string" ? section.slug : `section-${index + 1}`,
-          title: typeof section.title === "string" ? section.title : `Section ${index + 1}`,
+          title: typeof section.title === "string" ? section.title : `章节 ${index + 1}`,
           summary: typeof section.summary === "string" ? section.summary : "",
           bullets: parseStringArray(section.bullets),
           evidence_ref_ids: parseStringArray(section.evidence_ref_ids),
@@ -233,7 +233,7 @@ function parseResearchReport(value: unknown): ResearchFormalReport | undefined {
     : [];
 
   return {
-    headline: typeof value.headline === "string" ? value.headline : "Research Report",
+    headline: typeof value.headline === "string" ? value.headline : "研究报告",
     executive_summary: typeof value.executive_summary === "string" ? value.executive_summary : "",
     sections,
     open_questions: parseStringArray(value.open_questions),
@@ -323,10 +323,10 @@ function sortTasks(tasks: TaskRecord[]): TaskRecord[] {
 
 function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
-    pending: { label: "pending", color: "#92400e" },
-    running: { label: "running", color: "#1d4ed8" },
-    completed: { label: "completed", color: "#15803d" },
-    failed: { label: "failed", color: "#b91c1c" },
+    pending: { label: "待处理", color: "#92400e" },
+    running: { label: "运行中", color: "#1d4ed8" },
+    completed: { label: "已完成", color: "#15803d" },
+    failed: { label: "失败", color: "#b91c1c" },
   };
   const style = statusStyles[status];
 
@@ -350,9 +350,9 @@ function renderStatus(status: TaskRecord["status"]) {
 
 function renderArtifactStats(artifacts: ResearchArtifacts) {
   const cards = [
-    { label: "Documents", value: artifacts.document_count },
-    { label: "Matches", value: artifacts.match_count },
-    { label: "Tool calls", value: artifacts.tool_call_ids.length },
+    { label: "文档", value: artifacts.document_count },
+    { label: "命中片段", value: artifacts.match_count },
+    { label: "工具调用", value: artifacts.tool_call_ids.length },
   ];
 
   return (
@@ -489,7 +489,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
     } finally {
       setIsLoadingWorkspace(false);
     }
@@ -517,7 +517,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
           return loadedTasks[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research tasks");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载研究任务");
       } finally {
         if (!silent) {
           setIsLoadingTasks(false);
@@ -541,7 +541,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       try {
         setSelectedAsset(await getResearchAsset(session.accessToken, assetId));
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research asset");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载研究资产");
       } finally {
         if (!silent) {
           setIsLoadingSelectedAsset(false);
@@ -561,7 +561,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       try {
         setCompareAsset(await getResearchAsset(session.accessToken, assetId));
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load comparison asset");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载比较资产");
       }
     },
     [session],
@@ -594,7 +594,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
           return sortedAssets[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load research workbench");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载 Research 工作台");
       } finally {
         if (!silent) {
           setIsLoadingAssets(false);
@@ -814,7 +814,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       });
       setAssetComparison(comparison);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to compare research assets");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法比较研究资产");
     } finally {
       setIsComparingAssets(false);
     }
@@ -838,7 +838,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setSelectedAsset(asset);
       setSelectedTaskId(task.id);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to save research asset");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法保存研究资产");
     } finally {
       setIsSavingAsset(false);
     }
@@ -857,7 +857,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setSelectedTaskId(updatedTask.id);
       await loadTasks(true);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to cancel research task");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法取消研究任务");
     } finally {
       setIsControllingTaskId(null);
     }
@@ -876,7 +876,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setSelectedTaskId(retriedTask.id);
       await loadTasks(true);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to retry research task");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法重试研究任务");
     } finally {
       setIsControllingTaskId(null);
     }
@@ -950,14 +950,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       setParentTaskId(null);
       setContinuationNotes("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch research task");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法启动研究任务");
     } finally {
       setIsCreating(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Research Assistant">Loading session...</SectionCard>;
+    return <SectionCard title="Research Assistant">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
@@ -968,19 +968,19 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
     <>
       <SectionCard
         title="Research Assistant"
-        description="Launch research tasks, inspect structured findings, and follow linked evidence back to workspace documents."
+        description="启动研究任务，查看结构化发现，并沿着关联证据回到工作区文档。"
       >
-        {isLoadingWorkspace ? <p>Loading workspace configuration...</p> : null}
+        {isLoadingWorkspace ? <p>正在加载工作区配置...</p> : null}
         {workspace ? (
           <div style={{ display: "grid", gap: 8 }}>
             <div>
-              <strong>Workspace:</strong> {workspace.name}
+              <strong>工作区：</strong> {workspace.name}
             </div>
             <div>
-              <strong>Module:</strong> {workspace.module_type}
+              <strong>模块：</strong> {workspace.module_type}
             </div>
             <div>
-              <strong>Features:</strong>{" "}
+              <strong>能力：</strong>{" "}
               {Array.isArray(workspace.module_config_json.features)
                 ? workspace.module_config_json.features.join(", ")
                 : "documents, grounded_chat, tasks, evals"}
@@ -989,7 +989,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
         ) : null}
         {workspace?.module_type && workspace.module_type !== "research" ? (
           <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 12 }}>
-            This surface is only available for research workspaces. Current module: {workspace.module_type}.
+            这个界面只对 Research 工作区开放。当前模块：{workspace.module_type}.
           </p>
         ) : null}
       </SectionCard>
@@ -1021,12 +1021,12 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       />
 
       <SectionCard
-        title="Launch research task"
+        title="启动研究任务"
         description="Define the research goal, scope, and output expectations for a reusable Stage B research run."
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Task type</span>
+            <span>任务类型</span>
             <select
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setTaskType(event.target.value as ResearchTaskType)}
@@ -1053,17 +1053,17 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             >
               <div style={{ fontWeight: 700 }}>Workbench context</div>
               <div>
-                <strong>Asset:</strong> {continuationAssetSummary.title}
+                <strong>资产：</strong> {continuationAssetSummary.title}
               </div>
               <div>
-                <strong>Latest revision:</strong> v{continuationAssetSummary.latest_revision_number}
+                <strong>最新版本：</strong> v{continuationAssetSummary.latest_revision_number}
               </div>
               <div>
-                <strong>Latest summary:</strong> {continuationAssetSummary.latest_summary}
+                <strong>最新摘要：</strong> {continuationAssetSummary.latest_summary}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => setSelectedAssetId(continuationAssetSummary.id)} type="button">
-                  Open asset
+                  打开资产
                 </button>
                 <button onClick={clearWorkbenchLinkage} type="button">
                   Clear workbench link
@@ -1082,19 +1082,19 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 padding: 12,
               }}
             >
-              <div style={{ fontWeight: 700 }}>Follow-up context</div>
+              <div style={{ fontWeight: 700 }}>后续上下文</div>
               <div>
-                <strong>Parent task:</strong> {continuationParentTask.id}
+                <strong>父任务：</strong> {continuationParentTask.id}
               </div>
               <div>
-                <strong>Parent title:</strong> {continuationParentResult.title}
+                <strong>父任务标题：</strong> {continuationParentResult.title}
               </div>
               <div>
-                <strong>Parent summary:</strong> {continuationParentResult.summary}
+                <strong>父任务摘要：</strong> {continuationParentResult.summary}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => setSelectedTaskId(continuationParentTask.id)} type="button">
-                  Open parent result
+                  打开父任务结果
                 </button>
                 <button onClick={clearWorkbenchLinkage} type="button">
                   Clear follow-up
@@ -1113,7 +1113,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Focus areas</span>
+            <span>关注方向</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setFocusAreasText(event.target.value)}
@@ -1123,7 +1123,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Key questions</span>
+            <span>关键问题</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setKeyQuestionsText(event.target.value)}
@@ -1133,7 +1133,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Constraints</span>
+            <span>约束条件</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setConstraintsText(event.target.value)}
@@ -1143,7 +1143,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Continuation notes</span>
+            <span>延续备注</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setContinuationNotes(event.target.value)}
@@ -1153,15 +1153,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Deliverable</span>
+            <span>交付形式</span>
             <select
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "research"}
               onChange={(event) => setDeliverable(event.target.value as ResearchDeliverable | "")}
               value={deliverable}
             >
               <option value="">Use task default</option>
-              <option value="brief">Brief</option>
-              <option value="report">Report</option>
+              <option value="brief">摘要</option>
+              <option value="report">报告</option>
             </select>
           </label>
           <fieldset
@@ -1191,18 +1191,18 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
             disabled={isCreating || (workspace?.module_type !== undefined && workspace.module_type !== "research")}
             type="submit"
           >
-            {isCreating ? "Launching..." : "Launch research task"}
+            {isCreating ? "正在启动..." : "启动研究任务"}
           </button>
         </form>
       </SectionCard>
 
       <SectionCard
-        title="Research runs"
-        description="Tasks are refreshed automatically every 2 seconds so you can watch pending and running work settle into final results."
+        title="Research 运行记录"
+        description="任务会每 2 秒自动刷新一次，方便你观察等待中和运行中的工作如何收敛为最终结果。"
       >
-        {isLoadingTasks ? <p>Loading research tasks...</p> : null}
-        {!isLoadingTasks && tasks.length === 0 ? <p>No research tasks yet. Launch one to generate a structured result.</p> : null}
-        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+        {isLoadingTasks ? <p>正在加载研究任务...</p> : null}
+        {!isLoadingTasks && tasks.length === 0 ? <p>还没有研究任务。先启动一个任务来生成结构化结果。</p> : null}
+        <ul style={{ listStyle: "无", margin: 0, padding: 0 }}>
           {tasks.map((task) => {
             const result = parseResearchTaskResult(task);
             const assetLink = result ? parseResearchAssetLink(result.metadata.research_asset) : undefined;
@@ -1235,15 +1235,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   ) : null}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
-                  {result?.summary ?? extractGoal(task, result) ?? "No custom goal provided."}
+                  {result?.summary ?? extractGoal(task, result) ?? "未提供自定义目标。"}
                 </div>
-                <div>Task ID: {task.id}</div>
-                <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
-                <div>Recovery: {task.recovery_state}</div>
+                <div>任务 ID：{task.id}</div>
+                <div>更新时间：{new Date(task.updated_at).toLocaleString()}</div>
+                <div>恢复状态：{task.recovery_state}</div>
                 <div style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                      Open result
+                      查看结果
                     </button>
                     {task.status === "pending" || task.status === "running" ? (
                       <button
@@ -1251,7 +1251,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                         onClick={() => void handleCancelTask(task)}
                         type="button"
                       >
-                        {isControllingTaskId === task.id ? "Cancelling..." : "Cancel task"}
+                        {isControllingTaskId === task.id ? "正在取消..." : "取消任务"}
                       </button>
                     ) : null}
                     {task.status === "failed" ? (
@@ -1260,22 +1260,22 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                         onClick={() => void handleRetryTask(task)}
                         type="button"
                       >
-                        {isControllingTaskId === task.id ? "Retrying..." : "Retry task"}
+                        {isControllingTaskId === task.id ? "正在重试..." : "重试任务"}
                       </button>
                     ) : null}
                     {task.status === "completed" && result ? (
                       <button onClick={() => startFollowUpFromTask(task, result)} type="button">
-                        Continue research
+                        继续研究
                       </button>
                     ) : null}
                     {task.status === "completed" && result ? (
                       <button disabled={isSavingAsset} onClick={() => void handleSaveTaskToWorkbench(task)} type="button">
-                        {assetLink ? "Refresh asset" : isSavingAsset ? "Saving..." : "Save to workbench"}
+                        {assetLink ? "刷新资产" : isSavingAsset ? "正在保存..." : "保存到工作台"}
                       </button>
                     ) : null}
                     {assetLink ? (
                       <button onClick={() => setSelectedAssetId(assetLink.asset_id)} type="button">
-                        Open asset
+                        打开资产
                       </button>
                     ) : null}
                   </div>
@@ -1287,41 +1287,41 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
       </SectionCard>
 
       <SectionCard
-        title="Structured result"
-        description="Inspect the research output, input contract, evidence trail, and source artifacts from the selected task."
+        title="结构化结果"
+        description="查看所选任务生成的研究输出、输入契约、证据链和来源材料。"
       >
-        {!selectedTask ? <p>Select a research task to inspect its output.</p> : null}
+        {!selectedTask ? <p>请选择一个研究任务查看结果。</p> : null}
         {selectedTask ? (
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
               <div>
-                <strong>Task ID:</strong> {selectedTask.id}
+                <strong>任务 ID：</strong> {selectedTask.id}
               </div>
               <div>
-                <strong>Status:</strong> {renderStatus(selectedTask.status)}
+                <strong>状态：</strong> {renderStatus(selectedTask.status)}
               </div>
               <div>
-                <strong>Recovery:</strong> {selectedTask.recovery_state}
+                <strong>恢复状态：</strong> {selectedTask.recovery_state}
               </div>
               <div>
-                <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as ResearchTaskType].label}
+                <strong>任务类型：</strong> {TASK_OPTIONS[selectedTask.task_type as ResearchTaskType].label}
               </div>
               {extractGoal(selectedTask, selectedResult) ? (
                 <div>
-                  <strong>Goal:</strong> {extractGoal(selectedTask, selectedResult)}
+                  <strong>目标：</strong> {extractGoal(selectedTask, selectedResult)}
                 </div>
               ) : null}
               {selectedTask.status === "completed" && selectedResult ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => startFollowUpFromTask(selectedTask, selectedResult)} type="button">
-                    Continue from this result
+                    基于此结果继续
                   </button>
                   <button disabled={isSavingAsset} onClick={() => void handleSaveTaskToWorkbench(selectedTask)} type="button">
-                    {selectedTaskAssetLink ? "Refresh asset" : isSavingAsset ? "Saving..." : "Save to workbench"}
+                    {selectedTaskAssetLink ? "刷新资产" : isSavingAsset ? "正在保存..." : "保存到工作台"}
                   </button>
                   {selectedTaskAssetLink ? (
                     <button onClick={() => setSelectedAssetId(selectedTaskAssetLink.asset_id)} type="button">
-                      Open linked asset
+                      打开关联资产
                     </button>
                   ) : null}
                 </div>
@@ -1333,7 +1333,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     onClick={() => void handleCancelTask(selectedTask)}
                     type="button"
                   >
-                    {isControllingTaskId === selectedTask.id ? "Cancelling..." : "Cancel task"}
+                    {isControllingTaskId === selectedTask.id ? "正在取消..." : "取消任务"}
                   </button>
                 </div>
               ) : null}
@@ -1344,7 +1344,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     onClick={() => void handleRetryTask(selectedTask)}
                     type="button"
                   >
-                    {isControllingTaskId === selectedTask.id ? "Retrying..." : "Retry task"}
+                    {isControllingTaskId === selectedTask.id ? "正在重试..." : "重试任务"}
                   </button>
                 </div>
               ) : null}
@@ -1352,15 +1352,15 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
             {selectedTask.error_message ? (
               <div>
-                <strong style={{ color: "#b91c1c" }}>Research error</strong>
+                <strong style={{ color: "#b91c1c" }}>研究任务错误</strong>
                 <p style={{ color: "#b91c1c", marginBottom: 0 }}>{selectedTask.error_message}</p>
               </div>
             ) : null}
 
             <RecoveryDetailCard
               detail={selectedTask.recovery_detail}
-              emptyText="This task has not recorded any cancel or retry lineage yet."
-              title="Task recovery detail"
+              emptyText="这个任务目前还没有记录任何取消或重试历史。"
+              title="任务恢复详情"
             />
 
             {selectedResult ? (
@@ -1382,17 +1382,17 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     }}
                   >
                     <div style={{ color: "#1d4ed8", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                      Linked workbench asset
+                      关联工作台资产
                     </div>
                     <div>
-                      <strong>Asset:</strong> {selectedTaskAssetLink.asset_id}
+                      <strong>资产：</strong> {selectedTaskAssetLink.asset_id}
                     </div>
                     <div>
-                      <strong>Revision:</strong> v{selectedTaskAssetLink.revision_number}
+                      <strong>版本：</strong> v{selectedTaskAssetLink.revision_number}
                     </div>
                     <div>
                       <button onClick={() => setSelectedAssetId(selectedTaskAssetLink.asset_id)} type="button">
-                        Open workbench asset
+                        打开工作台资产
                       </button>
                     </div>
                   </div>
@@ -1401,35 +1401,35 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 {renderArtifactStats(selectedResult.artifacts)}
 
                 <div style={{ display: "grid", gap: 6 }}>
-                  <strong>Structured input</strong>
+                  <strong>结构化输入</strong>
                   <div>
-                    <strong>Deliverable:</strong> {selectedResult.input.deliverable ?? "not specified"}
+                    <strong>交付形式：</strong> {selectedResult.input.deliverable ?? "not specified"}
                   </div>
                   <div>
-                    <strong>Requested sections:</strong>{" "}
+                    <strong>所需章节：</strong>{" "}
                     {selectedResult.input.requested_sections.length > 0
                       ? selectedResult.input.requested_sections.join(", ")
-                      : "task default"}
+                      : "任务默认"}
                   </div>
                   <div>
-                    <strong>Workbench asset:</strong> {selectedResult.input.research_asset_id ?? "none"}
+                    <strong>工作台资产：</strong> {selectedResult.input.research_asset_id ?? "无"}
                   </div>
                   <div>
-                    <strong>Focus areas</strong>
-                    {renderStringList(selectedResult.input.focus_areas, "No focus areas were provided.")}
+                    <strong>关注方向</strong>
+                    {renderStringList(selectedResult.input.focus_areas, "没有提供关注方向。")}
                   </div>
                   <div>
-                    <strong>Key questions</strong>
-                    {renderStringList(selectedResult.input.key_questions, "No key questions were provided.")}
+                    <strong>关键问题</strong>
+                    {renderStringList(selectedResult.input.key_questions, "没有提供关键问题。")}
                   </div>
                   <div>
-                    <strong>Constraints</strong>
-                    {renderStringList(selectedResult.input.constraints, "No explicit constraints were provided.")}
+                    <strong>约束条件</strong>
+                    {renderStringList(selectedResult.input.constraints, "没有提供明确约束条件。")}
                   </div>
                   <div>
-                    <strong>Continuation notes</strong>
+                    <strong>延续备注</strong>
                     <p style={{ marginBottom: 0, marginTop: 8 }}>
-                      {selectedResult.input.continuation_notes ?? "No continuation notes were provided."}
+                      {selectedResult.input.continuation_notes ?? "没有提供延续备注。"}
                     </p>
                   </div>
                 </div>
@@ -1446,30 +1446,30 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                     }}
                   >
                     <div style={{ color: "#1d4ed8", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                      Follow-up lineage
+                      后续 lineage
                     </div>
                     <div>
-                      <strong>Parent task:</strong> {selectedResult.lineage.parent_task_id}
+                      <strong>父任务：</strong> {selectedResult.lineage.parent_task_id}
                     </div>
                     <div>
-                      <strong>Parent title:</strong> {selectedResult.lineage.parent_title}
+                      <strong>父任务标题：</strong> {selectedResult.lineage.parent_title}
                     </div>
                     {selectedResult.lineage.parent_goal ? (
                       <div>
-                        <strong>Parent goal:</strong> {selectedResult.lineage.parent_goal}
+                        <strong>父任务目标：</strong> {selectedResult.lineage.parent_goal}
                       </div>
                     ) : null}
                     {selectedResult.lineage.parent_report_headline ? (
                       <div>
-                        <strong>Parent report:</strong> {selectedResult.lineage.parent_report_headline}
+                        <strong>父报告：</strong> {selectedResult.lineage.parent_report_headline}
                       </div>
                     ) : null}
                     <div>
-                      <strong>Parent summary:</strong> {selectedResult.lineage.parent_summary}
+                      <strong>父任务摘要：</strong> {selectedResult.lineage.parent_summary}
                     </div>
                     {selectedResult.lineage.continuation_notes ? (
                       <div>
-                        <strong>Follow-up guidance:</strong> {selectedResult.lineage.continuation_notes}
+                        <strong>后续指引：</strong> {selectedResult.lineage.continuation_notes}
                       </div>
                     ) : null}
                   </div>
@@ -1488,7 +1488,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                   >
                     <div style={{ display: "grid", gap: 8 }}>
                       <div style={{ color: "#475569", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-                        Formal report
+                        正式报告
                       </div>
                       <h3 style={{ margin: 0 }}>{selectedResult.report.headline}</h3>
                       <p style={{ margin: 0 }}>{selectedResult.report.executive_summary}</p>
@@ -1522,17 +1522,17 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
 
                     <div style={{ display: "grid", gap: 12 }}>
                       <div>
-                        <strong>Report open questions</strong>
+                        <strong>报告开放问题</strong>
                         {renderStringList(
                           selectedResult.report.open_questions,
-                          "The report did not identify additional open questions.",
+                          "报告没有识别出额外开放问题。",
                         )}
                       </div>
                       <div>
-                        <strong>Recommended next steps</strong>
+                        <strong>建议下一步</strong>
                         {renderStringList(
                           selectedResult.report.recommended_next_steps,
-                          "The report did not recommend follow-up work.",
+                          "报告没有建议后续工作。",
                         )}
                       </div>
                     </div>
@@ -1540,14 +1540,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                 ) : null}
 
                 <div>
-                  <strong>{selectedResult.report ? "Underlying structured sections" : "Section summary"}</strong>
+                  <strong>{selectedResult.report ? "底层结构化章节" : "章节摘要"}</strong>
                   <p style={{ marginBottom: 0, marginTop: 8 }}>{selectedResult.sections.summary}</p>
                 </div>
 
                 <div>
-                  <strong>Key findings</strong>
+                  <strong>关键发现</strong>
                   {selectedResult.sections.findings.length > 0 ? (
-                    <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+                    <ul style={{ display: "grid", gap: 12, listStyle: "无", margin: "12px 0 0", padding: 0 }}>
                       {selectedResult.sections.findings.map((finding) => (
                         <li
                           key={`${finding.title}-${finding.summary}`}
@@ -1564,30 +1564,30 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                       ))}
                     </ul>
                   ) : (
-                    <p>No structured findings were produced for this run.</p>
+                    <p>这次运行没有产出结构化发现。</p>
                   )}
                 </div>
 
                 <div>
-                  <strong>Evidence overview</strong>
+                  <strong>证据概览</strong>
                   {renderStringList(
                     selectedResult.sections.evidence_overview,
-                    "No evidence overview items were produced for this run.",
+                    "这次运行没有产出证据概览。",
                   )}
                 </div>
 
                 <div>
-                  <strong>Open questions</strong>
-                  {renderStringList(selectedResult.sections.open_questions, "No open questions were recorded.")}
+                  <strong>开放问题</strong>
+                  {renderStringList(selectedResult.sections.open_questions, "没有记录开放问题。")}
                 </div>
 
                 <div>
-                  <strong>Next steps</strong>
-                  {renderStringList(selectedResult.sections.next_steps, "No next steps were suggested.")}
+                  <strong>下一步建议</strong>
+                  {renderStringList(selectedResult.sections.next_steps, "没有建议下一步。")}
                 </div>
 
                 <div>
-                  <strong>Highlight bullets</strong>
+                  <strong>亮点摘要</strong>
                   {selectedResult.highlights.length > 0 ? (
                     <ul>
                       {selectedResult.highlights.map((highlight) => (
@@ -1595,14 +1595,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                       ))}
                     </ul>
                   ) : (
-                    <p>No highlight bullets were produced for this run.</p>
+                    <p>这次运行没有产出亮点摘要。</p>
                   )}
                 </div>
 
                 <div>
-                  <strong>Linked evidence</strong>
+                  <strong>关联证据</strong>
                   {selectedResult.evidence.length > 0 ? (
-                    <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+                    <ul style={{ display: "grid", gap: 12, listStyle: "无", margin: "12px 0 0", padding: 0 }}>
                       {selectedResult.evidence.map((evidence) => (
                         <li
                           key={evidence.ref_id}
@@ -1616,24 +1616,24 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                           {evidence.snippet ? (
                             <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>{evidence.snippet}</p>
                           ) : null}
-                          <div style={{ color: "#475569", fontSize: 14 }}>Ref ID: {evidence.ref_id}</div>
+                          <div style={{ color: "#475569", fontSize: 14 }}>引用 ID：{evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>Open document context</Link>
+                              <Link href={`/workspaces/${workspaceId}/documents`}>打开文档上下文</Link>
                             </div>
                           ) : null}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No linked evidence was returned. This usually means the workspace had limited indexed context.</p>
+                    <p>这次没有返回关联证据，通常说明工作区里的索引上下文还不充分。</p>
                   )}
                 </div>
 
                 <div>
-                  <strong>Matched chunks</strong>
+                  <strong>命中片段</strong>
                   {selectedResult.artifacts.matches.length > 0 ? (
-                    <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+                    <ul style={{ display: "grid", gap: 12, listStyle: "无", margin: "12px 0 0", padding: 0 }}>
                       {selectedResult.artifacts.matches.map((match) => (
                         <li
                           key={match.chunk_id}
@@ -1644,18 +1644,18 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                           }}
                         >
                           <div style={{ fontWeight: 600 }}>{match.document_title}</div>
-                          <div style={{ color: "#475569", fontSize: 14, marginTop: 4 }}>Chunk {match.chunk_index}</div>
+                          <div style={{ color: "#475569", fontSize: 14, marginTop: 4 }}>片段 {match.chunk_index}</div>
                           <p style={{ marginBottom: 0, marginTop: 8 }}>{match.snippet}</p>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No matched chunks were found for this run.</p>
+                    <p>这次运行没有找到命中片段。</p>
                   )}
                 </div>
 
                 <div>
-                  <strong>Workspace documents considered</strong>
+                  <strong>参与分析的工作区文档</strong>
                   {selectedResult.artifacts.documents.length > 0 ? (
                     <ul>
                       {selectedResult.artifacts.documents.map((document) => (
@@ -1665,14 +1665,14 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                       ))}
                     </ul>
                   ) : (
-                    <p>No workspace documents were available when this task ran.</p>
+                    <p>这个任务运行时没有可用的工作区文档。</p>
                   )}
                 </div>
               </>
             ) : (
               <p>
-                This task does not have a completed structured research payload yet. If it is still running, wait for the
-                next refresh cycle.
+                这个任务还没有生成完成的结构化研究结果。如果它仍在运行，请等待
+                下一次自动刷新。
               </p>
             )}
           </div>

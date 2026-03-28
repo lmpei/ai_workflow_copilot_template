@@ -1,4 +1,4 @@
-﻿import LoginForm from "../../../components/auth/login-form";
+import LoginForm from "../../../components/auth/login-form";
 import { getPublicDemoSettings } from "../../../lib/api";
 
 export default async function LoginPage() {
@@ -8,7 +8,7 @@ export default async function LoginPage() {
 
   return (
     <main>
-      <h1>Login</h1>
+      <h1>登录</h1>
       <LoginForm publicDemoSettings={publicDemoSettings} />
     </main>
   );

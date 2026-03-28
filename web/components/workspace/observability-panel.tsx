@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -34,7 +34,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
     try {
       setTraces(await listWorkspaceTraces(session.accessToken, workspaceId, 20));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load traces");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载调用轨迹");
     } finally {
       setIsLoading(false);
     }
@@ -45,26 +45,23 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
   }, [loadTraces]);
 
   if (!isReady) {
-    return <SectionCard title="Observability">Loading session...</SectionCard>;
+    return <SectionCard title="可观测性">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to inspect workspace traces and eval execution signals." />;
+    return <AuthRequired description="登录后才能查看工作区调用轨迹和评测执行信号。" />;
   }
 
   return (
-    <SectionCard
-      title="Recent traces"
-      description="Inspect the latest persisted traces for chat, task, agent, tool, and eval execution."
-    >
+    <SectionCard title="近期调用轨迹" description="查看最近持久化的对话、任务、Agent、工具和评测执行记录。">
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-        <p style={{ margin: 0, color: "#475569" }}>Showing up to 20 most recent traces for this workspace.</p>
+        <p style={{ margin: 0, color: "#475569" }}>这里最多显示当前工作区最近的 20 条调用轨迹记录。</p>
         <button onClick={() => void loadTraces()} type="button">
-          {isLoading ? "Refreshing..." : "Refresh traces"}
+          {isLoading ? "正在刷新..." : "刷新调用轨迹"}
         </button>
       </div>
       {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-      {!isLoading && traces.length === 0 ? <p>No traces recorded yet.</p> : null}
+      {!isLoading && traces.length === 0 ? <p>目前还没有记录任何调用轨迹。</p> : null}
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {traces.map((trace) => (
           <li
@@ -80,24 +77,22 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
               <strong>{trace.trace_type}</strong>
               <span>{new Date(trace.created_at).toLocaleString()}</span>
             </div>
-            <div>Trace ID: {trace.id}</div>
-            <div>Latency: {trace.latency_ms} ms</div>
-            <div>
-              Tokens: {trace.token_input} in / {trace.token_output} out
-            </div>
-            <div>Estimated cost: {formatCost(trace.estimated_cost)}</div>
-            {trace.task_id ? <div>Task ID: {trace.task_id}</div> : null}
-            {trace.agent_run_id ? <div>Agent run ID: {trace.agent_run_id}</div> : null}
-            {trace.tool_call_id ? <div>Tool call ID: {trace.tool_call_id}</div> : null}
-            {trace.eval_run_id ? <div>Eval run ID: {trace.eval_run_id}</div> : null}
-            {trace.parent_trace_id ? <div>Parent trace ID: {trace.parent_trace_id}</div> : null}
+            <div>调用轨迹 ID：{trace.id}</div>
+            <div>延迟：{trace.latency_ms} ms</div>
+            <div>Token：输入 {trace.token_input} / 输出 {trace.token_output}</div>
+            <div>预估成本：{formatCost(trace.estimated_cost)}</div>
+            {trace.task_id ? <div>任务 ID：{trace.task_id}</div> : null}
+            {trace.agent_run_id ? <div>Agent 运行 ID：{trace.agent_run_id}</div> : null}
+            {trace.tool_call_id ? <div>工具调用 ID：{trace.tool_call_id}</div> : null}
+            {trace.eval_run_id ? <div>评测运行 ID：{trace.eval_run_id}</div> : null}
+            {trace.parent_trace_id ? <div>父级调用轨迹 ID：{trace.parent_trace_id}</div> : null}
             {trace.error_message ? (
               <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 8 }}>
-                <strong>Error:</strong> {trace.error_message}
+                <strong>错误：</strong> {trace.error_message}
               </p>
             ) : null}
             <details style={{ marginTop: 10 }}>
-              <summary>Trace payload</summary>
+              <summary>调用轨迹载荷</summary>
               <pre style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
                 {JSON.stringify(
                   {

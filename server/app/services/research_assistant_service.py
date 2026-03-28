@@ -86,7 +86,7 @@ def normalize_research_task_input(input_json: dict[str, object] | None) -> dict[
     try:
         payload = ResearchTaskInput.model_validate(input_json or {})
     except ValidationError as error:
-        raise ResearchAssistantContractError("Invalid research task input") from error
+        raise ResearchAssistantContractError("Research 任务输入无效") from error
 
     normalized_payload: dict[str, object] = {}
 

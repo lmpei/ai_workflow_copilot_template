@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -38,7 +38,7 @@ export default function MetricsPanel({ workspaceId }: MetricsPanelProps) {
       try {
         setMetrics(await getWorkspaceAnalytics(session.accessToken, workspaceId));
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load analytics");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载分析数据");
       } finally {
         setIsLoading(false);
       }
@@ -48,20 +48,17 @@ export default function MetricsPanel({ workspaceId }: MetricsPanelProps) {
   }, [session, workspaceId]);
 
   if (!isReady) {
-    return <SectionCard title="Analytics">Loading session...</SectionCard>;
+    return <SectionCard title="分析">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to view workspace analytics." />;
+    return <AuthRequired description="登录后才能查看工作区分析数据。" />;
   }
 
   return (
-    <SectionCard
-      title="Workspace analytics"
-      description={`Workspace: ${workspaceId}. Phase 4 combines request, evaluation, and task signals.`}
-    >
+    <SectionCard title="工作区分析" description={`工作区：${workspaceId}。这里汇总请求、评测和任务信号。`}>
       {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-      {isLoading ? <p>Loading analytics...</p> : null}
+      {isLoading ? <p>正在加载分析数据...</p> : null}
       {metrics ? (
         <div
           style={{
@@ -71,39 +68,39 @@ export default function MetricsPanel({ workspaceId }: MetricsPanelProps) {
           }}
         >
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Total requests</strong>
+            <strong>总请求数</strong>
             <div>{metrics.total_requests}</div>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Avg latency</strong>
+            <strong>平均延迟</strong>
             <div>{metrics.avg_latency_ms} ms</div>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Retrieval hit rate</strong>
+            <strong>检索命中率</strong>
             <div>{formatPercent(metrics.retrieval_hit_rate)}</div>
-            <small>{metrics.retrieval_hit_count} hits total</small>
+            <small>累计命中 {metrics.retrieval_hit_count} 次</small>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Token usage</strong>
+            <strong>Token 用量</strong>
             <div>{metrics.token_usage}</div>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Estimated cost</strong>
+            <strong>预估成本</strong>
             <div>{formatCost(metrics.total_estimated_cost)}</div>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Task success rate</strong>
+            <strong>任务成功率</strong>
             <div>{formatPercent(metrics.task_success_rate)}</div>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Eval runs</strong>
+            <strong>评测运行数</strong>
             <div>{metrics.eval_run_count}</div>
-            <small>{metrics.eval_case_count} cases processed</small>
+            <small>累计处理 {metrics.eval_case_count} 个 case</small>
           </div>
           <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}>
-            <strong>Eval pass rate</strong>
+            <strong>评测通过率</strong>
             <div>{formatPercent(metrics.eval_pass_rate)}</div>
-            <small>Average score: {metrics.avg_eval_score.toFixed(2)}</small>
+            <small>平均分：{metrics.avg_eval_score.toFixed(2)}</small>
           </div>
         </div>
       ) : null}

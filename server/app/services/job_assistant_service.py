@@ -110,7 +110,7 @@ def normalize_job_task_input(input_json: dict[str, object] | None) -> dict[str, 
     try:
         payload = JobTaskInput.model_validate(payload_input)
     except ValidationError as error:
-        raise JobAssistantContractError("Invalid job task input") from error
+        raise JobAssistantContractError("Job 任务输入无效") from error
 
     normalized_payload: dict[str, object] = {}
 
@@ -153,7 +153,7 @@ def resolve_job_task_input(input_json: dict[str, object] | None) -> JobTaskInput
     try:
         return JobTaskInput.model_validate(normalize_job_task_input(input_json))
     except ValidationError as error:
-        raise JobAssistantContractError("Invalid job task input") from error
+        raise JobAssistantContractError("Job 任务输入无效") from error
 
 
 def _flatten_job_evidence_ref_ids(findings: Sequence[JobFinding]) -> list[str]:
@@ -171,24 +171,24 @@ def _flatten_job_evidence_ref_ids(findings: Sequence[JobFinding]) -> list[str]:
 def _extract_job_comparison_candidate(task_id: str) -> JobComparisonCandidate:
     task = task_repository.get_task(task_id)
     if task is None:
-        raise JobAssistantContractError("Comparison job task not found")
+        raise JobAssistantContractError("未找到对比招聘任务")
     if get_scenario_task_module_type(task.task_type) != MODULE_TYPE_JOB:
-        raise JobAssistantContractError("Comparison task must be a completed Job review task")
+        raise JobAssistantContractError("对比任务必须是已完成的 Job 评审任务")
     if task.task_type != "resume_match":
-        raise JobAssistantContractError("Comparison task must be a completed Job resume_match task")
+        raise JobAssistantContractError("对比任务必须是已完成的 Job resume_match 任务")
     if task.status != "done":
-        raise JobAssistantContractError("Comparison job task must be completed before shortlist review")
+        raise JobAssistantContractError("对比招聘任务必须先完成后才能做短名单评审")
 
     result = task.output_json.get("result")
     if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_JOB:
-        raise JobAssistantContractError("Comparison job task does not contain a structured Job result")
+        raise JobAssistantContractError("对比招聘任务不包含结构化 Job 结果")
 
     title = result.get("title")
     summary = result.get("summary")
     if not isinstance(title, str) or not title.strip():
-        raise JobAssistantContractError("Comparison job task is missing a Job title")
+        raise JobAssistantContractError("对比招聘任务缺少 Job 标题")
     if not isinstance(summary, str) or not summary.strip():
-        raise JobAssistantContractError("Comparison job task is missing a Job summary")
+        raise JobAssistantContractError("对比招聘任务缺少 Job 摘要")
 
     input_json = result.get("input")
     input_payload = input_json if isinstance(input_json, dict) else {}
@@ -211,7 +211,7 @@ def _extract_job_comparison_candidate(task_id: str) -> JobComparisonCandidate:
     fit_signal = _coerce_job_fit_signal(assessment_payload.get("fit_signal"))
     evidence_status = _coerce_job_evidence_status(assessment_payload.get("evidence_status"))
     if fit_signal is None or evidence_status is None:
-        raise JobAssistantContractError("Comparison job task is missing structured assessment metadata")
+        raise JobAssistantContractError("对比招聘任务缺少结构化评估元数据")
 
     findings = [
         JobFinding.model_validate(finding)
@@ -254,16 +254,16 @@ def resolve_job_comparison_candidates(
         candidate = _extract_job_comparison_candidate(task_id)
         task = task_repository.get_task(candidate.task_id)
         if task is None or task.workspace_id != workspace_id:
-            raise JobAssistantContractError("Comparison job task not found in this workspace")
+            raise JobAssistantContractError("当前工作区中未找到对比招聘任务")
 
         candidate_role = _normalize_optional_string(candidate.target_role)
         candidate_role_key = candidate_role.casefold() if candidate_role else None
         if comparison_role_key is None and candidate_role_key is not None:
             comparison_role_key = candidate_role_key
         elif comparison_role_key is not None and candidate_role_key is not None and candidate_role_key != comparison_role_key:
-            raise JobAssistantContractError("Comparison job tasks must target the same role")
+            raise JobAssistantContractError("对比招聘任务必须面向同一个岗位")
         if role_key is not None and candidate_role_key is not None and role_key != candidate_role_key:
-            raise JobAssistantContractError("Comparison job tasks must match the current target_role")
+            raise JobAssistantContractError("对比招聘任务必须与当前 target_role 一致")
 
         comparison_candidates.append(candidate)
 

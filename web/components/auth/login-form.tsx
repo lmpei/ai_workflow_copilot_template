@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,21 +36,21 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
       storeLoginSession(response);
       router.push("/workspaces");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Login failed");
+      setErrorMessage(isApiClientError(error) ? error.message : "登录失败");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Login">Loading session...</SectionCard>;
+    return <SectionCard title="登录">正在加载会话...</SectionCard>;
   }
 
   if (session) {
     return (
-      <SectionCard title="Already signed in" description={`Signed in as ${session.user.email}.`}>
+      <SectionCard title="已登录" description={`当前登录账号：${session.user.email}。`}>
         <p>
-          Continue to <Link href="/workspaces">workspaces</Link>.
+          前往 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );
@@ -61,14 +61,14 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
       {publicDemoSettings ? (
         <PublicDemoNotice
           settings={publicDemoSettings}
-          title="Public Demo Access"
-          description="Use this page to sign in to the public demo. Registration availability is controlled by the current demo guardrails."
+          title="公网 Demo 访问"
+          description="使用这个页面登录公网 demo。是否允许注册由当前 demo 限制策略控制。"
         />
       ) : null}
-      <SectionCard title="Sign in" description="Sign in to access public-demo workspaces, documents, and workflow surfaces.">
+      <SectionCard title="登录" description="登录后即可访问公网 demo 的工作区、文档和各类工作流页面。">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Email</span>
+            <span>邮箱</span>
             <input
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
@@ -78,7 +78,7 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
             />
           </label>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Password</span>
+            <span>密码</span>
             <input
               autoComplete="current-password"
               onChange={(event) => setPassword(event.target.value)}
@@ -89,14 +89,14 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
           </label>
           {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
           <button disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? "正在登录..." : "登录"}
           </button>
         </form>
         {registrationDisabled ? (
-          <p>Self-serve registration is temporarily disabled for this public demo.</p>
+          <p>当前公网 demo 暂时关闭自助注册。</p>
         ) : (
           <p>
-            Need an account? <Link href={authRoutes.register}>Register</Link>
+            还没有账号？前往 <Link href={authRoutes.register}>注册</Link>
           </p>
         )}
       </SectionCard>

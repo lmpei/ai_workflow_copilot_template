@@ -29,7 +29,7 @@ def register_user(payload: RegisterRequest) -> UserResponse:
     ensure_registration_allowed()
     existing_user = user_repository.get_user_by_email(payload.email)
     if existing_user is not None:
-        raise AuthConflictError("Email already registered")
+        raise AuthConflictError("该邮箱已被注册")
 
     password_hash = hash_password(payload.password)
     user = user_repository.create_user(
@@ -44,7 +44,7 @@ def register_user(payload: RegisterRequest) -> UserResponse:
 def login_user(payload: LoginRequest) -> LoginResponse:
     user = user_repository.get_user_by_email(payload.email)
     if user is None or not verify_password(payload.password, user.password_hash):
-        raise AuthCredentialsError("Invalid email or password")
+        raise AuthCredentialsError("邮箱或密码不正确")
 
     access_token = create_access_token(user_id=user.id)
     return LoginResponse(

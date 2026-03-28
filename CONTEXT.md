@@ -13,14 +13,13 @@ AI Workflow Copilot is a shared platform core for knowledge-work AI workflows. I
 grounded chat, async tasks, agent execution, evaluation, and observability so multiple scenario modules can run on the
 same primitives.
 
-The Stage D public-demo baseline now includes backend-owned guided demo templates, seeded workspace paths, a bounded
-operator routine, a repository-side public deployment path for the first rollout target, and one live public rehearsal
-record at `https://app.lmpai.online`.
+The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
+public-demo delivery into Support and Job persistent workbench productization.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, and Stage D active after completing its second task wave
+- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, and Stage E active
 
 ## Success Criteria
 
@@ -53,11 +52,13 @@ workflow when deeper scenario-module structure is being evaluated.
 - `docs/prd/STAGE_C_PLAN.md`
   - closed Stage C planning document
 - `docs/prd/STAGE_D_PLAN.md`
-  - active Stage D planning document
+  - closed Stage D planning document
+- `docs/prd/STAGE_E_PLAN.md`
+  - active Stage E planning document
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage D work uses `stage-d-*`
+  - active Stage E work uses `stage-e-*`
 - Phase 5 task history
   - archived under `tasks/archive/phase5/`
 - root control-plane docs

@@ -41,14 +41,14 @@ const TASK_OPTIONS: Record<
   }
 > = {
   ticket_summary: {
-    label: "Ticket Summary",
-    description: "Summarize the case, identify grounded findings, and recommend triage.",
-    placeholder: "Example: Customer cannot reset their password after clicking the email link.",
+    label: "工单摘要",
+    description: "总结案例，提炼有依据的发现，并给出分诊建议。",
+    placeholder: "示例：客户点击邮件链接后仍无法重置密码。",
   },
   reply_draft: {
-    label: "Reply Draft",
-    description: "Draft a customer response grounded in the current workspace knowledge base.",
-    placeholder: "Example: Customer asks how to fix an expired password reset link.",
+    label: "回复草稿",
+    description: "基于当前工作区知识库，生成一版面向客户的回复草稿。",
+    placeholder: "示例：客户询问过期的密码重置链接该如何处理。",
   },
 };
 
@@ -56,11 +56,11 @@ const SEVERITY_OPTIONS: Array<{
   value: "" | SupportSeverity;
   label: string;
 }> = [
-  { value: "", label: "Not specified" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
+  { value: "", label: "未指定" },
+  { value: "low", label: "低" },
+  { value: "medium", label: "中" },
+  { value: "high", label: "高" },
+  { value: "critical", label: "紧急" },
 ];
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -150,10 +150,10 @@ function sortTasks(tasks: TaskRecord[]): TaskRecord[] {
 
 function renderStatus(status: TaskRecord["status"]) {
   const statusStyles: Record<TaskRecord["status"], { label: string; color: string }> = {
-    pending: { label: "pending", color: "#92400e" },
-    running: { label: "running", color: "#1d4ed8" },
-    completed: { label: "completed", color: "#15803d" },
-    failed: { label: "failed", color: "#b91c1c" },
+    pending: { label: "待处理", color: "#92400e" },
+    running: { label: "运行中", color: "#1d4ed8" },
+    completed: { label: "已完成", color: "#15803d" },
+    failed: { label: "失败", color: "#b91c1c" },
   };
   const style = statusStyles[status];
 
@@ -177,9 +177,9 @@ function renderStatus(status: TaskRecord["status"]) {
 
 function renderEvidenceStatusBadge(evidenceStatus: SupportEvidenceStatus) {
   const styles: Record<SupportEvidenceStatus, { label: string; color: string }> = {
-    grounded_matches: { label: "Grounded matches", color: "#166534" },
-    documents_only: { label: "Documents only", color: "#92400e" },
-    no_documents: { label: "No documents", color: "#b91c1c" },
+    grounded_matches: { label: "已命中依据", color: "#166534" },
+    documents_only: { label: "仅有文档", color: "#92400e" },
+    no_documents: { label: "无文档", color: "#b91c1c" },
   };
   const style = styles[evidenceStatus];
 
@@ -202,9 +202,9 @@ function renderEvidenceStatusBadge(evidenceStatus: SupportEvidenceStatus) {
 
 function renderArtifactStats(artifacts: SupportArtifacts) {
   const cards = [
-    { label: "Documents", value: artifacts.document_count },
-    { label: "Matches", value: artifacts.match_count },
-    { label: "Tool calls", value: artifacts.tool_call_ids.length },
+    { label: "文档", value: artifacts.document_count },
+    { label: "命中片段", value: artifacts.match_count },
+    { label: "工具调用", value: artifacts.tool_call_ids.length },
   ];
 
   return (
@@ -226,7 +226,7 @@ function renderArtifactStats(artifacts: SupportArtifacts) {
         ))}
       </div>
       <div>
-        <strong>Evidence status:</strong> {renderEvidenceStatusBadge(artifacts.evidence_status)}
+        <strong>依据状态：</strong> {renderEvidenceStatusBadge(artifacts.evidence_status)}
       </div>
     </div>
   );
@@ -243,10 +243,10 @@ function formatIssueSnapshot(input: SupportTaskInput): string {
     segments.push(input.product_area);
   }
   if (input.severity) {
-    segments.push(`Severity ${input.severity}`);
+    segments.push(`严重级别：${input.severity}`);
   }
   if (input.desired_outcome) {
-    segments.push(`Outcome: ${input.desired_outcome}`);
+    segments.push(`目标：${input.desired_outcome}`);
   }
   return segments.join(" | ");
 }
@@ -290,7 +290,7 @@ function renderListSection<T extends string>({
 function renderFindings(findings: SupportFinding[]) {
   return (
     <div>
-      <strong>Grounded findings</strong>
+      <strong>有依据的发现</strong>
       {findings.length > 0 ? (
         <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
           {findings.map((finding) => (
@@ -306,14 +306,14 @@ function renderFindings(findings: SupportFinding[]) {
               <p style={{ color: "#475569", marginBottom: 0, marginTop: 8 }}>{finding.summary}</p>
               {finding.evidence_ref_ids.length > 0 ? (
                 <div style={{ color: "#475569", fontSize: 14, marginTop: 8 }}>
-                  Evidence refs: {finding.evidence_ref_ids.join(", ")}
+                  证据引用：{finding.evidence_ref_ids.join(", ")}
                 </div>
               ) : null}
             </li>
           ))}
         </ul>
       ) : (
-        <p>No grounded findings were produced for this case.</p>
+        <p>这次案例没有产出有依据的发现。</p>
       )}
     </div>
   );
@@ -329,30 +329,30 @@ function renderCaseBrief(caseBrief: SupportCaseBrief) {
       }}
     >
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <strong>Case brief</strong>
+        <strong>案例摘要</strong>
         {renderEvidenceStatusBadge(caseBrief.evidence_status)}
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <div>
-          <strong>Issue summary:</strong> {caseBrief.issue_summary}
+          <strong>问题摘要：</strong> {caseBrief.issue_summary}
         </div>
         {caseBrief.product_area ? (
           <div>
-            <strong>Product area:</strong> {caseBrief.product_area}
+            <strong>产品范围：</strong> {caseBrief.product_area}
           </div>
         ) : null}
         {caseBrief.severity ? (
           <div>
-            <strong>Severity:</strong> {caseBrief.severity}
+            <strong>严重级别：</strong> {caseBrief.severity}
           </div>
         ) : null}
         {caseBrief.desired_outcome ? (
           <div>
-            <strong>Desired outcome:</strong> {caseBrief.desired_outcome}
+            <strong>期望结果：</strong> {caseBrief.desired_outcome}
           </div>
         ) : null}
         <div>
-          <strong>Reproduction steps:</strong>
+          <strong>复现步骤：</strong>
           {caseBrief.reproduction_steps.length > 0 ? (
             <ol style={{ marginBottom: 0, marginTop: 8, paddingLeft: 20 }}>
               {caseBrief.reproduction_steps.map((step) => (
@@ -360,7 +360,7 @@ function renderCaseBrief(caseBrief: SupportCaseBrief) {
               ))}
             </ol>
           ) : (
-            <p style={{ marginBottom: 0, marginTop: 8 }}>No reproduction steps were captured for this task.</p>
+            <p style={{ marginBottom: 0, marginTop: 8 }}>这次任务没有记录复现步骤。</p>
           )}
         </div>
       </div>
@@ -381,14 +381,14 @@ function renderReplyDraft(replyDraft: SupportReplyDraft | undefined) {
         padding: 16,
       }}
     >
-      <strong>Reply draft</strong>
+      <strong>回复草稿</strong>
       <div style={{ marginTop: 12 }}>
         <div>
-          <strong>Subject:</strong> {replyDraft.subject_line}
+          <strong>主题：</strong> {replyDraft.subject_line}
         </div>
         <p style={{ marginBottom: 12, marginTop: 12, whiteSpace: "pre-wrap" }}>{replyDraft.body}</p>
         <div style={{ color: "#475569" }}>
-          <strong>Confidence note:</strong> {replyDraft.confidence_note}
+          <strong>置信说明：</strong> {replyDraft.confidence_note}
         </div>
       </div>
     </div>
@@ -409,43 +409,43 @@ function renderEscalationPacket(escalationPacket: SupportEscalationPacket | unde
       }}
     >
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-        <strong>Escalation packet</strong>
+        <strong>升级交接包</strong>
         {renderEvidenceStatusBadge(escalationPacket.evidence_status)}
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         <div>
-          <strong>Recommended owner:</strong> {escalationPacket.recommended_owner}
+          <strong>建议负责人：</strong> {escalationPacket.recommended_owner}
         </div>
         <div>
-          <strong>Manual review required:</strong> {escalationPacket.needs_manual_review ? "Yes" : "No"}
+          <strong>是否需要人工复核：</strong> {escalationPacket.needs_manual_review ? "是" : "否"}
         </div>
         <div>
-          <strong>Escalate:</strong> {escalationPacket.should_escalate ? "Yes" : "No"}
+          <strong>是否升级：</strong> {escalationPacket.should_escalate ? "是" : "否"}
         </div>
         <div>
-          <strong>Escalation reason:</strong> {escalationPacket.escalation_reason}
+          <strong>升级原因：</strong> {escalationPacket.escalation_reason}
         </div>
         <div>
-          <strong>Case summary:</strong> {escalationPacket.case_summary}
+          <strong>案例总结：</strong> {escalationPacket.case_summary}
         </div>
         {escalationPacket.follow_up_notes ? (
           <div>
-            <strong>Follow-up focus:</strong> {escalationPacket.follow_up_notes}
+            <strong>跟进重点：</strong> {escalationPacket.follow_up_notes}
           </div>
         ) : null}
         <div>
-          <strong>Handoff note:</strong> {escalationPacket.handoff_note}
+          <strong>交接说明：</strong> {escalationPacket.handoff_note}
         </div>
         {escalationPacket.evidence_ref_ids.length > 0 ? (
           <div>
-            <strong>Evidence refs:</strong> {escalationPacket.evidence_ref_ids.join(", ")}
+            <strong>证据引用：</strong> {escalationPacket.evidence_ref_ids.join(", ")}
           </div>
         ) : null}
       </div>
 
       {escalationPacket.findings.length > 0 ? (
         <div style={{ marginTop: 16 }}>
-          <strong>Evidence-linked findings</strong>
+          <strong>证据关联发现</strong>
           <ul style={{ marginBottom: 0, marginTop: 8, paddingLeft: 20 }}>
             {escalationPacket.findings.map((finding) => (
               <li key={`${finding.title}-${finding.summary}`}>
@@ -457,15 +457,15 @@ function renderEscalationPacket(escalationPacket: SupportEscalationPacket | unde
       ) : null}
 
       {renderListSection({
-        title: "Unresolved questions",
+        title: "未解决问题",
         items: escalationPacket.unresolved_questions,
-        emptyText: "No unresolved questions were included in the packet.",
+        emptyText: "交接包里没有额外未解决问题。",
       })}
 
       {renderListSection({
-        title: "Recommended next steps",
+        title: "建议下一步",
         items: escalationPacket.recommended_next_steps,
-        emptyText: "No next steps were included in the packet.",
+        emptyText: "交接包里没有额外下一步建议。",
       })}
     </div>
   );
@@ -507,7 +507,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
     try {
       setWorkspace(await getWorkspace(session.accessToken, workspaceId));
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load workspace");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作区");
     } finally {
       setIsLoadingWorkspace(false);
     }
@@ -535,7 +535,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
           return loadedTasks[0]?.id ?? null;
         });
       } catch (error) {
-        setErrorMessage(isApiClientError(error) ? error.message : "Unable to load support tasks");
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载支持任务");
       } finally {
         if (!silent) {
           setIsLoadingTasks(false);
@@ -663,57 +663,57 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
       setParentTaskId(null);
       setFollowUpNotes("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to launch support task");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法启动支持任务");
     } finally {
       setIsCreating(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Support Copilot">Loading session...</SectionCard>;
+    return <SectionCard title="Support Copilot">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to run support tasks and inspect grounded outputs." />;
+    return <AuthRequired description="登录后才能运行支持任务并查看 grounded 输出。" />;
   }
 
   return (
     <>
       <SectionCard
         title="Support Copilot"
-        description="Launch grounded support case workflows, inspect evidence quality, and decide whether a case can stay frontline or needs escalation."
+        description="启动 grounded 支持案例流程，查看证据质量，并判断案例应由一线继续处理还是升级。"
       >
-        {isLoadingWorkspace ? <p>Loading workspace configuration...</p> : null}
+        {isLoadingWorkspace ? <p>正在加载工作区配置...</p> : null}
         {workspace ? (
           <div style={{ display: "grid", gap: 8 }}>
             <div>
-              <strong>Workspace:</strong> {workspace.name}
+              <strong>工作区：</strong> {workspace.name}
             </div>
             <div>
-              <strong>Module:</strong> {workspace.module_type}
+              <strong>模块：</strong> {workspace.module_type}
             </div>
             <div>
-              <strong>Features:</strong>{" "}
+              <strong>能力：</strong>{" "}
               {Array.isArray(workspace.module_config_json.features)
                 ? workspace.module_config_json.features.join(", ")
-                : "knowledge_base, reply_drafts, tasks, evals"}
+                : "知识库、回复草稿、任务、评测"}
             </div>
           </div>
         ) : null}
         {workspace?.module_type && workspace.module_type !== "support" ? (
           <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 12 }}>
-            This surface is only available for support workspaces. Current module: {workspace.module_type}.
+            这个面板只对 Support 工作区开放。当前模块： {workspace.module_type}.
           </p>
         ) : null}
       </SectionCard>
 
       <SectionCard
-        title="Launch support case"
-        description="Capture the case, decide how much context you already know, and run a grounded support task against the current workspace knowledge base."
+        title="启动支持案例"
+        description="填写案例信息、明确你已掌握的上下文，再基于当前工作区知识库运行 grounded 支持任务。"
       >
         <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12, maxWidth: 760 }}>
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Task type</span>
+            <span>任务类型</span>
             <select
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
               onChange={(event) => setTaskType(event.target.value as SupportTaskType)}
@@ -740,27 +740,27 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
               }}
             >
               <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
-                <strong>Continuing support case</strong>
+                <strong>继续跟进支持案例</strong>
                 <button onClick={handleClearFollowUp} type="button">
-                  Clear
+                  清除
                 </button>
               </div>
               <div>
-                <strong>Parent task:</strong> {parentTask.id}
+                <strong>父任务：</strong> {parentTask.id}
               </div>
               <div>
-                <strong>Prior result:</strong> {parentResult?.summary ?? "Completed support task"}
+                <strong>上一轮结果：</strong> {parentResult?.summary ?? "已完成的支持任务"}
               </div>
               {parentInput?.customer_issue ? (
                 <div>
-                  <strong>Inherited issue:</strong> {parentInput.customer_issue}
+                  <strong>继承的问题：</strong> {parentInput.customer_issue}
                 </div>
               ) : null}
             </div>
           ) : null}
 
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Customer issue</span>
+            <span>客户问题</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
               onChange={(event) => setCustomerIssue(event.target.value)}
@@ -772,18 +772,18 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
 
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Product area</span>
+              <span>产品范围</span>
               <input
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
                 onChange={(event) => setProductArea(event.target.value)}
-                placeholder="Auth, billing, admin console..."
+                placeholder="认证、计费、管理后台等"
                 type="text"
                 value={productArea}
               />
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Severity</span>
+              <span>严重级别</span>
               <select
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
                 onChange={(event) => setSeverity(event.target.value as "" | SupportSeverity)}
@@ -799,22 +799,22 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
           </div>
 
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Desired outcome</span>
+            <span>期望结果</span>
             <input
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
               onChange={(event) => setDesiredOutcome(event.target.value)}
-              placeholder="Example: restore login access without forcing a full account recovery."
+              placeholder="示例：恢复登录能力，同时避免客户走完整账号找回流程。"
               type="text"
               value={desiredOutcome}
             />
           </label>
 
           <label style={{ display: "grid", gap: 6 }}>
-            <span>Reproduction steps</span>
+            <span>复现步骤</span>
             <textarea
               disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
               onChange={(event) => setReproductionStepsText(event.target.value)}
-              placeholder={"One step per line\n1. Open reset email\n2. Click link\n3. Expired page appears"}
+              placeholder={"每行一个步骤\n1. 打开重置邮件\n2. 点击链接\n3. 页面提示已过期"}
               rows={5}
               value={reproductionStepsText}
             />
@@ -822,11 +822,11 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
 
           {parentTask ? (
             <label style={{ display: "grid", gap: 6 }}>
-              <span>Follow-up notes</span>
+              <span>跟进备注</span>
               <textarea
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
                 onChange={(event) => setFollowUpNotes(event.target.value)}
-                placeholder="Example: confirm whether the reset link can be reissued safely and whether the outage scope changed."
+                placeholder="示例：确认是否可以安全重发重置链接，以及影响范围是否已经扩大。"
                 rows={3}
                 value={followUpNotes}
               />
@@ -840,17 +840,17 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
             }
             type="submit"
           >
-            {isCreating ? "Launching..." : "Launch support task"}
+            {isCreating ? "正在启动..." : "启动支持任务"}
           </button>
         </form>
       </SectionCard>
 
       <SectionCard
-        title="Support runs"
-        description="Tasks refresh automatically every 2 seconds so you can watch case analysis settle into a grounded triage decision."
+        title="支持任务记录"
+        description="任务每 2 秒自动刷新一次，便于你观察案例分析如何收敛成 grounded 分诊结论。"
       >
-        {isLoadingTasks ? <p>Loading support tasks...</p> : null}
-        {!isLoadingTasks && tasks.length === 0 ? <p>No support tasks yet. Launch one to generate a structured case workflow.</p> : null}
+        {isLoadingTasks ? <p>正在加载支持任务...</p> : null}
+        {!isLoadingTasks && tasks.length === 0 ? <p>还没有支持任务。先启动一个任务来生成结构化案例流程。</p> : null}
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {tasks.map((task) => {
             const result = parseSupportTaskResult(task);
@@ -873,21 +873,21 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                   {result ? renderEvidenceStatusBadge(result.artifacts.evidence_status) : null}
                 </div>
                 <div style={{ color: "#475569", marginBottom: 6 }}>
-                  {result?.summary ?? extractCustomerIssue(task, result) ?? "No customer issue provided."}
+                  {result?.summary ?? extractCustomerIssue(task, result) ?? "没有提供客户问题。"}
                 </div>
                 {issueSnapshot ? (
                   <div style={{ color: "#64748b", fontSize: 14, marginBottom: 6 }}>{issueSnapshot}</div>
                 ) : null}
-                <div>Task ID: {task.id}</div>
-                <div>Updated: {new Date(task.updated_at).toLocaleString()}</div>
+                <div>任务 ID：{task.id}</div>
+                <div>更新时间：{new Date(task.updated_at).toLocaleString()}</div>
                 <div style={{ marginTop: 8 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     <button onClick={() => setSelectedTaskId(task.id)} type="button">
-                      Open result
+                      查看结果
                     </button>
                     {task.status === "completed" ? (
                       <button onClick={() => handleContinueFromTask(task)} type="button">
-                        Continue case
+                        继续跟进案例
                       </button>
                     ) : null}
                   </div>
@@ -899,36 +899,36 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
       </SectionCard>
 
       <SectionCard
-        title="Structured case result"
-        description="Inspect the case brief, grounded findings, triage decision, and customer-ready reply generated for the selected support task."
+        title="结构化案例结果"
+        description="查看所选支持任务生成的案例摘要、有依据的发现、分诊决策和面向客户的回复草稿。"
       >
-        {!selectedTask ? <p>Select a support task to inspect its output.</p> : null}
+        {!selectedTask ? <p>请选择一个支持任务查看结果。</p> : null}
         {selectedTask ? (
           <div style={{ display: "grid", gap: 16 }}>
             <div style={{ display: "grid", gap: 6 }}>
               <div>
-                <strong>Task ID:</strong> {selectedTask.id}
+                <strong>任务 ID：</strong> {selectedTask.id}
               </div>
               <div>
-                <strong>Status:</strong> {renderStatus(selectedTask.status)}
+                <strong>状态：</strong> {renderStatus(selectedTask.status)}
               </div>
               <div>
-                <strong>Task type:</strong> {TASK_OPTIONS[selectedTask.task_type as SupportTaskType]?.label ?? selectedTask.task_type}
+                <strong>任务类型：</strong> {TASK_OPTIONS[selectedTask.task_type as SupportTaskType]?.label ?? selectedTask.task_type}
               </div>
               {selectedResult?.lineage ? (
                 <div>
-                  <strong>Follow-up from:</strong> {selectedResult.lineage.parent_title} ({selectedResult.lineage.parent_task_id})
+                  <strong>延续自：</strong> {selectedResult.lineage.parent_title} ({selectedResult.lineage.parent_task_id})
                 </div>
               ) : null}
               {selectedInput?.customer_issue ? (
                 <div>
-                  <strong>Customer issue:</strong> {selectedInput.customer_issue}
+                  <strong>客户问题：</strong> {selectedInput.customer_issue}
                 </div>
               ) : null}
               {selectedTask.status === "completed" ? (
                 <div>
                   <button onClick={() => handleContinueFromTask(selectedTask)} type="button">
-                    Continue this case
+                    继续这个案例
                   </button>
                 </div>
               ) : null}
@@ -936,7 +936,7 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
 
             {selectedTask.error_message ? (
               <div>
-                <strong style={{ color: "#b91c1c" }}>Support error</strong>
+                <strong style={{ color: "#b91c1c" }}>支持任务错误</strong>
                 <p style={{ color: "#b91c1c", marginBottom: 0 }}>{selectedTask.error_message}</p>
               </div>
             ) : null}
@@ -960,21 +960,21 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                   }}
                 >
                   <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-                    <strong>Triage decision</strong>
+                    <strong>分诊决策</strong>
                     {renderEvidenceStatusBadge(selectedResult.triage.evidence_status)}
                   </div>
                   <div style={{ display: "grid", gap: 8 }}>
                     <div>
-                      <strong>Recommended owner:</strong> {selectedResult.triage.recommended_owner}
+                      <strong>建议负责人：</strong> {selectedResult.triage.recommended_owner}
                     </div>
                     <div>
-                      <strong>Manual review required:</strong> {selectedResult.triage.needs_manual_review ? "Yes" : "No"}
+                      <strong>是否需要人工复核：</strong> {selectedResult.triage.needs_manual_review ? "是" : "否"}
                     </div>
                     <div>
-                      <strong>Escalate:</strong> {selectedResult.triage.should_escalate ? "Yes" : "No"}
+                      <strong>是否升级：</strong> {selectedResult.triage.should_escalate ? "是" : "否"}
                     </div>
                     <div>
-                      <strong>Rationale:</strong> {selectedResult.triage.rationale}
+                      <strong>判断依据：</strong> {selectedResult.triage.rationale}
                     </div>
                   </div>
                 </div>
@@ -983,25 +983,25 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                 {renderReplyDraft(selectedResult.reply_draft)}
 
                 {renderListSection({
-                  title: "Highlights",
+                  title: "亮点摘要",
                   items: selectedResult.highlights,
-                  emptyText: "No highlight bullets were produced for this run.",
+                  emptyText: "这次运行没有生成亮点摘要。",
                 })}
 
                 {renderListSection({
-                  title: "Open questions",
+                  title: "开放问题",
                   items: selectedResult.open_questions,
-                  emptyText: "No further open questions were produced for this run.",
+                  emptyText: "这次运行没有生成额外开放问题。",
                 })}
 
                 {renderListSection({
-                  title: "Next steps",
+                  title: "下一步建议",
                   items: selectedResult.next_steps,
-                  emptyText: "No next steps were produced for this run.",
+                  emptyText: "这次运行没有生成下一步建议。",
                 })}
 
                 <div>
-                  <strong>Linked evidence</strong>
+                  <strong>关联证据</strong>
                   {selectedResult.evidence.length > 0 ? (
                     <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: "12px 0 0", padding: 0 }}>
                       {selectedResult.evidence.map((evidence) => (
@@ -1017,24 +1017,24 @@ export default function SupportCopilotPanel({ workspaceId }: SupportCopilotPanel
                           {evidence.snippet ? (
                             <p style={{ color: "#475569", marginBottom: 8, marginTop: 8 }}>{evidence.snippet}</p>
                           ) : null}
-                          <div style={{ color: "#475569", fontSize: 14 }}>Ref ID: {evidence.ref_id}</div>
+                          <div style={{ color: "#475569", fontSize: 14 }}>引用 ID：{evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>Open knowledge base context</Link>
+                              <Link href={`/workspaces/${workspaceId}/documents`}>打开知识库上下文</Link>
                             </div>
                           ) : null}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p>No linked evidence was returned. This usually means the workspace had limited indexed support context.</p>
+                    <p>这次没有返回关联证据，通常说明工作区里的支持上下文或索引资料还不充分。</p>
                   )}
                 </div>
               </>
             ) : (
               <p>
-                This task does not have a completed structured support payload yet. If it is still running,
-                wait for the next refresh cycle.
+                这个任务还没有生成完成的结构化支持结果。如果它仍在运行，
+                等待下一次自动刷新即可。
               </p>
             )}
           </div>

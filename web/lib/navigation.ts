@@ -1,4 +1,4 @@
-// Navigation-only helpers. Scenario registry truth now comes from /api/v1/scenario-modules, not from this file.
+﻿// Navigation-only helpers. Scenario registry truth now comes from /api/v1/scenario-modules, not from this file.
 import { moduleTypes, type ModuleType } from "./types";
 
 type PlatformModule = {
@@ -12,17 +12,17 @@ type WorkspaceTab = {
 };
 
 export const platformCoreModule: PlatformModule = {
-  title: "Platform Core",
-  description: "Shared auth, workspaces, documents, chat, tasks, and metrics foundations.",
+  title: "平台核心",
+  description: "共享的认证、工作区、文档、对话、任务与指标基础能力。",
 };
 
 export const workspaceTabs: ReadonlyArray<WorkspaceTab> = [
-  { label: "Overview", suffix: "" },
-  { label: "Modules", suffix: "/modules" },
-  { label: "Documents", suffix: "/documents" },
-  { label: "Chat", suffix: "/chat" },
-  { label: "Tasks", suffix: "/tasks" },
-  { label: "Analytics", suffix: "/analytics" },
+  { label: "概览", suffix: "" },
+  { label: "模块", suffix: "/modules" },
+  { label: "文档", suffix: "/documents" },
+  { label: "对话", suffix: "/chat" },
+  { label: "任务", suffix: "/tasks" },
+  { label: "分析", suffix: "/analytics" },
 ];
 
 export function isModuleType(value: string): value is ModuleType {

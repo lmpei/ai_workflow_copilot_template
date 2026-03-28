@@ -10,14 +10,13 @@ type AuthRequiredProps = {
 };
 
 export default function AuthRequired({
-  title = "Login required",
-  description = "This page requires an authenticated account session.",
+  title = "需要先登录",
+  description = "这个页面需要已登录的账号会话。",
 }: AuthRequiredProps) {
   return (
     <SectionCard title={title} description={description}>
       <p>
-        <Link href="/login">Log in</Link> or <Link href="/register">create an account</Link> to
-        continue.
+        请先 <Link href="/login">登录</Link>，如果还没有账号，可以先去 <Link href="/register">注册</Link>。
       </p>
     </SectionCard>
   );

@@ -116,13 +116,14 @@ After the Phase 5 baseline, roadmap planning shifts from a purely phase-based bu
 The first formal planning unit under that model was `Stage A`, documented in `docs/prd/STAGE_A_PLAN.md`.
 `Stage B`, documented in `docs/prd/STAGE_B_PLAN.md`, is now complete and closed.
 `Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`.
+`Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed `Stage A`, has completed and closed
-`Stage B`, has completed and closed `Stage C`, and is now executing the first `Stage D` wave.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage D`,
+and is now executing the first `Stage E` wave.
 
 The current implemented platform increment includes:
 
@@ -149,15 +150,18 @@ The repository does not yet implement:
 - durable or multi-agent orchestration beyond the minimal LangGraph workflow
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
-- a real public internet demo baseline beyond local and staging-oriented operation
-- deeper non-Research persistent workbench layers beyond the current Support and Job workflow baseline
+- full production-grade hardening beyond the current bounded public-demo baseline
+- deeper non-Research persistent workbench layers beyond the first bounded Stage E workbench foundation
 - the staged AI capability expansions described in `docs/prd/LONG_TERM_ROADMAP.md`
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
 `Stage B: Research Workflow Productization With Recoverable Runtime`, documented in `docs/prd/STAGE_B_PLAN.md`, is
 complete and closed.
-The active formal planning unit is `Stage C: Multi-Module Workflow Expansion With Cross-Module Readiness`, documented
-in `docs/prd/STAGE_C_PLAN.md`.
+`Stage C: Multi-Module Workflow Expansion With Cross-Module Readiness`, documented in `docs/prd/STAGE_C_PLAN.md`, is
+complete and closed.
+`Stage D: Public Internet Demo Baseline`, documented in `docs/prd/STAGE_D_PLAN.md`, is complete and closed.
+The active formal planning unit is `Stage E: Support and Job Workbench Productization`, documented in
+`docs/prd/STAGE_E_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

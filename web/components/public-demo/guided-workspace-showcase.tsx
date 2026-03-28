@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -12,6 +12,16 @@ import SectionCard from "../ui/section-card";
 type GuidedWorkspaceShowcaseProps = {
   workspaceId: string;
 };
+
+const MODULE_PRODUCT_NAMES: Record<string, string> = {
+  research: "Research Assistant",
+  support: "Support Copilot",
+  job: "Job Assistant",
+};
+
+function getModuleDisplayName(moduleType: string): string {
+  return MODULE_PRODUCT_NAMES[moduleType] ?? moduleType;
+}
 
 function getDemoTemplateId(workspace: Workspace | null): string | null {
   const value = workspace?.module_config_json.demo_template_id;
@@ -46,7 +56,7 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
       setWorkspace(loadedWorkspace);
       setTemplates(loadedTemplates);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load the guided demo path");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法加载引导演示路径");
     } finally {
       setIsLoading(false);
     }
@@ -65,20 +75,20 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
   }, [templates, workspace]);
 
   if (!isReady) {
-    return <SectionCard title="Guided Demo Path">Loading session...</SectionCard>;
+    return <SectionCard title="引导演示路径">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in to load guided demo workspaces and walkthrough steps." />;
+    return <AuthRequired description="登录后才能加载引导演示工作区和演示步骤。" />;
   }
 
   if (isLoading) {
-    return <SectionCard title="Guided Demo Path">Loading workspace walkthrough...</SectionCard>;
+    return <SectionCard title="引导演示路径">正在加载工作区演示说明...</SectionCard>;
   }
 
   if (errorMessage) {
     return (
-      <SectionCard title="Guided Demo Path" description="This workspace walkthrough depends on the seeded public-demo template metadata.">
+      <SectionCard title="引导演示路径" description="这个工作区演示依赖预置的 public-demo 模板元数据。">
         <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p>
       </SectionCard>
     );
@@ -87,33 +97,30 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
   if (!template || !workspace) {
     return (
       <SectionCard
-        title="Workspace Walkthrough"
-        description="This workspace was created manually. Use the shared surfaces below to add documents, test grounded chat, and run module tasks."
+        title="工作区导览"
+        description="这个工作区是手动创建的。请使用下面这些共享页面来添加文档、测试 grounded chat，并运行模块任务。"
       >
         <ol style={{ margin: 0, paddingLeft: 20 }}>
-          <li>Open Documents and add source material for the active module.</li>
-          <li>Use Chat to verify the workspace can answer grounded questions against the indexed corpus.</li>
-          <li>Open Tasks to run the module-specific workflow and inspect the structured result.</li>
+          <li>先打开“文档”页面，为当前模块添加资料。</li>
+          <li>再用“对话”页面验证工作区是否能基于已索引语料回答 grounded 问题。</li>
+          <li>最后打开“任务”页面，运行模块工作流并查看结构化结果。</li>
         </ol>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard
-      title={isGuidedDemoWorkspace(workspace) ? "Guided Demo Path" : "Workspace Walkthrough"}
-      description={template.summary}
-    >
+    <SectionCard title={isGuidedDemoWorkspace(workspace) ? "引导演示路径" : "工作区导览"} description={template.summary}>
       <div style={{ display: "grid", gap: 16 }}>
         <div style={{ display: "grid", gap: 6 }}>
           <div>
-            <strong>Workspace:</strong> {workspace.name}
+            <strong>工作区：</strong> {workspace.name}
           </div>
           <div>
-            <strong>Module:</strong> {template.module_type}
+            <strong>模块：</strong> {getModuleDisplayName(template.module_type)}
           </div>
           <div>
-            <strong>Seeded documents:</strong> {template.seeded_documents.map((document) => document.title).join(", ")}
+            <strong>预置文档：</strong> {template.seeded_documents.map((document) => document.title).join("，")}
           </div>
         </div>
 
@@ -137,7 +144,7 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
                       padding: 12,
                     }}
                   >
-                    <strong>Sample prompt</strong>
+                    <strong>示例提问</strong>
                     <p style={{ marginBottom: 0, marginTop: 8 }}>{step.sample_prompt}</p>
                   </div>
                 ) : null}
@@ -151,10 +158,10 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
                     }}
                   >
                     <div>
-                      <strong>Suggested task type:</strong> {step.sample_task_type}
+                      <strong>建议任务类型：</strong> {step.sample_task_type}
                     </div>
                     <div style={{ marginTop: 8 }}>
-                      <strong>Suggested input</strong>
+                      <strong>建议输入</strong>
                       <pre style={{ marginBottom: 0, marginTop: 8, whiteSpace: "pre-wrap" }}>
                         {JSON.stringify(step.sample_task_input, null, 2)}
                       </pre>

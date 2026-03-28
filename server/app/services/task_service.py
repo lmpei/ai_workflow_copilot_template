@@ -51,7 +51,7 @@ MODULE_CONTRACT_ERRORS = (
     JobAssistantContractError,
 )
 MODULE_VALIDATION_ERRORS = MODULE_CONTRACT_ERRORS + (ValidationError,)
-TASK_CANCELLED_ERROR_MESSAGE = "Task cancelled by operator"
+TASK_CANCELLED_ERROR_MESSAGE = "任务已被操作员取消"
 
 
 class TaskAccessError(Exception):
@@ -105,27 +105,27 @@ def _validate_research_task_lineage(
 
         asset = research_asset_repository.get_research_asset_for_user(research_asset_id, user_id)
         if asset is None or asset.workspace_id != workspace_id:
-            raise TaskValidationError("Research asset not found in this workspace")
+            raise TaskValidationError("当前工作区中未找到对应的研究资产")
 
     parent_task_id = normalized_input.get("parent_task_id")
     if isinstance(parent_task_id, str) and parent_task_id:
         parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
         if parent_task is None or parent_task.workspace_id != workspace_id:
-            raise TaskValidationError("Parent research task not found in this workspace")
+            raise TaskValidationError("当前工作区中未找到父级研究任务")
         if _resolve_task_module_type(parent_task.task_type) != MODULE_TYPE_RESEARCH:
-            raise TaskValidationError("Parent task must be a completed Research task")
+            raise TaskValidationError("父任务必须是已完成的 Research 任务")
         if parent_task.status != "done":
-            raise TaskValidationError("Parent research task must be completed before follow-up")
+            raise TaskValidationError("父级研究任务必须先完成后才能继续跟进")
         result = parent_task.output_json.get("result")
         if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_RESEARCH:
-            raise TaskValidationError("Parent research task does not contain a structured Research result")
+            raise TaskValidationError("父级研究任务不包含结构化 Research 结果")
 
         if isinstance(research_asset_id, str) and research_asset_id:
             from app.repositories import research_asset_repository
 
             asset_revision = research_asset_repository.get_research_asset_revision_by_task_id(parent_task_id)
             if asset_revision is not None and asset_revision.research_asset_id != research_asset_id:
-                raise TaskValidationError("Parent research task is linked to a different Research asset")
+                raise TaskValidationError("父级研究任务关联的是另一个 Research 资产")
 
 
 def _validate_support_task_lineage(
@@ -140,15 +140,15 @@ def _validate_support_task_lineage(
 
     parent_task = task_repository.get_task_for_user(parent_task_id, user_id)
     if parent_task is None or parent_task.workspace_id != workspace_id:
-        raise TaskValidationError("Parent support task not found in this workspace")
+        raise TaskValidationError("当前工作区中未找到父级 Support 任务")
     if _resolve_task_module_type(parent_task.task_type) != MODULE_TYPE_SUPPORT:
-        raise TaskValidationError("Parent task must be a completed Support task")
+        raise TaskValidationError("父任务必须是已完成的 Support 任务")
     if parent_task.status != "done":
-        raise TaskValidationError("Parent support task must be completed before follow-up")
+        raise TaskValidationError("父级 Support 任务必须先完成后才能继续跟进")
 
     result = parent_task.output_json.get("result")
     if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_SUPPORT:
-        raise TaskValidationError("Parent support task does not contain a structured Support result")
+        raise TaskValidationError("父级 Support 任务不包含结构化 Support 结果")
 
 
 def _validate_job_task_comparison(
@@ -163,36 +163,36 @@ def _validate_job_task_comparison(
         return
 
     if task_type != "resume_match":
-        raise TaskValidationError("Comparison task IDs are only supported for resume_match tasks")
+        raise TaskValidationError("只有 resume_match 任务支持 comparison_task_ids")
     if len(comparison_task_ids) < 2:
-        raise TaskValidationError("At least two comparison job tasks are required for shortlist review")
+        raise TaskValidationError("短名单评审至少需要两个对比招聘任务")
 
     normalized_target_role = normalized_input.get("target_role")
     target_role_key = normalized_target_role.strip().casefold() if isinstance(normalized_target_role, str) and normalized_target_role.strip() else None
 
     for comparison_task_id in comparison_task_ids:
         if not isinstance(comparison_task_id, str) or not comparison_task_id:
-            raise TaskValidationError("Comparison job task IDs must be non-empty strings")
+            raise TaskValidationError("对比招聘任务 ID 必须是非空字符串")
         comparison_task = task_repository.get_task_for_user(comparison_task_id, user_id)
         if comparison_task is None or comparison_task.workspace_id != workspace_id:
-            raise TaskValidationError("Comparison job task not found in this workspace")
+            raise TaskValidationError("当前工作区中未找到对比招聘任务")
         if _resolve_task_module_type(comparison_task.task_type) != MODULE_TYPE_JOB:
-            raise TaskValidationError("Comparison task must be a completed Job review task")
+            raise TaskValidationError("对比任务必须是已完成的 Job 评审任务")
         if comparison_task.task_type != "resume_match":
-            raise TaskValidationError("Comparison task must be a completed Job resume_match task")
+            raise TaskValidationError("对比任务必须是已完成的 Job resume_match 任务")
         if comparison_task.status != "done":
-            raise TaskValidationError("Comparison job task must be completed before shortlist review")
+            raise TaskValidationError("对比招聘任务必须先完成后才能做短名单评审")
 
         result = comparison_task.output_json.get("result")
         if not isinstance(result, dict) or result.get("module_type") != MODULE_TYPE_JOB:
-            raise TaskValidationError("Comparison job task does not contain a structured Job result")
+            raise TaskValidationError("对比招聘任务不包含结构化 Job 结果")
         input_payload = result.get("input")
         if not isinstance(input_payload, dict):
             continue
         nested_comparison_ids = input_payload.get("comparison_task_ids")
         if isinstance(nested_comparison_ids, list) and len(nested_comparison_ids) > 0:
             raise TaskValidationError(
-                "Comparison job task must be a single candidate review, not a prior shortlist",
+                "对比招聘任务必须是单个候选人的评审结果，不能引用已有短名单",
             )
         comparison_target_role = input_payload.get("target_role")
         comparison_role_key = (
@@ -201,20 +201,20 @@ def _validate_job_task_comparison(
             else None
         )
         if target_role_key is not None and comparison_role_key is not None and target_role_key != comparison_role_key:
-            raise TaskValidationError("Comparison job tasks must match the current target_role")
+            raise TaskValidationError("对比招聘任务必须与当前 target_role 一致")
 
 
 def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
-        raise TaskAccessError("Workspace not found")
+        raise TaskAccessError("未找到工作区")
     return workspace
 
 
 def _get_task_or_raise(*, task_id: str, user_id: str):
     task = task_repository.get_task_for_user(task_id, user_id)
     if task is None:
-        raise TaskAccessError("Task not found")
+        raise TaskAccessError("未找到任务")
     return task
 
 
@@ -273,7 +273,7 @@ async def create_task(
             error_message=str(error),
         )
         if failed_task is None:
-            raise TaskQueueError("Failed to enqueue task execution") from error
+            raise TaskQueueError("任务执行入队失败") from error
         raise TaskQueueError(str(error)) from error
 
     return TaskResponse.from_model(task)
@@ -323,7 +323,7 @@ def cancel_task(
     )
 
     if updated_task is None:
-        raise TaskAccessError("Task not found")
+        raise TaskAccessError("未找到任务")
     return TaskResponse.from_model(updated_task)
 
 
@@ -337,7 +337,7 @@ async def retry_task(
     reason = payload.reason if payload is not None else None
 
     if task.status != "failed":
-        raise TaskControlError("Only failed tasks can be retried")
+        raise TaskControlError("只有失败的任务才能重试")
 
     existing_retry_task_id = get_linked_retry_target_id(
         task.control_json,
@@ -377,7 +377,7 @@ async def retry_task(
             error_message=str(error),
         )
         if failed_retry_task is None:
-            raise TaskQueueError("Failed to enqueue retry task execution") from error
+            raise TaskQueueError("重试任务执行入队失败") from error
         raise TaskQueueError(str(error)) from error
 
     updated_original = task_repository.update_task_status(
@@ -392,6 +392,6 @@ async def retry_task(
         ),
     )
     if updated_original is None:
-        raise TaskAccessError("Task not found")
+        raise TaskAccessError("未找到任务")
 
     return TaskResponse.from_model(retry_task_record)

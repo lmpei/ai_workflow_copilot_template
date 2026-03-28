@@ -126,7 +126,7 @@ def test_public_demo_template_creation_checks_document_limits_before_workspace_c
     response = client.post("/api/v1/public-demo/templates/research/workspaces", headers=headers)
 
     assert response.status_code == 409
-    assert "needs 3 seeded documents" in response.json()["detail"]
+    assert "需要 3 份预置文档" in response.json()["detail"]
 
     workspace_list_response = client.get("/api/v1/workspaces", headers=headers)
     assert workspace_list_response.status_code == 200

@@ -48,7 +48,7 @@ def test_resolve_research_task_input_applies_defaults_for_summary_task() -> None
 
 
 def test_normalize_research_task_input_rejects_invalid_shapes() -> None:
-    with pytest.raises(ResearchAssistantContractError, match="Invalid research task input"):
+    with pytest.raises(ResearchAssistantContractError, match="Research 任务输入无效"):
         normalize_research_task_input(
             {
                 "goal": "Summarize the workspace",

@@ -47,74 +47,74 @@ _DEMO_TEMPLATES: dict[str, DemoTemplate] = {
     "research": DemoTemplate(
         template_id="research",
         module_type="research",
-        title="Research Briefing Demo",
-        summary="Create a grounded research workspace with seeded launch materials, then turn the corpus into a concise brief.",
-        workspace_name="Guided Demo - Research Briefing",
-        workspace_description="Seeded research workspace for the public demo path.",
+        title="Research 简报演示",
+        summary="创建一个带有预置启动材料的 grounded 研究工作区，再把整套语料转成简洁简报。",
+        workspace_name="引导演示 - Research 简报",
+        workspace_description="用于公开演示路径的预置 Research 工作区。",
         seeded_documents=(
             DemoSeedDocument(
-                title="launch-memo.txt",
-                summary="Internal product memo describing the pilot goal, scope, and launch risks.",
+                title="产品启动备忘录.txt",
+                summary="描述试点目标、范围和上线风险的内部产品备忘录。",
                 body=(
-                    "Acme Team Inbox Pilot Launch Memo\n"
+                    "Acme 团队收件箱试点启动备忘录\n"
                     "\n"
-                    "Goal: launch a shared team inbox pilot for small support teams in Q3.\n"
-                    "Primary value: reduce response time for high-volume support queues.\n"
-                    "Known risks: onboarding complexity, unclear routing ownership, and limited analytics coverage.\n"
-                    "Success measures: first-response time under 20 minutes and a 25 percent drop in backlog volume.\n"
-                    "Open concern: the current routing logic does not explain why tickets move between teammates.\n"
+                    "目标：在第三季度为小型支持团队上线共享团队收件箱试点。\n"
+                    "核心价值：缩短高容量支持队列的响应时间。\n"
+                    "已知风险：上手复杂、路由归属不清，以及分析覆盖有限。\n"
+                    "成功指标：首次响应时间低于 20 分钟，积压量下降 25%。\n"
+                    "待解决担忧：当前路由逻辑无法解释工单为什么会在队友之间流转。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="customer-interviews.txt",
-                summary="Condensed interview notes from pilot customers describing friction and desired outcomes.",
+                title="客户访谈纪要.txt",
+                summary="来自试点客户的精简访谈纪要，描述摩擦点和期望结果。",
                 body=(
-                    "Pilot Customer Interview Notes\n"
+                    "试点客户访谈纪要\n"
                     "\n"
-                    "Customer A wants routing explanations because managers need to audit ticket handoffs.\n"
-                    "Customer B says setup is confusing when more than one inbox rule applies to the same case.\n"
-                    "Customer C values SLA visibility and wants clearer reporting on overdue conversations.\n"
-                    "All three customers say rollout will stall if admins cannot explain ownership changes quickly.\n"
+                    "客户 A 希望看到路由解释，因为管理者需要审计工单交接。\n"
+                    "客户 B 表示，当同一个案例同时命中多条收件箱规则时，配置过程会变得混乱。\n"
+                    "客户 C 很看重 SLA 可见性，希望更清楚地看到超时会话报告。\n"
+                    "三位客户都提到，如果管理员不能快速解释归属变化，推广就会停滞。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="competitor-watch.txt",
-                summary="Brief market scan covering competitor strengths and gaps in shared inbox tooling.",
+                title="竞品观察.txt",
+                summary="简要市场扫描，覆盖竞品在共享收件箱工具上的优势与缺口。",
                 body=(
-                    "Competitor Watch\n"
+                    "竞品观察\n"
                     "\n"
-                    "Vendor Northstar emphasizes audit logs and approval-friendly routing changes.\n"
-                    "Vendor Relay differentiates on analytics dashboards for backlog, SLA breaches, and handoff reasons.\n"
-                    "Neither competitor is especially strong in setup simplicity, but both communicate routing visibility clearly.\n"
+                    "Northstar 强调审计日志和适合审批流程的路由变更。\n"
+                    "Relay 的差异化在于面向积压、SLA 违约和交接原因的分析面板。\n"
+                    "两家竞品在配置简洁性上都不算突出，但都把路由可见性讲得很清楚。\n"
                 ),
             ),
         ),
         showcase_steps=(
             DemoShowcaseStep(
-                title="Review the seeded corpus",
-                description="Open the documents surface and confirm the demo workspace already has indexed source material.",
+                title="查看预置语料",
+                description="打开文档页面，确认演示工作区已经带有已索引的源材料。",
                 route_suffix="/documents",
-                cta_label="Open documents",
+                cta_label="打开文档",
             ),
             DemoShowcaseStep(
-                title="Ask a grounded question",
-                description="Use chat to verify that answers cite the seeded launch material instead of free-writing from memory.",
+                title="提出 grounded 问题",
+                description="使用 chat 验证回答是否引用了预置启动材料，而不是脱离材料自由发挥。",
                 route_suffix="/chat",
-                cta_label="Open chat",
-                sample_prompt="What are the strongest launch risks for the team inbox pilot, and which documents support them?",
+                cta_label="打开对话",
+                sample_prompt="这个团队收件箱试点最突出的上线风险是什么？分别有哪些文档能支撑这些判断？",
             ),
             DemoShowcaseStep(
-                title="Run a research task",
-                description="Launch a structured research summary to turn the same corpus into an evidence-backed briefing.",
+                title="运行研究任务",
+                description="启动一个结构化研究摘要，把同一套语料转成有证据支撑的简报。",
                 route_suffix="/tasks",
-                cta_label="Open tasks",
+                cta_label="打开任务",
                 sample_task_type="research_summary",
                 sample_task_input={
-                    "goal": "Summarize the strongest evidence about pilot launch risk and recommend next steps for the launch review.",
-                    "focus_areas": ["launch risk", "routing visibility", "analytics readiness"],
+                    "goal": "总结关于试点上线风险的关键证据，并为上线评审给出下一步建议。",
+                    "focus_areas": ["上线风险", "路由可见性", "分析就绪度"],
                     "key_questions": [
-                        "What could block rollout confidence?",
-                        "Which evidence points to the biggest operational gap?",
+                        "什么因素会阻碍推广信心？",
+                        "哪些证据指向最大的运营缺口？",
                     ],
                     "requested_sections": ["summary", "findings", "evidence", "next_steps"],
                     "deliverable": "brief",
@@ -125,74 +125,74 @@ _DEMO_TEMPLATES: dict[str, DemoTemplate] = {
     "support": DemoTemplate(
         template_id="support",
         module_type="support",
-        title="Support Escalation Demo",
-        summary="Seed a support knowledge base, then walk from frontline triage to a grounded escalation packet.",
-        workspace_name="Guided Demo - Support Escalation",
-        workspace_description="Seeded support workspace for the public demo path.",
+        title="Support 升级演示",
+        summary="预置一个支持知识库，然后从一线分诊一路走到 grounded 升级交接包。",
+        workspace_name="引导演示 - Support 升级",
+        workspace_description="用于公开演示路径的预置 Support 工作区。",
         seeded_documents=(
             DemoSeedDocument(
-                title="password-reset-kb.txt",
-                summary="Knowledge-base guidance for reset links, account ownership checks, and safe reissue rules.",
+                title="密码重置知识库.txt",
+                summary="关于重置链接、账号归属校验和安全重发规则的知识库说明。",
                 body=(
-                    "Password Reset Knowledge Base\n"
+                    "密码重置知识库\n"
                     "\n"
-                    "Reset links expire after 30 minutes.\n"
-                    "Frontline support may reissue a reset link after confirming account ownership with the last successful login timestamp or billing ZIP code.\n"
-                    "If the same user reports repeated expiry within one hour, escalate to identity engineering because email redirect mismatches may be involved.\n"
+                    "重置链接会在 30 分钟后失效。\n"
+                    "一线支持在通过最近一次成功登录时间或账单邮编确认账号归属后，可以重发重置链接。\n"
+                    "如果同一用户在一小时内多次反馈链接过期，应升级给身份工程团队，因为可能涉及邮件跳转不匹配。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="incident-update.txt",
-                summary="Incident update describing intermittent expiry behavior after a token-validation rollout.",
+                title="事故更新.txt",
+                summary="描述一次 token 校验发布后出现间歇性过期行为的事故更新。",
                 body=(
-                    "Incident Update - Identity Token Validation\n"
+                    "事故更新 - 身份 Token 校验\n"
                     "\n"
-                    "A rollout on Tuesday introduced intermittent false expiry responses for reset links opened in mobile email clients.\n"
-                    "Scope is limited but unresolved.\n"
-                    "Temporary mitigation: advise users to request a fresh link and open it in the system browser.\n"
+                    "周二的一次发布导致在移动邮件客户端中打开重置链接时，间歇性出现误报过期。\n"
+                    "影响范围有限，但问题尚未解决。\n"
+                    "临时缓解措施：建议用户重新申请链接，并在系统浏览器中打开。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="escalation-runbook.txt",
-                summary="Support runbook describing when to keep a case frontline versus when to escalate.",
+                title="升级处理手册.txt",
+                summary="描述何时由一线继续处理、何时应升级的支持手册。",
                 body=(
-                    "Support Escalation Runbook\n"
+                    "Support 升级处理手册\n"
                     "\n"
-                    "Keep the case frontline when the user can complete recovery after one guided retry.\n"
-                    "Escalate when identity ownership is uncertain, repeated reset attempts fail, or an active incident may be involved.\n"
-                    "Every escalation packet should include customer impact, reproduction steps, known mitigations, and evidence references.\n"
+                    "如果用户在一次引导重试后就能恢复访问，应继续由一线处理。\n"
+                    "当身份归属不确定、多次重置失败，或可能涉及活动事故时，应升级处理。\n"
+                    "每份升级交接包都应包含客户影响、复现步骤、已知缓解措施和证据引用。\n"
                 ),
             ),
         ),
         showcase_steps=(
             DemoShowcaseStep(
-                title="Inspect the support knowledge base",
-                description="Open the documents surface to see the KB article, incident note, and escalation runbook.",
+                title="查看支持知识库",
+                description="打开文档页面，查看知识库文章、事故说明和升级手册。",
                 route_suffix="/documents",
-                cta_label="Open documents",
+                cta_label="打开文档",
             ),
             DemoShowcaseStep(
-                title="Ask a support grounding question",
-                description="Use chat to confirm which mitigation and escalation triggers appear in the seeded docs.",
+                title="提出支持 grounding 问题",
+                description="使用 chat 确认预置文档里提到了哪些缓解措施和升级触发条件。",
                 route_suffix="/chat",
-                cta_label="Open chat",
-                sample_prompt="Before escalating a password reset case, what should frontline support confirm and what mitigation can they offer immediately?",
+                cta_label="打开对话",
+                sample_prompt="在升级一个密码重置案例之前，一线支持需要先确认什么？又可以立刻提供什么缓解方案？",
             ),
             DemoShowcaseStep(
-                title="Launch a support case workflow",
-                description="Run a ticket summary or reply draft using the seeded support context, then inspect the resulting triage and escalation packet.",
+                title="启动支持案例流程",
+                description="基于预置的支持上下文运行工单摘要或回复草稿，再查看生成的分诊结果和升级交接包。",
                 route_suffix="/tasks",
-                cta_label="Open tasks",
+                cta_label="打开任务",
                 sample_task_type="ticket_summary",
                 sample_task_input={
-                    "customer_issue": "Customer says every password reset link is already expired, even after requesting a new email twice from mobile.",
-                    "product_area": "Authentication",
+                    "customer_issue": "客户反馈每一封密码重置邮件里的链接都已经过期，即使他在手机上连续重新申请了两次。",
+                    "product_area": "身份认证",
                     "severity": "high",
-                    "desired_outcome": "Restore access without forcing a full account recovery flow.",
+                    "desired_outcome": "恢复访问能力，但不要强迫客户走完整账号找回流程。",
                     "reproduction_steps": [
-                        "Request a password reset email from the login page.",
-                        "Open the email on a mobile device.",
-                        "Tap the reset link and observe an expired-link message.",
+                        "在登录页请求密码重置邮件。",
+                        "在移动设备上打开邮件。",
+                        "点击重置链接，并看到链接已过期的提示。",
                     ],
                 },
             ),
@@ -201,81 +201,81 @@ _DEMO_TEMPLATES: dict[str, DemoTemplate] = {
     "job": DemoTemplate(
         template_id="job",
         module_type="job",
-        title="Hiring Review Demo",
-        summary="Seed a hiring packet, then use the Job Assistant to turn grounded materials into a structured candidate review.",
-        workspace_name="Guided Demo - Hiring Review",
-        workspace_description="Seeded hiring workspace for the public demo path.",
+        title="招聘评审演示",
+        summary="预置一份招聘材料包，再用 Job Assistant 把 grounded 材料转成结构化候选人评审。",
+        workspace_name="引导演示 - 招聘评审",
+        workspace_description="用于公开演示路径的预置 Job 工作区。",
         seeded_documents=(
             DemoSeedDocument(
-                title="backend-platform-role.txt",
-                summary="Job description for a backend platform engineer focused on workflow systems and observability.",
+                title="后端平台岗位说明.txt",
+                summary="聚焦工作流系统与可观测性的后端平台工程师岗位说明。",
                 body=(
-                    "Backend Platform Engineer Role\n"
+                    "后端平台工程师岗位说明\n"
                     "\n"
-                    "Must-have skills: Python services, workflow orchestration, SQL, observability, and API design.\n"
-                    "Preferred skills: retrieval systems, evaluation frameworks, and developer tooling.\n"
-                    "The role owns internal workflow reliability and developer-facing platform primitives.\n"
+                    "必备技能：Python 服务、工作流编排、SQL、可观测性和 API 设计。\n"
+                    "加分技能：检索系统、评测框架和开发者工具。\n"
+                    "这个岗位负责内部工作流稳定性，以及面向开发者的平台基础能力。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="candidate-resume-lina.txt",
-                summary="Condensed resume for a candidate with platform, workflow, and observability experience.",
+                title="候选人简历-李娜.txt",
+                summary="一位具备平台、工作流和可观测性经验候选人的精简简历。",
                 body=(
-                    "Candidate Resume - Lina Chen\n"
+                    "候选人简历 - Lina Chen\n"
                     "\n"
-                    "Five years building Python backend services for internal developer platforms.\n"
-                    "Led workflow reliability work across task orchestration, observability dashboards, and API integrations.\n"
-                    "Less direct experience with evaluation systems, but strong grounding in platform operations and tooling.\n"
+                    "有五年为内部开发者平台构建 Python 后端服务的经验。\n"
+                    "曾负责工作流稳定性相关工作，覆盖任务编排、可观测面板和 API 集成。\n"
+                    "对评测系统的直接经验较少，但在平台运维和工具建设方面基础扎实。\n"
                 ),
             ),
             DemoSeedDocument(
-                title="hiring-rubric.txt",
-                summary="Interview rubric focusing on system judgment, reliability ownership, and evidence-based tradeoffs.",
+                title="招聘评审标准.txt",
+                summary="聚焦系统判断、稳定性 owner 能力和基于证据取舍的面试标准。",
                 body=(
-                    "Hiring Rubric\n"
+                    "招聘评审标准\n"
                     "\n"
-                    "Strong candidates explain platform tradeoffs clearly, show ownership over reliability metrics, and can separate product asks from execution-layer design.\n"
-                    "Interview focus areas: incident judgment, workflow state modeling, and collaboration with downstream product teams.\n"
+                    "优秀候选人应能清楚解释平台取舍，对稳定性指标有 owner 意识，并能区分产品诉求与执行层设计。\n"
+                    "面试重点：事故判断、工作流状态建模，以及与下游产品团队协作。\n"
                 ),
             ),
         ),
         showcase_steps=(
             DemoShowcaseStep(
-                title="Review the hiring packet",
-                description="Open the documents surface and confirm the role brief, candidate resume, and rubric are already indexed.",
+                title="查看招聘材料包",
+                description="打开文档页面，确认岗位说明、候选人简历和评审标准都已经完成索引。",
                 route_suffix="/documents",
-                cta_label="Open documents",
+                cta_label="打开文档",
             ),
             DemoShowcaseStep(
-                title="Ask a fit question",
-                description="Use chat to quickly compare what the role requires with what the candidate has actually done.",
+                title="提出匹配问题",
+                description="使用 chat 快速比较岗位要求和候选人的真实经历。",
                 route_suffix="/chat",
-                cta_label="Open chat",
-                sample_prompt="Which requirements in the backend platform role look strongest for Lina Chen, and where is the evidence thinner?",
+                cta_label="打开对话",
+                sample_prompt="在后端平台岗位的要求里，Lina Chen 最强的匹配点是什么？哪些地方的证据还偏弱？",
             ),
             DemoShowcaseStep(
-                title="Launch a candidate review",
-                description="Run a resume match task to generate a structured fit assessment grounded in the seeded hiring materials.",
+                title="启动候选人评审",
+                description="运行一个简历匹配任务，基于预置招聘材料生成结构化匹配评估。",
                 route_suffix="/tasks",
-                cta_label="Open tasks",
+                cta_label="打开任务",
                 sample_task_type="resume_match",
                 sample_task_input={
-                    "target_role": "Backend Platform Engineer",
+                    "target_role": "后端平台工程师",
                     "candidate_label": "Lina Chen",
                     "seniority": "mid-senior",
                     "must_have_skills": [
-                        "Python backend services",
-                        "workflow orchestration",
+                        "Python 后端服务",
+                        "工作流编排",
                         "SQL",
-                        "observability",
-                        "API design",
+                        "可观测性",
+                        "API 设计",
                     ],
                     "preferred_skills": [
-                        "retrieval systems",
-                        "evaluation frameworks",
-                        "developer tooling",
+                        "检索系统",
+                        "评测框架",
+                        "开发者工具",
                     ],
-                    "hiring_context": "Hiring for a platform team that owns workflow reliability and developer-facing primitives.",
+                    "hiring_context": "为负责工作流稳定性和开发者基础能力的平台团队招聘。",
                 },
             ),
         ),
@@ -317,14 +317,14 @@ def list_public_demo_templates() -> list[PublicDemoTemplateResponse]:
 def get_public_demo_template(template_id: str) -> PublicDemoTemplateResponse:
     template = _DEMO_TEMPLATES.get(template_id)
     if template is None:
-        raise ValueError("Public demo template not found")
+        raise ValueError("未找到 public demo 模板")
     return _serialize_template(template)
 
 
 def _require_demo_template(template_id: str) -> DemoTemplate:
     template = _DEMO_TEMPLATES.get(template_id)
     if template is None:
-        raise ValueError("Public demo template not found")
+        raise ValueError("未找到 public demo 模板")
     return template
 
 
@@ -335,9 +335,9 @@ def _ensure_template_fits_current_limits(template: DemoTemplate) -> None:
 
     if len(template.seeded_documents) > settings.public_demo_max_documents_per_workspace:
         raise PublicDemoLimitError(
-            "Public demo limit reached: "
-            f"the {template.title} template needs {len(template.seeded_documents)} seeded documents "
-            f"but this environment allows only {settings.public_demo_max_documents_per_workspace}.",
+            "已达到 public demo 限额："
+            f"模板 {template.title} 需要 {len(template.seeded_documents)} 份预置文档，"
+            f"但当前环境只允许 {settings.public_demo_max_documents_per_workspace} 份。",
         )
 
 
