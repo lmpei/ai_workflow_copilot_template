@@ -909,3 +909,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Job hiring packets can now drive shortlist refresh and follow-on candidate review directly, packet-level review notes are readable at the packet surface, and the live public demo can explain the Job action loop honestly from the packet workbench itself.
 - Related Task: `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-059
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-e-09 public demo workbench entry and walkthrough
+- Context: after `stage-e-07` and `stage-e-08`, the live public demo exposed direct Support case and Job hiring-packet actions, but viewers still needed a clearer rule for when to start from a fresh guided workspace versus when to continue from an existing workbench object.
+- Choice: clarify the public-demo entry rule in the workspace overview, module task surfaces, and operator-facing docs so new viewers start from a fresh guided demo workspace while existing Support and Job work continues from the visible case or hiring-packet workbench; archive `stage-e-09` and leave the next Stage E direction open for human confirmation.
+- Why: the Stage E second wave should close with one honest walkthrough story instead of relying on hidden operator narration or implying silent page-level reset.
+- Impact: the live public demo now explains the fresh-workspace path and the workbench-first continuation path consistently, and Stage E can now be reviewed for closeout or another bounded wave.
+- Related Task: `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+- Supersedes:

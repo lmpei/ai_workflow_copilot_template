@@ -33,6 +33,81 @@ function isGuidedDemoWorkspace(workspace: Workspace | null): boolean {
   return workspace?.module_config_json.guided_demo === true;
 }
 
+function renderWorkbenchEntryGuide(moduleType: string, workspaceId: string) {
+  if (moduleType === "support") {
+    return (
+      <div
+        style={{
+          backgroundColor: "#f8fafc",
+          border: "1px solid #cbd5e1",
+          borderRadius: 14,
+          display: "grid",
+          gap: 10,
+          padding: 14,
+        }}
+      >
+        <strong>推荐入口</strong>
+        <div>第一次给新观众演示时，按下面的引导步骤从这个工作区走完整条路径。</div>
+        <div>
+          如果这个工作区里已经有 Support case，要继续同一个问题，直接去
+          {" "}
+          <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+          {" "}
+          页面，从 Support case 工作台继续。
+        </div>
+      </div>
+    );
+  }
+
+  if (moduleType === "job") {
+    return (
+      <div
+        style={{
+          backgroundColor: "#f8fafc",
+          border: "1px solid #cbd5e1",
+          borderRadius: 14,
+          display: "grid",
+          gap: 10,
+          padding: 14,
+        }}
+      >
+        <strong>推荐入口</strong>
+        <div>第一次给新观众演示时，按下面的引导步骤从这个工作区走完整条路径。</div>
+        <div>
+          如果这个工作区里已经有 Job hiring packet，要继续同一个招聘包，直接去
+          {" "}
+          <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+          {" "}
+          页面，从 Job hiring 工作台继续。
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        backgroundColor: "#f8fafc",
+        border: "1px solid #cbd5e1",
+        borderRadius: 14,
+        display: "grid",
+        gap: 10,
+        padding: 14,
+      }}
+    >
+      <strong>推荐入口</strong>
+      <div>第一次演示时，优先按下面的引导步骤从这个工作区走完整条路径。</div>
+      <div>
+        如果你打开的是一个已经有历史的 Support 或 Job 工作区，真正的继续入口在
+        {" "}
+        <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+        {" "}
+        页面里的工作台，而不是假装当前页面会自动清空历史。
+      </div>
+    </div>
+  );
+}
+
 export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspaceShowcaseProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -99,13 +174,16 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
     return (
       <SectionCard
         title="工作区导览"
-        description="这个工作区是手动创建的。请使用下面这些共享页面来添加文档、测试 grounded chat，并运行模块任务。"
+        description="这个工作区是手动创建的。这里不会假装自动清空历史；如果你需要一条干净演示路径，应该回 Workspace Hub 新建引导演示工作区。"
       >
-        <ol style={{ margin: 0, paddingLeft: 20 }}>
-          <li>先打开“文档”页面，为当前模块添加资料。</li>
-          <li>再用“对话”页面验证工作区是否能基于已索引语料回答 grounded 问题。</li>
-          <li>最后打开“任务”页面，运行模块工作流并查看结构化结果。</li>
-        </ol>
+        <div style={{ display: "grid", gap: 16 }}>
+          {renderWorkbenchEntryGuide(workspace?.module_type ?? "unknown", workspaceId)}
+          <ol style={{ margin: 0, paddingLeft: 20 }}>
+            <li>先打开“文档”页面，为当前模块添加资料。</li>
+            <li>再用“对话”页面验证工作区是否能基于已索引语料回答 grounded 问题。</li>
+            <li>最后打开“任务”页面，运行模块工作流并查看结构化结果。</li>
+          </ol>
+        </div>
       </SectionCard>
     );
   }
@@ -125,7 +203,9 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
           </div>
         </div>
 
-        <PublicDemoWorkbenchContinuityNote />
+        {renderWorkbenchEntryGuide(template.module_type, workspaceId)}
+
+        <PublicDemoWorkbenchContinuityNote moduleType={template.module_type === "support" || template.module_type === "job" ? template.module_type : undefined} />
 
         <ol style={{ display: "grid", gap: 16, margin: 0, paddingLeft: 20 }}>
           {template.showcase_steps.map((step) => (

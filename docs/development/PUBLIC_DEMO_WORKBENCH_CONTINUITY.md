@@ -44,6 +44,19 @@ When an operator wants a clean story for a new viewer, the preferred path is:
 This is the bounded Stage E continuity rule. The live demo should no longer depend on hidden manual cleanup of Support
 cases or Job hiring packets between viewers.
 
+## Viewer Start Rule
+
+The public demo now has two honest entry paths:
+
+1. first-time or clean walkthrough
+   - create a fresh guided demo workspace
+   - follow `Documents -> Chat -> Tasks`
+2. existing workbench continuity
+   - continue Support work from the visible Support case workbench
+   - continue Job work from the visible Job hiring-packet workbench
+
+The demo should not imply a third hidden path where the page silently clears old workbench state before a viewer starts.
+
 ## What Does Not Count As An Honest Promise
 
 The live public demo still does not promise:
@@ -65,16 +78,18 @@ operator wants to prove that the new workbench surfaces remain usable.
 ### Support continuity smoke
 
 - create or open a guided Support demo workspace
-- run one Support task
+- run one Support task if the workspace has no existing case yet
 - confirm at least one Support case appears in the workbench
 - confirm the latest case event links back to the new task
+- confirm the next follow-up can be started directly from the visible Support case
 
 ### Job continuity smoke
 
 - create or open a guided Job demo workspace
-- run one Job task
+- run one Job task if the workspace has no existing hiring packet yet
 - confirm at least one Job hiring packet appears in the workbench
 - confirm the latest packet event links back to the new task
+- confirm the next shortlist refresh or review can be started directly from the visible Job hiring packet
 
 These checks do not replace the smaller availability smoke. They extend it when the operator needs confidence that the
 Stage E workbench depth still behaves honestly in the live demo.
@@ -85,6 +100,7 @@ The demo should now be described like this:
 
 - the workspace keeps useful history instead of acting like a stateless playground
 - new viewers should use a fresh guided demo workspace when a clean path matters
-- existing workspaces may already contain prior Support or Job workbench state
+- existing Support work should continue from the visible case workbench
+- existing Job work should continue from the visible hiring-packet workbench
 
 That explanation is stronger and more honest than implying the system silently clears history between walkthroughs.

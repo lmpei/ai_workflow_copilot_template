@@ -17,26 +17,26 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage B complete and closed
 - Stage C complete and closed
 - Stage D complete and closed
-- Stage E active with second task wave active
+- Stage E active with second task wave complete
 
 ## Current Objective
 
-- execute the remaining Stage E second-wave tasks so Support cases and Job hiring packets become direct work surfaces
-  instead of readable persistence layers only
+- review the Stage E closeout boundary and choose the next bounded direction after the public-demo walkthrough story,
+  Support case action loop, and Job hiring-packet action loop have all landed
 
 ## Active Task
 
-- `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
+- none; waiting for the next bounded Stage E direction
 
 ## Verification Status
 
-- Summary: the first Stage E wave is complete, and `stage-e-08` has now turned Job hiring packets into direct action surfaces
-  on top of the shared task runtime. The remaining second-wave work now narrows to public-demo walkthrough clarity.
+- Summary: the first Stage E wave is complete, the second Stage E wave is complete, and the live public demo now explains
+  both the fresh guided-workspace path and the workbench-first Support / Job continuation path.
 - Last Verified At: 2026-03-28
 
 ## Current Blockers
 
-- none inside the repo; the next work is the bounded remainder of the Stage E second wave
+- none inside the repo; the next work is a human decision about whether to close Stage E or define another bounded wave
 
 ## Assumptions
 
@@ -46,13 +46,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact Stage E closeout boundary after the second wave lands
+- the exact Stage E closeout boundary after the second wave is now complete
 
 ## Ready Now
 
-1. execute `tasks/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
-2. preserve the Chinese-first live public demo baseline while Job workbench actions deepen
-3. keep Research as the reference workflow while the remaining Stage E workbench actions stabilize
+1. decide whether to close Stage E or define a third bounded Stage E wave
+2. keep the public-demo walkthrough aligned with the live Support case and Job hiring-packet action surfaces
+3. preserve the Chinese-first live public demo baseline while the next Stage E direction is chosen
 
 ## Parked / Later
 
@@ -62,7 +62,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-e/stage-e-08-job-hiring-packet-action-loop.md`
+- `tasks/archive/stage-e/stage-e-09-public-demo-workbench-entry-and-walkthrough.md`
 
 ## Recent Decisions
 
@@ -77,3 +77,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-28-056` define the second Stage E wave as `stage-e-07`, `stage-e-08`, and `stage-e-09`, with `stage-e-07` as the active task
 - `DEC-2026-03-28-057` complete `stage-e-07`, turn Support cases into direct follow-up surfaces through case-level action-loop guidance and case-driven task seeding, archive the task, and move the active Stage E task to `stage-e-08`
 - `DEC-2026-03-28-058` complete `stage-e-08`, turn Job hiring packets into direct work surfaces through packet-level action-loop guidance and packet-driven task seeding, archive the task, and move the active Stage E task to `stage-e-09`
+- `DEC-2026-03-28-059` complete `stage-e-09`, clarify the public-demo entry rule for fresh guided workspaces versus existing Support case / Job hiring-packet continuation, archive the task, and leave the next Stage E direction open for human confirmation

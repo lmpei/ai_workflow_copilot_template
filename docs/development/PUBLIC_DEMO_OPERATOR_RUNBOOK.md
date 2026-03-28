@@ -1,4 +1,4 @@
-# Public Demo Operator Runbook
+﻿# Public Demo Operator Runbook
 
 ## Purpose
 
@@ -101,6 +101,10 @@ cmd /c scripts\public-demo-refresh-windows.cmd .env app-tier
    - `Documents`
    - `Chat`
    - `Tasks`
+6. if you intentionally reopen an older Support or Job workspace, explain the honest entry rule up front:
+   - Support continues from the visible Support case workbench
+   - Job continues from the visible Job hiring-packet workbench
+   - a clean story still comes from a new guided demo workspace, not from quiet page-level reset
 
 If a new viewer needs a clean story, the honest Stage E path is to use a fresh guided demo workspace rather than to
 quietly scrub existing workbench objects.
@@ -121,8 +125,14 @@ When Stage E workbench continuity matters for the walkthrough, also confirm:
 
 - a Support demo path can generate or reopen at least one visible Support case
 - the latest Support case event can still link back to the task that produced it
+- the next Support follow-up can be started directly from the visible case
 - a Job demo path can generate or reopen at least one visible Job hiring packet
 - the latest Job hiring-packet event can still link back to the task that produced it
+- the next Job shortlist refresh or review can be started directly from the visible packet
+- the viewer-facing entry rule is still understandable without operator narration:
+  - fresh story -> new guided demo workspace
+  - existing Support work -> visible case workbench
+  - existing Job work -> visible hiring-packet workbench
 
 ## Registration and Abuse Response
 
