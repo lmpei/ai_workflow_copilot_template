@@ -1619,7 +1619,7 @@ export default function ResearchAssistantPanel({ workspaceId }: ResearchAssistan
                           <div style={{ color: "#475569", fontSize: 14 }}>引用 ID：{evidence.ref_id}</div>
                           {typeof evidence.metadata.document_id === "string" ? (
                             <div style={{ marginTop: 8 }}>
-                              <Link href={`/workspaces/${workspaceId}/documents`}>打开文档上下文</Link>
+                              <Link href={`/workspaces/${workspaceId}?panel=documents`}>打开文档上下文</Link>
                             </div>
                           ) : null}
                         </li>

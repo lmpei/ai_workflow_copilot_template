@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -38,8 +38,8 @@ const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
 
 const MODULE_WORKSPACE_HINTS: Record<ModuleType, string> = {
   research: "适合从资料开始，先补文档，再用对话验证，最后进入任务。",
-  support: "如果这是已有问题，进入工作区后直接去任务页里的 Support case 工作台继续。",
-  job: "如果这是已有招聘包，进入工作区后直接去任务页里的 Job hiring packet 工作台继续。",
+  support: "如果这是已有问题，进入工作区后直接切到工作台里的“任务”区域，从 Support case 工作台继续。",
+  job: "如果这是已有招聘包，进入工作区后直接切到工作台里的“任务”区域，从 Job hiring packet 工作台继续。",
 };
 
 function getModuleDisplayName(moduleType: ModuleType): string {
@@ -421,4 +421,3 @@ export default function WorkspaceCenterPanel() {
     </>
   );
 }
-

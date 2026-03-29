@@ -1,9 +1,9 @@
-# Task: stage-f-05-demo-visual-system-and-showcase-polish
+﻿# Task: stage-f-06-demo-visual-system-and-showcase-polish
 
 ## Goal
 
-Give the highest-traffic public demo and workspace pages a more intentional visual system after the information
-architecture and navigation reset lands.
+Give the highest-traffic public demo and workspace workbench surfaces a more intentional visual system after the
+single-workbench structure and module positioning reset land.
 
 ## Project Stage
 
@@ -13,17 +13,18 @@ architecture and navigation reset lands.
 ## Why
 
 The current surface still feels too much like an internal tool or control panel for a public-facing showcase. Once the
-structure is clearer, the project needs a more convincing visual presentation so external viewers can understand and
-trust what they are seeing.
+workspace is consolidated and module positioning is clearer, the project needs a more convincing visual presentation so
+external viewers can understand and trust what they are seeing.
 
 ## Context
 
 Relevant documents:
 
 - `docs/prd/STAGE_F_PLAN.md`
-- `tasks/stage-f-02-home-and-workspace-information-architecture-reset.md`
-- `tasks/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
-- `tasks/stage-f-04-module-positioning-and-entry-surface-clarification.md`
+- `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
+- `tasks/archive/stage-f/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
+- `tasks/stage-f-04-workspace-workbench-consolidation.md`
+- `tasks/stage-f-05-module-positioning-inside-workbench.md`
 - `STATUS.md`
 
 ## Scope
@@ -42,7 +43,7 @@ Disallowed work:
 
 ## Acceptance Criteria
 
-- the most important public demo and workspace pages feel materially more intentional and presentable
+- the most important public demo and workspace workbench pages feel materially more intentional and presentable
 - visual hierarchy reinforces the new structure instead of fighting it
 - visible encoding or presentation defects no longer damage demo trust
 - Stage F remains bounded and does not turn into an endless cosmetic polish track

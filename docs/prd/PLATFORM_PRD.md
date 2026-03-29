@@ -150,6 +150,8 @@ The current implemented platform increment includes:
 - one honest public-demo rule that distinguishes fresh guided workspaces from existing workbench continuation
 - a clearer first-contact user path on the home page and workspace center that separates first-time guided-demo entry
   from existing-work continuation
+- one primary workspace workbench that collapses documents, chat, and tasks into one user-facing surface while leaving
+  analytics as a secondary review route
 
 The repository does not yet implement:
 
@@ -157,7 +159,6 @@ The repository does not yet implement:
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
 - full production-grade hardening beyond the current bounded public-demo baseline
-- a simplified user-facing information architecture and navigation model that makes the public demo easy for first-time viewers to understand
 - clear first-surface differentiation between the three scenario modules without relying on deep workbench knowledge
 - a showcase-ready visual system across the highest-traffic public-demo and workspace pages
 - the staged AI capability expansions described in `docs/prd/LONG_TERM_ROADMAP.md`

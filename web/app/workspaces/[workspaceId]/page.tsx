@@ -1,34 +1,29 @@
-﻿import GuidedWorkspaceShowcase from "../../../components/public-demo/guided-workspace-showcase";
-import ModuleHubPanel from "../../../components/workspace/module-hub-panel";
-import SectionCard from "../../../components/ui/section-card";
-import WorkspaceNav from "../../../components/workspace/workspace-nav";
+﻿import { isWorkbenchPanelId } from "../../../lib/navigation";
+import WorkspaceWorkbenchPanel from "../../../components/workspace/workspace-workbench-panel";
+import WorkspacePageShell from "../../../components/workspace/workspace-page-shell";
 
 type WorkspacePageProps = {
   params: {
     workspaceId: string;
   };
+  searchParams?: {
+    panel?: string;
+  };
 };
 
-export default function WorkspaceOverviewPage({ params }: WorkspacePageProps) {
+export default function WorkspaceWorkbenchPage({ params, searchParams }: WorkspacePageProps) {
   const { workspaceId } = params;
+  const requestedPanel = searchParams?.panel;
+  const initialPanel = requestedPanel && isWorkbenchPanelId(requestedPanel) ? requestedPanel : undefined;
 
   return (
-    <main>
-      <h1>工作区概览</h1>
-      <WorkspaceNav workspaceId={workspaceId} />
-      <GuidedWorkspaceShowcase workspaceId={workspaceId} />
-      <SectionCard
-        title="共享工作区面板"
-        description="每个模块都会把文档、对话痕迹、任务和分析统一收在同一个工作区范围内。"
-      >
-        <ul>
-          <li>文档与检索状态</li>
-          <li>对话与引用来源</li>
-          <li>任务、agent 执行与工具痕迹</li>
-          <li>质量指标与成本跟踪</li>
-        </ul>
-      </SectionCard>
-      <ModuleHubPanel workspaceId={workspaceId} />
-    </main>
+    <WorkspacePageShell
+      description="这是当前工作区的主工作台。文档、对话和任务都在这里按需切换完成，不再要求你在多个平级页面之间来回跳。"
+      page="workbench"
+      title="工作台"
+      workspaceId={workspaceId}
+    >
+      <WorkspaceWorkbenchPanel initialPanel={initialPanel} workspaceId={workspaceId} />
+    </WorkspacePageShell>
   );
 }

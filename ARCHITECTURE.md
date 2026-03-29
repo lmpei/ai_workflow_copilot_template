@@ -1,11 +1,11 @@
-﻿# Architecture
+# Architecture
 
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
 ## Metadata
 
-- Last Updated: 2026-03-28
+- Last Updated: 2026-03-29
 
 ## Main Modules
 
@@ -39,6 +39,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 ## Key Interfaces
 
 - Next.js frontend in `web/`
+- `web/components/workspace/workspace-workbench-panel.tsx`
+  - owns the primary workspace user path; documents, chat, and tasks now switch inside one main workbench surface
 - FastAPI API in `server/app/api/routes/`
 - orchestration in `server/app/services/`
 - persistence in `server/app/repositories/`
@@ -84,6 +86,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - module-specific architecture forks
 - a single-purpose chatbot architecture
 - advanced multi-agent durability and approval flows at the current baseline
+- a flat multi-page workspace UI that treats overview, modules, documents, chat, and tasks as equal first-stop pages
 
 ## Change Guardrails
 

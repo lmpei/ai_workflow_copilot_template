@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -51,9 +51,9 @@ function renderWorkbenchEntryGuide(moduleType: string, workspaceId: string) {
         <div>
           如果这个工作区里已经有 Support case，要继续同一个问题，直接去
           {" "}
-          <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+          <Link href={`/workspaces/${workspaceId}?panel=tasks`}>任务</Link>
           {" "}
-          页面，从 Support case 工作台继续。
+          区域，从 Support case 工作台继续。
         </div>
       </div>
     );
@@ -76,9 +76,9 @@ function renderWorkbenchEntryGuide(moduleType: string, workspaceId: string) {
         <div>
           如果这个工作区里已经有 Job hiring packet，要继续同一个招聘包，直接去
           {" "}
-          <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+          <Link href={`/workspaces/${workspaceId}?panel=tasks`}>任务</Link>
           {" "}
-          页面，从 Job hiring 工作台继续。
+          区域，从 Job hiring 工作台继续。
         </div>
       </div>
     );
@@ -100,9 +100,9 @@ function renderWorkbenchEntryGuide(moduleType: string, workspaceId: string) {
       <div>
         如果你打开的是一个已经有历史的 Support 或 Job 工作区，真正的继续入口在
         {" "}
-        <Link href={`/workspaces/${workspaceId}/tasks`}>任务</Link>
+        <Link href={`/workspaces/${workspaceId}?panel=tasks`}>任务</Link>
         {" "}
-        页面里的工作台，而不是假装当前页面会自动清空历史。
+        区域里的工作台，而不是假装当前页面会自动清空历史。
       </div>
     </div>
   );
@@ -179,9 +179,9 @@ export default function GuidedWorkspaceShowcase({ workspaceId }: GuidedWorkspace
         <div style={{ display: "grid", gap: 16 }}>
           {renderWorkbenchEntryGuide(workspace?.module_type ?? "unknown", workspaceId)}
           <ol style={{ margin: 0, paddingLeft: 20 }}>
-            <li>先打开“文档”页面，为当前模块添加资料。</li>
-            <li>再用“对话”页面验证工作区是否能基于已索引语料回答 grounded 问题。</li>
-            <li>最后打开“任务”页面，运行模块工作流并查看结构化结果。</li>
+            <li>先切到工作台里的“文档”区域，为当前模块添加资料。</li>
+            <li>再切到“对话”区域，验证工作区是否能基于已索引语料回答 grounded 问题。</li>
+            <li>最后切到“任务”区域，运行模块工作流并查看结构化结果。</li>
           </ol>
         </div>
       </SectionCard>

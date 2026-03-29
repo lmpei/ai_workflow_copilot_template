@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-03-28
+- Last Updated: 2026-03-29
 
 ## Project Mode
 
@@ -22,23 +22,20 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the Stage F UX reset by simplifying workspace hierarchy and primary flow now that the home page and workspace
-  center expose a clearer first-contact path
+- continue the Stage F UX reset by clarifying module differences inside the new single-workbench workspace model before moving on to visual polish
 
 ## Active Task
 
-- `tasks/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
+- `tasks/stage-f-05-module-positioning-inside-workbench.md`
 
 ## Verification Status
 
-- Summary: Stage E is complete, Stage F is active, and the first Stage F task has already reduced first-contact
-  information overload on the home page and workspace center while keeping the Support / Job continuation story visible.
-- Last Verified At: 2026-03-28
+- Summary: Stage E is complete, Stage F is active, and the first three Stage F tasks have already reduced first-contact overload, clarified the entry hierarchy, and collapsed the workspace into one primary workbench with selectable documents, chat, and tasks panels. The next bounded step is to make the three modules easier to distinguish inside that workbench.
+- Last Verified At: 2026-03-29
 
 ## Current Blockers
 
-- none inside the repo; the main challenge is keeping the Stage F UX reset structural and bounded instead of mixing
-  navigation, module positioning, and visual polish into one unfocused rewrite
+- none inside the repo; the main challenge is making the three modules easier to distinguish without reopening a separate module page or renaming the products
 
 ## Assumptions
 
@@ -49,14 +46,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- the exact shape of the new workspace hierarchy and whether overview, modules, and task entry should remain separate
-  top-level surfaces after `stage-f-03`
+- how far the single-workbench model should let each module diverge visually and behaviorally before Stage F starts to fragment the shared surface too early
 
 ## Ready Now
 
-1. execute `stage-f-03` and simplify workspace hierarchy, return paths, and the main flow across documents, chat, and tasks
-2. keep the new home/workspace entry path stable while deeper navigation changes land
-3. preserve the Chinese-first live public demo baseline while Stage F keeps clarifying module explanation and surface polish
+1. execute `stage-f-05` and explain module differences inside the unified workbench instead of through a separate module page
+2. follow with `stage-f-06` and polish the visual system only after the structural workbench reset and module-positioning pass are in place
+3. preserve the Chinese-first live public demo baseline while Stage F keeps moving toward showcase-ready polish
 
 ## Parked / Later
 
@@ -66,7 +62,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
+- `tasks/archive/stage-f/stage-f-04-workspace-workbench-consolidation.md`
 
 ## Recent Decisions
 
@@ -86,3 +82,6 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-03-28-061` define `Stage F` as `Public Demo Experience Clarification and UX Reset`
 - `DEC-2026-03-28-062` define the first Stage F wave as `stage-f-02`, `stage-f-03`, `stage-f-04`, and `stage-f-05`, with `stage-f-02` as the active task
 - `DEC-2026-03-28-063` complete `stage-f-02`, reduce first-contact cognitive load on the home page and workspace center, archive the task, and move the active Stage F task to `stage-f-03`
+- `DEC-2026-03-28-064` complete `stage-f-03`, add one explicit workspace hierarchy with breadcrumb, grouped navigation, and a main-flow stepper, archive the task, and move the active Stage F task to `stage-f-04`
+- `DEC-2026-03-29-065` rescope the remaining Stage F wave around a single workspace workbench, shift module positioning behind that consolidation, and push visual-system polish to the last step of the wave
+- `DEC-2026-03-29-066` complete `stage-f-04`, collapse overview, modules, documents, chat, and tasks into one primary workbench surface with panel-level switching, archive the consolidation task, and move the active Stage F task to `stage-f-05`

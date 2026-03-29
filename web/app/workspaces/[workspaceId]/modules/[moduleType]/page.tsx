@@ -1,5 +1,4 @@
-﻿import ModuleHubPanel from "../../../../../components/workspace/module-hub-panel";
-import WorkspaceNav from "../../../../../components/workspace/workspace-nav";
+﻿import { redirect } from "next/navigation";
 
 type WorkspaceModulePageProps = {
   params: {
@@ -9,13 +8,5 @@ type WorkspaceModulePageProps = {
 };
 
 export default function WorkspaceModulePage({ params }: WorkspaceModulePageProps) {
-  const { workspaceId, moduleType } = params;
-
-  return (
-    <main>
-      <h1>模块详情</h1>
-      <WorkspaceNav workspaceId={workspaceId} />
-      <ModuleHubPanel workspaceId={workspaceId} selectedModuleType={moduleType} />
-    </main>
-  );
+  redirect(`/workspaces/${params.workspaceId}`);
 }

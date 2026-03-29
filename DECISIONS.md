@@ -979,3 +979,45 @@ Append-only log. Add new entries at the bottom.
 - Impact: first contact with the live demo is now more legible, the workspace center no longer treats deep links and raw workspace lists as equal entry points, and Stage F can move on to workspace hierarchy and primary-flow simplification.
 - Related Task: `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-28-064
+- Date: 2026-03-28
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-03 workspace navigation and primary-flow simplification
+- Context: after `stage-f-02`, first-time entry into the public demo and workspace center was clearer, but users still entered each workspace through a flat list of equal pages. Overview, modules, documents, chat, tasks, and analytics still competed as peer-level surfaces, which made return paths unclear and hid the intended main workflow.
+- Choice: add one explicit workspace-page shell with breadcrumb navigation, grouped primary versus secondary workspace navigation, and one visible main flow across `documents -> chat -> tasks`; archive `stage-f-03`; and move the active Stage F task to `stage-f-04`.
+- Why: Stage F needed to solve workspace hierarchy before it could credibly explain module differences or move on to showcase-oriented visual polish.
+- Impact: workspace pages now communicate where the user is, how to return to the workspace center or overview, which surfaces belong to the main workflow, and why analytics is a secondary review surface instead of a first-stop page.
+- Related Task: `tasks/archive/stage-f/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-29-065
+- Date: 2026-03-29
+- Status: Confirmed
+- Source: Human
+- Topic: rescope the remaining Stage F wave around a single workspace workbench
+- Context: after the first two Stage F tasks, the workspace hierarchy became clearer, but the user still had to navigate several separate pages for overview, modules, documents, chat, and tasks. The human clarified that this still feels like a developer console rather than a product workbench.
+- Choice: replace the old remaining Stage F sequence with a new order: `stage-f-04-workspace-workbench-consolidation`, then `stage-f-05-module-positioning-inside-workbench`, then `stage-f-06-demo-visual-system-and-showcase-polish`.
+- Why: module explanation and visual polish will be easier to do correctly once the workspace no longer depends on a flat multi-page model.
+- Impact: the next active Stage F task is now the single-workbench consolidation; module-positioning work moves behind that structural reset; visual polish remains the final step of the wave.
+- Related Task: `tasks/stage-f-04-workspace-workbench-consolidation.md`
+- Supersedes: `tasks/stage-f-04-module-positioning-and-entry-surface-clarification.md`
+
+## Decision Entry
+
+- ID: DEC-2026-03-29-066
+- Date: 2026-03-29
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-04 workspace workbench consolidation
+- Context: after `stage-f-02` and `stage-f-03`, users could better understand where to start, but the workspace still asked them to treat overview, modules, documents, chat, and tasks as separate peer pages. The human clarified that this still felt like a developer console rather than a product workbench.
+- Choice: collapse the primary workspace path into one main workbench, move documents, chat, and tasks behind panel-level switching on that surface, demote analytics to the only secondary workspace page, preserve compatibility redirects for legacy deep links, archive `stage-f-04`, and move the active Stage F task to `stage-f-05`.
+- Why: Stage F needed to finish the structural reset before module positioning or visual polish could be credible.
+- Impact: users now enter each workspace through one obvious main workbench instead of a flat page list, old deep links continue to land in the correct panel without pretending those pages still define the main model, and the next bounded step can focus on clarifying module differences inside the new workbench itself.
+- Related Task: `tasks/archive/stage-f/stage-f-04-workspace-workbench-consolidation.md`
+- Supersedes:

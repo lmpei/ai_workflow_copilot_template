@@ -1,4 +1,4 @@
-# Stage F Plan
+﻿# Stage F Plan
 
 ## Stage Name
 
@@ -43,9 +43,9 @@ increase first-time user confusion.
 
 ## Stage Goal
 
-Turn the public demo and workspace surface into a clearer product experience with lower cognitive load, explicit page
-hierarchy, stronger module differentiation, and a more showcase-ready visual baseline, while preserving the real
-Support case and Job hiring-packet behavior introduced in Stage E.
+Turn the public demo and workspace surface into a clearer product experience with lower cognitive load, a single main
+workspace workbench, stronger module differentiation, and a more showcase-ready visual baseline, while preserving the
+real Support case and Job hiring-packet behavior introduced in Stage E.
 
 ## Track 1: Research
 
@@ -91,14 +91,15 @@ Reduce first-time user confusion and make the live public demo easier to underst
 ### Focus Areas
 
 - home-page and workspace-center information architecture
-- workspace hierarchy, navigation, and return paths
-- clearer module entry messaging and workbench-first entry rules
+- single-workbench workspace model instead of multi-page tool switching
+- clearer module explanation inside the workbench itself
 - visual polish on the highest-traffic pages after structural simplification lands
 
 ### Expected Outcomes
 
 - first-time users can identify where to start
 - workspace navigation feels like a hierarchy instead of a flat tool list
+- the main user path lives in one primary workbench rather than several competing pages
 - the public demo looks intentional enough for external showcase use
 
 ## Non-Goals
@@ -124,37 +125,39 @@ Stage F does not primarily optimize for:
 Stage F is successful when:
 
 - a first-time user can identify the primary next action on the home page and workspace center
-- workspace hierarchy and return paths are explicit enough that users do not feel lost between overview, modules,
-  documents, chat, tasks, and analytics
-- the three scenario modules are easier to distinguish from their entry surfaces without renaming the products
+- the workspace no longer feels like several equal tool pages and instead offers one obvious main workbench
+- the three scenario modules are easier to distinguish from their main workbench surfaces without renaming the products
 - the user-facing public demo pages feel materially more presentable for external showcase use
 - Stage E workbench behavior remains intact and understandable during the UX reset
 
 ## Next Step
 
-Execute `tasks/stage-f-03-workspace-navigation-and-primary-flow-simplification.md` as the next Stage F task.
+Execute `tasks/stage-f-05-module-positioning-inside-workbench.md` as the next Stage F task.
 
 ## First Task Wave
 
 The first executable Stage F wave is:
 
 - `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md` (complete)
-- `tasks/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
-- `tasks/stage-f-04-module-positioning-and-entry-surface-clarification.md`
-- `tasks/stage-f-05-demo-visual-system-and-showcase-polish.md`
+- `tasks/archive/stage-f/stage-f-03-workspace-navigation-and-primary-flow-simplification.md` (complete)
+- `tasks/archive/stage-f/stage-f-04-workspace-workbench-consolidation.md` (complete)
+- `tasks/stage-f-05-module-positioning-inside-workbench.md`
+- `tasks/stage-f-06-demo-visual-system-and-showcase-polish.md`
 
 This wave keeps Stage F focused on one bounded outcome: make the live public demo and workspace experience easier to
 understand before the roadmap returns to deeper trust, eval, and capability expansion work.
 
 ## Completed So Far
 
-The first Stage F task is now complete:
+The first three Stage F tasks are now complete:
 
 - `tasks/archive/stage-f/stage-f-02-home-and-workspace-information-architecture-reset.md`
+- `tasks/archive/stage-f/stage-f-03-workspace-navigation-and-primary-flow-simplification.md`
+- `tasks/archive/stage-f/stage-f-04-workspace-workbench-consolidation.md`
 
-It reduced first-contact overload on the home page and workspace center by splitting first-time entry from existing-work
-continuation, moving demo limits behind lighter disclosure, and demoting deep workspace links that previously competed
-with the primary start path.
+They reduced first-contact overload on the home page and workspace center, then added one explicit workspace
+hierarchy with breadcrumb navigation and grouped surfaces, and then collapsed the remaining multi-page workspace model
+into one primary workbench. The next step is to make module differences visible inside that unified workbench.
 
 ## Relationship To The Long-Term Roadmap
 

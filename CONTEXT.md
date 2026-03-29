@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-28
+- Last Updated: 2026-03-29
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -19,11 +19,11 @@ persistent case workbench layer and a direct case-action loop: a user can contin
 still going through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue
 shortlist or candidate-review work from the packet itself while still going through the shared task runtime. The live
 public demo now has one bounded entry story: new viewers should start from a fresh guided demo workspace, while
-existing Support or Job work should continue from the visible case or hiring-packet workbench. The active planning
-question has shifted to how the user-facing surface should be simplified so those capabilities are easier to understand
-and demonstrate. The home page and workspace center now expose a clearer first-contact path: first-time users are
-guided toward one demo-start path, while existing work is pushed toward reopening an existing workspace instead of
-rebuilding context from scratch.
+existing Support or Job work should continue from the visible case or hiring-packet workbench. The home page and
+workspace center now expose a clearer first-contact path, and the workspace itself now opens into one main workbench
+where documents, chat, and tasks are switched inside one primary surface instead of being treated as separate peer
+pages. The next bounded planning step is to make the three modules easier to distinguish from inside that workbench
+without renaming the products or reopening a separate module page.
 
 ## Current Phase
 
