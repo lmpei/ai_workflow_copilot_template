@@ -78,21 +78,16 @@ function formatDateTime(value: string): string {
 }
 
 function WorkspaceCard({ workspace }: { workspace: Workspace }) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <Link
       href={`/workspaces/${workspace.id}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       style={{
-        alignItems: "center",
-        backgroundColor: isHovered ? "#eff6ff" : "#ffffff",
-        border: `1px solid ${isHovered ? "#60a5fa" : "#dbe4f0"}`,
+        backgroundColor: "#ffffff",
+        border: "1px solid #dbe4f0",
         borderRadius: 16,
         color: "#0f172a",
         display: "grid",
-        gap: 4,
+        gap: 6,
         padding: 14,
         textDecoration: "none",
         transition: "all 160ms ease",
@@ -104,7 +99,7 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
         </strong>
         <span
           style={{
-            backgroundColor: isHovered ? "#dbeafe" : "#f1f5f9",
+            backgroundColor: "#f1f5f9",
             borderRadius: 999,
             color: "#334155",
             display: "inline-flex",
@@ -259,10 +254,12 @@ export default function WorkspaceCenterPanel() {
       >
         <div style={{ alignItems: "start", display: "grid", gap: 12, gridTemplateColumns: "minmax(0, 1fr) auto" }}>
           <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.16em" }}>PROJECT</div>
-            <h1 style={{ color: "#0f172a", fontSize: "clamp(2rem, 3.5vw, 2.8rem)", lineHeight: 1.02, margin: 0 }}>LMPAI Loom</h1>
+            <div style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.16em" }}>PRODUCT</div>
+            <h1 style={{ color: "#0f172a", fontSize: "clamp(2rem, 3.5vw, 2.8rem)", lineHeight: 1.02, margin: 0 }}>
+              LMPAI Weave
+            </h1>
             <p style={{ color: "#475569", lineHeight: 1.65, margin: 0, maxWidth: 680 }}>
-              围绕资料接入、分析过程和正式输出组织起来的 AI 研究工作流。
+              以研究流程为主线的 AI 工作台，把资料接入、分析过程和正式输出组织成一条清楚的工作路径。
             </p>
           </div>
 
@@ -276,7 +273,7 @@ export default function WorkspaceCenterPanel() {
                 color: "#0f172a",
               }}
             >
-              打开个人主页
+              返回个人主页
             </Link>
             {session ? (
               <>
@@ -409,7 +406,7 @@ export default function WorkspaceCenterPanel() {
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
               <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
-                登录后即可创建自己的工作区，或先从上面的引导演示开始体验。
+                登录后即可创建自己的工作区，或者先从上方的引导演示开始体验。
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                 <Link
@@ -439,10 +436,10 @@ export default function WorkspaceCenterPanel() {
         </SectionCard>
 
         <SectionCard title="历史工作区">
-          {!session ? <p style={{ margin: 0 }}>登录后可以看到最近的工作区。</p> : null}
+          {!session ? <p style={{ margin: 0 }}>登录后可以看到最近使用的工作区。</p> : null}
           {session && isLoading ? <p style={{ margin: 0 }}>正在同步工作区...</p> : null}
           {session && !isLoading && orderedWorkspaces.length === 0 ? (
-            <p style={{ margin: 0 }}>还没有工作区。先从上面的演示或左侧空白创建开始。</p>
+            <p style={{ margin: 0 }}>还没有工作区。先从上方演示或左侧空白创建开始。</p>
           ) : null}
           <div
             style={{
@@ -462,7 +459,7 @@ export default function WorkspaceCenterPanel() {
 
       {publicDemoSettings?.public_demo_mode ? (
         <details>
-          <summary>查看当前 demo 限制</summary>
+          <summary>查看当前 Demo 限制</summary>
           <div style={{ marginTop: 12 }}>
             <PublicDemoNotice description="这些限制仍然有效，但不应该盖过主要入口。" settings={publicDemoSettings} variant="compact" />
           </div>

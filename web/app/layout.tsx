@@ -2,8 +2,8 @@
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "LMPAI Loom",
-  description: "Linminpei 的个人主页与 AI 产品入口。",
+  title: "LMPAI Weave",
+  description: "LMPAI Weave 产品工作台。",
 };
 
 type RootLayoutProps = {
