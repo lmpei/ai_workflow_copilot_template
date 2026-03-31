@@ -118,13 +118,14 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage C`, documented in `docs/prd/STAGE_C_PLAN.md`, is now complete and closed.
 `Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`, is now complete and closed.
 `Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`.
+`Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage E`,
-and is now executing `Stage F`.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage F`,
+and is now executing `Stage G`.
 
 The current implemented platform increment includes:
 
@@ -150,11 +151,8 @@ The current implemented platform increment includes:
 - one honest public-demo rule that distinguishes fresh guided workspaces from existing workbench continuation
 - a clearer first-contact user path on the home page and workspace center that separates first-time guided-demo entry
   from existing-work continuation
-- one root personal homepage that is now split away from the current product entry route
-- one dedicated project-facing route that auth now returns to instead of dropping the user back into the old root-home
-  overlap
-- one lighter project-facing home at `/app` that now acts as the workspace center while the legacy `/workspaces` entry
-  remains as a compatibility redirect
+- one product-facing home that already behaves like a compact project start surface and now needs to become the
+  canonical root route on the dedicated product host
 - one denser root-home versus project-home split where the main story and actions are now more visible inside the
   first viewport
 - one primary workspace workbench that now defaults to a chat-first shell, with documents and task actions behaving as
@@ -178,8 +176,10 @@ complete and closed.
 complete and closed.
 `Stage D: Public Internet Demo Baseline`, documented in `docs/prd/STAGE_D_PLAN.md`, is complete and closed.
 `Stage E: Support and Job Workbench Productization`, documented in `docs/prd/STAGE_E_PLAN.md`, is complete and closed.
-The active formal planning unit is `Stage F: Public Demo Experience Clarification and UX Reset`, documented in
-`docs/prd/STAGE_F_PLAN.md`, and its third bounded follow-up wave is now complete while closeout remains pending human confirmation.
+`Stage F: Public Demo Experience Clarification and UX Reset`, documented in `docs/prd/STAGE_F_PLAN.md`, is complete and
+closed.
+The active formal planning unit is `Stage G: Multi-Subdomain Product Split and Shared Edge Routing`, documented in
+`docs/prd/STAGE_G_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

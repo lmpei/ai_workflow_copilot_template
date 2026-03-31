@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
       await registerUser({ name, email, password });
       const loginResponse = await loginUser({ email, password });
       storeLoginSession(loginResponse);
-      router.push("/app");
+      router.push("/");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "注册失败");
     } finally {
@@ -52,7 +52,7 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
     return (
       <SectionCard title="账号已登录" description={`当前账号：${session.user.email}`}>
         <p>
-          前往 <Link href="/app">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
+          前往 <Link href="/">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );

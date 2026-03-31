@@ -5,7 +5,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 ## Metadata
 
-- Last Updated: 2026-03-31
+- Last Updated: 2026-04-01
 
 ## Main Modules
 
@@ -30,8 +30,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 ## State and Persistence
 
 - PostgreSQL is the system of record for product and workflow state.
-- PostgreSQL now also persists the first non-Research workbench state through Support case / Support case event and Job
-  hiring packet / Job hiring packet event records.
+- PostgreSQL also persists the non-Research workbench state through Support case / Support case event and Job hiring
+  packet / Job hiring packet event records.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime.
@@ -40,17 +40,17 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 - Next.js frontend in `web/`
 - `web/app/page.tsx`
-  - owns the root personal homepage and project-directory surface rather than the logged-in product entry
+  - owns the canonical product home for the dedicated frontend host
 - `web/app/app/page.tsx`
-  - owns the project-facing home and workspace-center route that now sits behind the root personal homepage
+  - preserves compatibility by redirecting the older project-home route into `/`
 - `web/app/workspaces/page.tsx`
-  - preserves compatibility by redirecting the older workspace-center route into `/app`
+  - preserves compatibility by redirecting the older workspace-center route into `/`
 - `web/app/workspaces/[workspaceId]/analytics/page.tsx`
   - preserves compatibility by redirecting the older analytics page route into the workbench analytics surface
 - `web/components/workspace/workspace-workbench-panel.tsx`
   - owns the primary workspace user path; the main conversation is the center of the workbench, documents behave like
     lightweight context/upload controls, module actions behave like the next step inside the same shell, and analytics,
-    execution detail, or deeper document inspection now belong to summoned supporting surfaces instead of equal peer
+    execution detail, or deeper document inspection belong to summoned supporting surfaces instead of equal peer
     destinations
 - FastAPI API in `server/app/api/routes/`
 - orchestration in `server/app/services/`
@@ -71,8 +71,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns persistent Support case synchronization, case timeline assembly, and case-action-loop guidance on top of
     completed Support task results
 - `server/app/services/job_hiring_packet_service.py`
-  - owns persistent Job hiring packet synchronization, hiring-timeline assembly, and packet-action-loop guidance on top of
-    completed Job task results
+  - owns persistent Job hiring packet synchronization, hiring-timeline assembly, and packet-action-loop guidance on top
+    of completed Job task results
 - `server/app/repositories/support_case_repository.py`
   - owns Support case and Support case event persistence
 - `server/app/repositories/job_hiring_packet_repository.py`
@@ -91,6 +91,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - Chroma
 - OpenAI-compatible chat and embedding providers
 - Docker Compose for local orchestration
+- Caddy as the shared edge for host-based frontend and API routing in the multi-subdomain deployment target
 
 ## Non-Goals
 
@@ -98,6 +99,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - a single-purpose chatbot architecture
 - advanced multi-agent durability and approval flows at the current baseline
 - a flat or panel-balanced workspace UI that treats documents, task execution, or analytics as equal first-stop surfaces
+- a deployment model where this repository still pretends to own the root marketing site instead of the dedicated
+  product host
 
 ## Change Guardrails
 

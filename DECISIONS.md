@@ -1214,8 +1214,45 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-f-18 project-home and research-workflow reset
 - Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
-- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `开始分析` CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `寮€濮嬪垎鏋恅 CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
 - Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
 - Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
 - Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-081
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human
+- Topic: close Stage F and open Stage G
+- Context: Stage F completed the user-facing experience reset through the final project-home and research-workflow
+  follow-up, and the next bounded need is no longer front-end shape iteration but deployment-boundary correction.
+- Choice: close Stage F as complete and open `Stage G: Multi-Subdomain Product Split and Shared Edge Routing`.
+- Why: the repo now needs a new planning unit that focuses on product-only host boundaries and shared-edge deployment
+  instead of continuing to stretch the UX-reset stage.
+- Impact: control-plane docs move from Stage F closeout review into a new active Stage G task stack.
+- Related Task: `tasks/archive/stage-g/stage-g-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-082
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human
+- Topic: product-only multi-subdomain deployment target
+- Context: the commercial deployment shape is now explicitly defined around a separate root homepage plus a dedicated
+  product frontend and API. The old `app.<domain>` public-demo shape is not the long-term boundary for this repo.
+- Choice: treat `lmpai.online` as the separate homepage outside this repo, adapt this repository to the dedicated
+  product frontend at `weave.lmpai.online`, keep the backend API at `api.lmpai.online`, and support that target behind
+  one Cloudflare -> Caddy -> multi-service edge with host-based routing, split service deployment, explicit
+  reverse-proxy headers, and explicit CORS.
+- Why: a commercial multi-project setup needs the root marketing site, the product frontend, and the API to evolve and
+  deploy independently.
+- Impact: the repo now needs one product-only root route, one compatibility redirect from `/app`, one dedicated
+  shared-edge deployment path, and deployment docs/templates that no longer assume `app.<domain>` as the canonical
+  product host.
+- Related Task: `tasks/stage-g-02-weave-subdomain-product-split.md`
 - Supersedes:

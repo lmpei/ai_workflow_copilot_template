@@ -1,0 +1,29 @@
+# Shared host-level Caddy example for one separate homepage plus the product stack from this repo.
+# Replace localhost ports if your host-level routing differs.
+
+lmpai.online {
+    encode gzip
+    reverse_proxy 127.0.0.1:3000
+}
+
+weave.lmpai.online {
+    encode gzip
+    reverse_proxy 127.0.0.1:3001 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+}
+
+api.lmpai.online {
+    encode gzip
+    reverse_proxy 127.0.0.1:8001 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+}
+
+app.lmpai.online {
+    redir https://weave.lmpai.online{uri} permanent
+}

@@ -1,4 +1,4 @@
-# Public Deployment Path
+# Public Deployment Path`r`n`r`n> Note: this is the older single-stack `app.<domain>` path from Stage D. The current preferred commercial deployment target is the multi-subdomain split documented in `docs/development/MULTI_SUBDOMAIN_DEPLOYMENT.md`.
 
 ## Purpose
 

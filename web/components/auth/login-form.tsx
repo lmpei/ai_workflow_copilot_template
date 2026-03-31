@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
     try {
       const response = await loginUser({ email, password });
       storeLoginSession(response);
-      router.push("/app");
+      router.push("/");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "登录失败");
     } finally {
@@ -50,7 +50,7 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
     return (
       <SectionCard title="已登录" description={`当前账号：${session.user.email}`}>
         <p>
-          前往 <Link href="/app">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
+          前往 <Link href="/">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );

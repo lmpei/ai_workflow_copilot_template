@@ -1,4 +1,4 @@
-# Public Deployment Contract
+# Public Deployment Contract`r`n`r`n> Note: this document records the older first-rollout single-stack contract chosen in Stage D. The current preferred commercial deployment target for this repo is the multi-subdomain split documented in `docs/development/MULTI_SUBDOMAIN_DEPLOYMENT.md`.
 
 ## Purpose
 

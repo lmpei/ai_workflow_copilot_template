@@ -6,7 +6,7 @@
 
 ## Status
 
-- Status: active
+- Status: complete and closed
 - Opened At: 2026-03-28
 - First Task Wave: complete
 - Second Task Wave: complete
@@ -264,5 +264,5 @@ This follow-up accepts one last human clarification: the project-facing home sti
 workspace-center explanation page, and the main workbench still needed to read less like a generic chat surface and more
 like a research workflow page. The result is a denser /app home with login or session actions at the top, one
 lightweight guided-demo row, one manual-create surface, and one bounded existing-work region, plus a clearer main
-workspace where prompt chips are visibly clickable, 开始分析 is the primary CTA, analysis progress stays in the main
+workspace where prompt chips are visibly clickable, 寮€濮嬪垎鏋?is the primary CTA, analysis progress stays in the main
 column, and the right rail behaves like a state-oriented research panel.

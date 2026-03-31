@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-03-31
+- Last Updated: 2026-04-01
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -13,43 +13,38 @@ AI Workflow Copilot is a shared platform core for knowledge-work AI workflows. I
 grounded chat, async tasks, agent execution, evaluation, and observability so multiple scenario modules can run on the
 same primitives.
 
-The project now has one live public demo baseline at `https://app.lmpai.online`. The active stage has shifted from
-public-demo delivery and non-Research workbench productization into a user-facing experience reset. Support now has a
-persistent case workbench layer and a direct case-action loop: a user can continue a case from the case itself while
-still going through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue
-shortlist or candidate-review work from the packet itself while still going through the shared task runtime. The live
-public demo now has one bounded entry story: new viewers should start from a fresh guided demo workspace, while
-existing Support or Job work should continue from the visible case or hiring-packet workbench. The workspace itself
-now opens into one main workbench where the conversation is the obvious center, documents behave like lightweight
-context and upload affordances, module actions behave like the next step instead of a peer panel, and deeper analytics
-or operator detail only appears when the user explicitly summons it.
+Support owns one persistent case workbench layer and one direct case-action loop: a user can continue a case from the
+case itself while still going through the shared task runtime. Job owns one persistent hiring-packet workbench layer and
+one direct hiring-packet action loop: a user can continue shortlist or candidate-review work from the packet itself
+while still going through the shared task runtime. Research remains the reference workflow when the product needs one
+clear primary path.
 
-Human review after the third Stage F wave and the narrow density follow-up confirmed that one more reset was still needed.
-That final follow-up has now landed: the root `/` page remains the personal homepage, the project-facing home at `/app`
-now behaves like a denser project start surface with login/session actions at the top, one lightweight guided-demo row,
-one manual-create surface, and one bounded existing-work region, and the main workspace now reads more like a
-research-workflow page than a generic explanatory chat surface. Prompt chips are clearly clickable, `开始分析` is the
-primary CTA, analysis progress stays in the main column, and the right rail now behaves like a research-state panel for
-status, documents, analytics, trace/readiness entry, and formal output. Stage F is now waiting on a human closeout
-decision rather than another active implementation task.
+Stage F is complete and closed after the experience reset that produced one denser product home, one
+research-workflow-oriented main workspace, and one clearer distinction between primary work and summoned supporting
+surfaces. The active work is now Stage G. Stage G prepares this repository for a product-only deployment boundary: the
+root personal homepage at `https://lmpai.online` is treated as a separate deployment outside this repo, while this repo
+is being adapted to run as the dedicated product frontend at `https://weave.lmpai.online` plus the dedicated backend API
+at `https://api.lmpai.online/api/v1` behind one shared Cloudflare -> Caddy edge.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, and Stage F active pending closeout after the third wave, one narrow density follow-up, and one final project-home plus research-workflow reset follow-up
+- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, Stage F
+  complete, and Stage G active
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
-forking the architecture. The active stage should be executed through the three-track roadmap model, with one primary
-track chosen for the stage, the other two treated as required parallel investment, and Research kept as the reference
-workflow when user-facing module differences and workbench depth need to be explained more clearly.
+forking the architecture. The active stage should preserve that shared-platform model while moving the repo to the
+correct commercial host boundary: one separate homepage outside the repo, one dedicated product frontend host, and one
+dedicated API host.
 
 ## Technology Stack
 
 - Backend: FastAPI, SQLAlchemy, PostgreSQL, ARQ
 - Frontend: Next.js App Router, TypeScript
-- Infrastructure: Docker Compose, Redis, Chroma, Caddy for the bounded public-demo rollout path
+- Infrastructure: Docker Compose, Redis, Chroma, Caddy for the bounded public-demo rollout path and the new shared-edge
+  multi-subdomain deployment target
 - Tooling: pytest, mypy, ruff, Next.js lint/build
 
 ## Repository Overview
@@ -73,25 +68,28 @@ workflow when user-facing module differences and workbench depth need to be expl
 - `docs/prd/STAGE_E_PLAN.md`
   - closed Stage E planning document
 - `docs/prd/STAGE_F_PLAN.md`
-  - active Stage F planning document, including the current third UX-restructure wave
+  - closed Stage F planning document for the UX reset and research-workflow surface rebuild
+- `docs/prd/STAGE_G_PLAN.md`
+  - active Stage G planning document for the product-only multi-subdomain deployment split
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage F work uses `stage-f-*`
-- Phase 5 task history
-  - archived under `tasks/archive/phase5/`
+  - active Stage G work uses `stage-g-*`
 - root control-plane docs
   - `AGENTS.md`, `CONTEXT.md`, `STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`
 
 ## Runtime Entrypoints
 
 - Full stack local dev: `docker compose up --build`
-- Public demo deployment path: `docker compose -f docker-compose.public-demo.yml --env-file <env-file> ...`
-- Live public demo web: `https://app.lmpai.online`
-- Live public demo API: `https://api.lmpai.online/api/v1`
-- Frontend: `http://localhost:3000`
-- API base: `http://localhost:8000/api/v1`
-- Health: `http://localhost:8000/api/v1/health`
+- Legacy single-stack public demo path: `docker compose -f docker-compose.public-demo.yml --env-file <env-file> ...`
+- New shared-edge subdomain path: `docker compose -f docker-compose.weave-stack.yml --env-file <env-file> ...`
+- Live current public demo web: `https://app.lmpai.online`
+- Live current public demo API: `https://api.lmpai.online/api/v1`
+- Target product web host after Stage G cutover: `https://weave.lmpai.online`
+- Target product API host after Stage G cutover: `https://api.lmpai.online/api/v1`
+- Frontend local: `http://localhost:3000`
+- API base local: `http://localhost:8000/api/v1`
+- Health local: `http://localhost:8000/api/v1/health`
 
 ## Environment Intent
 
@@ -102,7 +100,10 @@ workflow when user-facing module differences and workbench depth need to be expl
 - `staging`
   - release-like validation with explicit migration, smoke, rollback, release evidence, and handoff discipline
 - `public-demo`
-  - one public Linux VM using `docker-compose.public-demo.yml`, one reverse proxy, and a git-external env file
+  - the older single-stack Linux VM path using one reverse proxy inside this repo
+- `subdomain-product`
+  - a product-only stack from this repo, intended to run behind one shared host-level Caddy edge as
+    `weave.lmpai.online` plus `api.lmpai.online`
 
 ## Verification
 
@@ -117,9 +118,9 @@ workflow when user-facing module differences and workbench depth need to be expl
 - deployment drift between env templates, Compose config, reverse proxy routing, smoke scripts, and docs
 - cross-module consistency across research, support, and job
 - continuity expectations for persisted workbench state in the live public demo
-- front-end information overload, especially when abstract explanation competes with primary actions
-- summoned supporting surfaces or operator detail can still pull the workspace back toward a visible tool-console feel
-- a visual system that still undersells the intended product shape on the highest-traffic pages
+- deployment drift between the older `app.<domain>` public-demo path and the new `weave.lmpai.online` product-only
+  subdomain target
+- host-boundary confusion if the root homepage and the product frontend are not separated cleanly in routing and docs
 - documentation drift between current state, decisions, and archived task history
 
 ## Boundaries
@@ -128,3 +129,4 @@ workflow when user-facing module differences and workbench depth need to be expl
 - Do not bypass shared platform primitives for scenario-specific shortcuts.
 - Do not rename the three module product names without confirmation.
 - Do not replace the existing `docs/` or `tasks/archive/` systems; build on top of them.
+- Do not treat this repository as the long-term home-site codebase for `lmpai.online`.

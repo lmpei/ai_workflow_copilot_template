@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { CSSProperties } from "react";
 import Link from "next/link";
@@ -240,7 +240,7 @@ export default function WorkspaceCenterPanel() {
 
   const handleLogout = () => {
     clearStoredSession();
-    router.push("/app");
+    router.push("/");
   };
 
   if (!isReady) {
@@ -268,7 +268,7 @@ export default function WorkspaceCenterPanel() {
 
           <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "flex-end" }}>
             <Link
-              href="/"
+              href="https://lmpai.online"
               style={{
                 ...pillLinkStyle,
                 backgroundColor: "#ffffff",
@@ -276,7 +276,7 @@ export default function WorkspaceCenterPanel() {
                 color: "#0f172a",
               }}
             >
-              返回个人主页
+              打开个人主页
             </Link>
             {session ? (
               <>
