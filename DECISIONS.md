@@ -1,4 +1,4 @@
-﻿# Decisions
+# Decisions
 
 Append-only log. Add new entries at the bottom.
 
@@ -308,6 +308,7 @@ Append-only log. Add new entries at the bottom.
 - Impact: the Research workbench now exposes reusable brief summaries, asset/revision comparison, and clearer revision-level reuse without changing the broader platform module boundaries
 - Related Task: `tasks/archive/stage-b/stage-b-06-research-briefs-and-asset-comparison.md`
 - Supersedes:
+
 ## Decision Entry
 
 - ID: DEC-2026-03-21-017
@@ -394,6 +395,7 @@ Append-only log. Add new entries at the bottom.
 - Impact: `stage-c-02` becomes the next active execution task and Stage C gains an explicit first task wave instead of drifting into ad hoc work
 - Related Task: `tasks/archive/stage-c/stage-c-01-task-stack-planning.md`
 - Supersedes:
+
 ## Decision Entry
 
 - ID: DEC-2026-03-22-023
@@ -1020,4 +1022,200 @@ Append-only log. Add new entries at the bottom.
 - Why: Stage F needed to finish the structural reset before module positioning or visual polish could be credible.
 - Impact: users now enter each workspace through one obvious main workbench instead of a flat page list, old deep links continue to land in the correct panel without pretending those pages still define the main model, and the next bounded step can focus on clarifying module differences inside the new workbench itself.
 - Related Task: `tasks/archive/stage-f/stage-f-04-workspace-workbench-consolidation.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-29-067
+- Date: 2026-03-29
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-05 module positioning inside the workbench
+- Context: after `stage-f-04`, the workspace finally had one primary workbench, but the three modules still risked feeling like similar text-analysis tools because the workbench itself did not explain their different work objects, outputs, and continuation rules early enough.
+- Choice: move module explanation into the unified workbench, add one positioning card grounded in the scenario registry, make the documents/chat/tasks region descriptions module-specific, archive `stage-f-05`, and move the active Stage F task to `stage-f-06`.
+- Why: Stage F needed users to understand why Research, Support, and Job are different before visual polish would have real product value.
+- Impact: module differentiation now shows up in the main workbench surface itself, Support case and Job hiring-packet continuity are explained earlier than deep workbench history, and the last bounded Stage F step can focus on showcase-ready visual quality instead of structural explanation.
+- Related Task: `tasks/archive/stage-f/stage-f-05-module-positioning-inside-workbench.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-068
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: redefine the remaining Stage F wave around personal-homepage separation and a chat-first workbench
+- Context: after `stage-f-05`, the workspace explains the three modules more clearly, but the human clarified that the overall product still feels wrong in two ways: the root home page and project-facing home still overlap too much, and the workspace still feels more like a panelized tool console than a chat-centered product workbench.
+- Choice: supersede the old standalone `stage-f-06` visual-polish task, define a new Stage F second wave as `stage-f-07`, `stage-f-08`, `stage-f-09`, `stage-f-10`, and `stage-f-11`, treat the root home page as a personal homepage, treat the project home as the workspace center, move the workbench toward a chat-first model with summonable supporting surfaces, archive the replanning task, and move the active Stage F task to `stage-f-07`.
+- Why: visual polish alone would improve appearance but would not solve the deeper product-shape problem that the human identified.
+- Impact: Stage F now continues with a second bounded wave that changes the site and workbench structure before the final showcase-polish step, while keeping the module names and Stage E workbench behavior intact.
+- Related Task: `tasks/archive/stage-f/stage-f-06-wave-two-replanning.md`
+- Supersedes: `tasks/archive/stage-f/stage-f-06-demo-visual-system-and-showcase-polish-superseded.md`
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-069
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-07 personal homepage and project-entry split
+- Context: the new Stage F second wave begins by separating the root site from the product itself. Before this task, the root home page still behaved too much like the project entry surface, which made the site feel repetitive and blurred the line between the personal homepage and the product.
+- Choice: rewrite the root `/` page as a personal homepage plus project directory, introduce `/app` as the dedicated project-facing entry route, update auth return paths to land on that project-facing route, archive `stage-f-07`, and move the active Stage F task to `stage-f-08`.
+- Why: the human explicitly clarified that the root site should not double as the internal entry surface for a single project.
+- Impact: the public site now has one clearer external-facing role, the project has one clearer internal-facing entry route, and the next bounded step can simplify the project-facing home itself instead of continuing to untangle the root page.
+- Related Task: `tasks/archive/stage-f/stage-f-07-personal-homepage-and-project-entry-split.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-070
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-08 project-home workspace-center reset
+- Context: once the root personal homepage and project-facing entry route were separated, the project still needed its own home surface to become lighter and more product-like. Before this task, `/app` was only a temporary landing page and the older `/workspaces` page still held the heavy workspace-center surface.
+- Choice: move the lighter workspace-center surface onto `/app`, keep one lightweight guided-demo entry, bound the existing-work list inside a fixed-height scroll region, rewrite the workspace-center and public-demo notice copy into clean UTF-8 Chinese, redirect `/workspaces` into `/app`, archive `stage-f-08`, and move the active Stage F task to `stage-f-09`.
+- Why: the project-facing home should behave like the real start point for this product instead of remaining a temporary landing page or another duplicated explanation surface.
+- Impact: the project now has one clearer internal home, returning users can continue work from a bounded list instead of a page that expands without bound, and the next bounded step can focus directly on making the workspace itself chat-first.
+- Related Task: `tasks/archive/stage-f/stage-f-08-project-home-workspace-center-reset.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-071
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-09 chat-first workbench shell
+- Context: after `stage-f-08`, the project had a clearer root-site split and a lighter project-facing home, but the main workspace still read too much like a balanced panel console. Chat, documents, and task actions still competed too evenly for attention, which kept the workbench from feeling like one primary product surface.
+- Choice: make chat the default center of the workspace, demote documents into a lighter compact supporting surface, demote task work into a supporting action area instead of a peer page, archive `stage-f-09`, and move the active Stage F task to `stage-f-10`.
+- Why: the human explicitly clarified that the product should read more like one chat-centered workbench with supporting affordances than like a console of equal tool regions.
+- Impact: the primary workspace now reads more like one object-aware workbench, users no longer need to interpret documents and task work as equal first-stop regions, and the next bounded step can focus on making supporting detail and analytics feel truly summonable rather than just smaller.
+- Related Task: `tasks/archive/stage-f/stage-f-09-chat-first-workbench-shell.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-072
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-10 supporting panels and analytics drawer
+- Context: after `stage-f-09`, the workspace already read as a chat-first shell, but supporting detail still behaved too much like a persistent block or a separate page destination. The human had explicitly clarified that analytics should be summoned by button instead of living as a constant first-stop surface.
+- Choice: turn documents, task actions, execution detail, and analytics into on-demand supporting surfaces, route the older analytics page into the workbench analytics surface for compatibility, archive `stage-f-10`, and move the active Stage F task to `stage-f-11`.
+- Why: the workbench should keep one obvious center while still exposing honest operational detail when the user needs it.
+- Impact: the workspace now feels closer to one object-aware chat-first product surface, analytics no longer competes as a persistent page-level destination, and the final bounded Stage F step can focus on showcase-ready visual polish rather than more structural cleanup.
+- Related Task: `tasks/archive/stage-f/stage-f-10-supporting-panels-and-analytics-drawer.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-073
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-11 showcase visual polish
+- Context: after `stage-f-10`, the site structure and workbench model were finally in the right shape, but the highest-traffic pages still looked too plain and still carried presentation defects that weakened trust. The last bounded Stage F task existed specifically to improve those highest-traffic surfaces without reopening structure work.
+- Choice: apply one bounded showcase-quality visual pass across the root personal homepage, the project-facing home, the workspace center, the chat-first workbench shell, and the main chat surface; archive `stage-f-11`; and leave Stage F closeout open for human confirmation.
+- Why: the project needed one final polish step after the structural reset so the public demo would feel more intentional and presentable instead of staying in an internal-tool visual state.
+- Impact: the Stage F second wave is now execution-complete, the highest-traffic surfaces are materially stronger for live demo use, and the next step is a human decision about Stage F closeout rather than another default implementation task.
+- Related Task: `tasks/archive/stage-f/stage-f-11-showcase-visual-polish.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-074
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: replace Stage F closeout with a third bounded UX-restructure wave
+- Context: after reviewing the post-`stage-f-11` surface, the human clarified that the product still feels too verbose, too single-column, and too panelized. The direction from the first two Stage F waves is still correct, but the project-facing home still repeats too much explanation, the existing-work region still dominates too much space, and the main workspace still exposes documents, task work, and analytics more visibly than the intended product model.
+- Choice: keep Stage F open, archive one replanning task, and define a third bounded Stage F wave centered on a denser viewport-first project home, a conversation-first workbench rebuild, lighter summoned supporting surfaces, and one final cleanup / visual pass after structure lands.
+- Why: closing Stage F at this point would lock in the wrong interaction model and force later roadmap stages to build on top of a front-end shape the human has already rejected.
+- Impact: Stage F now continues with a third bounded wave instead of closing; the next active task becomes `stage-f-13`, and the repo should treat the current UI as a transitional baseline rather than the final Stage F endpoint.
+- Related Task: `tasks/archive/stage-f/stage-f-12-wave-three-replanning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-075
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-13 personal homepage and project-home viewport reset
+- Context: after replanning the third Stage F wave, the first required step was to compress the root personal homepage and the `/app` project-facing home into denser, more scannable first-view surfaces. Before this task, both routes still carried too much vertical explanation and too much single-column weight.
+- Choice: rebuild the root personal homepage around one denser two-column hero plus compact support cards, rebuild `/app` around one lighter project header plus a denser workspace-center layout, keep guided demo as the first-time entry, keep existing workspaces inside one bounded scroll region, archive `stage-f-13`, and move the active Stage F task to `stage-f-14`.
+- Why: the human explicitly clarified that the site should communicate the primary story and actions inside one clearer viewport instead of depending on extra scrolling and repeated explanatory copy.
+- Impact: the product now has a stronger personal-home versus project-home split, the project-facing home is materially lighter and more scannable, and the remaining third-wave work can now focus on the workspace interaction model itself.
+- Related Task: `tasks/archive/stage-f/stage-f-13-personal-homepage-and-project-home-viewport-reset.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-076
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-14 conversation-first workbench rebuild
+- Context: after `stage-f-13`, the site entry surfaces were denser and clearer, but the main workspace still read too much like a visible set of peer panels. The human had explicitly clarified that the workbench should feel closer to one conversation surface where documents and task work are lightweight affordances rather than balanced destinations.
+- Choice: rebuild the main workspace around one conversation-first center, rewrite the main chat surface to act like the obvious work area, demote documents into lighter context/upload controls, demote task work into module-aware next-action affordances, archive `stage-f-14`, and move the active Stage F task to `stage-f-15`.
+- Why: Stage F needed to finish the core interaction-model reset before it could credibly refine summoned supporting detail or perform final cleanup.
+- Impact: the workspace now reads more like one product workbench instead of a tool console, Support case and Job hiring-packet continuity stay visible inside that workbench, and the next bounded step can focus on analytics, operator detail, and other summoned supporting surfaces.
+- Related Task: `tasks/archive/stage-f/stage-f-14-conversation-first-workbench-rebuild.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-077
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-15 summoned supporting surfaces and operator affordances
+- Context: after `stage-f-14`, the main workspace already centered on one conversation-first surface, but supporting detail still risked reading like visible product structure instead of clearly secondary affordances. The human had explicitly clarified that analytics should be opened by button rather than treated like a standing page destination.
+- Choice: keep the main conversation surface intact, compress the visible document affordance further, move deeper document detail, module actions, analytics, and operator-oriented execution detail behind explicit summoned surfaces, archive `stage-f-15`, and move the active Stage F task to `stage-f-16`.
+- Why: Stage F needed one honest supporting-detail layer before the final visual cleanup could be done on top of a stable interaction model.
+- Impact: the workspace now distinguishes the main work surface from secondary detail much more clearly, compatibility analytics routes still land in the right place, and the final Stage F task can now focus on visual-system cleanup and legacy removal instead of more structural changes.
+- Related Task: `tasks/archive/stage-f/stage-f-15-summoned-supporting-surfaces-and-operator-affordances.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-078
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-16 showcase visual redesign and legacy cleanup
+- Context: after `stage-f-15`, the structural interaction model was finally in the right shape, but the highest-traffic surfaces still needed one coherent visual pass and one last cleanup sweep. The remaining goal was not another structural rewrite; it was to make the new shape look intentional enough for external showcase use and to remove the last obvious rough edges from the front-end surface.
+- Choice: apply the final Stage F visual redesign across the root personal homepage, the `/app` project home, the workspace center, the chat-first workbench, the document surface, and the shared card system; archive `stage-f-16`; and return Stage F to human closeout review instead of auto-extending the stage again.
+- Why: the human had explicitly clarified that the front-end should be treated as a product-surface rebuild, not a patchwork cleanup, and the third follow-up wave needed a real finish line before any later roadmap work resumed.
+- Impact: the personal homepage versus project-home split now reads more intentionally, the workbench visual system is more coherent around one conversation-first center, and the remaining question is now stage closeout rather than another active implementation gap.
+- Related Task: `tasks/archive/stage-f/stage-f-16-showcase-visual-redesign-and-legacy-cleanup.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-079
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-17 narrow workbench density and direct-affordance follow-up
+- Context: after `stage-f-16`, the overall Stage F direction was finally right, but human review still identified a few narrow workbench usability issues: the visible top of the conversation surface was still too tall, some cards repeated the same explanation, the document upload affordance was too weak, and abstract action labels still hid what the user would actually get.
+- Choice: define one narrow post-wave follow-up, compress the workbench top area and chat empty state, reduce repeated explanation, rename abstract action language into more result-oriented labels, add drag-and-drop plus click-to-select upload while keeping an explicit upload button, archive `stage-f-17`, and return Stage F to final human closeout review.
+- Why: these gaps were too small to justify another broad Stage F wave, but too visible to ignore before deciding whether the stage could close.
+- Impact: the workbench now wastes less vertical space, the visible surface is more direct about what to do next, document upload is easier to discover and use, and the remaining question is now Stage F closeout rather than more active UX rework inside this stage.
+- Related Task: `tasks/archive/stage-f/stage-f-17-workbench-density-and-direct-affordances.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-03-31-080
+- Date: 2026-03-31
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-f-18 project-home and research-workflow reset
+- Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `开始分析` CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
+- Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
+- Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
 - Supersedes:

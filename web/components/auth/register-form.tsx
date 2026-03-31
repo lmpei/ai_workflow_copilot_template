@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
       await registerUser({ name, email, password });
       const loginResponse = await loginUser({ email, password });
       storeLoginSession(loginResponse);
-      router.push("/workspaces");
+      router.push("/app");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "注册失败");
     } finally {
@@ -50,9 +50,9 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
 
   if (session) {
     return (
-      <SectionCard title="账号已登录" description={`当前登录账号：${session.user.email}。`}>
+      <SectionCard title="账号已登录" description={`当前账号：${session.user.email}`}>
         <p>
-          前往 <Link href="/workspaces">工作区中心</Link> 继续。
+          前往 <Link href="/app">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );
@@ -65,12 +65,12 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
           <PublicDemoNotice
             settings={publicDemoSettings}
             title="公网 Demo 访问"
-            description="当前已关闭自助注册，因此这个公网 demo 目前需要使用运维侧提供的账号。"
+            description="当前已关闭自助注册，因此这个公开 demo 目前需要使用已有账号登录。"
           />
         ) : null}
-        <SectionCard title="暂不开放注册" description="当前这轮公网 demo 暂时关闭了自助注册。">
+        <SectionCard title="暂不开放注册" description="当前这一轮公开 demo 暂时关闭了自助注册。">
           <p>
-            请使用运维侧提供的账号前往 <Link href={authRoutes.login}>登录</Link>，或稍后再试。
+            请使用已有账号前往 <Link href={authRoutes.login}>登录</Link>，或稍后再试。
           </p>
         </SectionCard>
       </>
@@ -83,10 +83,10 @@ export default function RegisterForm({ publicDemoSettings = null }: RegisterForm
         <PublicDemoNotice
           settings={publicDemoSettings}
           title="公网 Demo 限制"
-          description="你可以在当前限制范围内创建账号并体验公网 demo。"
+          description="你可以在当前限制范围内创建账号并体验这个项目。"
         />
       ) : null}
-      <SectionCard title="创建账号" description="创建一个受限的公网 demo 账号，登录态通过浏览器保存的 bearer 认证维持。">
+      <SectionCard title="创建账号" description="创建一个受限的公开 demo 账号，然后进入当前项目。">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
           <label style={{ display: "grid", gap: 6 }}>
             <span>姓名</span>

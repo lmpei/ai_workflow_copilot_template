@@ -1,4 +1,4 @@
-import type { PublicDemoSettingsRecord } from "../../lib/types";
+﻿import type { PublicDemoSettingsRecord } from "../../lib/types";
 import SectionCard from "../ui/section-card";
 
 type PublicDemoNoticeProps = {
@@ -20,7 +20,7 @@ function formatUploadLimit(settings: PublicDemoSettingsRecord): string {
 export default function PublicDemoNotice({
   settings,
   title = "公网 Demo 限制",
-  description = "这个公网 demo 会对每个账号施加明确限制，让外部用户在没有隐含运维步骤的前提下体验工作流平台。",
+  description = "这个公开 demo 会对每个账号施加明确限制，让外部用户在没有隐含运维步骤的前提下体验工作流平台。",
   showRegistrationStatus = true,
   variant = "card",
 }: PublicDemoNoticeProps) {

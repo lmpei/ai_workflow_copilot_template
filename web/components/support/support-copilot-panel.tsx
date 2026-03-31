@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -10,11 +10,10 @@ import {
 } from "../../lib/api";
 import type {
   JsonObject,
-  SupportArtifacts,
-  SupportCaseBrief,
   SupportCaseContinuationDraft,
-  SupportEscalationPacket,
+  SupportCaseStatus,
   SupportEvidenceStatus,
+  SupportEscalationPacket,
   SupportFinding,
   SupportReplyDraft,
   SupportSeverity,
@@ -31,6 +30,7 @@ import SectionCard from "../ui/section-card";
 type SupportCopilotPanelProps = {
   workspaceId: string;
   continuationDraft?: SupportCaseContinuationDraft | null;
+  requestedTaskType?: SupportTaskType | null;
   onContinuationHandled?: () => void;
 };
 
@@ -211,18 +211,8 @@ function renderList(items: string[], emptyText: string) {
   );
 }
 
-function formatIssueSnapshot(input: SupportTaskInput): string {
-  const parts: string[] = [];
-  if (input.product_area) {
-    parts.push(input.product_area);
-  }
-  if (input.severity) {
-    parts.push(`严重级别：${input.severity}`);
-  }
-  if (input.desired_outcome) {
-    parts.push(`目标：${input.desired_outcome}`);
-  }
-  return parts.join(" | ");
+function formatReproductionSteps(steps: string[]): string {
+  return steps.join("\n");
 }
 
 function parseReproductionSteps(value: string): string[] {
@@ -232,76 +222,9 @@ function parseReproductionSteps(value: string): string[] {
     .filter((step, index, allSteps) => step.length > 0 && allSteps.indexOf(step) === index);
 }
 
-function formatReproductionSteps(steps: string[]): string {
-  return steps.join("\n");
-}
-
-function renderArtifacts(artifacts: SupportArtifacts) {
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-        {[
-          { label: "文档", value: artifacts.document_count },
-          { label: "命中片段", value: artifacts.match_count },
-          { label: "工具调用", value: artifacts.tool_call_ids.length },
-        ].map((item) => (
-          <div
-            key={item.label}
-            style={{
-              border: "1px solid #cbd5e1",
-              borderRadius: 12,
-              minWidth: 120,
-              padding: 12,
-            }}
-          >
-            <div style={{ color: "#475569", fontSize: 12 }}>{item.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 700 }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <strong>依据状态：</strong> {renderEvidenceStatus(artifacts.evidence_status)}
-      </div>
-    </div>
-  );
-}
-
-function renderCaseBrief(caseBrief: SupportCaseBrief) {
-  return (
-    <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, display: "grid", gap: 8, padding: 16 }}>
-      <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
-        <strong>Case 摘要</strong>
-        {renderEvidenceStatus(caseBrief.evidence_status)}
-      </div>
-      <div>
-        <strong>问题摘要：</strong> {caseBrief.issue_summary}
-      </div>
-      {caseBrief.product_area ? (
-        <div>
-          <strong>产品范围：</strong> {caseBrief.product_area}
-        </div>
-      ) : null}
-      {caseBrief.severity ? (
-        <div>
-          <strong>严重级别：</strong> {caseBrief.severity}
-        </div>
-      ) : null}
-      {caseBrief.desired_outcome ? (
-        <div>
-          <strong>期望结果：</strong> {caseBrief.desired_outcome}
-        </div>
-      ) : null}
-      <div>
-        <strong>复现步骤</strong>
-        {renderList(caseBrief.reproduction_steps, "这次任务没有记录复现步骤。")}
-      </div>
-    </div>
-  );
-}
-
 function renderFindings(findings: SupportFinding[]) {
   if (findings.length === 0) {
-    return <p>这次任务没有产出额外的有依据发现。</p>;
+    return <p style={{ color: "#64748b", margin: 0 }}>当前没有额外的 grounded 发现。</p>;
   }
 
   return (
@@ -309,15 +232,14 @@ function renderFindings(findings: SupportFinding[]) {
       {findings.map((finding) => (
         <li
           key={`${finding.title}-${finding.summary}`}
-          style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: 12 }}
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: 12,
+            padding: 12,
+          }}
         >
-          <div style={{ fontWeight: 600 }}>{finding.title}</div>
+          <div style={{ fontWeight: 700 }}>{finding.title}</div>
           <p style={{ color: "#475569", marginBottom: 0 }}>{finding.summary}</p>
-          {finding.evidence_ref_ids.length > 0 ? (
-            <div style={{ color: "#64748b", fontSize: 13, marginTop: 8 }}>
-              证据引用：{finding.evidence_ref_ids.join(", ")}
-            </div>
-          ) : null}
         </li>
       ))}
     </ul>
@@ -326,12 +248,11 @@ function renderFindings(findings: SupportFinding[]) {
 
 function renderReplyDraft(replyDraft?: SupportReplyDraft) {
   if (!replyDraft) {
-    return null;
+    return <p style={{ color: "#64748b", margin: 0 }}>这次没有生成回复草稿。</p>;
   }
 
   return (
-    <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, display: "grid", gap: 8, padding: 16 }}>
-      <strong>回复草稿</strong>
+    <div style={{ display: "grid", gap: 8 }}>
       <div>
         <strong>主题：</strong> {replyDraft.subject_line}
       </div>
@@ -345,23 +266,13 @@ function renderReplyDraft(replyDraft?: SupportReplyDraft) {
 
 function renderEscalationPacket(packet?: SupportEscalationPacket) {
   if (!packet) {
-    return null;
+    return <p style={{ color: "#64748b", margin: 0 }}>当前没有升级交接包。</p>;
   }
 
   return (
-    <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, display: "grid", gap: 8, padding: 16 }}>
-      <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
-        <strong>升级交接包</strong>
-        {renderEvidenceStatus(packet.evidence_status)}
-      </div>
+    <div style={{ display: "grid", gap: 8 }}>
       <div>
         <strong>建议负责人：</strong> {packet.recommended_owner}
-      </div>
-      <div>
-        <strong>是否需人工复核：</strong> {packet.needs_manual_review ? "是" : "否"}
-      </div>
-      <div>
-        <strong>是否升级：</strong> {packet.should_escalate ? "是" : "否"}
       </div>
       <div>
         <strong>升级原因：</strong> {packet.escalation_reason}
@@ -369,18 +280,9 @@ function renderEscalationPacket(packet?: SupportEscalationPacket) {
       <div>
         <strong>交接说明：</strong> {packet.handoff_note}
       </div>
-      {packet.follow_up_notes ? (
-        <div>
-          <strong>跟进备注：</strong> {packet.follow_up_notes}
-        </div>
-      ) : null}
       <div>
         <strong>未解决问题</strong>
         {renderList(packet.unresolved_questions, "当前没有额外未解决问题。")}
-      </div>
-      <div>
-        <strong>下一步建议</strong>
-        {renderList(packet.recommended_next_steps, "当前没有额外下一步建议。")}
       </div>
     </div>
   );
@@ -389,6 +291,7 @@ function renderEscalationPacket(packet?: SupportEscalationPacket) {
 export default function SupportCopilotPanel({
   workspaceId,
   continuationDraft,
+  requestedTaskType,
   onContinuationHandled,
 }: SupportCopilotPanelProps) {
   const { session, isReady } = useAuthSession();
@@ -529,18 +432,17 @@ export default function SupportCopilotPanel({
     });
     setSelectedTaskId(continuationDraft.continue_from_task_id);
     setErrorMessage(null);
-
-    if (typeof window !== "undefined") {
-      window.requestAnimationFrame(() => {
-        document.getElementById("support-follow-up-form-anchor")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    }
-
     onContinuationHandled?.();
   }, [continuationDraft, onContinuationHandled]);
+
+  useEffect(() => {
+    if (!requestedTaskType || requestedTaskType === taskType) {
+      return;
+    }
+
+    setTaskType(requestedTaskType);
+    setErrorMessage(null);
+  }, [requestedTaskType, taskType]);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? null,
@@ -582,20 +484,10 @@ export default function SupportCopilotPanel({
     setContinuationContext({
       source: "task",
       title: "正在基于已完成任务继续跟进",
-      guidance:
-        "新的 Support 任务会把这条已完成任务作为父任务，并继续写回同一个 case（如果该任务已经关联 case）。",
+      guidance: "新的 Support 任务会把这条已完成任务作为父任务，并继续写回同一个 case（如果该任务已经关联 case）。",
     });
     setSelectedTaskId(task.id);
     setErrorMessage(null);
-
-    if (typeof window !== "undefined") {
-      window.requestAnimationFrame(() => {
-        document.getElementById("support-follow-up-form-anchor")?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    }
   }, []);
 
   const handleClearFollowUp = useCallback(() => {
@@ -666,7 +558,7 @@ export default function SupportCopilotPanel({
   };
 
   if (!isReady) {
-    return <SectionCard title="Support Copilot">正在加载会话...</SectionCard>;
+    return <SectionCard title="Support 动作">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
@@ -674,11 +566,8 @@ export default function SupportCopilotPanel({
   }
 
   return (
-    <>
-      <SectionCard
-        title="Support Copilot"
-        description="运行 grounded 的支持 case 流程，查看依据质量、分诊建议、回复草稿和升级交接包。"
-      >
+    <div style={{ display: "grid", gap: 16 }}>
+      <SectionCard title="Support 动作" description="继续已有 case，或启动新的 grounded Support 任务。">
         {isLoadingWorkspace ? <p>正在加载工作区配置...</p> : null}
         {workspace ? (
           <div style={{ display: "grid", gap: 8 }}>
@@ -692,16 +581,13 @@ export default function SupportCopilotPanel({
         ) : null}
         {workspace?.module_type && workspace.module_type !== "support" ? (
           <p style={{ color: "#b91c1c", marginBottom: 0, marginTop: 12 }}>
-            这个面板只对 Support 工作区开放。当前模块：{workspace.module_type}。
+            这个动作面只对 Support 工作区开放。当前模块：{workspace.module_type}。
           </p>
         ) : null}
       </SectionCard>
 
-      <SectionCard
-        title="启动 Support case"
-        description="填写 case 信息，或直接从已有 case / 已完成任务继续跟进。新的任务仍然走共享 task runtime。"
-      >
-        <div id="support-follow-up-form-anchor" style={{ display: "grid", gap: 12, maxWidth: 760 }}>
+      <SectionCard title="启动或继续 Support 任务" description="新的任务仍然走共享 task runtime，但表单现在默认按 case 连续性工作。">
+        <div style={{ display: "grid", gap: 12, maxWidth: 760 }}>
           <form onSubmit={handleCreateTask} style={{ display: "grid", gap: 12 }}>
             <label style={{ display: "grid", gap: 6 }}>
               <span>任务类型</span>
@@ -755,11 +641,6 @@ export default function SupportCopilotPanel({
                 {continuationContext?.guidance ? (
                   <div>
                     <strong>当前推进建议：</strong> {continuationContext.guidance}
-                  </div>
-                ) : null}
-                {continuationContext?.suggestedFollowUpPrompt ? (
-                  <div>
-                    <strong>建议补充到跟进备注：</strong> {continuationContext.suggestedFollowUpPrompt}
                   </div>
                 ) : null}
               </div>
@@ -821,7 +702,7 @@ export default function SupportCopilotPanel({
                 disabled={workspace?.module_type !== undefined && workspace.module_type !== "support"}
                 onChange={(event) => setReproductionStepsText(event.target.value)}
                 placeholder={"每行一个步骤\n1. 打开重置邮件\n2. 点击链接\n3. 页面提示链接已过期"}
-                rows={5}
+                rows={4}
                 value={reproductionStepsText}
               />
             </label>
@@ -840,33 +721,28 @@ export default function SupportCopilotPanel({
             ) : null}
 
             {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-            <button
-              disabled={isCreating || workspace?.module_type === "research" || workspace?.module_type === "job"}
-              type="submit"
-            >
-              {isCreating ? "正在启动..." : "启动 Support 任务"}
+            <button disabled={isCreating || workspace?.module_type === "research" || workspace?.module_type === "job"} type="submit">
+              {isCreating ? "正在启动..." : `启动${TASK_OPTIONS[taskType].label}`}
             </button>
           </form>
         </div>
       </SectionCard>
 
-      <SectionCard title="Support 任务记录" description="任务每 2 秒自动刷新一次，方便观察 case 如何从 grounded 分诊推进到持续跟进。">
+      <SectionCard title="最近 Support 任务" description="保留最近任务和继续入口，但不再把整套任务历史当成主界面。">
         {isLoadingTasks ? <p>正在加载 Support 任务...</p> : null}
         {!isLoadingTasks && tasks.length === 0 ? <p>还没有 Support 任务。先启动一个任务来生成结构化 case 流程。</p> : null}
-        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-          {tasks.map((task) => {
+        <ul style={{ display: "grid", gap: 12, listStyle: "none", margin: 0, padding: 0 }}>
+          {tasks.slice(0, 8).map((task) => {
             const result = parseSupportTaskResult(task);
             const input = parseSupportTaskInput(task, result);
-            const issueSnapshot = formatIssueSnapshot(input);
             return (
               <li
                 key={task.id}
                 style={{
                   border: task.id === selectedTaskId ? "1px solid #0f172a" : "1px solid #cbd5e1",
-                  borderRadius: 12,
+                  borderRadius: 14,
                   display: "grid",
                   gap: 8,
-                  marginBottom: 12,
                   padding: 12,
                 }}
               >
@@ -875,10 +751,7 @@ export default function SupportCopilotPanel({
                   {renderStatus(task.status)}
                   {result ? renderEvidenceStatus(result.artifacts.evidence_status) : null}
                 </div>
-                <div style={{ color: "#475569" }}>
-                  {result?.summary ?? input.customer_issue ?? "没有记录客户问题。"}
-                </div>
-                {issueSnapshot ? <div style={{ color: "#64748b", fontSize: 13 }}>{issueSnapshot}</div> : null}
+                <div style={{ color: "#475569" }}>{result?.summary ?? input.customer_issue ?? "没有记录客户问题。"}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   <button onClick={() => setSelectedTaskId(task.id)} type="button">
                     查看结果
@@ -895,7 +768,7 @@ export default function SupportCopilotPanel({
         </ul>
       </SectionCard>
 
-      <SectionCard title="结构化 Support 结果" description="查看所选任务的 case 摘要、分诊、回复草稿、升级交接包和依据。">
+      <SectionCard title="结构化结果" description="这里只保留当前任务最重要的摘要、case 信息和下一步建议。">
         {!selectedTask ? <p>请选择一个 Support 任务查看结果。</p> : null}
         {selectedTask ? (
           <div style={{ display: "grid", gap: 16 }}>
@@ -909,11 +782,6 @@ export default function SupportCopilotPanel({
               <div>
                 <strong>任务类型：</strong> {TASK_OPTIONS[selectedTask.task_type as SupportTaskType]?.label ?? selectedTask.task_type}
               </div>
-              {selectedResult?.lineage ? (
-                <div>
-                  <strong>延续自：</strong> {selectedResult.lineage.parent_title} ({selectedResult.lineage.parent_task_id})
-                </div>
-              ) : null}
               {selectedInput?.customer_issue ? (
                 <div>
                   <strong>客户问题：</strong> {selectedInput.customer_issue}
@@ -942,10 +810,36 @@ export default function SupportCopilotPanel({
                   <p style={{ margin: 0 }}>{selectedResult.summary}</p>
                 </div>
 
-                {renderArtifacts(selectedResult.artifacts)}
-                {renderCaseBrief(selectedResult.case_brief)}
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    <strong>Case 摘要</strong>
+                    {renderEvidenceStatus(selectedResult.case_brief.evidence_status)}
+                  </div>
+                  <div>
+                    <strong>问题摘要：</strong> {selectedResult.case_brief.issue_summary}
+                  </div>
+                  {selectedResult.case_brief.product_area ? (
+                    <div>
+                      <strong>产品范围：</strong> {selectedResult.case_brief.product_area}
+                    </div>
+                  ) : null}
+                  {selectedResult.case_brief.severity ? (
+                    <div>
+                      <strong>严重级别：</strong> {selectedResult.case_brief.severity}
+                    </div>
+                  ) : null}
+                  {selectedResult.case_brief.desired_outcome ? (
+                    <div>
+                      <strong>期望结果：</strong> {selectedResult.case_brief.desired_outcome}
+                    </div>
+                  ) : null}
+                  <div>
+                    <strong>复现步骤</strong>
+                    {renderList(selectedResult.case_brief.reproduction_steps, "这次任务没有记录复现步骤。")}
+                  </div>
+                </div>
 
-                <div style={{ border: "1px solid #cbd5e1", borderRadius: 12, display: "grid", gap: 8, padding: 16 }}>
+                <div style={{ display: "grid", gap: 10 }}>
                   <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
                     <strong>分诊决策</strong>
                     {renderEvidenceStatus(selectedResult.triage.evidence_status)}
@@ -969,12 +863,14 @@ export default function SupportCopilotPanel({
                   {renderFindings(selectedResult.findings)}
                 </div>
 
-                {renderReplyDraft(selectedResult.reply_draft)}
-                {renderEscalationPacket(selectedResult.escalation_packet)}
+                <div>
+                  <strong>回复草稿</strong>
+                  <div style={{ marginTop: 8 }}>{renderReplyDraft(selectedResult.reply_draft)}</div>
+                </div>
 
                 <div>
-                  <strong>亮点摘要</strong>
-                  {renderList(selectedResult.highlights, "这次运行没有额外亮点摘要。")}
+                  <strong>升级交接包</strong>
+                  <div style={{ marginTop: 8 }}>{renderEscalationPacket(selectedResult.escalation_packet)}</div>
                 </div>
 
                 <div>
@@ -993,6 +889,6 @@ export default function SupportCopilotPanel({
           </div>
         ) : null}
       </SectionCard>
-    </>
+    </div>
   );
 }

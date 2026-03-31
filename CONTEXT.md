@@ -1,10 +1,10 @@
-﻿# Context
+# Context
 
 Stable project facts only. Keep this file concise and update it when the project baseline changes.
 
 ## Metadata
 
-- Last Updated: 2026-03-29
+- Last Updated: 2026-03-31
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -19,16 +19,24 @@ persistent case workbench layer and a direct case-action loop: a user can contin
 still going through the shared task runtime. Job now also has a direct hiring-packet action loop: a user can continue
 shortlist or candidate-review work from the packet itself while still going through the shared task runtime. The live
 public demo now has one bounded entry story: new viewers should start from a fresh guided demo workspace, while
-existing Support or Job work should continue from the visible case or hiring-packet workbench. The home page and
-workspace center now expose a clearer first-contact path, and the workspace itself now opens into one main workbench
-where documents, chat, and tasks are switched inside one primary surface instead of being treated as separate peer
-pages. The next bounded planning step is to make the three modules easier to distinguish from inside that workbench
-without renaming the products or reopening a separate module page.
+existing Support or Job work should continue from the visible case or hiring-packet workbench. The workspace itself
+now opens into one main workbench where the conversation is the obvious center, documents behave like lightweight
+context and upload affordances, module actions behave like the next step instead of a peer panel, and deeper analytics
+or operator detail only appears when the user explicitly summons it.
+
+Human review after the third Stage F wave and the narrow density follow-up confirmed that one more reset was still needed.
+That final follow-up has now landed: the root `/` page remains the personal homepage, the project-facing home at `/app`
+now behaves like a denser project start surface with login/session actions at the top, one lightweight guided-demo row,
+one manual-create surface, and one bounded existing-work region, and the main workspace now reads more like a
+research-workflow page than a generic explanatory chat surface. Prompt chips are clearly clickable, `开始分析` is the
+primary CTA, analysis progress stays in the main column, and the right rail now behaves like a research-state panel for
+status, documents, analytics, trace/readiness entry, and formal output. Stage F is now waiting on a human closeout
+decision rather than another active implementation task.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
-- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, and Stage F active
+- Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, and Stage F active pending closeout after the third wave, one narrow density follow-up, and one final project-home plus research-workflow reset follow-up
 
 ## Success Criteria
 
@@ -65,7 +73,7 @@ workflow when user-facing module differences and workbench depth need to be expl
 - `docs/prd/STAGE_E_PLAN.md`
   - closed Stage E planning document
 - `docs/prd/STAGE_F_PLAN.md`
-  - active Stage F planning document
+  - active Stage F planning document, including the current third UX-restructure wave
 - `tasks/`
   - active and archived task specs
 - Stage task naming
@@ -109,7 +117,9 @@ workflow when user-facing module differences and workbench depth need to be expl
 - deployment drift between env templates, Compose config, reverse proxy routing, smoke scripts, and docs
 - cross-module consistency across research, support, and job
 - continuity expectations for persisted workbench state in the live public demo
-- front-end information overload, navigation ambiguity, and unclear module boundaries on the public demo path
+- front-end information overload, especially when abstract explanation competes with primary actions
+- summoned supporting surfaces or operator detail can still pull the workspace back toward a visible tool-console feel
+- a visual system that still undersells the intended product shape on the highest-traffic pages
 - documentation drift between current state, decisions, and archived task history
 
 ## Boundaries

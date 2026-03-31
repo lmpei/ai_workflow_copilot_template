@@ -5,7 +5,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 ## Metadata
 
-- Last Updated: 2026-03-29
+- Last Updated: 2026-03-31
 
 ## Main Modules
 
@@ -39,8 +39,19 @@ Stable system boundaries only. This is the short architecture summary. The long-
 ## Key Interfaces
 
 - Next.js frontend in `web/`
+- `web/app/page.tsx`
+  - owns the root personal homepage and project-directory surface rather than the logged-in product entry
+- `web/app/app/page.tsx`
+  - owns the project-facing home and workspace-center route that now sits behind the root personal homepage
+- `web/app/workspaces/page.tsx`
+  - preserves compatibility by redirecting the older workspace-center route into `/app`
+- `web/app/workspaces/[workspaceId]/analytics/page.tsx`
+  - preserves compatibility by redirecting the older analytics page route into the workbench analytics surface
 - `web/components/workspace/workspace-workbench-panel.tsx`
-  - owns the primary workspace user path; documents, chat, and tasks now switch inside one main workbench surface
+  - owns the primary workspace user path; the main conversation is the center of the workbench, documents behave like
+    lightweight context/upload controls, module actions behave like the next step inside the same shell, and analytics,
+    execution detail, or deeper document inspection now belong to summoned supporting surfaces instead of equal peer
+    destinations
 - FastAPI API in `server/app/api/routes/`
 - orchestration in `server/app/services/`
 - persistence in `server/app/repositories/`
@@ -86,7 +97,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - module-specific architecture forks
 - a single-purpose chatbot architecture
 - advanced multi-agent durability and approval flows at the current baseline
-- a flat multi-page workspace UI that treats overview, modules, documents, chat, and tasks as equal first-stop pages
+- a flat or panel-balanced workspace UI that treats documents, task execution, or analytics as equal first-stop surfaces
 
 ## Change Guardrails
 

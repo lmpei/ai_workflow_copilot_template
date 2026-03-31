@@ -1,4 +1,4 @@
-﻿import { isWorkbenchPanelId } from "../../../lib/navigation";
+import { isWorkbenchPanelId } from "../../../lib/navigation";
 import WorkspaceWorkbenchPanel from "../../../components/workspace/workspace-workbench-panel";
 import WorkspacePageShell from "../../../components/workspace/workspace-page-shell";
 
@@ -18,7 +18,7 @@ export default function WorkspaceWorkbenchPage({ params, searchParams }: Workspa
 
   return (
     <WorkspacePageShell
-      description="这是当前工作区的主工作台。文档、对话和任务都在这里按需切换完成，不再要求你在多个平级页面之间来回跳。"
+      description="这是当前工作区的主工作台。对话是主中心，资料、动作和分析只在需要时以辅助视图方式唤出。"
       page="workbench"
       title="工作台"
       workspaceId={workspaceId}

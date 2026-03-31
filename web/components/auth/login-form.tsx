@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,7 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
     try {
       const response = await loginUser({ email, password });
       storeLoginSession(response);
-      router.push("/workspaces");
+      router.push("/app");
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "登录失败");
     } finally {
@@ -48,9 +48,9 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
 
   if (session) {
     return (
-      <SectionCard title="已登录" description={`当前登录账号：${session.user.email}。`}>
+      <SectionCard title="已登录" description={`当前账号：${session.user.email}`}>
         <p>
-          前往 <Link href="/workspaces">工作区中心</Link> 继续。
+          前往 <Link href="/app">项目入口</Link> 或 <Link href="/workspaces">工作区中心</Link> 继续。
         </p>
       </SectionCard>
     );
@@ -62,10 +62,10 @@ export default function LoginForm({ publicDemoSettings = null }: LoginFormProps)
         <PublicDemoNotice
           settings={publicDemoSettings}
           title="公网 Demo 访问"
-          description="使用这个页面登录公网 demo。是否允许注册由当前 demo 限制策略控制。"
+          description="使用这个页面登录当前项目的公开 demo。是否允许注册由当前 demo 策略控制。"
         />
       ) : null}
-      <SectionCard title="登录" description="登录后即可访问公网 demo 的工作区、文档和各类工作流页面。">
+      <SectionCard title="登录" description="登录后进入这个项目，再继续打开工作区和工作台。">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420 }}>
           <label style={{ display: "grid", gap: 6 }}>
             <span>邮箱</span>

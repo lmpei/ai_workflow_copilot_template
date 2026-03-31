@@ -5,12 +5,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { getWorkspace, isApiClientError } from "../../lib/api";
-import { getWorkspacePage, getWorkspacePageHref, type WorkspacePageId } from "../../lib/navigation";
+import { getWorkspacePage, type WorkspacePageId } from "../../lib/navigation";
 import type { ModuleType, Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
-import WorkspaceNav from "./workspace-nav";
 
 type WorkspacePageShellProps = {
   workspaceId: string;
@@ -76,8 +75,8 @@ export default function WorkspacePageShell({ workspaceId, page, title, descripti
   return (
     <main style={{ display: "grid", gap: 18 }}>
       <nav aria-label="面包屑" style={{ color: "#475569", display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <Link href="/workspaces" style={{ color: "#0f172a", textDecoration: "none" }}>
-          工作区中心
+        <Link href="/app" style={{ color: "#0f172a", textDecoration: "none" }}>
+          项目首页
         </Link>
         <span>/</span>
         <span>{workspaceName}</span>
@@ -122,23 +121,18 @@ export default function WorkspacePageShell({ workspaceId, page, title, descripti
           <p style={{ color: "#334155", margin: 0 }}>{description}</p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <Link href="/workspaces" style={{ color: "#0f172a", textDecoration: "none" }}>
-            返回工作区中心
+          <Link href="/app" style={{ color: "#0f172a", textDecoration: "none" }}>
+            返回项目首页
           </Link>
-          {page === "analytics" ? (
-            <Link href={getWorkspacePageHref(workspaceId, "workbench")} style={{ color: "#0f172a", textDecoration: "none" }}>
+          {page !== "workbench" ? (
+            <Link href={`/workspaces/${workspaceId}`} style={{ color: "#0f172a", textDecoration: "none" }}>
               返回工作台
             </Link>
-          ) : (
-            <Link href={getWorkspacePageHref(workspaceId, "analytics")} style={{ color: "#0f172a", textDecoration: "none" }}>
-              查看分析
-            </Link>
-          )}
+          ) : null}
         </div>
         {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
       </section>
 
-      <WorkspaceNav currentPage={page} workspaceId={workspaceId} />
       {children}
     </main>
   );

@@ -150,8 +150,18 @@ The current implemented platform increment includes:
 - one honest public-demo rule that distinguishes fresh guided workspaces from existing workbench continuation
 - a clearer first-contact user path on the home page and workspace center that separates first-time guided-demo entry
   from existing-work continuation
-- one primary workspace workbench that collapses documents, chat, and tasks into one user-facing surface while leaving
-  analytics as a secondary review route
+- one root personal homepage that is now split away from the current product entry route
+- one dedicated project-facing route that auth now returns to instead of dropping the user back into the old root-home
+  overlap
+- one lighter project-facing home at `/app` that now acts as the workspace center while the legacy `/workspaces` entry
+  remains as a compatibility redirect
+- one denser root-home versus project-home split where the main story and actions are now more visible inside the
+  first viewport
+- one primary workspace workbench that now defaults to a chat-first shell, with documents and task actions behaving as
+  supporting surfaces inside the same user-facing workspace
+- earlier module differentiation inside that workbench through real work-object, output, and continuity guidance
+- one root personal homepage and one separate project-facing route
+- one conversation-first workspace where the main chat is the center, documents behave like lightweight context/upload controls, module actions behave like the next step inside the same workbench, and deeper analytics or operator detail only appears when summoned
 
 The repository does not yet implement:
 
@@ -159,8 +169,6 @@ The repository does not yet implement:
 - human approval flows, retries, or advanced scheduling
 - external observability stacks, alerting, or advanced BI-style dashboards
 - full production-grade hardening beyond the current bounded public-demo baseline
-- clear first-surface differentiation between the three scenario modules without relying on deep workbench knowledge
-- a showcase-ready visual system across the highest-traffic public-demo and workspace pages
 - the staged AI capability expansions described in `docs/prd/LONG_TERM_ROADMAP.md`
 
 `Stage A: Research Deepening With Trust Baseline`, documented in `docs/prd/STAGE_A_PLAN.md`, is complete and closed.
@@ -171,7 +179,7 @@ complete and closed.
 `Stage D: Public Internet Demo Baseline`, documented in `docs/prd/STAGE_D_PLAN.md`, is complete and closed.
 `Stage E: Support and Job Workbench Productization`, documented in `docs/prd/STAGE_E_PLAN.md`, is complete and closed.
 The active formal planning unit is `Stage F: Public Demo Experience Clarification and UX Reset`, documented in
-`docs/prd/STAGE_F_PLAN.md`.
+`docs/prd/STAGE_F_PLAN.md`, and its third bounded follow-up wave is now complete while closeout remains pending human confirmation.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

@@ -1,4 +1,4 @@
-import RegisterForm from "../../../components/auth/register-form";
+﻿import RegisterForm from "../../../components/auth/register-form";
 import { getPublicDemoSettings } from "../../../lib/api";
 
 export default async function RegisterPage() {
