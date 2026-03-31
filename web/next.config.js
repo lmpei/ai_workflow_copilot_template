@@ -1,3 +1,13 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/app",
+        destination: "/",
+        permanent: false,
+      },
+    ];
+  },
+};
 module.exports = nextConfig;

@@ -41,8 +41,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - Next.js frontend in `web/`
 - `web/app/page.tsx`
   - owns the canonical product home for the dedicated frontend host
-- `web/app/app/page.tsx`
-  - preserves compatibility by redirecting the older project-home route into `/`
+- `web/next.config.js`
+  - preserves compatibility by redirecting the older `/app` project-home route into `/`
 - `web/app/workspaces/page.tsx`
   - preserves compatibility by redirecting the older workspace-center route into `/`
 - `web/app/workspaces/[workspaceId]/analytics/page.tsx`
