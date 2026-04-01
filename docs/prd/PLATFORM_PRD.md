@@ -167,6 +167,8 @@ The current implemented platform increment includes:
   waves can build on one contract instead of three separate provider call paths
 - one bounded Research tool-assisted chat pilot on top of that shared model interface, visible on the main Research
   workspace surface as a mode that can show inline tool-step summaries instead of acting like ordinary grounded chat
+- one bounded honesty baseline around that pilot, where recent traces surface planning and degraded-path detail and the
+  backend has a regression-facing evaluation rule for visible tool steps plus honest no-source degradation
 
 The repository does not yet implement:
 

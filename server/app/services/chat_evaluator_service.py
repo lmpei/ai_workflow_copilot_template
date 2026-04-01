@@ -186,6 +186,72 @@ def evaluate_retrieval_chat_output(
     )
 
 
+def evaluate_research_tool_assisted_output(
+    *,
+    question: str,
+    expected_json: dict[str, object],
+    output_json: dict[str, object],
+    trace_metadata: dict[str, object] | None = None,
+    pass_threshold: float = DEFAULT_PASS_THRESHOLD,
+) -> ChatEvaluationResult:
+    rule_checks = _evaluate_tool_assisted_rule_checks(
+        expected_json=expected_json,
+        output_json=output_json,
+        trace_metadata=trace_metadata or {},
+    )
+    applicable_checks = [check for check in rule_checks.values() if check["applicable"] is True]
+    passed_checks = [check for check in applicable_checks if check["passed"] is True]
+    rule_score = len(passed_checks) / len(applicable_checks) if applicable_checks else 0.0
+
+    judge_result: JudgeScoreResult
+    try:
+        judge_result = get_judge_scorer().score_retrieval_chat(
+            question=question,
+            expected_json=expected_json,
+            output_json=output_json,
+        )
+    except ChatEvaluatorError as error:
+        judge_result = JudgeScoreResult(score=None, error=str(error))
+
+    final_score = (
+        (rule_score + judge_result.score) / 2.0
+        if judge_result.score is not None
+        else rule_score
+    )
+    passed = (
+        final_score >= max(0.0, min(pass_threshold, 1.0))
+        and rule_checks["answer_present"]["passed"] is True
+        and rule_checks["tool_steps_present"]["passed"] is True
+        and (
+            rule_checks["source_present"]["passed"] is True
+            or rule_checks["honest_degraded_path"]["passed"] is True
+        )
+    )
+
+    return ChatEvaluationResult(
+        score=round(final_score, 4),
+        passed=passed,
+        rule_score=round(rule_score, 4),
+        judge_score=judge_result.score,
+        judge_error=judge_result.error,
+        details_json={
+            "rule_evaluation": {
+                "score": round(rule_score, 4),
+                "checks": rule_checks,
+            },
+            "judge_evaluation": {
+                "score": judge_result.score,
+                "reasoning": judge_result.reasoning,
+                "error": judge_result.error,
+            },
+            "scenario_context": {
+                "mode": "research_tool_assisted",
+                **(trace_metadata or {}),
+            },
+        },
+    )
+
+
 def _evaluate_rule_checks(
     *,
     expected_json: dict[str, object],
@@ -248,6 +314,40 @@ def _evaluate_rule_checks(
             "applicable": False,
             "passed": None,
         }
+
+    return checks
+
+
+def _evaluate_tool_assisted_rule_checks(
+    *,
+    expected_json: dict[str, object],
+    output_json: dict[str, object],
+    trace_metadata: dict[str, object],
+) -> dict[str, dict[str, object]]:
+    checks = _evaluate_rule_checks(expected_json=expected_json, output_json=output_json)
+
+    raw_tool_steps = output_json.get("tool_steps")
+    tool_steps = raw_tool_steps if isinstance(raw_tool_steps, list) else []
+    degraded_reason = output_json.get("degraded_reason")
+    if not isinstance(degraded_reason, str) or not degraded_reason:
+        degraded_reason = trace_metadata.get("degraded_reason")
+    normalized_degraded_reason = degraded_reason if isinstance(degraded_reason, str) and degraded_reason else None
+
+    checks["tool_steps_present"] = {
+        "applicable": True,
+        "passed": len(tool_steps) > 0,
+    }
+
+    has_sources = checks["source_present"]["passed"] is True
+    allow_honest_degraded = bool(expected_json.get("allow_degraded_without_sources"))
+    checks["honest_degraded_path"] = {
+        "applicable": not has_sources,
+        "passed": bool(normalized_degraded_reason) if allow_honest_degraded else False,
+    }
+    checks["degraded_reason_visible"] = {
+        "applicable": not has_sources,
+        "passed": bool(normalized_degraded_reason),
+    }
 
     return checks
 

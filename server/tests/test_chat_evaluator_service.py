@@ -153,3 +153,70 @@ def test_get_judge_scorer_uses_openai_api_key_fallback(
     assert scorer.api_key == "openai-test-key"
     assert scorer.provider_name == "openai"
 
+
+def test_evaluate_research_tool_assisted_output_accepts_visible_tool_steps(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(score=0.8, reasoning="Grounded and transparent."),
+    )
+
+    evaluation = chat_evaluator_service.evaluate_research_tool_assisted_output(
+        question="What should we conclude from the current research material?",
+        expected_json={},
+        output_json={
+            "answer": "The strongest current signal is the pricing shift.",
+            "sources": [
+                {
+                    "document_id": "doc-1",
+                    "chunk_id": "chunk-1",
+                    "document_title": "market-notes.txt",
+                    "chunk_index": 0,
+                    "snippet": "The strongest current signal is the pricing shift.",
+                },
+            ],
+            "tool_steps": [
+                {"tool_name": "list_workspace_documents", "summary": "Checked the material."},
+                {"tool_name": "search_documents", "summary": "Found the strongest evidence."},
+            ],
+        },
+    )
+
+    checks = evaluation.details_json["rule_evaluation"]["checks"]
+    assert checks["tool_steps_present"]["passed"] is True
+    assert checks["source_present"]["passed"] is True
+    assert checks["honest_degraded_path"]["applicable"] is False
+    assert evaluation.passed is True
+
+
+def test_evaluate_research_tool_assisted_output_accepts_honest_degraded_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_evaluator_service,
+        "get_judge_scorer",
+        lambda: FakeJudgeScorer(score=0.7, reasoning="Honest about the missing evidence."),
+    )
+
+    evaluation = chat_evaluator_service.evaluate_research_tool_assisted_output(
+        question="What can we conclude from the current material?",
+        expected_json={"allow_degraded_without_sources": True},
+        output_json={
+            "answer": "There is not enough grounded material yet to reach a firm conclusion.",
+            "sources": [],
+            "tool_steps": [
+                {"tool_name": "list_workspace_documents", "summary": "Checked the material."},
+            ],
+        },
+        trace_metadata={"degraded_reason": "no_documents"},
+    )
+
+    checks = evaluation.details_json["rule_evaluation"]["checks"]
+    assert checks["tool_steps_present"]["passed"] is True
+    assert checks["source_present"]["passed"] is False
+    assert checks["honest_degraded_path"]["passed"] is True
+    assert checks["degraded_reason_visible"]["passed"] is True
+    assert evaluation.passed is True
+

@@ -19,6 +19,7 @@ class ToolAssistedResearchChatResult:
     token_output: int
     analysis_focus: str | None = None
     search_query: str | None = None
+    degraded_reason: str | None = None
 
 
 def _invoke_inline_tool(*, workspace_id: str, user_id: str, tool_name: str, tool_input: dict[str, object]) -> dict[str, object]:
@@ -213,6 +214,7 @@ def run_tool_assisted_research_chat(
             tool_steps=tool_steps,
             token_input=0,
             token_output=0,
+            degraded_reason='no_documents',
         )
 
     analysis_focus, search_query = _plan_search_query(question=question, documents=documents)
@@ -263,4 +265,5 @@ def run_tool_assisted_research_chat(
         token_output=response.usage.output_tokens,
         analysis_focus=analysis_focus,
         search_query=search_query,
+        degraded_reason='no_grounded_matches' if not matches else None,
     )

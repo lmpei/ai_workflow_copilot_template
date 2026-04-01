@@ -1360,3 +1360,23 @@ Append-only log. Add new entries at the bottom.
   work can focus on trace and eval visibility instead of on basic capability wiring.
 - Related Task: `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-089
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-04 tool trace and eval visibility
+- Context: the first Stage H pilot was live, but its tool-assisted behavior still risked looking like a black box unless
+  the traces became human-readable and one bounded regression baseline checked for visible tool behavior plus honest
+  degraded no-source handling.
+- Choice: make the Research pilot trace surface show planning focus, search query, visible tool steps, and degraded
+  reason; add one bounded regression-facing evaluator for tool-step visibility and honest degraded paths; archive
+  `stage-h-04`; and return Stage H to human selection of the next bounded task wave.
+- Why: the first capability wave should end with an honest inspection baseline rather than with a hidden or generic
+  success-only surface.
+- Impact: Stage H first wave is now complete, the Research pilot is inspectable enough for honest review, and the next
+  bounded capability step can be chosen from a more stable baseline.
+- Related Task: `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
+- Supersedes:

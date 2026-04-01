@@ -38,6 +38,10 @@ The first bounded Stage H pilot is now also in place: Research workspaces can sw
 tool-assisted analysis mode that plans a bounded analysis focus, uses the existing workspace tools inline, and returns
 both the answer and visible tool-step summaries on the same product surface.
 
+That first pilot now also has an honest review baseline: recent Research tool-assisted traces surface the planning
+focus, search query, visible tool steps, and degraded-path reason, while the backend has one bounded regression
+evaluator for tool-step visibility and honest no-source degradation.
+
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented

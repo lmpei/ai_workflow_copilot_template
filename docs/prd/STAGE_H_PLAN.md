@@ -8,7 +8,7 @@
 
 - Status: active
 - Opened At: 2026-04-01
-- First Task Wave: active
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -129,15 +129,18 @@ The first executable Stage H wave is:
 
 1. `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md` (complete)
 2. `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md` (complete)
-3. `tasks/stage-h-04-tool-trace-and-eval-visibility.md`
+3. `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md` (complete)
 
 ## Completed So Far
 
 - `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
 - `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
+- `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
 
 The repository now has one shared backend model-interface layer beneath chat generation, embeddings, and eval judging.
 The repository also now has one bounded Research tool-assisted chat pilot on top of that layer: the main Research chat
 surface can switch into a pilot mode that plans a bounded analysis focus, invokes existing workspace tools inline, and
-returns visible tool-step summaries alongside the grounded answer. The next active task is the trace/eval visibility
-follow-through for that pilot.
+returns visible tool-step summaries alongside the grounded answer. That pilot now also has one honest visibility
+follow-through: recent traces surface the planning focus, search query, visible tool steps, and degraded-path reason,
+while the backend has one bounded regression baseline for visible tool steps plus honest no-source degradation. The
+next Stage H task wave has not yet been defined.

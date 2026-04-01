@@ -369,28 +369,29 @@ def test_chat_supports_research_tool_assisted_mode(client: TestClient, monkeypat
     def fake_run_tool_assisted_research_chat(*, workspace_id: str, user_id: str, question: str) -> ToolAssistedResearchChatResult:
         assert workspace_id
         assert user_id
-        assert question == "请分析当前研究问题"
+        assert question == "Please analyze the current research question"
         return ToolAssistedResearchChatResult(
-            answer="这是工具辅助试点的分析结论。",
+            answer="This is the tool-assisted pilot conclusion.",
             prompt="tool assisted prompt",
             sources=[],
             tool_steps=[],
             token_input=17,
             token_output=9,
-            analysis_focus="当前研究问题",
-            search_query="当前研究问题",
+            analysis_focus="Current research question",
+            search_query="current research question",
+            degraded_reason="no_grounded_matches",
         )
 
     monkeypatch.setattr(retrieval_service, "run_tool_assisted_research_chat", fake_run_tool_assisted_research_chat)
 
     response = client.post(
         f"/api/v1/workspaces/{workspace_id}/chat",
-        json={"question": "请分析当前研究问题", "mode": "research_tool_assisted"},
+        json={"question": "Please analyze the current research question", "mode": "research_tool_assisted"},
         headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["answer"] == "这是工具辅助试点的分析结论。"
+    assert data["answer"] == "This is the tool-assisted pilot conclusion."
     assert data["mode"] == "research_tool_assisted"
     assert data["tool_steps"] == []
 
@@ -399,6 +400,8 @@ def test_chat_supports_research_tool_assisted_mode(client: TestClient, monkeypat
 
     assert len(traces) == 1
     assert traces[0].trace_type == "research_tool_assisted"
-    assert traces[0].metadata_json["analysis_focus"] == "当前研究问题"
-    assert traces[0].metadata_json["search_query"] == "当前研究问题"
-
+    assert traces[0].response_json["tool_steps"] == []
+    assert traces[0].response_json["degraded_reason"] == "no_grounded_matches"
+    assert traces[0].metadata_json["analysis_focus"] == "Current research question"
+    assert traces[0].metadata_json["search_query"] == "current research question"
+    assert traces[0].metadata_json["degraded_reason"] == "no_grounded_matches"

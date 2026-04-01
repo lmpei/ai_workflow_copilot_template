@@ -90,6 +90,7 @@ def test_tool_assisted_chat_plans_search_executes_tools_and_returns_sources(monk
     assert result.sources[0].chunk_id == 'chunk-1'
     assert result.token_input == 21
     assert result.token_output == 13
+    assert result.degraded_reason is None
     assert tool_calls == [
         ('list_workspace_documents', {'limit': 20}),
         ('search_documents', {'query': 'market signal competitor change', 'limit': 4}),
@@ -127,3 +128,4 @@ def test_tool_assisted_chat_returns_guidance_when_no_documents(monkeypatch) -> N
     ]
     assert result.token_input == 0
     assert result.token_output == 0
+    assert result.degraded_reason == 'no_documents'

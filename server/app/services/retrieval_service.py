@@ -2,6 +2,10 @@ from datetime import UTC, datetime
 
 from app.repositories import conversation_repository, workspace_repository
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.research_tool_assisted_chat_service import (
+    ToolAssistedResearchChatResult,
+    run_tool_assisted_research_chat,
+)
 from app.services.retrieval_generation_service import (
     FALLBACK_ANSWER,
     AnswerGenerator,
@@ -12,10 +16,6 @@ from app.services.retrieval_generation_service import (
     get_answer_generator,
     get_retriever,
     serialize_sources,
-)
-from app.services.research_tool_assisted_chat_service import (
-    ToolAssistedResearchChatResult,
-    run_tool_assisted_research_chat,
 )
 from app.services.trace_service import record_chat_trace
 
@@ -94,6 +94,7 @@ def process_chat_request(
             trace_metadata_extra = {
                 "analysis_focus": generated_tool_assisted.analysis_focus,
                 "search_query": generated_tool_assisted.search_query,
+                "degraded_reason": generated_tool_assisted.degraded_reason,
                 "tool_steps": tool_steps,
             }
         else:
@@ -142,7 +143,12 @@ def process_chat_request(
             token_output=token_output,
             estimated_cost=estimated_cost,
             trace_type=trace_type,
-            extra_response_json={"tool_steps": tool_steps},
+            extra_response_json={
+                "tool_steps": tool_steps,
+                "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
+                "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
+                "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+            },
             extra_metadata_json=trace_metadata_extra,
         )
         return ChatResponse(
@@ -173,7 +179,12 @@ def process_chat_request(
             estimated_cost=estimated_cost,
             error=str(error),
             trace_type=trace_type,
-            extra_response_json={"tool_steps": tool_steps},
+            extra_response_json={
+                "tool_steps": tool_steps,
+                "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
+                "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
+                "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+            },
             extra_metadata_json=trace_metadata_extra,
         )
         raise
@@ -198,7 +209,12 @@ def process_chat_request(
             estimated_cost=estimated_cost,
             error=str(error),
             trace_type=trace_type,
-            extra_response_json={"tool_steps": tool_steps},
+            extra_response_json={
+                "tool_steps": tool_steps,
+                "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
+                "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
+                "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+            },
             extra_metadata_json=trace_metadata_extra,
         )
         raise ChatProcessingError("Failed to process chat request") from error

@@ -75,6 +75,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/retrieval_service.py`
   - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and writes the
     resulting tool-step metadata into chat traces for later visibility work
+- `server/app/services/chat_evaluator_service.py`
+  - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
+    visible tool steps and honest degraded no-source paths
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor
