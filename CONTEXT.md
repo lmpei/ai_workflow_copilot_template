@@ -42,6 +42,10 @@ That first pilot now also has an honest review baseline: recent Research tool-as
 focus, search query, visible tool steps, and degraded-path reason, while the backend has one bounded regression
 evaluator for tool-step visibility and honest no-source degradation.
 
+The next bounded Stage H wave is now defined as a Research-first deepening pass rather than a broader capability
+expansion: move the pilot toward background-capable analysis runs, add bounded conversation-state compaction and run
+memory, and strengthen replayable review before any connector or multi-agent work begins.
+
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented

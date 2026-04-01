@@ -9,6 +9,7 @@
 - Status: active
 - Opened At: 2026-04-01
 - First Task Wave: complete
+- Second Task Wave: active
 
 ## Position In The Project
 
@@ -142,5 +143,27 @@ The repository also now has one bounded Research tool-assisted chat pilot on top
 surface can switch into a pilot mode that plans a bounded analysis focus, invokes existing workspace tools inline, and
 returns visible tool-step summaries alongside the grounded answer. That pilot now also has one honest visibility
 follow-through: recent traces surface the planning focus, search query, visible tool steps, and degraded-path reason,
-while the backend has one bounded regression baseline for visible tool steps plus honest no-source degradation. The
-next Stage H task wave has not yet been defined.
+while the backend has one bounded regression baseline for visible tool steps plus honest no-source degradation.
+
+The second Stage H task wave is now defined. It should keep Research as the single visible learning surface, but
+deepen the current pilot toward background-capable analysis runs, bounded conversation-state compaction, and
+tool-aware replay/regression review before any connector or multi-agent expansion begins.
+
+## Second Task Wave
+
+The second executable Stage H wave is now:
+
+1. `tasks/stage-h-07-research-background-analysis-runs.md`
+2. `tasks/stage-h-08-research-context-compaction-and-run-memory.md`
+3. `tasks/stage-h-09-tool-aware-replay-and-regression-baseline.md`
+
+### Why This Wave Exists
+
+The first Stage H wave proved that one visible Research-first tool-assisted path can exist honestly on the main product
+surface. The next bounded learning step should not broaden into another module or leap into connectors or multi-agent
+handoffs. It should deepen that one visible path so the repository learns:
+
+- when Research analysis should run in a background-capable workflow instead of as a synchronous chat turn
+- how conversation state and tool results should be compacted or resumed without hiding important reasoning context
+- how replay, regression, and operator review should evolve once tool-assisted analysis becomes more durable than one
+  chat response

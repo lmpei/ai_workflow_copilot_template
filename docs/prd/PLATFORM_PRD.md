@@ -192,6 +192,10 @@ and closed.
 The active formal planning unit is `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented
 in `docs/prd/STAGE_H_PLAN.md`.
 
+The first Stage H task wave is complete, and the second Stage H task wave is now defined to deepen the bounded
+Research-first capability path through background-capable analysis runs, bounded context compaction, and tool-aware
+replay/regression follow-through before the roadmap opens connector or multi-agent work.
+
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and
 `tasks/archive/stage-a/stage-a-03-research-report-assembly-and-surface.md` and

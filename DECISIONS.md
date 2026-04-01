@@ -1380,3 +1380,24 @@ Append-only log. Add new entries at the bottom.
   bounded capability step can be chosen from a more stable baseline.
 - Related Task: `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-090
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the second Stage H capability wave
+- Context: the first Stage H wave delivered one shared model-interface foundation, one visible bounded Research
+  tool-assisted pilot, and one honest trace/eval review baseline. The roadmap still warns against jumping too early
+  into connector work or multi-agent orchestration before the bounded capability layer learns background execution,
+  context compaction, and replay discipline in one workflow.
+- Choice: keep Stage H active and define a second bounded Research-first wave: move the current pilot toward
+  background-capable analysis runs, add bounded conversation-state compaction and run memory, and add tool-aware replay
+  plus stronger regression review before any broader connector or orchestration expansion.
+- Why: the next learning step should deepen the existing visible Research path instead of broadening the new
+  model-interface layer into multiple modules or trend-driven agent work too early.
+- Impact: Stage H now has one second-wave task stack and one new primary active task, while the roadmap remains aligned
+  to Wave 1 model-interface and built-in-tool learning rather than prematurely opening Wave 2 or Wave 3.
+- Related Task: `tasks/archive/stage-h/stage-h-06-wave-two-planning.md`
+- Supersedes:

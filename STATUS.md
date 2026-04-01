@@ -24,21 +24,22 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- complete the first bounded Stage H capability wave, keep the visible Research tool-assisted pilot honest in traces
-  and regression review, and wait for the next bounded Stage H task wave definition while the public product hosts
+- execute the second bounded Stage H capability wave by deepening the Research-first pilot into background-capable
+  analysis runs, bounded conversation-state compaction, and replayable review baselines while the public product hosts
   remain stable
 
 ## Active Task
 
-- none; first Stage H task wave complete and awaiting the next bounded task definition
+- `tasks/stage-h-07-research-background-analysis-runs.md`
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. The live product stack now runs behind one
   shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
-  outside this repository. Stage H is now underway: the shared model-interface foundation is in place, one bounded
-  Research tool-assisted chat pilot is live behind the Research workspace surface, and the first Stage H wave now also
-  has trace-visible tool steps plus a bounded regression baseline for honest pilot review.
+  outside this repository. Stage H first wave is complete: the shared model-interface foundation is in place, one
+  bounded Research tool-assisted chat pilot is live behind the Research workspace surface, and that pilot now has
+  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave is now
+  defined to deepen that Research path before any connector or multi-agent expansion.
 - Last Verified At: 2026-04-01
 
 ## Current Blockers
@@ -56,16 +57,17 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which next bounded Stage H capability step should follow the first Research pilot wave without jumping too early into
-  connector or multi-agent work
-- whether the next Stage H wave should deepen Research first or broaden the new model-interface layer into another
-  user-visible module path
+- how far the second Stage H wave should go on background execution before it starts to look like a broader agent
+  orchestration effort
+- which compaction or replay signals must be visible to users versus remaining operator-only during the bounded
+  Research-first deepening pass
 
 ## Ready Now
 
-1. define the next bounded Stage H task wave now that the first foundation / pilot / visibility sequence is complete
-2. keep the live `weave` and `api` hosts stable while the next capability wave is being selected
-3. preserve the current honest pilot visibility baseline instead of hiding it behind generic success language
+1. implement `stage-h-07` to move the visible Research pilot toward explicit background-capable analysis runs
+2. keep the live `weave` and `api` hosts stable while the second capability wave deepens Research instead of broadening
+   prematurely
+3. preserve the current honest pilot visibility baseline while later Stage H tasks add compaction and replay depth
 
 ## Parked / Later
 
@@ -75,7 +77,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
+- `tasks/archive/stage-h/stage-h-06-wave-two-planning.md`
 
 ## Recent Decisions
 
@@ -105,3 +107,6 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-01-089` complete `stage-h-04`, make the Research pilot readable in trace surfaces, add a bounded
   regression baseline for honest degraded-path review, archive the task, and return Stage H to human task-wave
   selection
+- `DEC-2026-04-01-090` define the second Stage H task wave as Research-first background analysis runs, bounded
+  conversation-state compaction, and tool-aware replay/regression follow-through instead of broadening into connector
+  or multi-agent work yet
