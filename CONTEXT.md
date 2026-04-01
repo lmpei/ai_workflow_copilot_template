@@ -34,6 +34,10 @@ The first Stage H foundation is now in place: one shared backend model-interface
 generation, embedding generation, and eval judging, so later capability work can build on one contract instead of on
 three separate provider call paths.
 
+The first bounded Stage H pilot is now also in place: Research workspaces can switch from ordinary grounded chat to one
+tool-assisted analysis mode that plans a bounded analysis focus, uses the existing workspace tools inline, and returns
+both the answer and visible tool-step summaries on the same product surface.
+
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -49,6 +49,12 @@ type SupportingSurfaceMeta = {
   width?: string;
 };
 
+type ChatModeOption = {
+  value: "rag" | "research_tool_assisted";
+  label: string;
+  description: string;
+};
+
 type FocusMeta = {
   assistantLabel: string;
   workflowLabel: string;
@@ -61,6 +67,7 @@ type FocusMeta = {
   outputDescription: string;
   analyticsDescription: string;
   headerLead: string;
+  chatModes?: ChatModeOption[];
 };
 
 type QuickAction = {
@@ -113,7 +120,7 @@ const sideCardStyle: CSSProperties = {
 
 function getModuleDisplayName(moduleType?: string | null): string {
   if (!moduleType) {
-    return "未配置模块";
+    return "Module not configured";
   }
 
   return MODULE_PRODUCT_NAMES[moduleType as ModuleType] ?? moduleType;
@@ -136,59 +143,74 @@ function getFocusMeta(workspace: Workspace | null): FocusMeta {
   if (!workspace || workspace.module_type === "research") {
     return {
       assistantLabel: "Research Assistant",
-      workflowLabel: "研究工作流",
-      introTitle: "从一个研究问题开始",
-      introBody: "先点一个快捷提示词，或直接输入问题，然后开始分析。",
-      defaultTaskLabel: "围绕当前资料形成研究判断",
-      placeholder: "例如：请基于当前资料总结最重要的市场信号，并指出还缺哪些证据才能形成正式结论。",
+      workflowLabel: "Research Workflow",
+      introTitle: "Start from one research question",
+      introBody: "Pick one prompt or type your own question, then start the analysis.",
+      defaultTaskLabel: "Form the next research judgment from current material",
+      placeholder:
+        "For example: summarize the strongest market signals in the current material and tell me what evidence is still missing before we can make a formal conclusion.",
       promptSuggestions: [
-        "请先总结当前资料里最重要的研究发现。",
-        "请告诉我现在最缺哪些资料，才能继续往下分析。",
-        "请判断这批资料里有哪些结论还不够稳，需要进一步核对。",
+        "Summarize the most important findings in the current material.",
+        "Tell me which missing material would unblock the next research step.",
+        "Point out which conclusions are still weak and need more verification.",
       ],
-      outputHeading: "正式输出",
-      outputDescription: "确认判断后，再生成研究摘要或正式报告。",
-      analyticsDescription: "需要解释过程时，再进入 trace、readiness 与分析。",
-      headerLead: "围绕资料、分析过程和正式输出推进这一轮研究。",
+      outputHeading: "Formal outputs",
+      outputDescription: "After one analysis pass, turn it into a research summary or a formal report.",
+      analyticsDescription: "Open trace, readiness, and deeper analysis only when you need to explain the process.",
+      headerLead: "Move this research pass forward through material, analysis, and final output.",
+      chatModes: [
+        {
+          value: "rag",
+          label: "Standard analysis",
+          description: "Use the current material directly for one grounded analysis pass.",
+        },
+        {
+          value: "research_tool_assisted",
+          label: "Tool-assisted pilot",
+          description: "Inspect documents, plan a search, and show a more explicit research-analysis flow.",
+        },
+      ],
     };
   }
 
   if (workspace.module_type === "support") {
     return {
       assistantLabel: "Support Copilot",
-      workflowLabel: "Support 流程",
-      introTitle: "先把 case 判断清楚",
-      introBody: "从一个关键问题开始，确认事实与证据，再决定是否生成摘要、回复或继续升级。",
-      defaultTaskLabel: "围绕当前 case 推进下一步判断",
-      placeholder: "例如：请先总结这个 case 当前最关键的事实，再告诉我应该继续跟进、生成回复还是升级处理。",
+      workflowLabel: "Support workflow",
+      introTitle: "Clarify the case first",
+      introBody: "Start from one key question, confirm facts and evidence, then decide whether to summarize, reply, or escalate.",
+      defaultTaskLabel: "Advance the next support judgment from the current case",
+      placeholder:
+        "For example: summarize the most important facts in this case and tell me whether we should continue follow-up, draft a reply, or prepare escalation.",
       promptSuggestions: [
-        "请先总结当前 case 的核心问题和证据。",
-        "如果现在要直接回复客户，最需要先确认什么？",
-        "这个 case 现在更适合继续跟进，还是应该准备升级？",
+        "Summarize the core issue and evidence in this case.",
+        "If we need to reply now, what still needs confirmation first?",
+        "Is this case better suited for follow-up or escalation right now?",
       ],
-      outputHeading: "Case 产出",
-      outputDescription: "完成一轮判断后，再生成工单摘要、回复草稿或继续已有 case。",
-      analyticsDescription: "需要复盘 trace、readiness 或评测时再打开分析。",
-      headerLead: "围绕 case 事实、回复和升级路径推进这一轮支持工作。",
+      outputHeading: "Case outputs",
+      outputDescription: "After one pass, generate a ticket summary, a reply draft, or continue the current case.",
+      analyticsDescription: "Open analysis only when you need trace, readiness, or deeper explanation.",
+      headerLead: "Move the support work forward through facts, response quality, and escalation decisions.",
     };
   }
 
   return {
     assistantLabel: "Job Assistant",
-    workflowLabel: "招聘判断流程",
-    introTitle: "先把岗位和候选池判断清楚",
-    introBody: "从一个招聘判断问题开始，再决定是继续评审候选人还是刷新 shortlist。",
-    defaultTaskLabel: "围绕当前招聘包形成下一步判断",
-    placeholder: "例如：请先总结这个招聘包当前最大的判断风险，再告诉我应该继续评审候选人还是刷新 shortlist。",
+    workflowLabel: "Hiring workflow",
+    introTitle: "Clarify the role and candidate pool first",
+    introBody: "Start from one hiring question, then decide whether to review candidates or refresh the shortlist.",
+    defaultTaskLabel: "Form the next hiring judgment from the current packet",
+    placeholder:
+      "For example: summarize the biggest judgment risk in this hiring packet and tell me whether we should review more candidates or refresh the shortlist.",
     promptSuggestions: [
-      "请先总结这个招聘包当前最大的判断风险。",
-      "如果现在要继续推进 shortlist，最缺什么材料？",
-      "基于现有资料，这个岗位和候选池最值得先核对什么？",
+      "Summarize the biggest judgment risk in this hiring packet.",
+      "If we need to move the shortlist forward now, what material is still missing?",
+      "Based on the current material, what should we verify first about the role and candidate pool?",
     ],
-    outputHeading: "正式判断",
-    outputDescription: "确认判断后，再生成岗位摘要、评审候选人或刷新 shortlist。",
-    analyticsDescription: "分析只在需要解释结果、trace 或 readiness 时才展开。",
-    headerLead: "围绕岗位要求、候选池和 shortlist 推进这一轮招聘判断。",
+    outputHeading: "Formal outputs",
+    outputDescription: "After one pass, generate a role summary, review candidates, or refresh the shortlist.",
+    analyticsDescription: "Open analysis only when you need trace, readiness, or explanation for a result.",
+    headerLead: "Move the hiring work forward through role context, candidate evidence, and shortlist decisions.",
   };
 }
 
@@ -197,8 +219,8 @@ function getQuickActions(workspace: Workspace | null): QuickAction[] {
     return [
       {
         key: "research:open",
-        label: "生成研究摘要 / 报告",
-        description: "把当前分析整理成正式研究输出。",
+        label: "Generate research summary or report",
+        description: "Turn the current analysis into a formal research output.",
       },
     ];
   }
@@ -207,13 +229,13 @@ function getQuickActions(workspace: Workspace | null): QuickAction[] {
     return [
       {
         key: "support:ticket_summary",
-        label: "生成工单摘要",
-        description: "梳理 case 的问题、证据与判断。",
+        label: "Generate ticket summary",
+        description: "Summarize the case, evidence, and next decision.",
       },
       {
         key: "support:reply_draft",
-        label: "生成回复草稿",
-        description: "基于当前资料生成回复草稿。",
+        label: "Generate reply draft",
+        description: "Draft a response from the current grounded material.",
       },
     ];
   }
@@ -221,13 +243,13 @@ function getQuickActions(workspace: Workspace | null): QuickAction[] {
   return [
     {
       key: "job:jd_summary",
-      label: "生成岗位摘要",
-      description: "收清岗位要求、背景和缺口。",
+      label: "Generate role summary",
+      description: "Clarify role requirements, context, and gaps.",
     },
     {
       key: "job:resume_match",
-      label: "评审候选人 / 刷新 shortlist",
-      description: "继续当前招聘包并推进 shortlist。",
+      label: "Review candidates or refresh shortlist",
+      description: "Continue the current packet and move shortlist work forward.",
     },
   ];
 }
@@ -235,8 +257,8 @@ function getQuickActions(workspace: Workspace | null): QuickAction[] {
 function getSupportingSurfaceMeta(surface: SupportingSurface, moduleType?: string | null): SupportingSurfaceMeta {
   if (surface === "documents") {
     return {
-      title: "资料库",
-      description: "这里只在需要补资料、检查状态或手动重建索引时展开。",
+      title: "Document library",
+      description: "Open this only when you need to upload more material, inspect status, or reindex manually.",
       width: "min(560px, 100vw)",
     };
   }
@@ -244,38 +266,38 @@ function getSupportingSurfaceMeta(surface: SupportingSurface, moduleType?: strin
   if (surface === "tasks") {
     if (moduleType === "support") {
       return {
-        title: "Case 产出与跟进",
-        description: "继续已有 case，或生成工单摘要和回复草稿。",
+        title: "Case outputs and follow-up",
+        description: "Continue an existing case or generate summary and reply outputs.",
         width: "min(660px, 100vw)",
       };
     }
 
     if (moduleType === "job") {
       return {
-        title: "招聘判断与 shortlist",
-        description: "继续已有招聘包，或推进岗位对齐、候选人评审和 shortlist。",
+        title: "Hiring review and shortlist",
+        description: "Continue the current hiring packet or advance candidate review and shortlist work.",
         width: "min(660px, 100vw)",
       };
     }
 
     return {
-      title: "正式研究输出",
-      description: "这里保留研究摘要和正式报告等结构化产出。",
+      title: "Formal research outputs",
+      description: "Keep research summaries and formal reports here instead of on the main work surface.",
       width: "min(660px, 100vw)",
     };
   }
 
   if (surface === "analytics") {
     return {
-      title: "分析与轨迹",
-      description: "这里只在需要解释系统行为时展开，不和主流程争夺注意力。",
+      title: "Analysis and traces",
+      description: "Open this only when you need to explain system behavior, not as the default workspace path.",
       width: "min(620px, 100vw)",
     };
   }
 
   return {
-    title: "主工作台",
-    description: "当前只显示主分析流程。",
+    title: "Main workbench",
+    description: "The primary surface stays on the main workflow.",
   };
 }
 
@@ -375,7 +397,7 @@ function TaskWorkbenchByModule({
   workspaceId: string;
 }) {
   if (!workspace) {
-    return <SectionCard title="正式输出">正在加载当前模块...</SectionCard>;
+    return <SectionCard title="Formal outputs">Loading module output surface...</SectionCard>;
   }
 
   if (workspace.module_type === "support") {
@@ -430,21 +452,21 @@ function SupportingAnalyticsSurface({ workspaceId }: { workspaceId: string }) {
           padding: 16,
         }}
       >
-        <strong style={{ color: "#0f172a" }}>这里保留 trace、readiness、评测与指标。</strong>
+        <strong style={{ color: "#0f172a" }}>This drawer keeps trace, readiness, eval, and metrics together.</strong>
         <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
-          这些入口用来解释系统行为，而不是替代主分析流程。看完后可以直接关闭抽屉，回到左侧继续工作。
+          Use it when you need to explain system behavior, then close it and return to the main workflow.
         </p>
       </section>
 
-      <CollapsibleAnalyticsSection description="快速查看当前工作区的指标、成本和成功率。" open title="指标概览">
+      <CollapsibleAnalyticsSection description="See top-line workspace metrics, latency, and cost." open title="Metrics overview">
         <MetricsPanel workspaceId={workspaceId} />
       </CollapsibleAnalyticsSection>
 
-      <CollapsibleAnalyticsSection description="需要复盘质量或查看评测结果时再展开。" title="readiness 与评测">
+      <CollapsibleAnalyticsSection description="Open readiness and eval detail only when you need deeper quality review." title="Readiness and evals">
         <EvalManager workspaceId={workspaceId} />
       </CollapsibleAnalyticsSection>
 
-      <CollapsibleAnalyticsSection description="查看最近的 trace、任务执行和错误细节。" title="trace 与执行细节">
+      <CollapsibleAnalyticsSection description="Inspect recent traces, task execution, and error detail." title="Trace and execution detail">
         <ObservabilityPanel workspaceId={workspaceId} />
       </CollapsibleAnalyticsSection>
     </div>
@@ -516,13 +538,13 @@ function SupportingSurfaceDrawer({
                 textTransform: "uppercase",
               }}
             >
-              辅助面
+              Supporting surface
             </span>
             <strong style={{ color: "#0f172a", fontSize: 18 }}>{title}</strong>
             <p style={{ color: "#475569", margin: 0 }}>{description}</p>
           </div>
           <button onClick={onClose} type="button">
-            关闭
+            Close
           </button>
         </div>
         {children}
@@ -566,7 +588,7 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
       const loadedWorkspace = await getWorkspace(session.accessToken, workspaceId);
       setWorkspace(loadedWorkspace);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "无法加载工作台信息。");
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load the workspace.");
     } finally {
       setIsLoading(false);
     }
@@ -590,15 +612,15 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
 
   const stageStatus = useMemo(() => {
     if (conversationStatus.isSubmitting) {
-      return "分析进行中";
+      return "Analysis in progress";
     }
     if (conversationStatus.entryCount > 0) {
-      return "已形成初步结论";
+      return "Initial conclusion available";
     }
     if (documentStatus.totalCount > 0) {
-      return "资料已接入，等待开始分析";
+      return "Material ready for analysis";
     }
-    return "等待接入资料";
+    return "Waiting for material";
   }, [conversationStatus.entryCount, conversationStatus.isSubmitting, documentStatus.totalCount]);
 
   const currentTaskLabel = useMemo(() => {
@@ -611,12 +633,12 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
 
   const outputStatus = useMemo(() => {
     if (hasOpenedFormalOutput) {
-      return "已打开正式输出面";
+      return "Formal output surface opened";
     }
     if (conversationStatus.entryCount > 0) {
-      return "可以整理正式输出";
+      return "Ready to package a formal output";
     }
-    return "先完成一轮分析";
+    return "Complete one analysis pass first";
   }, [conversationStatus.entryCount, hasOpenedFormalOutput]);
 
   const setSurface = (surface: SupportingSurface) => {
@@ -636,11 +658,11 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
   };
 
   if (!isReady) {
-    return <SectionCard title="工作台">正在加载工作台...</SectionCard>;
+    return <SectionCard title="Workbench">Loading workspace...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="登录后才能进入工作区工作台。" />;
+    return <AuthRequired description="Sign in before entering the workspace workbench." />;
   }
 
   return (
@@ -672,11 +694,11 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
               >
                 {moduleDisplayName}
               </span>
-              <span style={{ color: "#475569", fontSize: 14 }}>工作区：{workspace?.name ?? workspaceId}</span>
+              <span style={{ color: "#475569", fontSize: 14 }}>Workspace: {workspace?.name ?? workspaceId}</span>
               {workspace?.module_config_json.guided_demo === true ? (
-                <span style={{ color: "#475569", fontSize: 14 }}>引导演示工作区</span>
+                <span style={{ color: "#475569", fontSize: 14 }}>Guided demo workspace</span>
               ) : null}
-              {isLoading ? <span style={{ color: "#64748b", fontSize: 14 }}>正在同步工作区信息...</span> : null}
+              {isLoading ? <span style={{ color: "#64748b", fontSize: 14 }}>Refreshing workspace context...</span> : null}
             </div>
             <h1 style={{ color: "#0f172a", fontSize: 30, margin: 0 }}>{focusMeta.workflowLabel}</h1>
             <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{focusMeta.headerLead}</p>
@@ -685,11 +707,11 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
 
           <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
             <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, display: "grid", gap: 4, padding: 14 }}>
-              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>当前任务</span>
+              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>Current task</span>
               <strong style={{ color: "#0f172a", lineHeight: 1.5 }}>{currentTaskLabel}</strong>
             </div>
             <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 16, display: "grid", gap: 4, padding: 14 }}>
-              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>当前阶段状态</span>
+              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>Current stage</span>
               <strong style={{ color: "#0f172a", lineHeight: 1.5 }}>{stageStatus}</strong>
             </div>
           </div>
@@ -709,10 +731,11 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
           introBody={focusMeta.introBody}
           introTitle={focusMeta.introTitle}
           onStatusChange={setConversationStatus}
-          outputTitle="分析过程与结论"
+          outputTitle="Analysis flow and conclusions"
           placeholder={focusMeta.placeholder}
-          primaryActionLabel="开始分析"
+          primaryActionLabel="Start analysis"
           suggestedPrompts={focusMeta.promptSuggestions}
+          modes={focusMeta.chatModes}
           workflowLabel={focusMeta.workflowLabel}
           workspaceId={workspaceId}
         />
@@ -720,32 +743,32 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
         <aside style={{ display: "grid", gap: 14 }}>
           <section style={sideCardStyle}>
             <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>运行状态</div>
-              <strong style={{ color: "#0f172a", fontSize: 18 }}>当前研究状态</strong>
+              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Run state</div>
+              <strong style={{ color: "#0f172a", fontSize: 18 }}>Current workflow state</strong>
             </div>
             <div style={{ display: "grid", gap: 10 }}>
               <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-                <span style={{ color: "#64748b", fontSize: 12 }}>资料状态</span>
+                <span style={{ color: "#64748b", fontSize: 12 }}>Material</span>
                 <strong style={{ color: "#0f172a" }}>
                   {documentStatus.totalCount === 0
-                    ? "还没有接入资料"
-                    : `已接入 ${documentStatus.totalCount} 份资料，${documentStatus.readyCount} 份可直接使用`}
+                    ? "No connected material yet"
+                    : `${documentStatus.totalCount} documents connected, ${documentStatus.readyCount} ready for direct use`}
                 </strong>
                 {documentStatus.latestDocumentTitle ? (
-                  <span style={{ color: "#475569", fontSize: 13 }}>最近资料：{documentStatus.latestDocumentTitle}</span>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Latest: {documentStatus.latestDocumentTitle}</span>
                 ) : null}
               </div>
               <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-                <span style={{ color: "#64748b", fontSize: 12 }}>agent 状态</span>
+                <span style={{ color: "#64748b", fontSize: 12 }}>Trace state</span>
                 <strong style={{ color: "#0f172a" }}>{stageStatus}</strong>
                 {conversationStatus.lastTraceId ? (
-                  <span style={{ color: "#475569", fontSize: 13 }}>最近 trace：{conversationStatus.lastTraceId}</span>
+                  <span style={{ color: "#475569", fontSize: 13 }}>Latest trace: {conversationStatus.lastTraceId}</span>
                 ) : (
-                  <span style={{ color: "#475569", fontSize: 13 }}>开始分析后，这里会记录最近的 trace。</span>
+                  <span style={{ color: "#475569", fontSize: 13 }}>A trace id will appear here after analysis starts.</span>
                 )}
               </div>
               <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-                <span style={{ color: "#64748b", fontSize: 12 }}>正式输出</span>
+                <span style={{ color: "#64748b", fontSize: 12 }}>Formal output</span>
                 <strong style={{ color: "#0f172a" }}>{outputStatus}</strong>
                 <span style={{ color: "#475569", fontSize: 13 }}>{focusMeta.outputDescription}</span>
               </div>
@@ -754,28 +777,28 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
 
           <section style={sideCardStyle}>
             <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>当前资料</div>
-              <strong style={{ color: "#0f172a", fontSize: 18 }}>资料接入</strong>
+              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Current material</div>
+              <strong style={{ color: "#0f172a", fontSize: 18 }}>Document intake</strong>
             </div>
             <DocumentManager onOpenLibrary={() => setSurface("documents")} onStatusChange={setDocumentStatus} variant="dock" workspaceId={workspaceId} />
           </section>
 
           <section style={sideCardStyle}>
             <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>分析入口</div>
-              <strong style={{ color: "#0f172a", fontSize: 18 }}>trace、readiness 与分析</strong>
+              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Analysis entry</div>
+              <strong style={{ color: "#0f172a", fontSize: 18 }}>Trace, readiness, and deeper analysis</strong>
               <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{focusMeta.analyticsDescription}</p>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               <button onClick={() => setSurface("analytics")} style={pillButtonStyle} type="button">
-                查看 trace / readiness
+                Open trace and readiness
               </button>
             </div>
           </section>
 
           <section style={sideCardStyle}>
             <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>正式输出</div>
+              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>Formal outputs</div>
               <strong style={{ color: "#0f172a", fontSize: 18 }}>{focusMeta.outputHeading}</strong>
               <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{focusMeta.outputDescription}</p>
             </div>

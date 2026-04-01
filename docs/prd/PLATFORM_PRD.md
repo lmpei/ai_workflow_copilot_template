@@ -165,6 +165,8 @@ The current implemented platform increment includes:
   `api.lmpai.online`, while the root homepage is deployed outside this repo behind the same shared edge
 - one shared backend model-interface foundation under chat generation, embeddings, and eval judging so later capability
   waves can build on one contract instead of three separate provider call paths
+- one bounded Research tool-assisted chat pilot on top of that shared model interface, visible on the main Research
+  workspace surface as a mode that can show inline tool-step summaries instead of acting like ordinary grounded chat
 
 The repository does not yet implement:
 

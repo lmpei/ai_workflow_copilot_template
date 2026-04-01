@@ -69,7 +69,25 @@ def record_chat_trace(
     agent_run_id: str | None = None,
     tool_call_id: str | None = None,
     eval_run_id: str | None = None,
+    trace_type: str = "rag",
+    extra_response_json: dict[str, object] | None = None,
+    extra_metadata_json: dict[str, object] | None = None,
 ) -> str:
+    response_json: dict[str, object] = {
+        "answer": answer,
+        "sources": sources,
+        "error": error,
+    }
+    if extra_response_json:
+        response_json.update(extra_response_json)
+
+    metadata_json: dict[str, object] = {
+        "prompt": prompt,
+        "retrieved_chunks": retrieved_chunks,
+    }
+    if extra_metadata_json:
+        metadata_json.update(extra_metadata_json)
+
     return record_trace(
         workspace_id=workspace_id,
         parent_trace_id=parent_trace_id,
@@ -77,7 +95,7 @@ def record_chat_trace(
         agent_run_id=agent_run_id,
         tool_call_id=tool_call_id,
         eval_run_id=eval_run_id,
-        trace_type="rag",
+        trace_type=trace_type,
         request_json={
             "conversation_id": conversation_id,
             "question": question,
@@ -85,15 +103,8 @@ def record_chat_trace(
             "prompt": prompt,
             "retrieved_chunks": retrieved_chunks,
         },
-        response_json={
-            "answer": answer,
-            "sources": sources,
-            "error": error,
-        },
-        metadata_json={
-            "prompt": prompt,
-            "retrieved_chunks": retrieved_chunks,
-        },
+        response_json=response_json,
+        metadata_json=metadata_json,
         error_message=error,
         latency_ms=latency_ms,
         token_input=token_input,

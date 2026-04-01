@@ -1,4 +1,4 @@
-﻿export const moduleTypes = ["job", "support", "research"] as const;
+export const moduleTypes = ["job", "support", "research"] as const;
 export const workspaceTypes = moduleTypes;
 export const scenarioTaskTypes = [
   "research_summary",
@@ -737,7 +737,7 @@ export type DocumentRecord = {
 export type ChatRequestPayload = {
   question: string;
   conversation_id?: string;
-  mode?: string;
+  mode?: 'rag' | 'research_tool_assisted';
 };
 
 export type ChatSource = {
@@ -748,10 +748,18 @@ export type ChatSource = {
   snippet: string;
 };
 
+export type ChatToolStep = {
+  tool_name: string;
+  summary: string;
+  detail?: string | null;
+};
+
 export type ChatResponsePayload = {
   answer: string;
   sources: ChatSource[];
   trace_id: string;
+  mode: 'rag' | 'research_tool_assisted';
+  tool_steps: ChatToolStep[];
 };
 
 export type WorkspaceMetrics = {

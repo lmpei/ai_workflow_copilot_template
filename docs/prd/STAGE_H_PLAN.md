@@ -128,12 +128,16 @@ Stage H is successful when:
 The first executable Stage H wave is:
 
 1. `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md` (complete)
-2. `tasks/stage-h-03-research-tool-assisted-analysis-pilot.md`
+2. `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md` (complete)
 3. `tasks/stage-h-04-tool-trace-and-eval-visibility.md`
 
 ## Completed So Far
 
 - `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
+- `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
 
 The repository now has one shared backend model-interface layer beneath chat generation, embeddings, and eval judging.
-The next active task is the first bounded Research pilot on top of that layer.
+The repository also now has one bounded Research tool-assisted chat pilot on top of that layer: the main Research chat
+surface can switch into a pilot mode that plans a bounded analysis focus, invokes existing workspace tools inline, and
+returns visible tool-step summaries alongside the grounded answer. The next active task is the trace/eval visibility
+follow-through for that pilot.

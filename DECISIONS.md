@@ -1322,3 +1322,41 @@ Append-only log. Add new entries at the bottom.
   capability work can extend that layer without reopening the deployment-boundary stage.
 - Related Task: `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-087
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: runtime upload storage should not be repo-tracked
+- Context: the repository still tracked a few files under `server/storage/uploads/`, which caused local runtime upload
+  churn to appear as source changes even though deployed product data now lives behind runtime volumes and should not be
+  versioned as code.
+- Choice: add `server/storage/uploads/` to `.gitignore`, remove already tracked upload files from the Git index, and
+  treat that directory as runtime-only state going forward.
+- Why: uploaded source files are local or deployed runtime data, not durable repo content, and they should not pollute
+  normal feature work or control-plane task history.
+- Impact: future local upload churn should stop appearing as code changes, while deployment data remains governed by the
+  runtime volume boundary instead of by Git.
+- Related Task: `tasks/archive/stage-h/stage-h-05-runtime-upload-storage-ignore-cleanup.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-088
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-03 Research tool-assisted analysis pilot
+- Context: Stage H needed one visible bounded capability pilot on top of the shared model-interface foundation, but it
+  still needed to stay inside the existing Research workspace flow instead of becoming a separate experimental surface.
+- Choice: add one `research_tool_assisted` chat mode for Research workspaces, route it through a new bounded
+  Research-only tool-assisted service, expose inline tool-step summaries in the chat response, archive `stage-h-03`,
+  and move the active task to trace/eval visibility follow-through.
+- Why: the first visible capability wave should demonstrate modern tool-assisted analysis behavior in one honest,
+  product-facing path before any broader rollout or deeper orchestration work begins.
+- Impact: the repo now has one user-visible Research pilot built on the new model-interface layer, and the next active
+  work can focus on trace and eval visibility instead of on basic capability wiring.
+- Related Task: `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
+- Supersedes:

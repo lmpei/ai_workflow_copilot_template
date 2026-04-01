@@ -13,6 +13,8 @@ web/node_modules/
 web/.next/
 web/tsconfig.tsbuildinfo
 
+server/storage/uploads/
+
 .env
 .env.dev
 .env.staging

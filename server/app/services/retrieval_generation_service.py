@@ -131,21 +131,14 @@ class OpenAICompatibleAnswerGenerator:
         *,
         question: str,
         retrieved_chunks: list[RetrievedChunk],
-    ) -> GeneratedAnswer:
-        if not self.api_key or self.api_key == "replace_me":
-            raise ChatProcessingError(
-                f"{self.provider_name} chat API key must be configured for chat generation",
-            )
-
+        ) -> GeneratedAnswer:
         prompt = build_grounded_prompt(question=question, retrieved_chunks=retrieved_chunks)
         try:
-            response = OpenAICompatibleModelInterface(
-                settings=OpenAICompatibleModelSettings(
-                    api_key=self.api_key,
-                    model=self.model,
-                    base_url=self.base_url,
-                    provider_name=self.provider_name,
-                )
+            response = build_chat_model_interface(
+                api_key=self.api_key,
+                model=self.model,
+                base_url=self.base_url,
+                provider_name=self.provider_name,
             ).generate_text(
                 temperature=0.2,
                 messages=[
@@ -175,6 +168,28 @@ class OpenAICompatibleAnswerGenerator:
         )
 
 
+def build_chat_model_interface(
+    *,
+    api_key: str,
+    model: str,
+    base_url: str,
+    provider_name: str,
+) -> OpenAICompatibleModelInterface:
+    if not api_key or api_key == "replace_me":
+        raise ChatProcessingError(
+            f"{provider_name} chat API key must be configured for chat generation",
+        )
+
+    return OpenAICompatibleModelInterface(
+        settings=OpenAICompatibleModelSettings(
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            provider_name=provider_name,
+        )
+    )
+
+
 def get_retriever() -> Retriever:
     settings = get_settings()
     return ChromaRetriever(
@@ -195,6 +210,24 @@ def get_answer_generator() -> AnswerGenerator:
     )
 
     return OpenAICompatibleAnswerGenerator(
+        api_key=api_key,
+        model=settings.chat_model,
+        base_url=settings.chat_base_url,
+        provider_name=settings.chat_provider,
+    )
+
+
+def get_chat_model_interface() -> OpenAICompatibleModelInterface:
+    settings = get_settings()
+    if settings.chat_provider not in {"openai", "qwen"}:
+        raise ChatProcessingError(f"Unsupported chat provider: {settings.chat_provider}")
+
+    api_key = resolve_api_key(
+        provider_name=settings.chat_provider,
+        configured_api_key=settings.chat_api_key,
+        openai_api_key=settings.openai_api_key,
+    )
+    return build_chat_model_interface(
         api_key=api_key,
         model=settings.chat_model,
         base_url=settings.chat_base_url,

@@ -24,20 +24,20 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- continue the first bounded AI-capability wave after the deployment split by using the new shared model interface for
-  one visible Research pilot, then preserving honest tool visibility in trace/eval surfaces while the public product
-  hosts remain stable
+- continue the first bounded AI-capability wave after the deployment split by making the new Research tool-assisted
+  pilot visible in trace/eval surfaces while the public product hosts remain stable
 
 ## Active Task
 
-- `tasks/stage-h-03-research-tool-assisted-analysis-pilot.md`
+- `tasks/stage-h-04-tool-trace-and-eval-visibility.md`
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. The live product stack now runs behind one
   shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
-  outside this repository. Stage H is now underway: the shared model-interface foundation is in place, and the next
-  active work is the first bounded Research pilot on top of that foundation.
+  outside this repository. Stage H is now underway: the shared model-interface foundation is in place, one bounded
+  Research tool-assisted chat pilot is live behind the Research workspace surface, and the next active work is to make
+  that pilot more honestly visible in traces and eval-facing review paths.
 - Last Verified At: 2026-04-01
 
 ## Current Blockers
@@ -55,15 +55,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which one bounded tool-assisted Research path should become the first visible Stage H pilot after the shared model
-  interface lands
-- how much of the next model-interface layer should stay provider-neutral versus using one provider-first capability
-  path for the first public demoable pilot
+- which specific trace surface should become the primary human-readable inspection path for the first tool-assisted
+  Research pilot
+- what minimum eval or regression baseline is enough to keep the pilot honest before any broader capability expansion
 
 ## Ready Now
 
-1. choose and implement one bounded Research-first tool-assisted workflow on top of the new shared model interface
-2. extend trace/eval surfaces so tool behavior and degraded-output honesty remain visible during the first capability wave
+1. extend trace/eval surfaces so the Research tool-assisted pilot shows tool requests, tool results, and degraded-path
+   honesty instead of collapsing into generic success output
+2. add one bounded eval or regression baseline for the new pilot
 3. keep the live `weave` and `api` hosts stable while the first Research pilot lands
 
 ## Parked / Later
@@ -74,7 +74,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
+- `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
 
 ## Recent Decisions
 
@@ -97,3 +97,7 @@ Current state only. Keep this file short, current, and action-oriented.
   Research tool-assisted pilot, and tool-visible trace/eval follow-through
 - `DEC-2026-04-01-086` complete `stage-h-02`, add the shared model-interface foundation, archive the task, and move
   Stage H to the bounded Research pilot
+- `DEC-2026-04-01-087` stop tracking `server/storage/uploads/` in Git, treat upload files as runtime-only state, and
+  keep the active Stage H work focused on the Research pilot instead of on local data churn
+- `DEC-2026-04-01-088` complete `stage-h-03`, add one bounded Research tool-assisted chat pilot on top of the shared
+  model-interface layer, archive the task, and move Stage H to trace/eval visibility follow-through

@@ -156,6 +156,27 @@ def get_tool_definition(tool_name: str) -> ToolDefinition:
     return definition
 
 
+def invoke_tool_inline(
+    *,
+    workspace_id: str,
+    user_id: str,
+    tool_name: str,
+    tool_input: dict[str, object] | None = None,
+) -> dict[str, object]:
+    recorded_input = tool_input or {}
+    try:
+        definition = get_tool_definition(tool_name)
+        validated_input = definition.input_model.model_validate(recorded_input)
+        output_model = definition.handler(workspace_id, user_id, validated_input)
+        return output_model.model_dump()
+    except ToolRegistryError:
+        raise
+    except ValidationError as error:
+        raise ToolExecutionError("Invalid tool input") from error
+    except Exception as error:
+        raise ToolExecutionError(str(error)) from error
+
+
 def invoke_tool(
     *,
     agent_run_id: str,

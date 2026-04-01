@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
 import { isApiClientError, sendWorkspaceChat } from "../../lib/api";
-import type { ChatSource } from "../../lib/types";
+import type { ChatSource, ChatToolStep } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -18,6 +18,11 @@ type ChatPanelProps = {
   suggestedPrompts?: string[];
   primaryActionLabel?: string;
   outputTitle?: string;
+  modes?: Array<{
+    value: "rag" | "research_tool_assisted";
+    label: string;
+    description: string;
+  }>;
   onStatusChange?: (status: {
     entryCount: number;
     isSubmitting: boolean;
@@ -30,6 +35,8 @@ type ChatEntry = {
   question: string;
   answer: string;
   traceId: string;
+  mode: "rag" | "research_tool_assisted";
+  toolSteps: ChatToolStep[];
   sources: ChatSource[];
 };
 
@@ -159,7 +166,7 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
             padding: "18px 20px",
           }}
         >
-          <div style={{ alignItems: "center", display: "flex", gap: 8, marginBottom: 10 }}>
+          <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
             <span
               style={{
                 backgroundColor: "#e0f2fe",
@@ -172,9 +179,56 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
             >
               {assistantLabel}
             </span>
+            {entry.mode === "research_tool_assisted" ? (
+              <span
+                style={{
+                  backgroundColor: "#ecfccb",
+                  borderRadius: 999,
+                  color: "#3f6212",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: "4px 10px",
+                }}
+              >
+                工具辅助试点
+              </span>
+            ) : null}
             <span style={{ color: "#64748b", fontSize: 12 }}>Trace ID: {entry.traceId}</span>
           </div>
           <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
+          {entry.toolSteps.length > 0 ? (
+            <section
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: 14,
+                display: "grid",
+                gap: 10,
+                marginTop: 12,
+                padding: 12,
+              }}
+            >
+              <strong style={{ color: "#0f172a", fontSize: 14 }}>本轮工具辅助步骤</strong>
+              <div style={{ display: "grid", gap: 8 }}>
+                {entry.toolSteps.map((step, index) => (
+                  <div
+                    key={`${entry.traceId}-${step.tool_name}-${index}`}
+                    style={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #dbe4f0",
+                      borderRadius: 12,
+                      display: "grid",
+                      gap: 4,
+                      padding: 10,
+                    }}
+                  >
+                    <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
+                    {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <details style={{ marginTop: 12 }}>
             <summary>查看资料引用</summary>
             {entry.sources.length === 0 ? (
@@ -219,6 +273,7 @@ export default function ChatPanel({
   suggestedPrompts,
   primaryActionLabel = "开始分析",
   outputTitle = "分析过程与结论",
+  modes,
   onStatusChange,
 }: ChatPanelProps) {
   const { session, isReady } = useAuthSession();
@@ -227,6 +282,14 @@ export default function ChatPanel({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
+  const availableModes = useMemo(
+    () =>
+      modes && modes.length > 0
+        ? modes
+        : [{ value: "rag" as const, label: "普通分析", description: "直接基于当前资料进行 grounded 分析。" }],
+    [modes],
+  );
+  const [mode, setMode] = useState<"rag" | "research_tool_assisted">(availableModes[0]?.value ?? "rag");
 
   const prompts = useMemo(
     () =>
@@ -239,6 +302,17 @@ export default function ChatPanel({
           ],
     [suggestedPrompts],
   );
+
+  const modeMeta = useMemo(
+    () => availableModes.find((candidate) => candidate.value === mode) ?? availableModes[0],
+    [availableModes, mode],
+  );
+
+  useEffect(() => {
+    if (!availableModes.some((candidate) => candidate.value === mode)) {
+      setMode(availableModes[0]?.value ?? "rag");
+    }
+  }, [availableModes, mode]);
 
   useEffect(() => {
     onStatusChange?.({
@@ -277,6 +351,7 @@ export default function ChatPanel({
       const trimmedQuestion = question.trim();
       const response = await sendWorkspaceChat(session.accessToken, workspaceId, {
         question: trimmedQuestion,
+        mode,
       });
       setEntries((currentEntries) => [
         ...currentEntries,
@@ -284,6 +359,8 @@ export default function ChatPanel({
           question: trimmedQuestion,
           answer: response.answer,
           traceId: response.trace_id,
+          mode: response.mode,
+          toolSteps: response.tool_steps,
           sources: response.sources,
         },
       ]);
@@ -320,6 +397,35 @@ export default function ChatPanel({
           <span style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em" }}>{workflowLabel}</span>
           <span style={{ color: "#64748b", fontSize: 13 }}>快捷提示词可点击并插入输入框</span>
         </div>
+        {availableModes.length > 1 ? (
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {availableModes.map((candidate) => {
+                const active = candidate.value === mode;
+                return (
+                  <button
+                    key={candidate.value}
+                    onClick={() => setMode(candidate.value)}
+                    style={{
+                      backgroundColor: active ? "#0f172a" : "#ffffff",
+                      border: `1px solid ${active ? "#0f172a" : "#cbd5e1"}`,
+                      borderRadius: 999,
+                      color: active ? "#f8fafc" : "#0f172a",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      minHeight: 40,
+                      padding: "0 14px",
+                    }}
+                    type="button"
+                  >
+                    {candidate.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ color: "#475569", fontSize: 14, lineHeight: 1.7 }}>{modeMeta?.description}</div>
+          </div>
+        ) : null}
         <div style={{ display: "grid", gap: 4 }}>
           <strong style={{ color: "#0f172a", fontSize: 20 }}>{introTitle}</strong>
           <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{introBody}</p>

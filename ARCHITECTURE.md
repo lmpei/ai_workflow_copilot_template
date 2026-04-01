@@ -34,7 +34,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   packet / Job hiring packet event records.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
-- Files under `storage/uploads/` back uploaded document content during local runtime.
+- Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
+  state instead of repo-tracked source content.
 
 ## Key Interfaces
 
@@ -67,6 +68,13 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/model_interface_service.py`
   - owns the shared model-facing contract for text generation, structured JSON generation, embeddings, and future
     tool-call visibility behind the current OpenAI-compatible provider path
+- `server/app/services/research_tool_assisted_chat_service.py`
+  - owns the first bounded Stage H Research pilot: it plans one analysis focus plus search query, invokes existing
+    workspace tools inline, synthesizes the grounded answer, and returns visible tool-step summaries to the main chat
+    flow without creating a separate agent runtime surface
+- `server/app/services/retrieval_service.py`
+  - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and writes the
+    resulting tool-step metadata into chat traces for later visibility work
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor

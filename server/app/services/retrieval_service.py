@@ -13,6 +13,10 @@ from app.services.retrieval_generation_service import (
     get_retriever,
     serialize_sources,
 )
+from app.services.research_tool_assisted_chat_service import (
+    ToolAssistedResearchChatResult,
+    run_tool_assisted_research_chat,
+)
 from app.services.trace_service import record_chat_trace
 
 
@@ -66,25 +70,50 @@ def process_chat_request(
     token_input = 0
     token_output = 0
     estimated_cost = 0.0
+    tool_steps: list[dict[str, object]] = []
+    trace_type = "rag"
+    trace_metadata_extra: dict[str, object] | None = None
 
     try:
-        retriever: Retriever = get_retriever()
-        answer_generator: AnswerGenerator = get_answer_generator()
-        retrieved_chunks = retriever.retrieve(workspace_id=workspace_id, question=payload.question)
-        sources = serialize_sources(retrieved_chunks)
+        if payload.mode == "research_tool_assisted":
+            if workspace.module_type != "research":
+                raise ChatProcessingError("Tool-assisted analysis pilot is only available in Research workspaces")
 
-        if retrieved_chunks:
-            generated: GeneratedAnswer = answer_generator.generate_answer(
+            generated_tool_assisted: ToolAssistedResearchChatResult = run_tool_assisted_research_chat(
+                workspace_id=workspace_id,
+                user_id=user_id,
                 question=payload.question,
-                retrieved_chunks=retrieved_chunks,
             )
-            answer = generated.answer
-            prompt = generated.prompt
-            token_input = generated.token_input
-            token_output = generated.token_output
-            estimated_cost = generated.estimated_cost
+            answer = generated_tool_assisted.answer
+            sources = generated_tool_assisted.sources
+            prompt = generated_tool_assisted.prompt
+            token_input = generated_tool_assisted.token_input
+            token_output = generated_tool_assisted.token_output
+            tool_steps = [step.model_dump() for step in generated_tool_assisted.tool_steps]
+            trace_type = "research_tool_assisted"
+            trace_metadata_extra = {
+                "analysis_focus": generated_tool_assisted.analysis_focus,
+                "search_query": generated_tool_assisted.search_query,
+                "tool_steps": tool_steps,
+            }
         else:
-            answer = FALLBACK_ANSWER
+            retriever: Retriever = get_retriever()
+            answer_generator: AnswerGenerator = get_answer_generator()
+            retrieved_chunks = retriever.retrieve(workspace_id=workspace_id, question=payload.question)
+            sources = serialize_sources(retrieved_chunks)
+
+            if retrieved_chunks:
+                generated: GeneratedAnswer = answer_generator.generate_answer(
+                    question=payload.question,
+                    retrieved_chunks=retrieved_chunks,
+                )
+                answer = generated.answer
+                prompt = generated.prompt
+                token_input = generated.token_input
+                token_output = generated.token_output
+                estimated_cost = generated.estimated_cost
+            else:
+                answer = FALLBACK_ANSWER
 
         serialized_sources = [source.model_dump() for source in sources]
         conversation_repository.create_message(
@@ -112,8 +141,17 @@ def process_chat_request(
             token_input=token_input,
             token_output=token_output,
             estimated_cost=estimated_cost,
+            trace_type=trace_type,
+            extra_response_json={"tool_steps": tool_steps},
+            extra_metadata_json=trace_metadata_extra,
         )
-        return ChatResponse(answer=answer, sources=sources, trace_id=trace_id)
+        return ChatResponse(
+            answer=answer,
+            sources=sources,
+            trace_id=trace_id,
+            mode=payload.mode,
+            tool_steps=tool_steps,
+        )
     except ChatProcessingError as error:
         conversation_repository.touch_conversation(conversation.id)
         latency_ms = max(
@@ -134,6 +172,9 @@ def process_chat_request(
             token_output=token_output,
             estimated_cost=estimated_cost,
             error=str(error),
+            trace_type=trace_type,
+            extra_response_json={"tool_steps": tool_steps},
+            extra_metadata_json=trace_metadata_extra,
         )
         raise
     except Exception as error:
@@ -156,5 +197,8 @@ def process_chat_request(
             token_output=token_output,
             estimated_cost=estimated_cost,
             error=str(error),
+            trace_type=trace_type,
+            extra_response_json={"tool_steps": tool_steps},
+            extra_metadata_json=trace_metadata_extra,
         )
         raise ChatProcessingError("Failed to process chat request") from error
