@@ -6,9 +6,9 @@
 
 ## Status
 
-- Status: active
+- Status: complete and closed
 - Opened At: 2026-04-01
-- First Task Wave: active
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -42,4 +42,15 @@ The repo should become product-only at the web tier and should ship one shared-e
 
 ## First Task Wave
 
-1. `tasks/stage-g-02-weave-subdomain-product-split.md`
+1. `tasks/archive/stage-g/stage-g-02-weave-subdomain-product-split.md`
+
+## Closeout
+
+Stage G is complete after the repository boundary and live deployment boundary were aligned:
+
+- `lmpai.online` is now treated as a separate homepage outside this repo
+- this repo now serves the dedicated product host at `weave.lmpai.online`
+- this repo now serves the dedicated API host at `api.lmpai.online`
+- the shared Cloudflare -> Caddy -> multi-service edge is live
+
+The next bounded planning unit is `docs/prd/STAGE_H_PLAN.md`.

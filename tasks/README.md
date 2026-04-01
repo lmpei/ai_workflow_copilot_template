@@ -31,6 +31,10 @@ current state of the project.
 - Archive completed Stage E tasks under `tasks/archive/stage-e/`.
 - Use `stage-f-*` naming for Stage F work.
 - Archive completed Stage F tasks under `tasks/archive/stage-f/`.
+- Use `stage-g-*` naming for Stage G work.
+- Archive completed Stage G tasks under `tasks/archive/stage-g/`.
+- Use `stage-h-*` naming for Stage H work.
+- Archive completed Stage H tasks under `tasks/archive/stage-h/`.
 - If the planning model changes again in a later stage, record that choice in `DECISIONS.md` before changing naming.
 
 ## Relationship to Other Docs

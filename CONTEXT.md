@@ -21,23 +21,31 @@ clear primary path.
 
 Stage F is complete and closed after the experience reset that produced one denser product home, one
 research-workflow-oriented main workspace, and one clearer distinction between primary work and summoned supporting
-surfaces. The active work is now Stage G. Stage G prepares this repository for a product-only deployment boundary: the
-root personal homepage at `https://lmpai.online` is treated as a separate deployment outside this repo, while this repo
-is being adapted to run as the dedicated product frontend at `https://weave.lmpai.online` plus the dedicated backend API
-at `https://api.lmpai.online/api/v1` behind one shared Cloudflare -> Caddy edge.
+surfaces. Stage G is now also complete and closed after the host-boundary split: the root personal homepage at
+`https://lmpai.online` is treated as a separate deployment outside this repo, while this repo now runs as the dedicated
+product frontend at `https://weave.lmpai.online` plus the dedicated backend API at
+`https://api.lmpai.online/api/v1` behind one shared Cloudflare -> Caddy edge.
+
+The active work is now Stage H. Stage H opens the first bounded post-split AI-capability wave: modernize the model
+interface, keep Research as the reference workflow, pilot one visible tool-assisted path, and make tool behavior
+honest in traces and eval surfaces before any broader capability expansion begins.
+
+The first Stage H foundation is now in place: one shared backend model-interface layer sits underneath chat
+generation, embedding generation, and eval judging, so later capability work can build on one contract instead of on
+three separate provider call paths.
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
 - Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, Stage F
-  complete, and Stage G active
+  complete, Stage G complete, and Stage H active
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
-forking the architecture. The active stage should preserve that shared-platform model while moving the repo to the
-correct commercial host boundary: one separate homepage outside the repo, one dedicated product frontend host, and one
-dedicated API host.
+forking the architecture. The active stage should preserve that shared-platform model while beginning the next modern
+AI-system layer in a bounded way: one clearer model interface, one visible tool-assisted workflow, and one honest trace
+and eval baseline for that workflow.
 
 ## Technology Stack
 
@@ -70,11 +78,13 @@ dedicated API host.
 - `docs/prd/STAGE_F_PLAN.md`
   - closed Stage F planning document for the UX reset and research-workflow surface rebuild
 - `docs/prd/STAGE_G_PLAN.md`
-  - active Stage G planning document for the product-only multi-subdomain deployment split
+  - closed Stage G planning document for the product-only multi-subdomain deployment split
+- `docs/prd/STAGE_H_PLAN.md`
+  - active Stage H planning document for the first bounded model-interface modernization wave
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage G work uses `stage-g-*`
+  - active Stage H work uses `stage-h-*`
 - root control-plane docs
   - `AGENTS.md`, `CONTEXT.md`, `STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`
 
@@ -104,6 +114,9 @@ dedicated API host.
 - `subdomain-product`
   - a product-only stack from this repo, intended to run behind one shared host-level Caddy edge as
     `weave.lmpai.online` plus `api.lmpai.online`
+- `stage-h-capability-wave`
+  - the same product-only stack, but now treated as the bounded environment where one model-interface modernization wave
+    can ship without collapsing the stable public-demo boundary
 
 ## Verification
 

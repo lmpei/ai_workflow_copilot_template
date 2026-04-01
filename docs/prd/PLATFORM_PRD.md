@@ -119,13 +119,14 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage D`, documented in `docs/prd/STAGE_D_PLAN.md`, is now complete and closed.
 `Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`, is now complete and closed.
 `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`.
+`Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage H`, documented in `docs/prd/STAGE_H_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage F`,
-and is now executing `Stage G`.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage G`,
+and is now executing `Stage H`.
 
 The current implemented platform increment includes:
 
@@ -160,6 +161,10 @@ The current implemented platform increment includes:
 - earlier module differentiation inside that workbench through real work-object, output, and continuity guidance
 - one root personal homepage and one separate project-facing route
 - one conversation-first workspace where the main chat is the center, documents behave like lightweight context/upload controls, module actions behave like the next step inside the same workbench, and deeper analytics or operator detail only appears when summoned
+- one product-only live host boundary where this repository now serves `weave.lmpai.online` plus
+  `api.lmpai.online`, while the root homepage is deployed outside this repo behind the same shared edge
+- one shared backend model-interface foundation under chat generation, embeddings, and eval judging so later capability
+  waves can build on one contract instead of three separate provider call paths
 
 The repository does not yet implement:
 
@@ -178,8 +183,10 @@ complete and closed.
 `Stage E: Support and Job Workbench Productization`, documented in `docs/prd/STAGE_E_PLAN.md`, is complete and closed.
 `Stage F: Public Demo Experience Clarification and UX Reset`, documented in `docs/prd/STAGE_F_PLAN.md`, is complete and
 closed.
-The active formal planning unit is `Stage G: Multi-Subdomain Product Split and Shared Edge Routing`, documented in
-`docs/prd/STAGE_G_PLAN.md`.
+`Stage G: Multi-Subdomain Product Split and Shared Edge Routing`, documented in `docs/prd/STAGE_G_PLAN.md`, is complete
+and closed.
+The active formal planning unit is `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented
+in `docs/prd/STAGE_H_PLAN.md`.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

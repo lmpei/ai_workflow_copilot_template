@@ -64,6 +64,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns cancel and retry control-state transitions plus recovery-detail derivation
 - `server/app/services/task_execution_service.py`
   - owns generic task lifecycle only: pending -> running -> completed or failed
+- `server/app/services/model_interface_service.py`
+  - owns the shared model-facing contract for text generation, structured JSON generation, embeddings, and future
+    tool-call visibility behind the current OpenAI-compatible provider path
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor

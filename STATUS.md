@@ -19,23 +19,25 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage D complete and closed
 - Stage E complete and closed
 - Stage F complete and closed
-- Stage G active
+- Stage G complete and closed
+- Stage H active
 
 ## Current Objective
 
-- adapt this repository to the new multi-subdomain deployment model so the repo becomes the dedicated
-  `weave.lmpai.online` product plus `api.lmpai.online` backend stack behind a shared Cloudflare -> Caddy edge, while
-  the root `lmpai.online` homepage moves outside this repository
+- continue the first bounded AI-capability wave after the deployment split by using the new shared model interface for
+  one visible Research pilot, then preserving honest tool visibility in trace/eval surfaces while the public product
+  hosts remain stable
 
 ## Active Task
 
-- `tasks/stage-g-02-weave-subdomain-product-split.md`
+- `tasks/stage-h-03-research-tool-assisted-analysis-pilot.md`
 
 ## Verification Status
 
-- Summary: Stage E is complete. Stage F is also complete and closed after the root/home split, the conversation-first
-  workbench reset, and the final research-workflow refinement. The new active work is Stage G, which prepares the repo
-  for a product-only deployment boundary at `weave.lmpai.online` plus `api.lmpai.online`.
+- Summary: Stage G is complete and closed after the multi-subdomain cutover. The live product stack now runs behind one
+  shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
+  outside this repository. Stage H is now underway: the shared model-interface foundation is in place, and the next
+  active work is the first bounded Research pilot on top of that foundation.
 - Last Verified At: 2026-04-01
 
 ## Current Blockers
@@ -46,20 +48,23 @@ Current state only. Keep this file short, current, and action-oriented.
 
 - module product names remain unchanged for now
 - Research remains the reference workflow when module differences and entry explanations are being clarified
-- the live public demo remains demo-grade during the deployment-boundary transition
+- the live public demo remains demo-grade during the first model-interface modernization wave
 - the root homepage at `lmpai.online` is now treated as a separate site outside this repository
 - this repository should become the dedicated product stack for `weave.lmpai.online` plus `api.lmpai.online`
+- the first visible capability pilot should stay bounded to one Research path before any broader module rollout
 
 ## Information Gaps
 
-- whether the repo should keep any compatibility path for the older `app.lmpai.online` host during the cutover
-- whether the shared edge will be deployed as one host-level Caddy service or as a separate reverse-proxy stack
+- which one bounded tool-assisted Research path should become the first visible Stage H pilot after the shared model
+  interface lands
+- how much of the next model-interface layer should stay provider-neutral versus using one provider-first capability
+  path for the first public demoable pilot
 
 ## Ready Now
 
-1. adapt the frontend entry routes so this repo treats `/` as the canonical product home on `weave.lmpai.online`
-2. add a shared-edge deployment path with product and API hosts split behind Caddy
-3. update env, CORS, and reverse-proxy expectations so deployment docs and templates no longer assume `app.<domain>`
+1. choose and implement one bounded Research-first tool-assisted workflow on top of the new shared model interface
+2. extend trace/eval surfaces so tool behavior and degraded-output honesty remain visible during the first capability wave
+3. keep the live `weave` and `api` hosts stable while the first Research pilot lands
 
 ## Parked / Later
 
@@ -69,7 +74,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-g/stage-g-01-task-stack-planning.md`
+- `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
 
 ## Recent Decisions
 
@@ -84,3 +89,11 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-01-082` adopt the multi-subdomain target where `lmpai.online` is the separate homepage outside this
   repo, `weave.lmpai.online` is the product frontend, and `api.lmpai.online` is the dedicated API host behind a shared
   Cloudflare -> Caddy edge
+- `DEC-2026-04-01-083` close Stage G after the product-only host split is live and this repo now serves only the
+  dedicated `weave` frontend plus `api` backend stack
+- `DEC-2026-04-01-084` open Stage H as the next bounded unit for model-interface modernization with one tool-visible
+  Research pilot and explicit trace/eval honesty
+- `DEC-2026-04-01-085` define the first Stage H task wave as the shared model-interface foundation, one bounded
+  Research tool-assisted pilot, and tool-visible trace/eval follow-through
+- `DEC-2026-04-01-086` complete `stage-h-02`, add the shared model-interface foundation, archive the task, and move
+  Stage H to the bounded Research pilot

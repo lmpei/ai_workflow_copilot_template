@@ -11,7 +11,7 @@ visible without overloading the next bounded planning unit.
 
 - Status: active direction document
 - Created At: 2026-03-26
-- Current bounded stage: `docs/prd/STAGE_D_PLAN.md`
+- Current bounded stage: `docs/prd/STAGE_H_PLAN.md`
 
 ## Primary Intent
 
@@ -57,7 +57,7 @@ This means:
 - a stable showcase path through the existing module surfaces
 - basic abuse, quota, and operator guardrails
 
-This theme is intentionally separated into the bounded next stage in `docs/prd/STAGE_D_PLAN.md`.
+This theme has now been materially delivered through the bounded Stage D, Stage F, and Stage G sequence.
 
 ### Theme 2: Non-Research Workbench Productization
 
@@ -76,6 +76,8 @@ Expected direction:
   - candidate-set state
   - comparison history
   - reusable interview or decision notes
+
+This theme has now been materially delivered as a first bounded baseline through Stage E.
 
 This theme should treat Research as the reference workflow, but it should not copy the Research asset layer blindly.
 
@@ -139,6 +141,8 @@ Exit signal:
 
 - at least one module uses the modern model/tool interface in a way that is visible through traces, evals, and honest
   public-demo behavior
+
+This wave is now the active bounded next stage in `docs/prd/STAGE_H_PLAN.md`.
 
 #### Wave 2: Connector and Context Plane
 

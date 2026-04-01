@@ -1256,3 +1256,69 @@ Append-only log. Add new entries at the bottom.
   product host.
 - Related Task: `tasks/stage-g-02-weave-subdomain-product-split.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-083
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human
+- Topic: Stage G closeout
+- Context: the host-boundary split is now live, the root homepage is deployed outside this repo, and this repository
+  now serves only the dedicated `weave` product frontend plus `api` backend stack.
+- Choice: close Stage G and archive `tasks/stage-g-02-weave-subdomain-product-split.md`.
+- Why: the bounded deployment-boundary objective has been achieved and should not remain the active planning unit.
+- Impact: control-plane docs should now treat Stage G as complete and closed.
+- Related Task: `tasks/archive/stage-g/stage-g-02-weave-subdomain-product-split.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-084
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human
+- Topic: next bounded stage after the host split
+- Context: the deployment-boundary work is complete and the long-term roadmap's next major theme is the first staged
+  AI-capability wave around a more modern model interface and bounded built-in or tool-assisted behavior.
+- Choice: open `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`.
+- Why: the repo now has the right commercial host boundary and can return to product learning and capability growth in
+  one bounded, publicly demonstrable way.
+- Impact: Stage H becomes the active planning unit and Research remains the reference workflow for the first pilot.
+- Related Task: `tasks/archive/stage-h/stage-h-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-085
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human
+- Topic: Stage H first task wave
+- Context: Stage H needs one bounded first wave that modernizes the model-facing interface without exploding scope.
+- Choice: define the first Stage H wave as:
+  - `tasks/stage-h-02-responses-style-model-interface-foundation.md`
+  - `tasks/stage-h-03-research-tool-assisted-analysis-pilot.md`
+  - `tasks/stage-h-04-tool-trace-and-eval-visibility.md`
+- Why: the new wave should first build one shared contract, then one visible Research pilot, then one trace and eval
+  honesty layer around that pilot.
+- Impact: the repo now has one concrete Stage H task stack and one primary active task.
+- Related Task: `tasks/archive/stage-h/stage-h-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-086
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-02 shared model-interface foundation
+- Context: Stage H needed one shared foundation before any bounded tool-assisted workflow could become durable. The repo
+  had three separate OpenAI-compatible call paths for chat generation, embeddings, and eval judging.
+- Choice: add one shared backend model-interface service, route the existing OpenAI-compatible chat, embedding, and
+  eval provider calls through it, archive `stage-h-02`, and move the active task to the Research-first pilot.
+- Why: the next Stage H work should build on one reusable contract instead of on scattered provider-specific logic.
+- Impact: the repo now has one shared model-interface layer under the current provider path, and future tool-visible
+  capability work can extend that layer without reopening the deployment-boundary stage.
+- Related Task: `tasks/archive/stage-h/stage-h-02-responses-style-model-interface-foundation.md`
+- Supersedes:

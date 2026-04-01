@@ -1,10 +1,15 @@
 import json
 from dataclasses import dataclass
-from typing import Any, Protocol
-
-import httpx
+from typing import Protocol
 
 from app.core.config import get_settings
+from app.services.model_interface_service import (
+    ModelInterfaceError,
+    ModelMessage,
+    OpenAICompatibleModelInterface,
+    OpenAICompatibleModelSettings,
+    resolve_api_key,
+)
 
 DEFAULT_PASS_THRESHOLD = 0.7
 
@@ -71,45 +76,35 @@ class OpenAICompatibleJudgeScorer:
             output_json=output_json,
         )
         try:
-            response = httpx.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.model,
-                    "temperature": 0.0,
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are an evaluator for retrieval-backed chat quality. "
-                                "Return strict JSON with keys score and reasoning."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt,
-                        },
-                    ],
-                },
-                timeout=30.0,
+            response = OpenAICompatibleModelInterface(
+                settings=OpenAICompatibleModelSettings(
+                    api_key=self.api_key,
+                    model=self.model,
+                    base_url=self.base_url,
+                    provider_name=self.provider_name,
+                )
+            ).generate_json_object(
+                temperature=0.0,
+                messages=[
+                    ModelMessage(
+                        role="system",
+                        content=(
+                            "You are an evaluator for retrieval-backed chat quality. "
+                            "Return strict JSON with keys score and reasoning."
+                        ),
+                    ),
+                    ModelMessage(role="user", content=prompt),
+                ],
             )
-            response.raise_for_status()
-            payload = response.json()
-            content = _extract_chat_completion_text(payload)
-            parsed = json.loads(content)
-        except (httpx.HTTPError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        except ModelInterfaceError as error:
             raise ChatEvaluatorError("Failed to score retrieval chat output") from error
 
-        raw_score = parsed.get("score")
+        raw_score = response.data.get("score")
         if not isinstance(raw_score, int | float):
             raise ChatEvaluatorError("Judge output did not include a numeric score")
 
         normalized_score = max(0.0, min(float(raw_score), 1.0))
-        reasoning = parsed.get("reasoning")
+        reasoning = response.data.get("reasoning")
         return JudgeScoreResult(
             score=normalized_score,
             reasoning=str(reasoning) if reasoning is not None else None,
@@ -120,16 +115,17 @@ def get_judge_scorer() -> JudgeScorer:
     settings = get_settings()
     if settings.eval_provider not in {"openai", "qwen"}:
         raise ChatEvaluatorError(f"Unsupported eval provider: {settings.eval_provider}")
-    api_key = settings.eval_api_key
-    if api_key == "replace_me" and settings.eval_provider == "openai":
-        api_key = settings.openai_api_key
+    api_key = resolve_api_key(
+        provider_name=settings.eval_provider,
+        configured_api_key=settings.eval_api_key,
+        openai_api_key=settings.openai_api_key,
+    )
     return OpenAICompatibleJudgeScorer(
         api_key=api_key,
         model=settings.eval_model,
         base_url=settings.eval_base_url,
         provider_name=settings.eval_provider,
     )
-
 
 def evaluate_retrieval_chat_output(
     *,
@@ -270,27 +266,3 @@ def _build_judge_prompt(
         f"Actual:\n{json.dumps(output_json, ensure_ascii=False, sort_keys=True)}\n\n"
         "Score from 0.0 to 1.0 based on answer correctness and grounding in cited sources."
     )
-
-
-def _extract_chat_completion_text(payload: dict[str, Any]) -> str:
-    choices = payload.get("choices")
-    if not isinstance(choices, list) or not choices:
-        raise KeyError("choices")
-
-    message = choices[0].get("message")
-    if not isinstance(message, dict):
-        raise KeyError("message")
-
-    content = message.get("content")
-    if isinstance(content, str):
-        return content
-
-    if isinstance(content, list):
-        text_parts = [
-            str(item.get("text", ""))
-            for item in content
-            if isinstance(item, dict) and item.get("type") == "text"
-        ]
-        return "\n".join(part for part in text_parts if part)
-
-    raise TypeError("Unsupported chat completion content type")

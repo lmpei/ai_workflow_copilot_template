@@ -2,11 +2,16 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
-import httpx
-
 from app.core.config import get_settings
 from app.schemas.chat import SourceReference
 from app.services.indexing_service import DocumentIndexingError, get_embedding_provider
+from app.services.model_interface_service import (
+    ModelInterfaceError,
+    ModelMessage,
+    OpenAICompatibleModelInterface,
+    OpenAICompatibleModelSettings,
+    resolve_api_key,
+)
 
 RETRIEVAL_LIMIT = 4
 FALLBACK_ANSWER = "I couldn't find relevant indexed content in this workspace."
@@ -134,46 +139,38 @@ class OpenAICompatibleAnswerGenerator:
 
         prompt = build_grounded_prompt(question=question, retrieved_chunks=retrieved_chunks)
         try:
-            response = httpx.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.model,
-                    "temperature": 0.2,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You answer using only the provided workspace context. "
-                                "If the context is insufficient, say so plainly."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt,
-                        },
-                    ],
-                },
-                timeout=30.0,
+            response = OpenAICompatibleModelInterface(
+                settings=OpenAICompatibleModelSettings(
+                    api_key=self.api_key,
+                    model=self.model,
+                    base_url=self.base_url,
+                    provider_name=self.provider_name,
+                )
+            ).generate_text(
+                temperature=0.2,
+                messages=[
+                    ModelMessage(
+                        role="system",
+                        content=(
+                            "You answer using only the provided workspace context. "
+                            "If the context is insufficient, say so plainly."
+                        ),
+                    ),
+                    ModelMessage(role="user", content=prompt),
+                ],
             )
-            response.raise_for_status()
-            payload = response.json()
-            answer = extract_chat_completion_text(payload)
-            usage = payload.get("usage", {})
-        except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
+        except ModelInterfaceError as error:
             raise ChatProcessingError("Failed to generate a grounded answer") from error
 
+        answer = response.text
         if not answer.strip():
             raise ChatProcessingError("LLM returned an empty grounded answer")
 
         return GeneratedAnswer(
             answer=answer,
             prompt=prompt,
-            token_input=int(usage.get("prompt_tokens", 0)),
-            token_output=int(usage.get("completion_tokens", 0)),
+            token_input=response.usage.input_tokens,
+            token_output=response.usage.output_tokens,
             estimated_cost=0.0,
         )
 
@@ -191,9 +188,11 @@ def get_answer_generator() -> AnswerGenerator:
     if settings.chat_provider not in {"openai", "qwen"}:
         raise ChatProcessingError(f"Unsupported chat provider: {settings.chat_provider}")
 
-    api_key = settings.chat_api_key
-    if api_key == "replace_me" and settings.chat_provider == "openai":
-        api_key = settings.openai_api_key
+    api_key = resolve_api_key(
+        provider_name=settings.chat_provider,
+        configured_api_key=settings.chat_api_key,
+        openai_api_key=settings.openai_api_key,
+    )
 
     return OpenAICompatibleAnswerGenerator(
         api_key=api_key,
@@ -226,31 +225,6 @@ def build_grounded_prompt(*, question: str, retrieved_chunks: list[RetrievedChun
         f"{context_text}\n\n"
         "Answer the question using the context above. If the context is incomplete, say so."
     )
-
-
-def extract_chat_completion_text(payload: dict[str, Any]) -> str:
-    choices = payload.get("choices")
-    if not isinstance(choices, list) or not choices:
-        raise KeyError("choices")
-
-    message = choices[0].get("message")
-    if not isinstance(message, dict):
-        raise KeyError("message")
-
-    content = message.get("content")
-    if isinstance(content, str):
-        return content
-
-    if isinstance(content, list):
-        text_parts = [
-            str(item.get("text", ""))
-            for item in content
-            if isinstance(item, dict) and item.get("type") == "text"
-        ]
-        return "\n".join(part for part in text_parts if part)
-
-    raise TypeError("Unsupported chat completion content type")
-
 
 def serialize_sources(chunks: list[RetrievedChunk]) -> list[SourceReference]:
     return [

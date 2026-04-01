@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
-import httpx
-
 from app.core.config import get_settings
 from app.models.document import (
     DOCUMENT_STATUS_FAILED,
@@ -15,6 +13,12 @@ from app.models.document_chunk import DocumentChunk
 from app.repositories import document_repository
 from app.repositories.document_repository import EmbeddingMappingCreate
 from app.schemas.document import DocumentResponse
+from app.services.model_interface_service import (
+    ModelInterfaceError,
+    OpenAICompatibleModelInterface,
+    OpenAICompatibleModelSettings,
+    resolve_api_key,
+)
 
 
 class DocumentIndexingError(Exception):
@@ -52,39 +56,24 @@ class OpenAICompatibleEmbeddingProvider:
     provider_name: str = "openai"
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        if not texts:
-            return []
         if not self.api_key or self.api_key == "replace_me":
             raise DocumentIndexingError(
                 f"{self.provider_name} embedding API key must be configured for document indexing",
             )
 
         try:
-            response = httpx.post(
-                f"{self.base_url}/embeddings",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": self.model,
-                    "input": texts,
-                },
-                timeout=30.0,
-            )
-            response.raise_for_status()
-            payload = response.json()
-            vectors = [
-                item["embedding"]
-                for item in sorted(payload["data"], key=lambda item: item["index"])
-            ]
-        except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
+            response = OpenAICompatibleModelInterface(
+                settings=OpenAICompatibleModelSettings(
+                    api_key=self.api_key,
+                    model=self.model,
+                    base_url=self.base_url,
+                    provider_name=self.provider_name,
+                )
+            ).embed_texts(texts=texts)
+        except ModelInterfaceError as error:
             raise DocumentIndexingError("Failed to generate embeddings") from error
 
-        if len(vectors) != len(texts):
-            raise DocumentIndexingError("Embedding response length did not match chunk count")
-
-        return vectors
+        return response.vectors
 
 
 @dataclass(slots=True)
@@ -154,9 +143,11 @@ def get_embedding_provider() -> EmbeddingProvider:
         raise DocumentIndexingError(
             f"Unsupported embedding provider: {settings.embedding_provider}",
         )
-    api_key = settings.embedding_api_key
-    if api_key == "replace_me" and settings.embedding_provider == "openai":
-        api_key = settings.openai_api_key
+    api_key = resolve_api_key(
+        provider_name=settings.embedding_provider,
+        configured_api_key=settings.embedding_api_key,
+        openai_api_key=settings.openai_api_key,
+    )
     return OpenAICompatibleEmbeddingProvider(
         api_key=api_key,
         model=settings.embedding_model,
