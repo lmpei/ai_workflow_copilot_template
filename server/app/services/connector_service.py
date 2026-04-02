@@ -1,8 +1,14 @@
-﻿from app.models.workspace_connector_consent import WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED
+from datetime import UTC, datetime
+
+from app.models.workspace_connector_consent import (
+    WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED,
+    WORKSPACE_CONNECTOR_CONSENT_STATUS_REVOKED,
+)
 from app.repositories import workspace_connector_consent_repository, workspace_repository
 from app.schemas.connector import (
-    ConnectorDefinition,
     ConnectorConsentGrantRequest,
+    ConnectorConsentRevokeRequest,
+    ConnectorDefinition,
     WorkspaceConnectorStatusResponse,
 )
 
@@ -30,7 +36,9 @@ class ConnectorValidationError(Exception):
 
 
 class ConnectorConsentRequiredError(Exception):
-    pass
+    def __init__(self, message: str, *, consent_state: str) -> None:
+        super().__init__(message)
+        self.consent_state = consent_state
 
 
 def list_connector_definitions(*, module_type: str | None = None) -> list[ConnectorDefinition]:
@@ -71,15 +79,22 @@ def _build_workspace_connector_status(
     workspace_id: str,
     consent,
 ) -> WorkspaceConnectorStatusResponse:
-    consent_granted = consent is not None and consent.status == WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED
+    consent_state = "not_granted"
+    if consent is not None:
+        if consent.status == WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED:
+            consent_state = "granted"
+        elif consent.status == WORKSPACE_CONNECTOR_CONSENT_STATUS_REVOKED:
+            consent_state = "revoked"
+
     return WorkspaceConnectorStatusResponse(
         connector=connector,
         workspace_id=workspace_id,
-        consent_state="granted" if consent_granted else "not_granted",
-        granted_by=consent.granted_by if consent_granted else None,
-        consent_note=consent.consent_note if consent_granted else None,
-        granted_at=consent.granted_at if consent_granted else None,
-        updated_at=consent.updated_at if consent_granted else None,
+        consent_state=consent_state,
+        granted_by=consent.granted_by if consent is not None else None,
+        consent_note=consent.consent_note if consent is not None else None,
+        granted_at=consent.granted_at if consent is not None else None,
+        revoked_at=consent.revoked_at if consent is not None else None,
+        updated_at=consent.updated_at if consent is not None else None,
     )
 
 
@@ -148,6 +163,34 @@ def grant_workspace_connector_consent(
     )
 
 
+def revoke_workspace_connector_consent(
+    *,
+    workspace_id: str,
+    user_id: str,
+    connector_id: str,
+    payload: ConnectorConsentRevokeRequest,
+) -> WorkspaceConnectorStatusResponse:
+    workspace = _get_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
+    connector = _get_connector_definition_or_raise(connector_id)
+    _ensure_connector_available_for_workspace(workspace=workspace, connector=connector)
+    consent = workspace_connector_consent_repository.get_workspace_connector_consent(
+        workspace_id=workspace.id,
+        connector_id=connector.id,
+    )
+    if consent is not None:
+        consent = workspace_connector_consent_repository.update_workspace_connector_consent_status(
+            consent.id,
+            next_status=WORKSPACE_CONNECTOR_CONSENT_STATUS_REVOKED,
+            revoked_at=datetime.now(UTC),
+            consent_note=payload.consent_note.strip() if isinstance(payload.consent_note, str) and payload.consent_note.strip() else consent.consent_note,
+        )
+    return _build_workspace_connector_status(
+        connector=connector,
+        workspace_id=workspace.id,
+        consent=consent,
+    )
+
+
 def require_workspace_connector_consent(
     *,
     workspace_id: str,
@@ -160,5 +203,13 @@ def require_workspace_connector_consent(
         connector_id=connector_id,
     )
     if status.consent_state != "granted":
-        raise ConnectorConsentRequiredError("使用这个外部信息试点前，必须先完成工作区授权")
+        if status.consent_state == "revoked":
+            raise ConnectorConsentRequiredError(
+                "这个工作区已经撤销了外部信息试点授权，继续使用前需要重新授权。",
+                consent_state="revoked",
+            )
+        raise ConnectorConsentRequiredError(
+            "使用这个外部信息试点前，必须先完成工作区授权",
+            consent_state="not_granted",
+        )
     return status

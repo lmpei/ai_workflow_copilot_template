@@ -83,6 +83,7 @@ def update_workspace_connector_consent_status(
     *,
     next_status: str,
     revoked_at: datetime | None = None,
+    consent_note: str | None = None,
 ) -> WorkspaceConnectorConsent | None:
     if not is_valid_workspace_connector_consent_status(next_status):
         raise ValueError(f"Unsupported connector consent status: {next_status}")
@@ -94,6 +95,8 @@ def update_workspace_connector_consent_status(
 
         consent.status = next_status
         consent.revoked_at = revoked_at
+        if consent_note is not None:
+            consent.consent_note = consent_note
         consent.updated_at = datetime.now(UTC)
         session.add(consent)
         session.flush()

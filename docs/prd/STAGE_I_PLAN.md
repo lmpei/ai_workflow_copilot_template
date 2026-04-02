@@ -1,4 +1,4 @@
-# Stage I Plan
+﻿# Stage I Plan
 
 ## Stage Name
 
@@ -157,15 +157,15 @@ layer before any broader MCP or orchestration work opens.
 - complete: `stage-i-06`, which persisted approved external-context matches as explicit Research external-resource
   snapshots, linked direct chat and background analysis runs to the snapshot they used, and surfaced recent snapshots
   back on the main product and observability views
-- active now: `stage-i-07`, which should make consent changes and explicit snapshot selection more inspectable on that
-  same bounded Research path
-
+- complete: `stage-i-07`, which made consent changes and explicit snapshot selection more inspectable on that same
+  bounded Research path
+- active now: `stage-i-08`, which should deepen replay or review around that more explicit resource-backed connector flow
 ## Second Task Wave
 
 The second executable Stage I wave is:
 
-1. `tasks/stage-i-06-research-external-resource-snapshots.md`
-2. `tasks/stage-i-07-consent-lifecycle-and-resource-selection.md`
+1. `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
+2. `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
 3. `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
 
 ### Why This Wave Exists

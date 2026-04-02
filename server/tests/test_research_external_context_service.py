@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 
 from app.connectors.research_external_context_connector import (
     ResearchExternalContextConnectorUnavailableError,
     ResearchExternalContextEntry,
 )
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services import research_external_context_service
 from app.services.research_external_context_service import run_research_external_context_chat
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
@@ -61,7 +62,10 @@ def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeyp
     )
 
     def require_consent(**kwargs):
-        raise research_external_context_service.ConnectorConsentRequiredError("consent required")
+        raise research_external_context_service.ConnectorConsentRequiredError(
+            "consent required",
+            consent_state="not_granted",
+        )
 
     monkeypatch.setattr(research_external_context_service, "require_workspace_connector_consent", require_consent)
 
@@ -74,7 +78,7 @@ def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeyp
     assert result.degraded_reason == "connector_consent_required"
     assert result.external_context_used is False
     assert result.connector_consent_state == "not_granted"
-    assert "还没有为这个试点完成授权" in result.answer
+    assert "没有使用外部信息" in result.answer
     assert result.tool_steps[-1].tool_name == "research_external_context"
 
 
@@ -124,6 +128,32 @@ def test_external_context_chat_combines_internal_and_external_sources(monkeypatc
     assert len(fake_interface.calls) == 1
 
 
+def test_external_context_chat_degrades_honestly_when_consent_is_revoked(monkeypatch) -> None:
+    monkeypatch.setattr(
+        research_external_context_service,
+        "run_tool_assisted_research_chat",
+        lambda **_: _build_internal_result(),
+    )
+
+    def require_consent(**kwargs):
+        raise research_external_context_service.ConnectorConsentRequiredError(
+            "consent revoked",
+            consent_state="revoked",
+        )
+
+    monkeypatch.setattr(research_external_context_service, "require_workspace_connector_consent", require_consent)
+
+    result = run_research_external_context_chat(
+        workspace_id="workspace-1",
+        user_id="user-1",
+        question="What is the strongest current signal?",
+    )
+
+    assert result.degraded_reason == "connector_consent_revoked"
+    assert result.external_context_used is False
+    assert result.connector_consent_state == "revoked"
+
+
 def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatch) -> None:
     monkeypatch.setattr(
         research_external_context_service,
@@ -149,4 +179,67 @@ def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatc
 
     assert result.degraded_reason == "external_context_unavailable"
     assert result.external_context_used is False
-    assert "外部信息暂时不可用" in result.answer
+    assert result.tool_steps[-1].tool_name == "research_external_context"
+
+
+def test_external_context_chat_can_reuse_selected_snapshot_without_search(monkeypatch) -> None:
+    monkeypatch.setattr(
+        research_external_context_service,
+        "run_tool_assisted_research_chat",
+        lambda **_: _build_internal_result(),
+    )
+    monkeypatch.setattr(
+        research_external_context_service,
+        "require_workspace_connector_consent",
+        lambda **_: object(),
+    )
+
+    def fail_search(**kwargs):
+        raise AssertionError("search_research_external_context should not be called when a snapshot is selected")
+
+    monkeypatch.setattr(research_external_context_service, "search_research_external_context", fail_search)
+
+    fake_interface = FakeModelInterface(
+        text="The selected external snapshot confirms the workspace signal.",
+        calls=[],
+    )
+    monkeypatch.setattr(research_external_context_service, "get_chat_model_interface", lambda: fake_interface)
+
+    snapshot = ResearchExternalResourceSnapshotResponse.model_validate(
+        {
+            "id": "snapshot-1",
+            "workspace_id": "workspace-1",
+            "conversation_id": "conversation-1",
+            "created_by": "user-1",
+            "connector_id": "research_external_context",
+            "source_run_id": None,
+            "title": "Latest approved market snapshot",
+            "analysis_focus": "Judge the strongest market signal",
+            "search_query": "pricing pressure market signal",
+            "resource_count": 1,
+            "resources": [
+                {
+                    "resource_id": "external-1",
+                    "title": "Analyst note",
+                    "source_label": "External market note",
+                    "snippet": "External analysts also see sustained pricing pressure.",
+                }
+            ],
+            "created_at": "2026-04-02T00:00:00Z",
+            "updated_at": "2026-04-02T00:00:00Z",
+        }
+    )
+
+    result = run_research_external_context_chat(
+        workspace_id="workspace-1",
+        user_id="user-1",
+        question="What is the strongest current signal?",
+        selected_external_resource_snapshot=snapshot,
+    )
+
+    assert result.degraded_reason is None
+    assert result.external_context_used is True
+    assert result.selected_external_resource_snapshot_id == "snapshot-1"
+    assert result.external_match_count == 1
+    assert result.sources[-1].source_kind == "external_context"
+    assert len(fake_interface.calls) == 1

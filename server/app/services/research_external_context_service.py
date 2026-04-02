@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 
 from app.connectors.research_external_context_connector import (
     ResearchExternalContextConnectorUnavailableError,
@@ -6,12 +6,16 @@ from app.connectors.research_external_context_connector import (
     search_research_external_context,
 )
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services.connector_service import (
     RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
     ConnectorConsentRequiredError,
     require_workspace_connector_consent,
 )
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
+from app.services.research_external_resource_snapshot_service import (
+    deserialize_research_external_resource_snapshot_matches,
+)
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
     ToolAssistedResearchChatResult,
@@ -38,6 +42,7 @@ class ResearchExternalContextChatResult:
     external_context_used: bool = False
     external_match_count: int = 0
     external_matches: list[ResearchExternalContextEntry] = field(default_factory=list)
+    selected_external_resource_snapshot_id: str | None = None
 
 
 def _append_answer_note(answer: str, note: str) -> str:
@@ -75,6 +80,17 @@ def _summarize_external_context_step(
     )
 
 
+def _summarize_selected_snapshot_step(
+    *,
+    snapshot: ResearchExternalResourceSnapshotResponse,
+) -> ChatToolStep:
+    return ChatToolStep(
+        tool_name="research_external_context",
+        summary=f"已显式使用外部资源快照“{snapshot.title}”。",
+        detail=f"这次直接复用了 {snapshot.resource_count} 条已保存的外部资源，而不是重新自动检索。",
+    )
+
+
 def _summarize_external_context_degraded_step(*, reason: str) -> ChatToolStep:
     if reason == "connector_consent_required":
         return ChatToolStep(
@@ -82,11 +98,23 @@ def _summarize_external_context_degraded_step(*, reason: str) -> ChatToolStep:
             summary="这次没有使用外部信息，因为当前工作区还没有完成连接器授权。",
             detail="先授权工作区，再运行外部信息试点。",
         )
+    if reason == "connector_consent_revoked":
+        return ChatToolStep(
+            tool_name="research_external_context",
+            summary="这次没有使用外部信息，因为当前工作区已经撤销了这个连接器授权。",
+            detail="重新授权后，才能继续使用外部资源快照或新的外部信息检索。",
+        )
     if reason == "external_context_unavailable":
         return ChatToolStep(
             tool_name="research_external_context",
             summary="这次外部信息已获授权，但当前暂时不可用。",
             detail="系统已退回到只使用工作区资料的路径。",
+        )
+    if reason == "selected_external_resource_snapshot_empty":
+        return ChatToolStep(
+            tool_name="research_external_context",
+            summary="这次选中的外部资源快照里没有可用内容。",
+            detail="请重新选择一个最近快照，或者直接让系统自动尝试外部信息。",
         )
     return ChatToolStep(
         tool_name="research_external_context",
@@ -180,6 +208,7 @@ def run_research_external_context_chat(
     user_id: str,
     question: str,
     prior_memory: ResearchRunMemoryContext | None = None,
+    selected_external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None,
 ) -> ResearchExternalContextChatResult:
     internal_result = run_tool_assisted_research_chat(
         workspace_id=workspace_id,
@@ -196,14 +225,18 @@ def run_research_external_context_chat(
             user_id=user_id,
             connector_id=RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
         )
-    except ConnectorConsentRequiredError:
-        degraded_reason = "connector_consent_required"
+    except ConnectorConsentRequiredError as error:
+        degraded_reason = (
+            "connector_consent_revoked" if getattr(error, "consent_state", "not_granted") == "revoked" else "connector_consent_required"
+        )
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
+        answer_note = (
+            "这次没有使用外部信息，因为当前工作区已经撤销了这个连接器授权。"
+            if degraded_reason == "connector_consent_revoked"
+            else "这次没有使用外部信息，因为当前工作区还没有为这个试点完成授权。"
+        )
         return ResearchExternalContextChatResult(
-            answer=_append_answer_note(
-                internal_result.answer,
-                "这次没有使用外部信息，因为当前工作区还没有为这个试点完成授权。",
-            ),
+            answer=_append_answer_note(internal_result.answer, answer_note),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
             tool_steps=tool_steps,
@@ -212,10 +245,59 @@ def run_research_external_context_chat(
             analysis_focus=internal_result.analysis_focus,
             search_query=search_query,
             degraded_reason=degraded_reason,
-            connector_consent_state="not_granted",
+            connector_consent_state=getattr(error, "consent_state", "not_granted"),
             external_context_used=False,
             external_match_count=0,
             external_matches=[],
+            selected_external_resource_snapshot_id=selected_external_resource_snapshot.id if selected_external_resource_snapshot else None,
+        )
+
+    if selected_external_resource_snapshot is not None:
+        external_matches = deserialize_research_external_resource_snapshot_matches(selected_external_resource_snapshot)
+        if not external_matches:
+            degraded_reason = "selected_external_resource_snapshot_empty"
+            tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
+            return ResearchExternalContextChatResult(
+                answer=_append_answer_note(
+                    internal_result.answer,
+                    "这次选中的外部资源快照里没有可用内容，所以答案只反映当前工作区资料。",
+                ),
+                prompt=internal_result.prompt,
+                sources=internal_result.sources,
+                tool_steps=tool_steps,
+                token_input=internal_result.token_input,
+                token_output=internal_result.token_output,
+                analysis_focus=internal_result.analysis_focus,
+                search_query=selected_external_resource_snapshot.search_query,
+                degraded_reason=degraded_reason,
+                connector_consent_state="granted",
+                external_context_used=False,
+                external_match_count=0,
+                external_matches=[],
+                selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            )
+
+        tool_steps.append(_summarize_selected_snapshot_step(snapshot=selected_external_resource_snapshot))
+        answer, prompt, synthesis_input_tokens, synthesis_output_tokens = _synthesize_external_context_answer(
+            question=question,
+            internal_result=internal_result,
+            external_matches=external_matches,
+        )
+        return ResearchExternalContextChatResult(
+            answer=answer,
+            prompt=prompt,
+            sources=[*internal_result.sources, *_serialize_external_sources(external_matches)],
+            tool_steps=tool_steps,
+            token_input=internal_result.token_input + synthesis_input_tokens,
+            token_output=internal_result.token_output + synthesis_output_tokens,
+            analysis_focus=internal_result.analysis_focus,
+            search_query=selected_external_resource_snapshot.search_query,
+            degraded_reason=None,
+            connector_consent_state="granted",
+            external_context_used=True,
+            external_match_count=len(external_matches),
+            external_matches=external_matches,
+            selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
         )
 
     try:

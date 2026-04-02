@@ -26,6 +26,7 @@ def create_research_analysis_run(
     mode: str = "research_tool_assisted",
     status: str = RESEARCH_ANALYSIS_RUN_STATUS_PENDING,
     resumed_from_run_id: str | None = None,
+    selected_external_resource_snapshot_id: str | None = None,
 ) -> ResearchAnalysisRun:
     if not is_valid_research_analysis_run_status(status):
         raise ValueError(f"Unsupported research analysis run status: {status}")
@@ -40,6 +41,7 @@ def create_research_analysis_run(
         question=question,
         mode=mode,
         resumed_from_run_id=resumed_from_run_id,
+        selected_external_resource_snapshot_id=selected_external_resource_snapshot_id,
         external_resource_snapshot_id=None,
         prompt=None,
         answer=None,
@@ -187,6 +189,7 @@ def update_research_analysis_run(
     run_id: str,
     *,
     next_status: str,
+    selected_external_resource_snapshot_id: str | None = None,
     external_resource_snapshot_id: str | None = None,
     prompt: str | None = None,
     answer: str | None = None,
@@ -217,6 +220,8 @@ def update_research_analysis_run(
             run.started_at = now
         if next_status in {"completed", "degraded", "failed"}:
             run.completed_at = now
+        if selected_external_resource_snapshot_id is not None:
+            run.selected_external_resource_snapshot_id = selected_external_resource_snapshot_id
         if external_resource_snapshot_id is not None:
             run.external_resource_snapshot_id = external_resource_snapshot_id
         if prompt is not None:

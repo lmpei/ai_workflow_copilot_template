@@ -98,3 +98,31 @@ def list_workspace_research_external_resource_snapshots(
         limit=normalized_limit,
     )
     return [ResearchExternalResourceSnapshotResponse.from_model(snapshot) for snapshot in snapshots]
+
+
+def get_workspace_research_external_resource_snapshot(
+    *,
+    workspace_id: str,
+    user_id: str,
+    snapshot_id: str,
+) -> ResearchExternalResourceSnapshotResponse:
+    _get_research_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
+    snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(snapshot_id)
+    if snapshot is None or snapshot.workspace_id != workspace_id:
+        raise ResearchExternalResourceSnapshotAccessError("外部资源快照不存在")
+    return ResearchExternalResourceSnapshotResponse.from_model(snapshot)
+
+
+def deserialize_research_external_resource_snapshot_matches(
+    snapshot: ResearchExternalResourceSnapshotResponse,
+) -> list[ResearchExternalContextEntry]:
+    return [
+        ResearchExternalContextEntry(
+            context_id=resource.resource_id,
+            title=resource.title,
+            source_label=resource.source_label,
+            keywords=(),
+            snippet=resource.snippet,
+        )
+        for resource in snapshot.resources
+    ]

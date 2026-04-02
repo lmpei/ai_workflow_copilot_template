@@ -1,4 +1,4 @@
-# Decisions
+﻿# Decisions
 
 Append-only log. Add new entries at the bottom.
 
@@ -1214,7 +1214,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-f-18 project-home and research-workflow reset
 - Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
-- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `鐎殿喒鍋撳┑顔碱儏閸ㄥ酣寮搁幁?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `閻庢鍠掗崑鎾斥攽椤旂⒈鍎忛柛銊ラ叄瀵悂骞?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
 - Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
 - Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
 - Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
@@ -1568,4 +1568,18 @@ Append-only log. Add new entries at the bottom.
 - Impact: the Research connector pilot now has one clearer resource-backed boundary, and the next Stage I work can
   focus on explicit consent lifecycle and snapshot selection instead of on transient answer-time match data.
 - Related Task: `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-101
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-07 consent lifecycle and resource selection
+- Context: the first task in Stage I Wave 2 had already turned approved external matches into persisted Research resource snapshots, but the bounded connector path still treated consent too much like a one-time hidden grant and still relied too heavily on auto-selected external context.
+- Choice: extend the bounded Research connector path so connector consent can be granted or revoked explicitly, recent external resource snapshots can be selected before direct chat or background analysis runs, archive `stage-i-07`, and move the active task to resource-aware replay or review follow-through.
+- Why: a resource-backed connector pilot should make consent changes and resource choice explicit before replay or review tries to reason about that path.
+- Impact: the Research external-context path now has a clearer consent lifecycle and an explicit snapshot-selection step, and the next Stage I work can focus on replay or review around that more inspectable connector behavior.
+- Related Task: `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
 - Supersedes:

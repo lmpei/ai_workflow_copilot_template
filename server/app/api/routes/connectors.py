@@ -2,13 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.security import get_current_user
 from app.models.user import User
-from app.schemas.connector import ConnectorConsentGrantRequest, WorkspaceConnectorStatusResponse
+from app.schemas.connector import (
+    ConnectorConsentGrantRequest,
+    ConnectorConsentRevokeRequest,
+    WorkspaceConnectorStatusResponse,
+)
 from app.services.connector_service import (
     ConnectorAccessError,
     ConnectorValidationError,
     get_workspace_connector_status,
     grant_workspace_connector_consent,
     list_workspace_connector_statuses,
+    revoke_workspace_connector_consent,
 )
 
 router = APIRouter()
@@ -67,6 +72,29 @@ async def grant_connector_consent(
 ) -> WorkspaceConnectorStatusResponse:
     try:
         return grant_workspace_connector_consent(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+            connector_id=connector_id,
+            payload=payload,
+        )
+    except ConnectorAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except ConnectorValidationError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.post(
+    "/workspaces/{workspace_id}/connectors/{connector_id}/consent/revoke",
+    response_model=WorkspaceConnectorStatusResponse,
+)
+async def revoke_connector_consent(
+    workspace_id: str,
+    connector_id: str,
+    payload: ConnectorConsentRevokeRequest,
+    current_user: User = Depends(get_current_user),
+) -> WorkspaceConnectorStatusResponse:
+    try:
+        return revoke_workspace_connector_consent(
             workspace_id=workspace_id,
             user_id=current_user.id,
             connector_id=connector_id,

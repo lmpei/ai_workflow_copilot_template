@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-WorkspaceConnectorConsentState = Literal["not_granted", "granted"]
+WorkspaceConnectorConsentState = Literal["not_granted", "granted", "revoked"]
 
 
 class ConnectorDefinition(BaseModel):
@@ -21,6 +21,10 @@ class ConnectorConsentGrantRequest(BaseModel):
     consent_note: str | None = None
 
 
+class ConnectorConsentRevokeRequest(BaseModel):
+    consent_note: str | None = None
+
+
 class WorkspaceConnectorStatusResponse(BaseModel):
     connector: ConnectorDefinition
     workspace_id: str
@@ -28,4 +32,5 @@ class WorkspaceConnectorStatusResponse(BaseModel):
     granted_by: str | None = None
     consent_note: str | None = None
     granted_at: datetime | None = None
+    revoked_at: datetime | None = None
     updated_at: datetime | None = None

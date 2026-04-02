@@ -14,6 +14,7 @@ class ChatRequest(BaseModel):
     question: str
     conversation_id: str | None = None
     mode: ChatMode = "rag"
+    external_resource_snapshot_id: str | None = None
 
 
 class ChatToolStep(BaseModel):

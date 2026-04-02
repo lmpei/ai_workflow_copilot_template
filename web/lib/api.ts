@@ -3,6 +3,7 @@ import type {
   ChatRequestPayload,
   ChatResponsePayload,
   ConnectorConsentGrantPayload,
+  ConnectorConsentRevokePayload,
   DocumentRecord,
   EvalDatasetCreatePayload,
   EvalDatasetRecord,
@@ -344,6 +345,22 @@ export async function grantWorkspaceConnectorConsent(
 ): Promise<WorkspaceConnectorStatusRecord> {
   return fetchBrowserApiJson<WorkspaceConnectorStatusRecord>(
     `/workspaces/${workspaceId}/connectors/${connectorId}/consent`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function revokeWorkspaceConnectorConsent(
+  accessToken: string,
+  workspaceId: string,
+  connectorId: string,
+  payload: ConnectorConsentRevokePayload = {},
+): Promise<WorkspaceConnectorStatusRecord> {
+  return fetchBrowserApiJson<WorkspaceConnectorStatusRecord>(
+    `/workspaces/${workspaceId}/connectors/${connectorId}/consent/revoke`,
     {
       method: "POST",
       body: JSON.stringify(payload),

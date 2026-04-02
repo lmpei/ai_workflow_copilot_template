@@ -8,6 +8,7 @@ from app.services.research_external_context_service import (
 )
 from app.services.research_external_resource_snapshot_service import (
     create_research_external_resource_snapshot,
+    get_workspace_research_external_resource_snapshot,
 )
 from app.services.research_tool_assisted_chat_service import (
     ToolAssistedResearchChatResult,
@@ -81,6 +82,7 @@ def process_chat_request(
     trace_type = "rag"
     trace_metadata_extra: dict[str, object] | None = None
     external_resource_snapshot = None
+    selected_external_resource_snapshot = None
 
     try:
         if payload.mode == "research_tool_assisted":
@@ -108,11 +110,18 @@ def process_chat_request(
         elif payload.mode == "research_external_context":
             if workspace.module_type != "research":
                 raise ChatProcessingError("External-context analysis pilot is only available in Research workspaces")
+            if payload.external_resource_snapshot_id:
+                selected_external_resource_snapshot = get_workspace_research_external_resource_snapshot(
+                    workspace_id=workspace_id,
+                    user_id=user_id,
+                    snapshot_id=payload.external_resource_snapshot_id,
+                )
 
             generated_external_context: ResearchExternalContextChatResult = run_research_external_context_chat(
                 workspace_id=workspace_id,
                 user_id=user_id,
                 question=payload.question,
+                selected_external_resource_snapshot=selected_external_resource_snapshot,
             )
             answer = generated_external_context.answer
             sources = generated_external_context.sources
@@ -120,7 +129,9 @@ def process_chat_request(
             token_input = generated_external_context.token_input
             token_output = generated_external_context.token_output
             tool_steps = [step.model_dump() for step in generated_external_context.tool_steps]
-            if generated_external_context.external_context_used and generated_external_context.external_matches:
+            if generated_external_context.selected_external_resource_snapshot_id and selected_external_resource_snapshot:
+                external_resource_snapshot = selected_external_resource_snapshot
+            elif generated_external_context.external_context_used and generated_external_context.external_matches:
                 external_resource_snapshot = create_research_external_resource_snapshot(
                     workspace_id=workspace_id,
                     conversation_id=conversation.id,
@@ -140,6 +151,7 @@ def process_chat_request(
                 "connector_consent_state": generated_external_context.connector_consent_state,
                 "external_context_used": generated_external_context.external_context_used,
                 "external_match_count": generated_external_context.external_match_count,
+                "selected_external_resource_snapshot_id": generated_external_context.selected_external_resource_snapshot_id,
                 "external_resource_snapshot_id": external_resource_snapshot.id if external_resource_snapshot else None,
             }
         else:
@@ -201,6 +213,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
@@ -243,6 +256,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
@@ -278,6 +292,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,

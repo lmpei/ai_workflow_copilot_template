@@ -1,4 +1,4 @@
-# Context
+﻿# Context
 
 Stable project facts only. Keep this file concise and update it when the project baseline changes.
 
@@ -68,12 +68,12 @@ The first task in the second Stage I wave is now complete as well: approved exte
 Research path no longer live only inside answer-time trace data. They can now be persisted as explicit external
 resource snapshots, linked back to the direct chat turn or background analysis run that used them, and surfaced on the
 main Research and observability views without collapsing them into ordinary workspace evidence.
+The second task in the second Stage I wave is now complete as well: the Research connector path can now expose
+explicit consent lifecycle and explicit snapshot selection instead of relying only on hidden grant state or
+auto-selected external context.
 
-The next bounded Stage I step is now to stay inside that same Research-first connector path, but deepen it by making
-consent state changes and explicit resource selection more inspectable before replay or review expands around that more
-explicit context plane and before any broader MCP or multi-module rollout opens.
-
-
+The next bounded Stage I step is now to deepen replay or review around that more explicit resource-backed path before
+any broader MCP or multi-module rollout opens.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented

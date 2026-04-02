@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.schemas.connector import ConnectorConsentGrantRequest
+from app.schemas.connector import ConnectorConsentGrantRequest, ConnectorConsentRevokeRequest
 from app.services import connector_service
 
 
@@ -119,3 +119,63 @@ def test_require_workspace_connector_consent_enforces_explicit_grant(client: Tes
         connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
     )
     assert status.consent_state == "granted"
+
+
+def test_revoke_workspace_connector_consent_marks_connector_revoked(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    grant_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}/consent",
+        json={"consent_note": "Initial approval"},
+        headers=headers,
+    )
+    assert grant_response.status_code == 201
+
+    revoke_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}/consent/revoke",
+        json={"consent_note": "Stop using external context for now"},
+        headers=headers,
+    )
+    assert revoke_response.status_code == 200
+    payload = revoke_response.json()
+    assert payload["consent_state"] == "revoked"
+    assert payload["consent_note"] == "Stop using external context for now"
+    assert payload["revoked_at"] is not None
+
+    get_response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}",
+        headers=headers,
+    )
+    assert get_response.status_code == 200
+    assert get_response.json()["consent_state"] == "revoked"
+
+
+def test_require_workspace_connector_consent_rejects_revoked_consent(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    workspace_id = _create_workspace(client, auth["token"])
+
+    connector_service.grant_workspace_connector_consent(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        payload=ConnectorConsentGrantRequest(consent_note="Approved"),
+    )
+    connector_service.revoke_workspace_connector_consent(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        payload=ConnectorConsentRevokeRequest(consent_note="Withdrawn"),
+    )
+
+    try:
+        connector_service.require_workspace_connector_consent(
+            workspace_id=workspace_id,
+            user_id=auth["user_id"],
+            connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        )
+    except connector_service.ConnectorConsentRequiredError as error:
+        assert error.consent_state == "revoked"
+    else:
+        raise AssertionError("Expected revoked connector consent to block access")

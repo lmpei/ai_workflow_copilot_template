@@ -739,6 +739,7 @@ export type ChatRequestPayload = {
   question: string;
   conversation_id?: string;
   mode?: 'rag' | 'research_tool_assisted' | 'research_external_context';
+  external_resource_snapshot_id?: string;
 };
 
 export type ChatSource = {
@@ -794,6 +795,7 @@ export type ResearchAnalysisRunCreatePayload = {
   question: string;
   conversation_id?: string;
   mode?: "research_tool_assisted" | "research_external_context";
+  external_resource_snapshot_id?: string;
 };
 
 export type ResearchAnalysisRunMemoryRecord = {
@@ -1000,13 +1002,18 @@ export type ConnectorDefinitionRecord = {
 export type WorkspaceConnectorStatusRecord = {
   connector: ConnectorDefinitionRecord;
   workspace_id: string;
-  consent_state: "not_granted" | "granted";
+  consent_state: "not_granted" | "granted" | "revoked";
   granted_by?: string | null;
   consent_note?: string | null;
   granted_at?: string | null;
+  revoked_at?: string | null;
   updated_at?: string | null;
 };
 
 export type ConnectorConsentGrantPayload = {
+  consent_note?: string;
+};
+
+export type ConnectorConsentRevokePayload = {
   consent_note?: string;
 };

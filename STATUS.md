@@ -1,4 +1,4 @@
-# Status
+﻿# Status
 
 Current state only. Keep this file short, current, and action-oriented.
 
@@ -31,7 +31,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-i-07-consent-lifecycle-and-resource-selection.md`
+- `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
 
 ## Verification Status
 
@@ -48,9 +48,9 @@ Current state only. Keep this file short, current, and action-oriented.
   layer now exposes connector consent state, connector use, external-match visibility, and degraded-path honesty for
   that pilot. The second Stage I wave is now in progress: the repo has one persisted external-resource snapshot layer
   for approved Research connector matches, direct chat and background analysis runs can now point to the snapshot they
-  actually used, and recent snapshots are visible on the main Research and observability surfaces. The current next
-  step is to deepen that same path into explicit consent lifecycle and resource selection before extending replay or
-  review again.
+  actually used, recent snapshots are visible on the main Research and observability surfaces, and the Research path
+  now exposes explicit consent lifecycle plus snapshot selection before execution begins. The current next step is to
+  deepen replay or review around that more explicit resource-backed path.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -73,9 +73,9 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. implement `stage-i-07` to make connector consent state and revocation more explicit on the Research path
-2. let Research choose from recent external resource snapshots instead of only auto-blending them
-3. keep the live `weave` and `api` hosts stable while consent and resource handling deepen
+1. implement `stage-i-08` to add a resource-aware replay or review baseline on top of explicit snapshot selection
+2. make replay and review distinguish auto-selected external context from explicitly selected resource snapshots
+3. keep the live `weave` and `api` hosts stable while replay or review deepens around the bounded connector path
 
 ## Parked / Later
 
@@ -85,7 +85,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
+- `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
 
 ## Recent Decisions
 

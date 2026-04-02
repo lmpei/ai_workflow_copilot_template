@@ -14,6 +14,7 @@ class ResearchAnalysisRunCreate(BaseModel):
     question: str
     conversation_id: str | None = None
     mode: ChatMode = "research_tool_assisted"
+    external_resource_snapshot_id: str | None = None
 
 
 class ResearchAnalysisRunMemory(BaseModel):

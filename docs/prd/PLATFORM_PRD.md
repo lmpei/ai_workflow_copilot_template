@@ -1,4 +1,4 @@
-# PRD: AI Workflow Copilot Platform
+﻿# PRD: AI Workflow Copilot Platform
 
 ## Background
 
@@ -212,10 +212,10 @@ Stage H is now complete. The bounded Research-first capability path now includes
 compact resumed-run memory, and one operator-visible replay/regression baseline before the roadmap opens connector or
 multi-agent work. Stage I is now active, and its first wave is now complete: one bounded connector contract, one
 explicit workspace-level consent boundary, one visible external-context Research pilot, and one connector-aware review
-baseline now exist on the product surface. The first task in the second Stage I wave is now also complete: approved
-external-context matches can be persisted as explicit Research external-resource snapshots and surfaced back on the
-product. The active Stage I follow-through is now to make consent lifecycle and resource selection more inspectable
-before replay or review deepens again around that more explicit context plane.
+baseline now exist on the product surface. The first two tasks in the second Stage I wave are now complete: approved
+external-context matches can be persisted as explicit Research external-resource snapshots, and the Research path can
+now expose consent lifecycle plus explicit snapshot selection on that same bounded connector flow. The active Stage I
+follow-through is now to deepen replay or review around that more explicit resource-backed context plane.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

@@ -13,6 +13,7 @@ from app.models.trace import Trace
 from app.schemas.chat import ChatToolStep, SourceReference
 from app.services import research_analysis_run_service
 from app.services.research_external_context_service import ResearchExternalContextChatResult
+from app.services.research_external_resource_snapshot_service import create_research_external_resource_snapshot
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
     ToolAssistedResearchChatResult,
@@ -475,8 +476,10 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
         user_id: str,
         question: str,
         prior_memory: ResearchRunMemoryContext | None = None,
+        selected_external_resource_snapshot=None,
     ) -> ResearchExternalContextChatResult:
         assert prior_memory is None
+        assert selected_external_resource_snapshot is None
         return ResearchExternalContextChatResult(
             answer="Workspace evidence aligns with the approved external market note.",
             prompt="external run prompt",
@@ -563,3 +566,164 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
     assert traces[0].response_json["connector_id"] == "research_external_context"
     assert traces[0].response_json["external_context_used"] is True
     assert traces[0].response_json["external_resource_snapshot_id"] == payload["external_resource_snapshot"]["id"]
+
+
+def test_create_research_analysis_run_can_select_existing_external_resource_snapshot(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    async def fake_enqueue(run_id: str) -> str:
+        return "job-1"
+
+    monkeypatch.setattr(research_analysis_run_service, "enqueue_research_analysis_run_execution", fake_enqueue)
+
+    snapshot = create_research_external_resource_snapshot(
+        workspace_id=workspace_id,
+        conversation_id=None,
+        created_by=auth["user_id"],
+        connector_id="research_external_context",
+        search_query="pricing pressure",
+        analysis_focus="Reuse the selected snapshot",
+        matches=[
+            ResearchExternalContextEntry(
+                context_id="external-1",
+                title="Analyst note",
+                source_label="External market note",
+                keywords=("pricing", "pressure"),
+                snippet="External analysts also see sustained pricing pressure.",
+            )
+        ],
+    )
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs",
+        json={
+            "question": "Reuse the selected snapshot",
+            "mode": "research_external_context",
+            "external_resource_snapshot_id": snapshot.id,
+        },
+        headers=headers,
+    )
+    assert response.status_code == 201
+
+    with session_scope() as session:
+        persisted_run = session.get(ResearchAnalysisRun, response.json()["id"])
+        persisted_message = session.scalar(select(Message).where(Message.conversation_id == persisted_run.conversation_id))
+
+    assert persisted_run is not None
+    assert persisted_run.selected_external_resource_snapshot_id == snapshot.id
+    assert persisted_message is not None
+    assert persisted_message.metadata_json["selected_external_resource_snapshot_id"] == snapshot.id
+
+
+def test_run_research_analysis_run_execution_can_reuse_selected_external_resource_snapshot(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    async def fake_enqueue(run_id: str) -> str:
+        return "job-1"
+
+    monkeypatch.setattr(research_analysis_run_service, "enqueue_research_analysis_run_execution", fake_enqueue)
+
+    snapshot = create_research_external_resource_snapshot(
+        workspace_id=workspace_id,
+        conversation_id=None,
+        created_by=auth["user_id"],
+        connector_id="research_external_context",
+        search_query="pricing pressure",
+        analysis_focus="Reuse the selected snapshot",
+        matches=[
+            ResearchExternalContextEntry(
+                context_id="external-1",
+                title="Analyst note",
+                source_label="External market note",
+                keywords=("pricing", "pressure"),
+                snippet="External analysts also see sustained pricing pressure.",
+            )
+        ],
+    )
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs",
+        json={
+            "question": "Reuse the selected snapshot",
+            "mode": "research_external_context",
+            "external_resource_snapshot_id": snapshot.id,
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    run_id = create_response.json()["id"]
+
+    captured_snapshot_ids: list[str | None] = []
+
+    def fake_run_research_external_context_chat(
+        *,
+        workspace_id: str,
+        user_id: str,
+        question: str,
+        prior_memory: ResearchRunMemoryContext | None = None,
+        selected_external_resource_snapshot=None,
+    ) -> ResearchExternalContextChatResult:
+        captured_snapshot_ids.append(selected_external_resource_snapshot.id if selected_external_resource_snapshot else None)
+        return ResearchExternalContextChatResult(
+            answer="Used the selected external snapshot.",
+            prompt="selected snapshot prompt",
+            sources=[
+                SourceReference(
+                    document_id="external:selected",
+                    chunk_id="external:selected",
+                    document_title="Selected snapshot evidence",
+                    chunk_index=0,
+                    snippet="Selected snapshot evidence.",
+                    source_kind="external_context",
+                )
+            ],
+            tool_steps=[
+                ChatToolStep(
+                    tool_name="research_external_context",
+                    summary="Used the selected external resource snapshot.",
+                )
+            ],
+            token_input=12,
+            token_output=8,
+            analysis_focus="Reuse the selected snapshot",
+            search_query="pricing pressure",
+            degraded_reason=None,
+            connector_consent_state="granted",
+            external_context_used=True,
+            external_match_count=1,
+            external_matches=[],
+            selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+        )
+
+    monkeypatch.setattr(
+        research_analysis_run_service,
+        "run_research_external_context_chat",
+        fake_run_research_external_context_chat,
+    )
+
+    execution_result = research_analysis_run_service.run_research_analysis_run_execution(run_id)
+    assert execution_result["status"] == "completed"
+    assert captured_snapshot_ids == [snapshot.id]
+
+    get_response = client.get(
+        f"/api/v1/research-analysis-runs/{run_id}",
+        headers=headers,
+    )
+    assert get_response.status_code == 200
+    payload = get_response.json()
+    assert payload["external_resource_snapshot"]["id"] == snapshot.id
+
+    with session_scope() as session:
+        traces = list(session.scalars(select(Trace)))
+
+    assert traces[0].response_json["selected_external_resource_snapshot_id"] == snapshot.id
