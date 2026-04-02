@@ -1,16 +1,18 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
-from app.connectors.research_external_context_connector import (
-    ResearchExternalContextConnectorUnavailableError,
-    ResearchExternalContextEntry,
-    search_research_external_context,
-)
+from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.schemas.chat import ChatToolStep, SourceReference
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services.connector_service import (
     RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
     ConnectorConsentRequiredError,
     require_workspace_connector_consent,
+)
+from app.services.mcp_service import (
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+    McpValidationError,
+    read_workspace_mcp_resource,
 )
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
 from app.services.research_external_resource_snapshot_service import (
@@ -43,6 +45,11 @@ class ResearchExternalContextChatResult:
     external_match_count: int = 0
     external_matches: list[ResearchExternalContextEntry] = field(default_factory=list)
     selected_external_resource_snapshot_id: str | None = None
+    mcp_server_id: str | None = None
+    mcp_resource_id: str | None = None
+    mcp_resource_uri: str | None = None
+    mcp_resource_display_name: str | None = None
+    context_selection_mode: Literal["none", "snapshot", "mcp_resource"] = "none"
 
 
 def _append_answer_note(answer: str, note: str) -> str:
@@ -67,16 +74,17 @@ def _serialize_external_sources(matches: list[ResearchExternalContextEntry]) -> 
     ]
 
 
-def _summarize_external_context_step(
+def _summarize_mcp_resource_step(
     *,
-    matches: list[ResearchExternalContextEntry],
+    match_count: int,
     search_query: str,
+    resource_display_name: str,
+    resource_uri: str,
 ) -> ChatToolStep:
-    top_titles = "、".join(match.title for match in matches[:2])
     return ChatToolStep(
         tool_name="research_external_context",
-        summary=f"已为“{search_query}”命中 {len(matches)} 条已授权外部信息。",
-        detail=f"最明显的外部信息来源：{top_titles}" if top_titles else None,
+        summary=f"已通过 MCP 资源“{resource_display_name}”读取 {match_count} 条外部上下文。",
+        detail=f"资源 URI：{resource_uri}；搜索词：{search_query}",
     )
 
 
@@ -86,8 +94,8 @@ def _summarize_selected_snapshot_step(
 ) -> ChatToolStep:
     return ChatToolStep(
         tool_name="research_external_context",
-        summary=f"已显式使用外部资源快照“{snapshot.title}”。",
-        detail=f"这次直接复用了 {snapshot.resource_count} 条已保存的外部资源，而不是重新自动检索。",
+        summary=f"已显式复用外部资源快照“{snapshot.title}”。",
+        detail=f"这次直接使用 {snapshot.resource_count} 条已保存资源，而不是重新读取 MCP 资源。",
     )
 
 
@@ -95,31 +103,31 @@ def _summarize_external_context_degraded_step(*, reason: str) -> ChatToolStep:
     if reason == "connector_consent_required":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="这次没有使用外部信息，因为当前工作区还没有完成连接器授权。",
-            detail="先授权工作区，再运行外部信息试点。",
+            summary="这次没有使用 MCP 资源，因为当前工作区还没有完成授权。",
+            detail="先授权当前工作区，再继续运行 MCP 资源试点。",
         )
     if reason == "connector_consent_revoked":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="这次没有使用外部信息，因为当前工作区已经撤销了这个连接器授权。",
-            detail="重新授权后，才能继续使用外部资源快照或新的外部信息检索。",
+            summary="这次没有使用 MCP 资源，因为当前工作区已经撤销了授权。",
+            detail="重新授权后，才能继续使用外部资源快照或新的 MCP 上下文。",
         )
     if reason == "external_context_unavailable":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="这次外部信息已获授权，但当前暂时不可用。",
-            detail="系统已退回到只使用工作区资料的路径。",
+            summary="MCP 资源当前暂时不可用。",
+            detail="系统已经诚实降级到只使用工作区资料的路径。",
         )
     if reason == "selected_external_resource_snapshot_empty":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="这次选中的外部资源快照里没有可用内容。",
-            detail="请重新选择一个最近快照，或者直接让系统自动尝试外部信息。",
+            summary="选中的外部资源快照里没有可用内容。",
+            detail="请重新选择一个最近快照，或改为自动读取 MCP 资源。",
         )
     return ChatToolStep(
         tool_name="research_external_context",
-        summary="这次外部信息试点没有找到足够有用的补充信息。",
-        detail="系统已退回到只使用工作区资料的路径。",
+        summary="MCP 资源没有命中足够有用的外部上下文。",
+        detail="系统已经诚实降级到只使用工作区资料的路径。",
     )
 
 
@@ -185,7 +193,7 @@ def _synthesize_external_context_answer(
                 ModelMessage(
                     role="system",
                     content=(
-                        "You are running a bounded Research external-context pilot. "
+                        "You are running a bounded Research MCP resource pilot. "
                         "Use the provided workspace material and the approved external context only. "
                         "Keep the two evidence classes visibly distinct and do not invent extra sources."
                     ),
@@ -194,12 +202,27 @@ def _synthesize_external_context_answer(
             ],
         )
     except ModelInterfaceError as error:
-        raise ChatProcessingError("Failed to generate the external-context research answer") from error
+        raise ChatProcessingError("Failed to generate the MCP-backed research answer") from error
 
     answer = response.text.strip()
     if not answer:
-        raise ChatProcessingError("External-context research analysis returned an empty answer")
+        raise ChatProcessingError("MCP-backed research analysis returned an empty answer")
     return answer, prompt, response.usage.input_tokens, response.usage.output_tokens
+
+
+def _convert_mcp_items_to_matches(
+    mcp_items,
+) -> list[ResearchExternalContextEntry]:
+    return [
+        ResearchExternalContextEntry(
+            context_id=item.resource_id,
+            title=item.title,
+            source_label=item.source_label,
+            keywords=(),
+            snippet=item.snippet,
+        )
+        for item in mcp_items
+    ]
 
 
 def run_research_external_context_chat(
@@ -219,6 +242,10 @@ def run_research_external_context_chat(
 
     tool_steps = list(internal_result.tool_steps)
     search_query = internal_result.search_query or question.strip()
+    selection_mode: Literal["none", "snapshot", "mcp_resource"] = (
+        "snapshot" if selected_external_resource_snapshot is not None else "mcp_resource"
+    )
+
     try:
         require_workspace_connector_consent(
             workspace_id=workspace_id,
@@ -227,13 +254,15 @@ def run_research_external_context_chat(
         )
     except ConnectorConsentRequiredError as error:
         degraded_reason = (
-            "connector_consent_revoked" if getattr(error, "consent_state", "not_granted") == "revoked" else "connector_consent_required"
+            "connector_consent_revoked"
+            if getattr(error, "consent_state", "not_granted") == "revoked"
+            else "connector_consent_required"
         )
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
         answer_note = (
-            "这次没有使用外部信息，因为当前工作区已经撤销了这个连接器授权。"
+            "这次没有使用 MCP 资源，因为当前工作区已经撤销了当前连接器授权。"
             if degraded_reason == "connector_consent_revoked"
-            else "这次没有使用外部信息，因为当前工作区还没有为这个试点完成授权。"
+            else "这次没有使用 MCP 资源，因为当前工作区还没有为这个试点完成授权。"
         )
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(internal_result.answer, answer_note),
@@ -249,7 +278,10 @@ def run_research_external_context_chat(
             external_context_used=False,
             external_match_count=0,
             external_matches=[],
-            selected_external_resource_snapshot_id=selected_external_resource_snapshot.id if selected_external_resource_snapshot else None,
+            selected_external_resource_snapshot_id=(
+                selected_external_resource_snapshot.id if selected_external_resource_snapshot else None
+            ),
+            context_selection_mode=selection_mode,
         )
 
     if selected_external_resource_snapshot is not None:
@@ -275,6 +307,7 @@ def run_research_external_context_chat(
                 external_match_count=0,
                 external_matches=[],
                 selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+                context_selection_mode="snapshot",
             )
 
         tool_steps.append(_summarize_selected_snapshot_step(snapshot=selected_external_resource_snapshot))
@@ -298,17 +331,25 @@ def run_research_external_context_chat(
             external_match_count=len(external_matches),
             external_matches=external_matches,
             selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            context_selection_mode="snapshot",
         )
 
     try:
-        external_matches = search_research_external_context(query=search_query, limit=_MAX_EXTERNAL_MATCHES)
-    except ResearchExternalContextConnectorUnavailableError:
+        mcp_result = read_workspace_mcp_resource(
+            workspace_id=workspace_id,
+            user_id=user_id,
+            connector_id=RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+            resource_id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+            query=search_query,
+            limit=_MAX_EXTERNAL_MATCHES,
+        )
+    except McpValidationError:
         degraded_reason = "external_context_unavailable"
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(
                 internal_result.answer,
-                "这次已获授权的外部信息暂时不可用，所以答案只反映当前工作区资料。",
+                "这次 MCP 资源暂时不可用，所以答案只反映当前工作区资料。",
             ),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
@@ -322,15 +363,21 @@ def run_research_external_context_chat(
             external_context_used=False,
             external_match_count=0,
             external_matches=[],
+            mcp_server_id=None,
+            mcp_resource_id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+            mcp_resource_uri=None,
+            mcp_resource_display_name=None,
+            context_selection_mode="mcp_resource",
         )
 
+    external_matches = _convert_mcp_items_to_matches(mcp_result.items)
     if not external_matches:
         degraded_reason = "external_context_no_useful_matches"
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(
                 internal_result.answer,
-                "这次已授权的外部信息没有找到足够有用的补充内容。",
+                "这次 MCP 资源没有命中足够有用的补充内容，所以答案只反映当前工作区资料。",
             ),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
@@ -344,9 +391,21 @@ def run_research_external_context_chat(
             external_context_used=False,
             external_match_count=0,
             external_matches=[],
+            mcp_server_id=mcp_result.server.id,
+            mcp_resource_id=mcp_result.resource.id,
+            mcp_resource_uri=mcp_result.resource.uri,
+            mcp_resource_display_name=mcp_result.resource.display_name,
+            context_selection_mode="mcp_resource",
         )
 
-    tool_steps.append(_summarize_external_context_step(matches=external_matches, search_query=search_query))
+    tool_steps.append(
+        _summarize_mcp_resource_step(
+            match_count=len(external_matches),
+            search_query=search_query,
+            resource_display_name=mcp_result.resource.display_name,
+            resource_uri=mcp_result.resource.uri,
+        )
+    )
     answer, prompt, synthesis_input_tokens, synthesis_output_tokens = _synthesize_external_context_answer(
         question=question,
         internal_result=internal_result,
@@ -366,4 +425,9 @@ def run_research_external_context_chat(
         external_context_used=True,
         external_match_count=len(external_matches),
         external_matches=external_matches,
+        mcp_server_id=mcp_result.server.id,
+        mcp_resource_id=mcp_result.resource.id,
+        mcp_resource_uri=mcp_result.resource.uri,
+        mcp_resource_display_name=mcp_result.resource.display_name,
+        context_selection_mode="mcp_resource",
     )

@@ -153,6 +153,11 @@ def process_chat_request(
                 "external_match_count": generated_external_context.external_match_count,
                 "selected_external_resource_snapshot_id": generated_external_context.selected_external_resource_snapshot_id,
                 "external_resource_snapshot_id": external_resource_snapshot.id if external_resource_snapshot else None,
+                "mcp_server_id": generated_external_context.mcp_server_id,
+                "mcp_resource_id": generated_external_context.mcp_resource_id,
+                "mcp_resource_uri": generated_external_context.mcp_resource_uri,
+                "mcp_resource_display_name": generated_external_context.mcp_resource_display_name,
+                "context_selection_mode": generated_external_context.context_selection_mode,
             }
         else:
             retriever: Retriever = get_retriever()
@@ -215,6 +220,11 @@ def process_chat_request(
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
                 "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
+                "mcp_server_id": trace_metadata_extra.get("mcp_server_id") if trace_metadata_extra else None,
+                "mcp_resource_id": trace_metadata_extra.get("mcp_resource_id") if trace_metadata_extra else None,
+                "mcp_resource_uri": trace_metadata_extra.get("mcp_resource_uri") if trace_metadata_extra else None,
+                "mcp_resource_display_name": trace_metadata_extra.get("mcp_resource_display_name") if trace_metadata_extra else None,
+                "context_selection_mode": trace_metadata_extra.get("context_selection_mode") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -258,6 +268,11 @@ def process_chat_request(
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
                 "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
+                "mcp_server_id": trace_metadata_extra.get("mcp_server_id") if trace_metadata_extra else None,
+                "mcp_resource_id": trace_metadata_extra.get("mcp_resource_id") if trace_metadata_extra else None,
+                "mcp_resource_uri": trace_metadata_extra.get("mcp_resource_uri") if trace_metadata_extra else None,
+                "mcp_resource_display_name": trace_metadata_extra.get("mcp_resource_display_name") if trace_metadata_extra else None,
+                "context_selection_mode": trace_metadata_extra.get("context_selection_mode") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -294,6 +309,11 @@ def process_chat_request(
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
                 "selected_external_resource_snapshot_id": trace_metadata_extra.get("selected_external_resource_snapshot_id") if trace_metadata_extra else None,
                 "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
+                "mcp_server_id": trace_metadata_extra.get("mcp_server_id") if trace_metadata_extra else None,
+                "mcp_resource_id": trace_metadata_extra.get("mcp_resource_id") if trace_metadata_extra else None,
+                "mcp_resource_uri": trace_metadata_extra.get("mcp_resource_uri") if trace_metadata_extra else None,
+                "mcp_resource_display_name": trace_metadata_extra.get("mcp_resource_display_name") if trace_metadata_extra else None,
+                "context_selection_mode": trace_metadata_extra.get("context_selection_mode") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )

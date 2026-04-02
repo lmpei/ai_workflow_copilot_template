@@ -4,7 +4,11 @@ from arq import create_pool
 
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
-from app.repositories import conversation_repository, research_analysis_run_repository, workspace_repository
+from app.repositories import (
+    conversation_repository,
+    research_analysis_run_repository,
+    workspace_repository,
+)
 from app.schemas.research_analysis_run import (
     ResearchAnalysisRunCreate,
     ResearchAnalysisRunMemory,
@@ -21,6 +25,7 @@ from app.services.research_external_resource_snapshot_service import (
 )
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
+    ToolAssistedResearchChatResult,
     run_tool_assisted_research_chat,
 )
 from app.services.retrieval_generation_service import ChatProcessingError
@@ -306,6 +311,11 @@ def _record_run_trace(
     external_match_count: int | None = None,
     selected_external_resource_snapshot_id: str | None = None,
     external_resource_snapshot_id: str | None = None,
+    mcp_server_id: str | None = None,
+    mcp_resource_id: str | None = None,
+    mcp_resource_uri: str | None = None,
+    mcp_resource_display_name: str | None = None,
+    context_selection_mode: str | None = None,
     error_message: str | None = None,
 ) -> str:
     latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
@@ -340,6 +350,11 @@ def _record_run_trace(
             "external_match_count": external_match_count,
             "selected_external_resource_snapshot_id": selected_external_resource_snapshot_id,
             "external_resource_snapshot_id": external_resource_snapshot_id,
+            "mcp_server_id": mcp_server_id,
+            "mcp_resource_id": mcp_resource_id,
+            "mcp_resource_uri": mcp_resource_uri,
+            "mcp_resource_display_name": mcp_resource_display_name,
+            "context_selection_mode": context_selection_mode,
         },
         extra_metadata_json={
             "research_analysis_run_id": run.id,
@@ -356,6 +371,11 @@ def _record_run_trace(
             "external_match_count": external_match_count,
             "selected_external_resource_snapshot_id": selected_external_resource_snapshot_id,
             "external_resource_snapshot_id": external_resource_snapshot_id,
+            "mcp_server_id": mcp_server_id,
+            "mcp_resource_id": mcp_resource_id,
+            "mcp_resource_uri": mcp_resource_uri,
+            "mcp_resource_display_name": mcp_resource_display_name,
+            "context_selection_mode": context_selection_mode,
         },
     )
 
@@ -451,6 +471,11 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             external_match_count=getattr(result, "external_match_count", None),
             selected_external_resource_snapshot_id=getattr(result, "selected_external_resource_snapshot_id", None),
             external_resource_snapshot_id=external_resource_snapshot.id if external_resource_snapshot else None,
+            mcp_server_id=getattr(result, "mcp_server_id", None),
+            mcp_resource_id=getattr(result, "mcp_resource_id", None),
+            mcp_resource_uri=getattr(result, "mcp_resource_uri", None),
+            mcp_resource_display_name=getattr(result, "mcp_resource_display_name", None),
+            context_selection_mode=getattr(result, "context_selection_mode", None),
         )
         conversation_repository.create_message(
             conversation_id=running_run.conversation_id,
@@ -513,6 +538,9 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             external_match_count=0 if running_run.mode == "research_external_context" else None,
             selected_external_resource_snapshot_id=running_run.selected_external_resource_snapshot_id,
             external_resource_snapshot_id=None,
+            context_selection_mode=(
+                "snapshot" if running_run.selected_external_resource_snapshot_id else "mcp_resource"
+            ) if running_run.mode == "research_external_context" else None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(
@@ -545,6 +573,9 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             external_match_count=0 if running_run.mode == "research_external_context" else None,
             selected_external_resource_snapshot_id=running_run.selected_external_resource_snapshot_id,
             external_resource_snapshot_id=None,
+            context_selection_mode=(
+                "snapshot" if running_run.selected_external_resource_snapshot_id else "mcp_resource"
+            ) if running_run.mode == "research_external_context" else None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(

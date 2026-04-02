@@ -32,8 +32,9 @@ multi-agent orchestration.
 - Current Stage-I baseline:
   - one connector-backed Research integration with explicit consent, resource snapshots, and operator review
   - one bounded local MCP server and MCP resource contract behind that same Research-first permission model
+  - one visible Research MCP-backed product path that reuses that same consent and snapshot model
 - Still optional follow-through:
-  - the visible MCP-backed Research path itself
+  - MCP trace and review visibility on that visible path
   - most MCP breadth beyond the first bounded path
   - broader connector rollout outside the same Research-first surface
 
@@ -184,7 +185,10 @@ layer before any broader MCP or orchestration work opens.
   resource-selection mode, and consent-lifecycle consistency on that same bounded Research path
 - complete: `stage-i-11`, which added one bounded local MCP server and one MCP resource contract behind the existing
   Research connector consent boundary
-- active now: `stage-i-12`, which will connect one visible Research path to that MCP resource foundation
+- complete: `stage-i-12`, which connected the existing visible Research external-context surface to the bounded local
+  MCP resource foundation while preserving explicit consent, snapshot reuse, and honest degraded behavior
+- active now: `stage-i-13`, which will make MCP use and degraded outcomes readable in trace and operator-review
+  surfaces on that same bounded Research path
 ## Second Task Wave
 
 The second executable Stage I wave is:
@@ -233,7 +237,7 @@ baseline as delivered:
 The third executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
-2. `tasks/stage-i-12-research-mcp-resource-context-pilot.md`
+2. `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
 3. `tasks/stage-i-13-mcp-trace-and-review-visibility.md`
 
 ### Why This Wave Exists

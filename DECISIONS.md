@@ -1654,3 +1654,25 @@ Append-only log. Add new entries at the bottom.
   boundary, and later Stage I tasks can build a visible MCP-backed product path on top of that foundation.
 - Related Task: `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-106
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-12 Research MCP resource-context pilot
+- Context: `stage-i-11` introduced one bounded local MCP server and one MCP resource contract, but the repository still
+  had no visible product path that actually used MCP-backed context. MCP remained a foundation concept rather than a
+  demonstrated Stage I behavior.
+- Choice: connect the existing visible `research_external_context` Research surface to the bounded local MCP resource
+  path, preserve the same workspace-level connector consent boundary, preserve explicit external-resource snapshot reuse,
+  keep internal and MCP-backed evidence visibly distinct, archive `stage-i-12`, and move the active task to MCP trace
+  and review visibility.
+- Why: the third Stage I wave should prove one actual MCP-backed product path before broadening into more MCP surface
+  area or closing the stage.
+- Impact: the repository now has one visible Research path that can actually read bounded MCP-backed context while
+  remaining honest under denied, unavailable, or empty MCP conditions, and the next bounded task can focus on making
+  that MCP behavior readable in trace and operator review surfaces.
+- Related Task: `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
+- Supersedes:

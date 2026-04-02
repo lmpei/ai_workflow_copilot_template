@@ -221,9 +221,10 @@ lifecycle consistency. Control-plane interpretation is now explicit: `Stage I` i
 current connector/context-plane baseline, while `docs/prd/LONG_TERM_ROADMAP.md` still describes the broader Wave 2
 concept family. The current repo baseline already satisfies the minimum Wave 2 exit signal through one connector-backed
 Research integration with explicit permission boundaries, but it does not claim exhaustive MCP host, client, or server
-coverage. The third Stage I wave is now active: the repo has one bounded local MCP server and one MCP resource
-contract wired to the existing Research connector consent boundary, and the current active task is to use that
-foundation in one visible Research MCP resource-context pilot instead of leaving MCP as deferred roadmap language.
+coverage. The third Stage I wave is now partially complete as well: the repo has one bounded local MCP server, one MCP
+resource contract wired to the existing Research connector consent boundary, and now one visible Research MCP
+resource-context pilot on the existing Research surface. The current active task is to make MCP use and degraded
+behavior readable in trace and operator-review surfaces instead of leaving MCP as a hidden transport detail.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

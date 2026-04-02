@@ -99,12 +99,12 @@ Stable system boundaries only. This is the short architecture summary. The long-
     product path is allowed to read that resource
 - `server/app/mcp/research_context_local_server.py`
   - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
-    that later Stage I tasks can connect to a visible product path
+    that now feeds one visible product path while still staying bounded to the Research-first pilot
 - `server/app/services/research_external_context_service.py`
   - owns the bounded Stage I Research pilot that checks workspace connector consent, can reuse an explicitly selected
-    external-resource snapshot or query the approved external context source, keeps internal and external evidence
-    visibly distinct, and degrades honestly when consent, connector availability, or useful external matches are
-    missing
+    external-resource snapshot or read one bounded MCP-backed resource through the same permission model, keeps
+    internal and external evidence visibly distinct, and degrades honestly when consent, MCP availability, or useful
+    external matches are missing
 - `server/app/services/research_external_resource_snapshot_service.py`
   - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
     snapshots and exposes recent snapshots back to the product surface

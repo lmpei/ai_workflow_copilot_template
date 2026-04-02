@@ -35,8 +35,17 @@ class WorkspaceConnectorMcpStatusResponse(BaseModel):
 
 
 @dataclass(frozen=True, slots=True)
+class LocalMcpResourceItem:
+    resource_id: str
+    title: str
+    source_label: str
+    snippet: str
+
+
+@dataclass(frozen=True, slots=True)
 class LocalMcpResourceReadResult:
     server: McpServerDefinition
     resource: McpResourceDefinition
     text: str
     resource_count: int
+    items: tuple[LocalMcpResourceItem, ...] = ()

@@ -78,3 +78,4 @@ def test_read_workspace_mcp_resource_returns_local_digest_after_consent(client: 
     assert result.resource.id == mcp_service.RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
     assert result.resource_count >= 1
     assert "来源：" in result.text
+    assert len(result.items) >= 1

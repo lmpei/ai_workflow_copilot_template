@@ -1,12 +1,19 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
-from app.connectors.research_external_context_connector import (
-    ResearchExternalContextConnectorUnavailableError,
-    ResearchExternalContextEntry,
-)
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.schemas.mcp import (
+    LocalMcpResourceItem,
+    LocalMcpResourceReadResult,
+    McpResourceDefinition,
+    McpServerDefinition,
+)
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services import research_external_context_service
+from app.services.mcp_service import (
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+    McpValidationError,
+)
 from app.services.research_external_context_service import run_research_external_context_chat
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 
@@ -54,6 +61,38 @@ def _build_internal_result(*, degraded_reason: str | None = None) -> ToolAssiste
     )
 
 
+def _build_mcp_read_result() -> LocalMcpResourceReadResult:
+    return LocalMcpResourceReadResult(
+        server=McpServerDefinition(
+            id=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+            display_name="Research 本地 MCP 服务",
+            summary="Bounded MCP pilot",
+            transport="local_inproc",
+            module_types=["research"],
+            resource_ids=[RESEARCH_CONTEXT_DIGEST_RESOURCE_ID],
+        ),
+        resource=McpResourceDefinition(
+            id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+            uri="mcp://research-context/digest",
+            display_name="Research 外部上下文摘要",
+            summary="Bounded MCP digest",
+            mime_type="text/markdown",
+            module_types=["research"],
+            connector_id="research_external_context",
+        ),
+        text="## Analyst note\n来源：External market note\n\nExternal analysts also see sustained pricing pressure.",
+        resource_count=1,
+        items=(
+            LocalMcpResourceItem(
+                resource_id="market-cost-pressure",
+                title="Analyst note",
+                source_label="External market note",
+                snippet="External analysts also see sustained pricing pressure.",
+            ),
+        ),
+    )
+
+
 def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeypatch) -> None:
     monkeypatch.setattr(
         research_external_context_service,
@@ -78,11 +117,12 @@ def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeyp
     assert result.degraded_reason == "connector_consent_required"
     assert result.external_context_used is False
     assert result.connector_consent_state == "not_granted"
-    assert "没有使用外部信息" in result.answer
+    assert "没有使用 MCP 资源" in result.answer
     assert result.tool_steps[-1].tool_name == "research_external_context"
+    assert result.context_selection_mode == "mcp_resource"
 
 
-def test_external_context_chat_combines_internal_and_external_sources(monkeypatch) -> None:
+def test_external_context_chat_combines_internal_and_mcp_sources(monkeypatch) -> None:
     monkeypatch.setattr(
         research_external_context_service,
         "run_tool_assisted_research_chat",
@@ -95,19 +135,11 @@ def test_external_context_chat_combines_internal_and_external_sources(monkeypatc
     )
     monkeypatch.setattr(
         research_external_context_service,
-        "search_research_external_context",
-        lambda **_: [
-            ResearchExternalContextEntry(
-                context_id="external-1",
-                title="Analyst note",
-                source_label="External market note",
-                keywords=("pricing", "pressure"),
-                snippet="External analysts also see sustained pricing pressure.",
-            )
-        ],
+        "read_workspace_mcp_resource",
+        lambda **_: _build_mcp_read_result(),
     )
     fake_interface = FakeModelInterface(
-        text="Workspace material shows pricing pressure, and external context confirms it is market-wide.",
+        text="Workspace material shows pricing pressure, and the MCP resource confirms it is market-wide.",
         calls=[],
     )
     monkeypatch.setattr(research_external_context_service, "get_chat_model_interface", lambda: fake_interface)
@@ -126,6 +158,9 @@ def test_external_context_chat_combines_internal_and_external_sources(monkeypatc
     assert result.sources[1].source_kind == "external_context"
     assert result.tool_steps[-1].tool_name == "research_external_context"
     assert len(fake_interface.calls) == 1
+    assert result.mcp_server_id == RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID
+    assert result.mcp_resource_id == RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.context_selection_mode == "mcp_resource"
 
 
 def test_external_context_chat_degrades_honestly_when_consent_is_revoked(monkeypatch) -> None:
@@ -154,7 +189,7 @@ def test_external_context_chat_degrades_honestly_when_consent_is_revoked(monkeyp
     assert result.connector_consent_state == "revoked"
 
 
-def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatch) -> None:
+def test_external_context_chat_degrades_when_mcp_resource_is_unavailable(monkeypatch) -> None:
     monkeypatch.setattr(
         research_external_context_service,
         "run_tool_assisted_research_chat",
@@ -167,9 +202,9 @@ def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatc
     )
 
     def unavailable(**kwargs):
-        raise ResearchExternalContextConnectorUnavailableError("down")
+        raise McpValidationError("down")
 
-    monkeypatch.setattr(research_external_context_service, "search_research_external_context", unavailable)
+    monkeypatch.setattr(research_external_context_service, "read_workspace_mcp_resource", unavailable)
 
     result = run_research_external_context_chat(
         workspace_id="workspace-1",
@@ -180,9 +215,10 @@ def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatc
     assert result.degraded_reason == "external_context_unavailable"
     assert result.external_context_used is False
     assert result.tool_steps[-1].tool_name == "research_external_context"
+    assert result.context_selection_mode == "mcp_resource"
 
 
-def test_external_context_chat_can_reuse_selected_snapshot_without_search(monkeypatch) -> None:
+def test_external_context_chat_can_reuse_selected_snapshot_without_mcp_read(monkeypatch) -> None:
     monkeypatch.setattr(
         research_external_context_service,
         "run_tool_assisted_research_chat",
@@ -194,10 +230,10 @@ def test_external_context_chat_can_reuse_selected_snapshot_without_search(monkey
         lambda **_: object(),
     )
 
-    def fail_search(**kwargs):
-        raise AssertionError("search_research_external_context should not be called when a snapshot is selected")
+    def fail_read(**kwargs):
+        raise AssertionError("read_workspace_mcp_resource should not be called when a snapshot is selected")
 
-    monkeypatch.setattr(research_external_context_service, "search_research_external_context", fail_search)
+    monkeypatch.setattr(research_external_context_service, "read_workspace_mcp_resource", fail_read)
 
     fake_interface = FakeModelInterface(
         text="The selected external snapshot confirms the workspace signal.",
@@ -243,3 +279,4 @@ def test_external_context_chat_can_reuse_selected_snapshot_without_search(monkey
     assert result.external_match_count == 1
     assert result.sources[-1].source_kind == "external_context"
     assert len(fake_interface.calls) == 1
+    assert result.context_selection_mode == "snapshot"

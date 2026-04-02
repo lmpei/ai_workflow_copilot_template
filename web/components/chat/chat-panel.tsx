@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
@@ -126,20 +126,35 @@ function getModeLabel(mode: "rag" | "research_tool_assisted" | "research_externa
     case "research_tool_assisted":
       return "工具辅助";
     case "research_external_context":
-      return "外部信息试点";
+      return "MCP 资源试点";
     default:
       return mode;
   }
 }
 
+function normalizeModeMeta(candidate: {
+  value: "rag" | "research_tool_assisted" | "research_external_context";
+  label: string;
+  description: string;
+}) {
+  if (candidate.value !== "research_external_context") {
+    return candidate;
+  }
+
+  return {
+    ...candidate,
+    label: "MCP 资源试点",
+    description: "在授权后读取一个有边界的 MCP 资源摘要，并继续清楚地区分工作区资料和外部上下文。",
+  };
+}
 function getConnectorStatusCopy(status: WorkspaceConnectorStatusRecord | null) {
   if (!status || status.consent_state === "not_granted") {
     return {
       tone: "#fff7ed",
       border: "#fed7aa",
       accent: "#9a3412",
-      title: "尚未授权外部信息试点",
-      body: "当前工作区还没有授权使用外部信息。授权后，研究分析可以在工作区资料之外参考外部资源快照。",
+      title: "尚未授权 MCP 资源试点",
+      body: "当前工作区还没有授权使用 MCP 资源。授权后，研究分析可以在工作区资料之外读取有边界的外部上下文。",
     };
   }
 
@@ -149,7 +164,7 @@ function getConnectorStatusCopy(status: WorkspaceConnectorStatusRecord | null) {
       border: "#fecaca",
       accent: "#991b1b",
       title: "授权已撤销",
-      body: "当前工作区已撤销外部信息授权。你仍然可以查看已有快照，但新的外部信息调用会诚实降级。",
+      body: "当前工作区已撤销 MCP 资源授权。你仍然可以查看已有快照，但新的 MCP 资源读取会诚实降级。",
     };
   }
 
@@ -157,8 +172,8 @@ function getConnectorStatusCopy(status: WorkspaceConnectorStatusRecord | null) {
     tone: "#ecfdf5",
     border: "#bbf7d0",
     accent: "#166534",
-    title: "已授权外部信息试点",
-    body: "当前工作区可以在研究分析里使用外部信息，并且会明确区分工作区资料和外部信息来源。",
+    title: "已授权 MCP 资源试点",
+    body: "当前工作区可以在研究分析里读取 MCP 资源摘要，并且会明确区分工作区资料和外部上下文来源。",
   };
 }
 
@@ -404,7 +419,7 @@ export default function ChatPanel({
   const availableModes = useMemo(
     () =>
       modes && modes.length > 0
-        ? modes
+        ? modes.map(normalizeModeMeta)
         : [
             {
               value: "rag" as const,
@@ -573,7 +588,7 @@ export default function ChatPanel({
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "无法读取外部信息试点的授权状态。");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法读取 MCP 资源试点的授权状态。");
         }
       }
     };
@@ -805,7 +820,7 @@ export default function ChatPanel({
                   ? "授权中..."
                   : connectorStatus?.consent_state === "revoked"
                     ? "重新授权"
-                    : "授权外部信息试点"}
+                    : "授权 MCP 资源试点"}
             </button>
             <button
               disabled={connectorStatus?.consent_state !== "granted" || isRevokingConnectorConsent}
@@ -859,7 +874,7 @@ export default function ChatPanel({
             </button>
           </div>
           <span style={{ color: "#475569", fontSize: 13 }}>
-            这些快照来自最近真实使用过的外部资源。你可以明确选择其中一个快照继续分析，也可以保持自动选择。
+            这些快照来自最近真实使用过的 MCP 资源结果。你可以明确选择其中一个快照继续分析，也可以保持自动选择。
           </span>
           {selectedExternalResourceSnapshot ? (
             <div style={{ color: "#6b21a8", fontSize: 13, fontWeight: 700 }}>
@@ -923,7 +938,7 @@ export default function ChatPanel({
 
         {entries.length === 0 && analysisRuns.length === 0 ? (
           <div style={{ ...cardStyle, color: "#475569", lineHeight: 1.8 }}>
-            先输入一个研究问题并开始分析。标准分析会直接回答，工具辅助和外部信息试点会创建可回看的后台分析运行。
+            先输入一个研究问题并开始分析。标准分析会直接回答，工具辅助和 MCP 资源试点会创建可回看的后台分析运行。
           </div>
         ) : null}
 

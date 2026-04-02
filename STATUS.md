@@ -30,7 +30,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-i-12-research-mcp-resource-context-pilot.md`
+- `tasks/stage-i-13-mcp-trace-and-review-visibility.md`
 
 ## Current Roadmap Alignment
 
@@ -45,20 +45,21 @@ Current state only. Keep this file short, current, and action-oriented.
 - Newly delivered:
   - one bounded local MCP server foundation
   - one bounded MCP resource contract wired to the existing Research connector consent boundary
+  - one real product-facing MCP-backed Research path on the existing `research_external_context` surface
 - Still not covered:
-  - a real product-facing MCP-backed Research path
   - MCP trace and review visibility on that path
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. Stage H is complete and closed after the
   bounded model-interface and tool-visible Research baseline. Stage I has now completed two bounded connector and
-  context-plane waves, plus the first task in a third MCP-specific wave: connector contract plus consent, one visible
-  Research external-context pilot, connector-aware trace and review, explicit external-resource snapshots, explicit
-  consent lifecycle plus snapshot selection, one resource-aware review baseline, and now one bounded MCP contract plus
-  local server foundation wired to the same Research-first consent boundary. The control-plane distinction remains
+  context-plane waves, plus the first two tasks in a third MCP-specific wave: connector contract plus consent, one
+  visible Research external-context pilot, connector-aware trace and review, explicit external-resource snapshots,
+  explicit consent lifecycle plus snapshot selection, one resource-aware review baseline, one bounded MCP contract plus
+  local server foundation wired to the same Research-first consent boundary, and now one real Research MCP-backed
+  product path that reuses the existing consent and snapshot boundaries. The control-plane distinction remains
   explicit: `Stage I` is the active bounded execution unit, while `LONG_TERM_ROADMAP` Wave 2 remains the broader
-  concept family. The next bounded task is to connect one visible Research path to that local MCP resource foundation.
+  concept family. The next bounded task is MCP trace and review visibility on that visible path.
 - Last Verified At: 2026-04-03
 
 ## Current Blockers
@@ -76,12 +77,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which single bounded MCP path should become the first real product-facing Stage I follow-through after the connector
-  baseline
+- whether the current bounded MCP path should end Stage I after `stage-i-13`, or stay open for one further narrowly
+  scoped Wave 2 follow-through
 
 ## Ready Now
 
-1. execute `stage-i-12` to connect one visible Research path to the new bounded MCP resource source
+1. execute `stage-i-13` to make MCP use, denial, and degraded outcomes readable in trace and operator review surfaces
 2. keep the live `weave` and `api` hosts stable while the Stage I MCP pilot deepens
 3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first MCP path is complete
 
@@ -93,7 +94,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
+- `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
 
 ## Recent Decisions
 
@@ -156,3 +157,6 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-03-105` complete `stage-i-11`, add one bounded local MCP server and MCP resource contract behind the
   existing Research connector consent boundary, archive the task, and move Stage I to one visible Research MCP
   resource-context pilot
+- `DEC-2026-04-03-106` complete `stage-i-12`, connect the existing visible Research external-context surface to the
+  bounded local MCP resource path, preserve explicit consent and snapshot reuse boundaries, archive the task, and move
+  Stage I to MCP trace and review visibility
