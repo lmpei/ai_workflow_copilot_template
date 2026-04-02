@@ -11,6 +11,7 @@ from app.api.routes import (
     job_hiring_packets,
     metrics,
     public_demo,
+    research_analysis_runs,
     research_assets,
     scenarios,
     support_cases,
@@ -41,6 +42,7 @@ app.include_router(workspaces.router, prefix=settings.api_prefix, tags=["workspa
 app.include_router(documents.router, prefix=settings.api_prefix, tags=["documents"])
 app.include_router(chat.router, prefix=settings.api_prefix, tags=["chat"])
 app.include_router(tasks.router, prefix=settings.api_prefix, tags=["tasks"])
+app.include_router(research_analysis_runs.router, prefix=settings.api_prefix, tags=["research-analysis-runs"])
 app.include_router(research_assets.router, prefix=settings.api_prefix, tags=["research-assets"])
 app.include_router(support_cases.router, prefix=settings.api_prefix, tags=["support-cases"])
 app.include_router(job_hiring_packets.router, prefix=settings.api_prefix, tags=["job-hiring-packets"])

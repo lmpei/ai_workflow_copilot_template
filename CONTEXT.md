@@ -42,9 +42,12 @@ That first pilot now also has an honest review baseline: recent Research tool-as
 focus, search query, visible tool steps, and degraded-path reason, while the backend has one bounded regression
 evaluator for tool-step visibility and honest no-source degradation.
 
-The next bounded Stage H wave is now defined as a Research-first deepening pass rather than a broader capability
-expansion: move the pilot toward background-capable analysis runs, add bounded conversation-state compaction and run
-memory, and strengthen replayable review before any connector or multi-agent work begins.
+The first task in that second Stage H wave is now complete: Research workspaces can launch one explicit background
+analysis run, keep that run visible through queued, running, completed, degraded, or failed state, and write the
+resulting answer, tool-step summary, and trace linkage back into the same workspace flow.
+
+The next bounded Stage H work now focuses on context compaction and run memory on top of that new background-run
+boundary, followed by replayable tool-aware review before any connector or multi-agent work begins.
 
 ## Current Phase
 

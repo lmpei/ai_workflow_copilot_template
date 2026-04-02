@@ -26,12 +26,15 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - create task -> queue -> worker -> agent/tool execution -> persisted result
 - evals
   - dataset -> eval run -> per-case execution -> scoring -> summaries and traces
+- bounded Research background analysis runs
+  - create run -> queue worker job -> tool-assisted synthesis -> assistant answer, tool steps, and trace linkage
 
 ## State and Persistence
 
 - PostgreSQL is the system of record for product and workflow state.
 - PostgreSQL also persists the non-Research workbench state through Support case / Support case event and Job hiring
-  packet / Job hiring packet event records.
+  packet / Job hiring packet event records, and now also persists bounded Research background analysis run state
+  through `research_analysis_run` records.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
@@ -72,9 +75,13 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the first bounded Stage H Research pilot: it plans one analysis focus plus search query, invokes existing
     workspace tools inline, synthesizes the grounded answer, and returns visible tool-step summaries to the main chat
     flow without creating a separate agent runtime surface
+- `server/app/services/research_analysis_run_service.py`
+  - owns the next bounded Stage H deepening step: create, queue, list, and complete explicit Research background
+    analysis runs that reuse the tool-assisted pilot while keeping run status, answer delivery, and trace linkage
+    honest on the same workspace surface
 - `server/app/services/retrieval_service.py`
-  - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and writes the
-    resulting tool-step metadata into chat traces for later visibility work
+  - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and now also
+    records the extra trace metadata needed when that pilot is delivered through explicit background analysis runs
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps and honest degraded no-source paths
@@ -91,10 +98,13 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns Support case and Support case event persistence
 - `server/app/repositories/job_hiring_packet_repository.py`
   - owns Job hiring packet and Job hiring packet event persistence
+- `server/app/repositories/research_analysis_run_repository.py`
+  - owns `research_analysis_run` persistence and run-status queries for the bounded Stage H background-run path
 - `server/app/agents/graph.py`
   - owns one shared workspace-agent execution skeleton with module-specific compose steps
 - `server/app/workers/task_worker.py`
-  - is the only live ARQ worker bundle today
+  - is the only live ARQ worker bundle today and now also runs `run_research_analysis_run` for the bounded Stage H
+    background-run path
 - `server/app/api/routes/agents.py`
   - remains a scaffolded `501` surface until standalone agent runtime contracts exist
 

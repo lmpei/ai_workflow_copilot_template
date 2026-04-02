@@ -1214,7 +1214,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-f-18 project-home and research-workflow reset
 - Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
-- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `寮€濮嬪垎鏋恅 CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `瀵偓婵鍨庨弸鎭?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
 - Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
 - Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
 - Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
@@ -1400,4 +1400,18 @@ Append-only log. Add new entries at the bottom.
 - Impact: Stage H now has one second-wave task stack and one new primary active task, while the roadmap remains aligned
   to Wave 1 model-interface and built-in-tool learning rather than prematurely opening Wave 2 or Wave 3.
 - Related Task: `tasks/archive/stage-h/stage-h-06-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-01-091
+- Date: 2026-04-01
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-07 Research background analysis runs
+- Context: the first Stage H second-wave task needed to deepen the visible Research pilot without jumping into broader multi-agent orchestration. The pilot still behaved like a synchronous chat turn even though the roadmap now needed one bounded background-capable run path.
+- Choice: add one explicit `research_analysis_run` object plus API, queue, worker, and Research workbench surface; let Research launch bounded background analysis runs on top of the existing tool-assisted pilot; expose queued, running, completed, degraded, and failed run states; archive `stage-h-07`; and move the active task to bounded compaction and run-memory follow-through.
+- Why: the next learning step should make the existing visible pilot more durable than one chat response while staying honest and bounded on the same workspace surface instead of broadening into a new orchestration layer too early.
+- Impact: Research now has one persisted background-run path with visible status, answer delivery, tool-step summaries, and trace linkage, and the next active work can focus on compaction and replay discipline instead of on basic background execution wiring.
+- Related Task: `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
 - Supersedes:

@@ -762,6 +762,36 @@ export type ChatResponsePayload = {
   tool_steps: ChatToolStep[];
 };
 
+export type ResearchAnalysisRunStatus = "pending" | "running" | "completed" | "degraded" | "failed";
+
+export type ResearchAnalysisRunCreatePayload = {
+  question: string;
+  conversation_id?: string;
+  mode?: "research_tool_assisted";
+};
+
+export type ResearchAnalysisRunRecord = {
+  id: string;
+  workspace_id: string;
+  conversation_id: string;
+  created_by: string;
+  status: ResearchAnalysisRunStatus;
+  question: string;
+  mode: "research_tool_assisted";
+  answer?: string | null;
+  trace_id?: string | null;
+  sources: ChatSource[];
+  tool_steps: ChatToolStep[];
+  analysis_focus?: string | null;
+  search_query?: string | null;
+  degraded_reason?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  updated_at: string;
+};
+
 export type WorkspaceMetrics = {
   workspace_id: string;
   total_requests: number;

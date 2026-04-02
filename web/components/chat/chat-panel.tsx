@@ -2,8 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { isApiClientError, sendWorkspaceChat } from "../../lib/api";
-import type { ChatSource, ChatToolStep } from "../../lib/types";
+import {
+  createWorkspaceResearchAnalysisRun,
+  getResearchAnalysisRun,
+  isApiClientError,
+  listWorkspaceResearchAnalysisRuns,
+  sendWorkspaceChat,
+} from "../../lib/api";
+import type {
+  ChatSource,
+  ChatToolStep,
+  ResearchAnalysisRunRecord,
+  ResearchAnalysisRunStatus,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -23,11 +34,15 @@ type ChatPanelProps = {
     label: string;
     description: string;
   }>;
+  supportsBackgroundRuns?: boolean;
   onStatusChange?: (status: {
     entryCount: number;
     isSubmitting: boolean;
     currentDraft: string;
     lastTraceId: string | null;
+    latestAnalysisRunId: string | null;
+    latestAnalysisRunStatus: ResearchAnalysisRunStatus | null;
+    latestAnalysisRunQuestion: string | null;
   }) => void;
 };
 
@@ -39,6 +54,9 @@ type ChatEntry = {
   toolSteps: ChatToolStep[];
   sources: ChatSource[];
 };
+
+const RUN_TERMINAL_STATUSES: ResearchAnalysisRunStatus[] = ["completed", "degraded", "failed"];
+const RUN_ACTIVE_STATUSES: ResearchAnalysisRunStatus[] = ["pending", "running"];
 
 function PromptCard({
   active,
@@ -77,63 +95,104 @@ function PromptCard({
   );
 }
 
-function AnalysisProgress({ question, phaseIndex }: { question: string; phaseIndex: number }) {
-  const phases = ["读取当前资料", "调用分析代理", "整理阶段结论"];
+function StatusBadge({ status }: { status: ResearchAnalysisRunStatus }) {
+  const palette: Record<ResearchAnalysisRunStatus, { label: string; color: string; background: string }> = {
+    pending: { label: "Queued", color: "#92400e", background: "#fef3c7" },
+    running: { label: "Running", color: "#1d4ed8", background: "#dbeafe" },
+    completed: { label: "Completed", color: "#166534", background: "#dcfce7" },
+    degraded: { label: "Degraded", color: "#7c2d12", background: "#ffedd5" },
+    failed: { label: "Failed", color: "#b91c1c", background: "#fee2e2" },
+  };
+  const token = palette[status];
+  return (
+    <span
+      style={{
+        backgroundColor: token.background,
+        borderRadius: 999,
+        color: token.color,
+        display: "inline-flex",
+        fontSize: 12,
+        fontWeight: 800,
+        minHeight: 28,
+        padding: "0 10px",
+        alignItems: "center",
+      }}
+    >
+      {token.label}
+    </span>
+  );
+}
+
+function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
+  if (toolSteps.length === 0) {
+    return null;
+  }
 
   return (
     <section
       style={{
-        backgroundColor: "#eff6ff",
-        border: "1px solid #bfdbfe",
-        borderRadius: 18,
+        backgroundColor: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        borderRadius: 14,
         display: "grid",
-        gap: 12,
-        padding: 16,
+        gap: 10,
+        marginTop: 12,
+        padding: 12,
       }}
     >
-      <div style={{ display: "grid", gap: 4 }}>
-        <strong style={{ color: "#0f172a", fontSize: 16 }}>分析进行中</strong>
-        <p style={{ color: "#334155", lineHeight: 1.7, margin: 0 }}>当前问题：{question}</p>
-      </div>
+      <strong style={{ color: "#0f172a", fontSize: 14 }}>Tool steps in this pass</strong>
       <div style={{ display: "grid", gap: 8 }}>
-        {phases.map((phase, index) => {
-          const isCurrent = index === phaseIndex;
-          const isDone = index < phaseIndex;
-          return (
-            <div
-              key={phase}
-              style={{
-                alignItems: "center",
-                backgroundColor: "#ffffff",
-                border: `1px solid ${isCurrent ? "#60a5fa" : "#dbe4f0"}`,
-                borderRadius: 14,
-                color: "#0f172a",
-                display: "flex",
-                gap: 10,
-                padding: "10px 12px",
-              }}
-            >
-              <span
-                style={{
-                  backgroundColor: isDone ? "#15803d" : isCurrent ? "#2563eb" : "#cbd5e1",
-                  borderRadius: 999,
-                  color: "#ffffff",
-                  display: "inline-flex",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  justifyContent: "center",
-                  minWidth: 28,
-                  padding: "4px 8px",
-                }}
-              >
-                {isDone ? "已完成" : isCurrent ? "进行中" : "等待"}
-              </span>
-              <span>{phase}</span>
-            </div>
-          );
-        })}
+        {toolSteps.map((step, index) => (
+          <div
+            key={`${step.tool_name}-${index}`}
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #dbe4f0",
+              borderRadius: 12,
+              display: "grid",
+              gap: 4,
+              padding: 10,
+            }}
+          >
+            <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
+            {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
+          </div>
+        ))}
       </div>
     </section>
+  );
+}
+
+function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: string | null }) {
+  return (
+    <details style={{ marginTop: 12 }}>
+      <summary>View grounded sources</summary>
+      {sources.length === 0 ? (
+        <p style={{ color: "#64748b", marginBottom: 0 }}>No grounded sources were returned for this pass.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          {sources.map((source) => (
+            <div
+              key={`${traceId ?? "run"}-${source.chunk_id}`}
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: 14,
+                display: "grid",
+                gap: 6,
+                padding: 12,
+              }}
+            >
+              <strong>{source.document_title}</strong>
+              <div style={{ color: "#475569", fontSize: 13 }}>
+                Chunk {source.chunk_index} · Document {source.document_id}
+              </div>
+              <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </details>
   );
 }
 
@@ -150,7 +209,7 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
             padding: "16px 18px",
           }}
         >
-          <div style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>你的问题</div>
+          <div style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Your question</div>
           <div style={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{entry.question}</div>
         </div>
       </div>
@@ -190,103 +249,127 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
                   padding: "4px 10px",
                 }}
               >
-                工具辅助试点
+                Tool-assisted pilot
               </span>
             ) : null}
             <span style={{ color: "#64748b", fontSize: 12 }}>Trace ID: {entry.traceId}</span>
           </div>
           <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
-          {entry.toolSteps.length > 0 ? (
-            <section
-              style={{
-                backgroundColor: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: 14,
-                display: "grid",
-                gap: 10,
-                marginTop: 12,
-                padding: 12,
-              }}
-            >
-              <strong style={{ color: "#0f172a", fontSize: 14 }}>本轮工具辅助步骤</strong>
-              <div style={{ display: "grid", gap: 8 }}>
-                {entry.toolSteps.map((step, index) => (
-                  <div
-                    key={`${entry.traceId}-${step.tool_name}-${index}`}
-                    style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #dbe4f0",
-                      borderRadius: 12,
-                      display: "grid",
-                      gap: 4,
-                      padding: 10,
-                    }}
-                  >
-                    <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
-                    {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
-          <details style={{ marginTop: 12 }}>
-            <summary>查看资料引用</summary>
-            {entry.sources.length === 0 ? (
-              <p style={{ color: "#64748b", marginBottom: 0 }}>这次没有返回可引用的资料来源。</p>
-            ) : (
-              <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-                {entry.sources.map((source) => (
-                  <div
-                    key={`${entry.traceId}-${source.chunk_id}`}
-                    style={{
-                      backgroundColor: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: 14,
-                      display: "grid",
-                      gap: 6,
-                      padding: 12,
-                    }}
-                  >
-                    <strong>{source.document_title}</strong>
-                    <div style={{ color: "#475569", fontSize: 13 }}>
-                      文档片段 {source.chunk_index} · 文档 ID {source.document_id}
-                    </div>
-                    <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </details>
+          <ToolSteps toolSteps={entry.toolSteps} />
+          <SourceList sources={entry.sources} traceId={entry.traceId} />
         </div>
       </div>
     </div>
   );
 }
 
+function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
+  const outcomeCopy: Record<ResearchAnalysisRunStatus, string> = {
+    pending: "The run has been queued and will start shortly.",
+    running: "The assistant is reading connected material, planning the next step, and synthesizing a result.",
+    completed: "The bounded analysis pass completed successfully.",
+    degraded: "The pass completed honestly, but the evidence path was weak and has been called out.",
+    failed: "The background analysis run failed before it could complete.",
+  };
+
+  return (
+    <section
+      style={{
+        backgroundColor: "#ffffff",
+        border: "1px solid #dbe4f0",
+        borderRadius: 20,
+        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
+        display: "grid",
+        gap: 14,
+        padding: 18,
+      }}
+    >
+      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
+        <div style={{ display: "grid", gap: 4 }}>
+          <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
+            Background analysis run
+          </span>
+          <strong style={{ color: "#0f172a", lineHeight: 1.6 }}>{run.question}</strong>
+        </div>
+        <StatusBadge status={run.status} />
+      </div>
+
+      <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{outcomeCopy[run.status]}</p>
+
+      <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+        <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
+          <span style={{ color: "#64748b", fontSize: 12 }}>Analysis focus</span>
+          <strong style={{ color: "#0f172a" }}>{run.analysis_focus ?? "Waiting for the planner to set focus"}</strong>
+        </div>
+        <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
+          <span style={{ color: "#64748b", fontSize: 12 }}>Search query</span>
+          <strong style={{ color: "#0f172a" }}>{run.search_query ?? "Not available yet"}</strong>
+        </div>
+      </div>
+
+      {run.trace_id ? <div style={{ color: "#64748b", fontSize: 13 }}>Trace ID: {run.trace_id}</div> : null}
+      {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>Degraded reason: {run.degraded_reason}</div> : null}
+      {run.error_message ? <div style={{ color: "#b91c1c", fontSize: 13 }}>Error: {run.error_message}</div> : null}
+
+      {run.answer ? (
+        <div
+          style={{
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            color: "#1e293b",
+            lineHeight: 1.8,
+            padding: 14,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {run.answer}
+        </div>
+      ) : null}
+
+      <ToolSteps toolSteps={run.tool_steps} />
+      <SourceList sources={run.sources} traceId={run.trace_id ?? null} />
+    </section>
+  );
+}
+
+function mergeRuns(
+  currentRuns: ResearchAnalysisRunRecord[],
+  incomingRuns: ResearchAnalysisRunRecord[],
+): ResearchAnalysisRunRecord[] {
+  const byId = new Map<string, ResearchAnalysisRunRecord>();
+  [...currentRuns, ...incomingRuns].forEach((run) => {
+    byId.set(run.id, run);
+  });
+  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
+}
+
 export default function ChatPanel({
   workspaceId,
   assistantLabel = "Research Assistant",
-  workflowLabel = "研究流程",
-  introTitle = "从一个研究问题开始",
-  introBody = "点一个快捷提示词，或直接输入问题，然后开始分析。",
-  placeholder = "例如：请基于当前资料总结最重要的市场信号，并指出还缺哪些证据才能形成正式结论。",
+  workflowLabel = "Research workflow",
+  introTitle = "Start from one research question",
+  introBody = "Pick one prompt or type your own question, then start the analysis.",
+  placeholder = "For example: summarize the strongest market signals in the current material and tell me what evidence is still missing before we can make a formal conclusion.",
   suggestedPrompts,
-  primaryActionLabel = "开始分析",
-  outputTitle = "分析过程与结论",
+  primaryActionLabel = "Start analysis",
+  outputTitle = "Analysis flow and conclusions",
   modes,
+  supportsBackgroundRuns = false,
   onStatusChange,
 }: ChatPanelProps) {
   const { session, isReady } = useAuthSession();
   const [question, setQuestion] = useState("");
   const [entries, setEntries] = useState<ChatEntry[]>([]);
+  const [analysisRuns, setAnalysisRuns] = useState<ResearchAnalysisRunRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [phaseIndex, setPhaseIndex] = useState(0);
+  const [isLoadingRuns, setIsLoadingRuns] = useState(false);
   const availableModes = useMemo(
     () =>
       modes && modes.length > 0
         ? modes
-        : [{ value: "rag" as const, label: "普通分析", description: "直接基于当前资料进行 grounded 分析。" }],
+        : [{ value: "rag" as const, label: "Standard analysis", description: "Use the current material directly for one grounded analysis pass." }],
     [modes],
   );
   const [mode, setMode] = useState<"rag" | "research_tool_assisted">(availableModes[0]?.value ?? "rag");
@@ -296,9 +379,9 @@ export default function ChatPanel({
       suggestedPrompts && suggestedPrompts.length > 0
         ? suggestedPrompts
         : [
-            "请先总结当前资料里最重要的研究发现。",
-            "请告诉我现在最缺哪些资料，才能继续往下分析。",
-            "请判断这批资料里有哪些结论还不够稳，需要进一步核对。",
+            "Summarize the most important findings in the current material.",
+            "Tell me which missing material would unblock the next research step.",
+            "Point out which conclusions are still weak and need more verification.",
           ],
     [suggestedPrompts],
   );
@@ -308,6 +391,13 @@ export default function ChatPanel({
     [availableModes, mode],
   );
 
+  const activeRuns = useMemo(
+    () => analysisRuns.filter((run) => RUN_ACTIVE_STATUSES.includes(run.status)),
+    [analysisRuns],
+  );
+  const latestRun = analysisRuns[0] ?? null;
+  const lastTraceId = latestRun?.trace_id ?? entries.at(-1)?.traceId ?? null;
+
   useEffect(() => {
     if (!availableModes.some((candidate) => candidate.value === mode)) {
       setMode(availableModes[0]?.value ?? "rag");
@@ -316,26 +406,78 @@ export default function ChatPanel({
 
   useEffect(() => {
     onStatusChange?.({
-      entryCount: entries.length,
-      isSubmitting,
+      entryCount: entries.length + analysisRuns.length,
+      isSubmitting: isSubmitting || activeRuns.length > 0,
       currentDraft: question,
-      lastTraceId: entries.at(-1)?.traceId ?? null,
+      lastTraceId,
+      latestAnalysisRunId: latestRun?.id ?? null,
+      latestAnalysisRunStatus: latestRun?.status ?? null,
+      latestAnalysisRunQuestion: latestRun?.question ?? null,
     });
-  }, [entries, isSubmitting, onStatusChange, question]);
+  }, [activeRuns.length, analysisRuns.length, entries.length, isSubmitting, lastTraceId, latestRun, onStatusChange, question]);
 
   useEffect(() => {
-    if (!isSubmitting) {
-      setPhaseIndex(0);
+    if (!session || !supportsBackgroundRuns) {
+      setAnalysisRuns([]);
       return;
     }
 
-    setPhaseIndex(0);
-    const timer = window.setInterval(() => {
-      setPhaseIndex((current) => (current >= 2 ? current : current + 1));
-    }, 900);
+    let cancelled = false;
+    const loadRuns = async () => {
+      setIsLoadingRuns(true);
+      try {
+        const runs = await listWorkspaceResearchAnalysisRuns(session.accessToken, workspaceId, 8);
+        if (!cancelled) {
+          setAnalysisRuns(runs);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(isApiClientError(error) ? error.message : "Unable to load background analysis runs.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingRuns(false);
+        }
+      }
+    };
 
-    return () => window.clearInterval(timer);
-  }, [isSubmitting]);
+    void loadRuns();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, supportsBackgroundRuns, workspaceId]);
+
+  useEffect(() => {
+    if (!session || activeRuns.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    const refreshActiveRuns = async () => {
+      try {
+        const refreshedRuns = await Promise.all(
+          activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)),
+        );
+        if (!cancelled) {
+          setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, refreshedRuns));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(isApiClientError(error) ? error.message : "Unable to refresh the background analysis run.");
+        }
+      }
+    };
+
+    void refreshActiveRuns();
+    const timer = window.setInterval(() => {
+      void refreshActiveRuns();
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [activeRuns, session]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -344,39 +486,48 @@ export default function ChatPanel({
       return;
     }
 
+    const trimmedQuestion = question.trim();
     setIsSubmitting(true);
     setErrorMessage(null);
 
     try {
-      const trimmedQuestion = question.trim();
-      const response = await sendWorkspaceChat(session.accessToken, workspaceId, {
-        question: trimmedQuestion,
-        mode,
-      });
-      setEntries((currentEntries) => [
-        ...currentEntries,
-        {
+      if (mode === "research_tool_assisted" && supportsBackgroundRuns) {
+        const run = await createWorkspaceResearchAnalysisRun(session.accessToken, workspaceId, {
           question: trimmedQuestion,
-          answer: response.answer,
-          traceId: response.trace_id,
-          mode: response.mode,
-          toolSteps: response.tool_steps,
-          sources: response.sources,
-        },
-      ]);
+          mode: "research_tool_assisted",
+        });
+        setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, [run]));
+      } else {
+        const response = await sendWorkspaceChat(session.accessToken, workspaceId, {
+          question: trimmedQuestion,
+          mode,
+        });
+        setEntries((currentEntries) => [
+          ...currentEntries,
+          {
+            question: trimmedQuestion,
+            answer: response.answer,
+            traceId: response.trace_id,
+            mode: response.mode,
+            toolSteps: response.tool_steps,
+            sources: response.sources,
+          },
+        ]);
+      }
+      setQuestion("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "无法提交分析请求。");
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to start the analysis.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="研究流程">正在加载会话...</SectionCard>;
+    return <SectionCard title="Research workflow">Loading session...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="登录后才能开始研究流程。" />;
+    return <AuthRequired description="Sign in before starting a research workflow." />;
   }
 
   return (
@@ -395,7 +546,7 @@ export default function ChatPanel({
       <section style={{ display: "grid", gap: 10 }}>
         <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
           <span style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em" }}>{workflowLabel}</span>
-          <span style={{ color: "#64748b", fontSize: 13 }}>快捷提示词可点击并插入输入框</span>
+          <span style={{ color: "#64748b", fontSize: 13 }}>Prompt cards are clickable and insert directly into the draft box.</span>
         </div>
         {availableModes.length > 1 ? (
           <div style={{ display: "grid", gap: 10 }}>
@@ -439,7 +590,7 @@ export default function ChatPanel({
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>输入当前问题</span>
+          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>Current research question</span>
           <textarea
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={placeholder}
@@ -472,7 +623,7 @@ export default function ChatPanel({
             }}
             type="submit"
           >
-            {isSubmitting ? "分析中..." : primaryActionLabel}
+            {isSubmitting ? "Starting..." : primaryActionLabel}
           </button>
         </div>
       </form>
@@ -491,11 +642,11 @@ export default function ChatPanel({
         <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
           <strong style={{ color: "#0f172a", fontSize: 18 }}>{outputTitle}</strong>
           <span style={{ color: "#64748b", fontSize: 13 }}>
-            {entries.length > 0 ? `已完成 ${entries.length} 次分析` : "尚未开始分析"}
+            {entries.length + analysisRuns.length > 0 ? `${entries.length + analysisRuns.length} passes recorded` : "No analysis pass yet"}
           </span>
         </div>
 
-        {entries.length === 0 && !isSubmitting ? (
+        {entries.length === 0 && analysisRuns.length === 0 && !isSubmitting && !isLoadingRuns ? (
           <div
             style={{
               alignItems: "center",
@@ -507,11 +658,34 @@ export default function ChatPanel({
               padding: 8,
             }}
           >
-            开始分析后，这里会持续显示分析进度、assistant 回复、trace 结果与资料引用。
+            Start one analysis pass. This area will show background run status, assistant conclusions, trace links, and grounded sources.
           </div>
         ) : null}
 
-        {isSubmitting ? <AnalysisProgress phaseIndex={phaseIndex} question={question.trim()} /> : null}
+        {isSubmitting ? (
+          <section
+            style={{
+              backgroundColor: "#eff6ff",
+              border: "1px solid #bfdbfe",
+              borderRadius: 18,
+              color: "#0f172a",
+              display: "grid",
+              gap: 6,
+              padding: 16,
+            }}
+          >
+            <strong>Submitting the analysis request</strong>
+            <span style={{ color: "#475569" }}>The run will appear here as soon as the server accepts it.</span>
+          </section>
+        ) : null}
+
+        {analysisRuns.length > 0 ? (
+          <div style={{ display: "grid", gap: 16 }}>
+            {analysisRuns.map((run) => (
+              <AnalysisRunCard key={run.id} run={run} />
+            ))}
+          </div>
+        ) : null}
 
         {entries.length > 0 ? (
           <div style={{ display: "grid", gap: 20 }}>

@@ -169,6 +169,8 @@ The current implemented platform increment includes:
   workspace surface as a mode that can show inline tool-step summaries instead of acting like ordinary grounded chat
 - one bounded honesty baseline around that pilot, where recent traces surface planning and degraded-path detail and the
   backend has a regression-facing evaluation rule for visible tool steps plus honest no-source degradation
+- one explicit Research background analysis run path that can persist run state beyond a single chat turn while keeping
+  answer delivery, tool-step visibility, and trace linkage on the same workspace surface
 
 The repository does not yet implement:
 
@@ -192,9 +194,10 @@ and closed.
 The active formal planning unit is `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented
 in `docs/prd/STAGE_H_PLAN.md`.
 
-The first Stage H task wave is complete, and the second Stage H task wave is now defined to deepen the bounded
-Research-first capability path through background-capable analysis runs, bounded context compaction, and tool-aware
-replay/regression follow-through before the roadmap opens connector or multi-agent work.
+The first Stage H task wave is complete, and the second Stage H task wave is now underway. Its first step is complete:
+Research can launch one explicit background analysis run. The remaining second-wave work now deepens that bounded
+Research-first capability path through context compaction, run memory, and tool-aware replay/regression follow-through
+before the roadmap opens connector or multi-agent work.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

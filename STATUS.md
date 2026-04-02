@@ -24,13 +24,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the second bounded Stage H capability wave by deepening the Research-first pilot into background-capable
+- execute the second bounded Stage H capability wave by deepening the Research-first pilot into durable background
   analysis runs, bounded conversation-state compaction, and replayable review baselines while the public product hosts
   remain stable
 
 ## Active Task
 
-- `tasks/stage-h-07-research-background-analysis-runs.md`
+- `tasks/stage-h-08-research-context-compaction-and-run-memory.md`
 
 ## Verification Status
 
@@ -38,8 +38,9 @@ Current state only. Keep this file short, current, and action-oriented.
   shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
   outside this repository. Stage H first wave is complete: the shared model-interface foundation is in place, one
   bounded Research tool-assisted chat pilot is live behind the Research workspace surface, and that pilot now has
-  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave is now
-  defined to deepen that Research path before any connector or multi-agent expansion.
+  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave has now begun:
+  Research can launch one explicit background analysis run with visible queued, running, completed, degraded, or failed
+  state, and that run writes its answer, tool steps, and trace linkage back into the same workspace flow.
 - Last Verified At: 2026-04-01
 
 ## Current Blockers
@@ -57,17 +58,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how far the second Stage H wave should go on background execution before it starts to look like a broader agent
-  orchestration effort
-- which compaction or replay signals must be visible to users versus remaining operator-only during the bounded
-  Research-first deepening pass
+- how much of run-state compaction should remain visible to users versus staying operator-only in the second Stage H wave
+- which run-memory summary fields are durable enough to support later replay/regression work without drifting into a
+  broader agent-orchestration surface too early
 
 ## Ready Now
 
-1. implement `stage-h-07` to move the visible Research pilot toward explicit background-capable analysis runs
+1. implement `stage-h-08` to add bounded context compaction and run memory on top of the new Research background-run path
 2. keep the live `weave` and `api` hosts stable while the second capability wave deepens Research instead of broadening
    prematurely
-3. preserve the current honest pilot visibility baseline while later Stage H tasks add compaction and replay depth
+3. preserve the current honest pilot visibility baseline while `stage-h-09` adds replay/regression depth
 
 ## Parked / Later
 
@@ -77,15 +77,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-h/stage-h-06-wave-two-planning.md`
+- `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
 
 ## Recent Decisions
 
-- `DEC-2026-03-31-078` complete `stage-f-16`, finish the final Stage F visual redesign and cleanup pass, archive the
-  task, and return the stage to human closeout review
-- `DEC-2026-03-31-079` complete `stage-f-17`, tighten workbench density, remove repeated explanation, add drag-and-drop
+- `DEC-2026-04-01-079` complete `stage-f-17`, tighten workbench density, remove repeated explanation, add drag-and-drop
   plus click-to-select upload, archive the task, and return Stage F to final closeout review
-- `DEC-2026-03-31-080` complete `stage-f-18`, reset `/app` into a denser project home and reshape the main workspace
+- `DEC-2026-04-01-080` complete `stage-f-18`, reset `/app` into a denser project home and reshape the main workspace
   into a clearer research-workflow page, archive the task, and return Stage F to final closeout review
 - `DEC-2026-04-01-081` close Stage F after the final research-workflow reset and open Stage G as the new bounded unit
   for product-only subdomain deployment adaptation
@@ -110,3 +108,5 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-01-090` define the second Stage H task wave as Research-first background analysis runs, bounded
   conversation-state compaction, and tool-aware replay/regression follow-through instead of broadening into connector
   or multi-agent work yet
+- `DEC-2026-04-01-091` complete `stage-h-07`, add one explicit Research background analysis run path with visible run
+  status and trace linkage, archive the task, and move Stage H to bounded compaction and run-memory follow-through

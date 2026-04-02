@@ -1,10 +1,15 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
+import os
+from pathlib import Path
+import tempfile
 from threading import Lock
+from uuid import uuid4
 
 from sqlalchemy import Engine, create_engine, inspect
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.engine import make_url
+from sqlalchemy.orm import Session, close_all_sessions, sessionmaker
 
 from app.core.config import get_settings
 from app.models import Base
@@ -92,6 +97,7 @@ def _validate_database_schema() -> None:
 def ensure_database_ready() -> None:
     url = get_database_config().url
     if url in _INITIALIZED_URLS:
+        _validate_database_schema()
         return
 
     with _LOCK:
@@ -129,10 +135,31 @@ def reset_database_for_tests() -> None:
     global _ENGINE
     global _SESSION_FACTORY
 
-    engine = get_engine()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    _INITIALIZED_URLS.discard(get_database_config().url)
-    engine.dispose()
+    close_all_sessions()
+    if _ENGINE is not None:
+        _ENGINE.dispose()
     _ENGINE = None
     _SESSION_FACTORY = None
+
+    config = get_database_config()
+    if config.url.startswith("sqlite"):
+        sqlite_path = make_url(config.url).database
+        if sqlite_path and sqlite_path != ":memory:":
+            temp_dir = Path(tempfile.gettempdir()) / "ai_workflow_copilot_template_tests"
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            fresh_file = temp_dir / f"test_app_{uuid4().hex}.db"
+            os.environ["DATABASE_URL"] = f"sqlite:///{fresh_file.resolve().as_posix()}"
+            get_settings.cache_clear()
+            config = get_database_config()
+
+    engine = get_engine()
+    engine.dispose()
+
+    if not config.url.startswith("sqlite"):
+        Base.metadata.drop_all(bind=engine)
+
+    _INITIALIZED_URLS.discard(config.url)
+    _ENGINE = None
+    _SESSION_FACTORY = None
+    Base.metadata.create_all(bind=get_engine())
+    _INITIALIZED_URLS.add(config.url)

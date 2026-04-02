@@ -11,6 +11,7 @@ from app.models.eval_run import EvalRun
 from app.models.job_hiring_packet import JobHiringPacket
 from app.models.job_hiring_packet_event import JobHiringPacketEvent
 from app.models.message import Message
+from app.models.research_analysis_run import ResearchAnalysisRun
 from app.models.research_asset import ResearchAsset
 from app.models.research_asset_revision import ResearchAssetRevision
 from app.models.support_case import SupportCase
@@ -36,6 +37,7 @@ __all__ = [
     "JobHiringPacket",
     "JobHiringPacketEvent",
     "Message",
+    "ResearchAnalysisRun",
     "ResearchAsset",
     "ResearchAssetRevision",
     "SupportCase",

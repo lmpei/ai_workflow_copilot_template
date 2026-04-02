@@ -10,6 +10,7 @@ import type {
   JobHiringPacketContinuationDraft,
   JobTaskType,
   ModuleType,
+  ResearchAnalysisRunStatus,
   SupportCaseContinuationDraft,
   SupportTaskType,
   Workspace,
@@ -88,6 +89,9 @@ type ConversationStatusSummary = {
   isSubmitting: boolean;
   currentDraft: string;
   lastTraceId: string | null;
+  latestAnalysisRunId: string | null;
+  latestAnalysisRunStatus: ResearchAnalysisRunStatus | null;
+  latestAnalysisRunQuestion: string | null;
 };
 
 const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
@@ -167,7 +171,7 @@ function getFocusMeta(workspace: Workspace | null): FocusMeta {
         {
           value: "research_tool_assisted",
           label: "Tool-assisted pilot",
-          description: "Inspect documents, plan a search, and show a more explicit research-analysis flow.",
+          description: "Create a background analysis run, inspect the tool steps, and keep the research workflow visible while it executes.",
         },
       ],
     };
@@ -572,6 +576,9 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
     isSubmitting: false,
     currentDraft: "",
     lastTraceId: null,
+    latestAnalysisRunId: null,
+    latestAnalysisRunStatus: null,
+    latestAnalysisRunQuestion: null,
   });
   const [hasOpenedFormalOutput, setHasOpenedFormalOutput] = useState(false);
 
@@ -611,6 +618,21 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
   );
 
   const stageStatus = useMemo(() => {
+    if (conversationStatus.latestAnalysisRunStatus === "pending") {
+      return "Background analysis queued";
+    }
+    if (conversationStatus.latestAnalysisRunStatus === "running") {
+      return "Background analysis running";
+    }
+    if (conversationStatus.latestAnalysisRunStatus === "degraded") {
+      return "Analysis completed with honest degradation";
+    }
+    if (conversationStatus.latestAnalysisRunStatus === "completed") {
+      return "Background analysis completed";
+    }
+    if (conversationStatus.latestAnalysisRunStatus === "failed") {
+      return "Background analysis failed";
+    }
     if (conversationStatus.isSubmitting) {
       return "Analysis in progress";
     }
@@ -621,25 +643,32 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
       return "Material ready for analysis";
     }
     return "Waiting for material";
-  }, [conversationStatus.entryCount, conversationStatus.isSubmitting, documentStatus.totalCount]);
+  }, [conversationStatus.entryCount, conversationStatus.isSubmitting, conversationStatus.latestAnalysisRunStatus, documentStatus.totalCount]);
 
   const currentTaskLabel = useMemo(() => {
+    const latestRunQuestion = conversationStatus.latestAnalysisRunQuestion?.trim();
+    if (latestRunQuestion) {
+      return latestRunQuestion.length > 54 ? `${latestRunQuestion.slice(0, 54)}...` : latestRunQuestion;
+    }
     const draft = conversationStatus.currentDraft.trim();
     if (!draft) {
       return focusMeta.defaultTaskLabel;
     }
     return draft.length > 54 ? `${draft.slice(0, 54)}...` : draft;
-  }, [conversationStatus.currentDraft, focusMeta.defaultTaskLabel]);
+  }, [conversationStatus.currentDraft, conversationStatus.latestAnalysisRunQuestion, focusMeta.defaultTaskLabel]);
 
   const outputStatus = useMemo(() => {
     if (hasOpenedFormalOutput) {
       return "Formal output surface opened";
     }
+    if (conversationStatus.latestAnalysisRunStatus === "completed" || conversationStatus.latestAnalysisRunStatus === "degraded") {
+      return "Ready to package the latest background run";
+    }
     if (conversationStatus.entryCount > 0) {
       return "Ready to package a formal output";
     }
     return "Complete one analysis pass first";
-  }, [conversationStatus.entryCount, hasOpenedFormalOutput]);
+  }, [conversationStatus.entryCount, conversationStatus.latestAnalysisRunStatus, hasOpenedFormalOutput]);
 
   const setSurface = (surface: SupportingSurface) => {
     setSupportingSurface(surface);
@@ -736,6 +765,7 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
           primaryActionLabel="Start analysis"
           suggestedPrompts={focusMeta.promptSuggestions}
           modes={focusMeta.chatModes}
+          supportsBackgroundRuns={workspace?.module_type === "research"}
           workflowLabel={focusMeta.workflowLabel}
           workspaceId={workspaceId}
         />
@@ -761,6 +791,9 @@ export default function WorkspaceWorkbenchPanel({ workspaceId, initialPanel }: W
               <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
                 <span style={{ color: "#64748b", fontSize: 12 }}>Trace state</span>
                 <strong style={{ color: "#0f172a" }}>{stageStatus}</strong>
+                {conversationStatus.latestAnalysisRunId ? (
+                  <span style={{ color: "#475569", fontSize: 13 }}>Latest run: {conversationStatus.latestAnalysisRunId}</span>
+                ) : null}
                 {conversationStatus.lastTraceId ? (
                   <span style={{ color: "#475569", fontSize: 13 }}>Latest trace: {conversationStatus.lastTraceId}</span>
                 ) : (

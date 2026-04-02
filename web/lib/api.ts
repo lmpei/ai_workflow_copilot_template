@@ -16,6 +16,8 @@ import type {
   PublicDemoTemplateRecord,
   PublicDemoWorkspaceSeedRecord,
   RegisterRequestPayload,
+  ResearchAnalysisRunCreatePayload,
+  ResearchAnalysisRunRecord,
   ResearchAssetComparisonRecord,
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
@@ -273,6 +275,39 @@ export async function sendWorkspaceChat(
   );
 }
 
+export async function createWorkspaceResearchAnalysisRun(
+  accessToken: string,
+  workspaceId: string,
+  payload: ResearchAnalysisRunCreatePayload,
+): Promise<ResearchAnalysisRunRecord> {
+  return fetchBrowserApiJson<ResearchAnalysisRunRecord>(
+    `/workspaces/${workspaceId}/research-analysis-runs`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function listWorkspaceResearchAnalysisRuns(
+  accessToken: string,
+  workspaceId: string,
+  limit = 8,
+): Promise<ResearchAnalysisRunRecord[]> {
+  return fetchBrowserApiJson<ResearchAnalysisRunRecord[]>(
+    `/workspaces/${workspaceId}/research-analysis-runs?limit=${limit}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getResearchAnalysisRun(
+  accessToken: string,
+  runId: string,
+): Promise<ResearchAnalysisRunRecord> {
+  return fetchBrowserApiJson<ResearchAnalysisRunRecord>(`/research-analysis-runs/${runId}`, {}, accessToken);
+}
 export async function getWorkspaceMetrics(
   accessToken: string,
   workspaceId: string,
