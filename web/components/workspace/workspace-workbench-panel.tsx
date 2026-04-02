@@ -51,7 +51,7 @@ type SupportingSurfaceMeta = {
 };
 
 type ChatModeOption = {
-  value: "rag" | "research_tool_assisted";
+  value: "rag" | "research_tool_assisted" | "research_external_context";
   label: string;
   description: string;
 };
@@ -171,7 +171,12 @@ function getFocusMeta(workspace: Workspace | null): FocusMeta {
         {
           value: "research_tool_assisted",
           label: "Tool-assisted pilot",
-          description: "Create a background analysis run, inspect the tool steps, and keep the research workflow visible while it executes.",
+          description: "Create a background analysis run, inspect the internal tool steps, and keep the research workflow visible while it executes.",
+        },
+        {
+          value: "research_external_context",
+          label: "External context pilot",
+          description: "Blend workspace material with approved external context, while keeping the two evidence paths visibly distinct.",
         },
       ],
     };

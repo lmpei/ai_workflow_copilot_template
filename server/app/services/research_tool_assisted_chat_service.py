@@ -194,6 +194,7 @@ def _serialize_sources(matches: list[SearchDocumentMatch]) -> list[SourceReferen
             document_title=match.document_title,
             chunk_index=match.chunk_index,
             snippet=match.snippet,
+            source_kind="workspace_document",
         )
         for match in matches
     ]

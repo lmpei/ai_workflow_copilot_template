@@ -56,9 +56,9 @@ The active work is now Stage I. Stage I opens the next bounded roadmap wave: mov
 one connector and context-plane pilot, keep Research as the reference workflow, and add explicit consent and degraded
 behavior before any broader connector surface or multi-agent work begins.
 
-The first Stage I foundation is now in place as well: the backend has one bounded external-context connector contract
-and one workspace-level connector consent boundary for Research workspaces, so the next step can add one real external
-context pilot without inventing ad hoc permission rules.
+The first Stage I foundation is now in place as well: the backend has one bounded external-context connector contract and one workspace-level connector consent boundary for Research workspaces.
+
+The first bounded Stage I pilot is now also in place: Research workspaces can switch to one explicit external-context mode that reuses the existing tool-assisted analysis path, checks workspace consent first, and then either blends approved external context with internal workspace evidence or degrades honestly when consent is missing, the connector is unavailable, or no useful external matches are found.
 
 
 ## Current Phase

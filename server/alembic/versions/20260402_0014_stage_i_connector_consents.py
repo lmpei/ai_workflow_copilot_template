@@ -1,7 +1,7 @@
 """Add Stage I workspace connector consent table.
 
-Revision ID: 20260402_0013
-Revises: 20260401_0012
+Revision ID: 20260402_0014
+Revises: 20260402_0013
 Create Date: 2026-04-02
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260402_0013"
-down_revision = "20260401_0012"
+revision = "20260402_0014"
+down_revision = "20260402_0013"
 branch_labels = None
 depends_on = None
 
@@ -62,3 +62,4 @@ def downgrade() -> None:
     op.drop_index("ix_workspace_connector_consents_connector_id", table_name="workspace_connector_consents")
     op.drop_index("ix_workspace_connector_consents_workspace_id", table_name="workspace_connector_consents")
     op.drop_table("workspace_connector_consents")
+

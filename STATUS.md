@@ -31,7 +31,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-i-03-research-external-context-pilot.md`
+- `tasks/stage-i-04-connector-trace-and-consent-visibility.md`
 
 ## Verification Status
 
@@ -41,9 +41,11 @@ Current state only. Keep this file short, current, and action-oriented.
   one bounded Research tool-assisted path is live, that path has explicit background analysis runs plus compact resumed
   memory, and recent terminal runs now surface one operator-facing regression review baseline. Stage I is now active as
   the next bounded roadmap step: move from internal-only tools toward one connector or context-plane pilot with
-  explicit consent, honest degraded behavior, and visible trace boundaries. The first Stage I foundation is now in
+  explicit consent, honest degraded behavior, and visible trace boundaries. The first two Stage I steps are now in
   place: the backend has one bounded external-context connector contract plus one workspace-level consent record and API
-  surface before any actual external-context call path is enabled.
+  surface, and the main Research surface now has one explicit external-context pilot that can blend approved external
+  context with internal workspace material while keeping the two evidence paths visibly distinct and honest when consent
+  or connector availability is missing.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -61,14 +63,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which single external context source should back the first Research pilot without creating premature connector sprawl
+- how connector consent and degraded outcomes should appear in the operator-facing trace and review surfaces before broader connector work opens
 
 ## Ready Now
 
-1. implement `stage-i-03` to make one Research path use approved external context while keeping internal retrieval and
-   connector-backed context visibly distinct
-2. keep the live `weave` and `api` hosts stable while Stage I extends the Research-first pilot toward external context
-3. preserve the current trace and degraded-path honesty baseline as connector capabilities are introduced
+1. implement `stage-i-04` to make connector consent state, usage, and degraded outcomes visible in trace and review surfaces
+2. keep the live `weave` and `api` hosts stable while the external-context pilot gains operator-facing visibility
+3. preserve the current distinction between internal workspace evidence and approved external context as trace surfaces deepen
 
 ## Parked / Later
 
@@ -78,7 +79,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md`
+- `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md`
 
 ## Recent Decisions
 
@@ -121,3 +122,5 @@ Current state only. Keep this file short, current, and action-oriented.
   pilot, and one connector trace/consent visibility follow-through
 - `DEC-2026-04-02-096` complete `stage-i-02`, add one bounded connector contract plus one workspace-level consent API,
   archive the task, and move Stage I to the visible Research external-context pilot
+- `DEC-2026-04-02-097` complete `stage-i-03`, add one bounded Research external-context pilot on top of the Stage I
+  connector consent boundary, archive the task, and move Stage I to connector trace and consent visibility follow-through

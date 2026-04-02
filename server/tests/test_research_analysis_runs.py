@@ -11,6 +11,7 @@ from app.models.research_analysis_run import ResearchAnalysisRun
 from app.models.trace import Trace
 from app.schemas.chat import ChatToolStep, SourceReference
 from app.services import research_analysis_run_service
+from app.services.research_external_context_service import ResearchExternalContextChatResult
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
     ToolAssistedResearchChatResult,
@@ -442,3 +443,100 @@ def test_list_workspace_research_analysis_run_review_returns_regression_summary(
     assert payload["items"][0]["run_id"] == run_id
     assert payload["items"][0]["passed"] is True
     assert payload["items"][0]["issues"] == []
+
+def test_run_research_analysis_run_execution_supports_external_context_mode(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    async def fake_enqueue(run_id: str) -> str:
+        return "job-1"
+
+    monkeypatch.setattr(research_analysis_run_service, "enqueue_research_analysis_run_execution", fake_enqueue)
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs",
+        json={
+            "question": "Combine the workspace signal with outside context.",
+            "mode": "research_external_context",
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    run_id = create_response.json()["id"]
+
+    def fake_run_research_external_context_chat(
+        *,
+        workspace_id: str,
+        user_id: str,
+        question: str,
+        prior_memory: ResearchRunMemoryContext | None = None,
+    ) -> ResearchExternalContextChatResult:
+        assert prior_memory is None
+        return ResearchExternalContextChatResult(
+            answer="Workspace evidence aligns with the approved external market note.",
+            prompt="external run prompt",
+            sources=[
+                SourceReference(
+                    document_id="doc-1",
+                    chunk_id=str(uuid4()),
+                    document_title="workspace-notes.txt",
+                    chunk_index=0,
+                    snippet="Workspace evidence snippet.",
+                    source_kind="workspace_document",
+                ),
+                SourceReference(
+                    document_id="external:market-cost-pressure",
+                    chunk_id="external:market-cost-pressure",
+                    document_title="Analyst note: margin pressure and price discipline",
+                    chunk_index=0,
+                    snippet="External analyst context.",
+                    source_kind="external_context",
+                ),
+            ],
+            tool_steps=[
+                ChatToolStep(
+                    tool_name="research_external_context",
+                    summary="Found one approved external context match.",
+                )
+            ],
+            token_input=22,
+            token_output=11,
+            analysis_focus="Compare workspace evidence with external market context",
+            search_query="pricing pressure",
+            degraded_reason=None,
+            connector_consent_state="granted",
+            external_context_used=True,
+            external_match_count=1,
+        )
+
+    monkeypatch.setattr(
+        research_analysis_run_service,
+        "run_research_external_context_chat",
+        fake_run_research_external_context_chat,
+    )
+
+    execution_result = research_analysis_run_service.run_research_analysis_run_execution(run_id)
+    assert execution_result["status"] == "completed"
+
+    get_response = client.get(
+        f"/api/v1/research-analysis-runs/{run_id}",
+        headers=headers,
+    )
+    assert get_response.status_code == 200
+    payload = get_response.json()
+    assert payload["mode"] == "research_external_context"
+    assert payload["status"] == "completed"
+    assert payload["sources"][0]["source_kind"] == "workspace_document"
+    assert payload["sources"][1]["source_kind"] == "external_context"
+
+    with session_scope() as session:
+        traces = list(session.scalars(select(Trace)))
+
+    assert len(traces) == 1
+    assert traces[0].trace_type == "research_external_context_run"
+    assert traces[0].response_json["connector_id"] == "research_external_context"
+    assert traces[0].response_json["external_context_used"] is True

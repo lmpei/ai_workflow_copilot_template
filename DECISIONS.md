@@ -1214,7 +1214,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-f-18 project-home and research-workflow reset
 - Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
-- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `瀵偓婵鍨庨弸鎭?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `鐎殿喒鍋撳┑顔碱儏閸ㄥ酣寮搁幁?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
 - Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
 - Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
 - Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
@@ -1492,4 +1492,18 @@ Append-only log. Add new entries at the bottom.
 - Impact: the repository now has one stable Stage I connector contract and one explicit workspace-consent boundary that
   later Research connector work can reuse without reopening the Stage H tool-only abstractions.
 - Related Task: `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-097
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-03 Research external-context pilot
+- Context: Stage I needed one visible external-context path after the connector consent foundation existed. The pilot had to stay bounded to Research, preserve the distinction between workspace evidence and connector-backed context, and degrade honestly when consent or connector availability blocked the path.
+- Choice: add one bounded Research external-context mode on top of the existing tool-assisted analysis path, reuse the workspace connector consent gate, support the same path through direct chat and background analysis runs, archive `stage-i-03`, and move the active task to connector trace and consent visibility.
+- Why: the first connector wave should prove one real product path before broadening into more connectors or broader context-plane work.
+- Impact: the repository now has one visible Stage I external-context pilot with explicit consent behavior and a reusable path for the next trace/review follow-through.
+- Related Task: `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md`
 - Supersedes:

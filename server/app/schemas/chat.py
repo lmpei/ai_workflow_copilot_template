@@ -2,7 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-ChatMode = Literal["rag", "research_tool_assisted"]
+ChatSourceKind = Literal["workspace_document", "external_context"]
+ChatMode = Literal["rag", "research_tool_assisted", "research_external_context"]
 
 
 class ChatRequest(BaseModel):
@@ -23,6 +24,7 @@ class SourceReference(BaseModel):
     document_title: str
     chunk_index: int
     snippet: str
+    source_kind: ChatSourceKind = "workspace_document"
 
 
 class ChatResponse(BaseModel):

@@ -2,6 +2,7 @@ import { clearStoredSession } from "./auth";
 import type {
   ChatRequestPayload,
   ChatResponsePayload,
+  ConnectorConsentGrantPayload,
   DocumentRecord,
   EvalDatasetCreatePayload,
   EvalDatasetRecord,
@@ -30,6 +31,7 @@ import type {
   TraceRecord,
   User,
   Workspace,
+  WorkspaceConnectorStatusRecord,
   WorkspaceCreatePayload,
   WorkspaceMetrics,
 } from "./types";
@@ -308,6 +310,33 @@ export async function getResearchAnalysisRun(
   runId: string,
 ): Promise<ResearchAnalysisRunRecord> {
   return fetchBrowserApiJson<ResearchAnalysisRunRecord>(`/research-analysis-runs/${runId}`, {}, accessToken);
+}
+export async function getWorkspaceConnectorStatus(
+  accessToken: string,
+  workspaceId: string,
+  connectorId: string,
+): Promise<WorkspaceConnectorStatusRecord> {
+  return fetchBrowserApiJson<WorkspaceConnectorStatusRecord>(
+    `/workspaces/${workspaceId}/connectors/${connectorId}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function grantWorkspaceConnectorConsent(
+  accessToken: string,
+  workspaceId: string,
+  connectorId: string,
+  payload: ConnectorConsentGrantPayload = {},
+): Promise<WorkspaceConnectorStatusRecord> {
+  return fetchBrowserApiJson<WorkspaceConnectorStatusRecord>(
+    `/workspaces/${workspaceId}/connectors/${connectorId}/consent`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
 }
 export async function listWorkspaceResearchAnalysisRunReviews(
   accessToken: string,

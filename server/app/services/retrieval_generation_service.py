@@ -267,6 +267,7 @@ def serialize_sources(chunks: list[RetrievedChunk]) -> list[SourceReference]:
             document_title=chunk.document_title,
             chunk_index=chunk.chunk_index,
             snippet=chunk.snippet,
+            source_kind="workspace_document",
         )
         for chunk in chunks
     ]

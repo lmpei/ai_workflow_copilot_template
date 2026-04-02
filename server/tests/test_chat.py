@@ -15,6 +15,8 @@ from app.repositories.document_repository import (
     replace_document_chunks,
 )
 from app.services import retrieval_service
+from app.schemas.chat import ChatToolStep, SourceReference
+from app.services.research_external_context_service import ResearchExternalContextChatResult
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 from app.services.retrieval_service import (
     ChatProcessingError,
@@ -207,6 +209,7 @@ def test_chat_returns_grounded_answer_sources_messages_and_trace(
             "document_title": indexed_chunk.document_title,
             "chunk_index": indexed_chunk.chunk_index,
             "snippet": indexed_chunk.snippet,
+            "source_kind": "workspace_document",
         },
     ]
     assert retriever.calls == [{"workspace_id": workspace_id, "question": "What is this?"}]
@@ -324,6 +327,7 @@ def test_chat_records_error_trace_when_answer_generation_fails(
             "document_title": indexed_chunk.document_title,
             "chunk_index": indexed_chunk.chunk_index,
             "snippet": indexed_chunk.snippet,
+            "source_kind": "workspace_document",
         },
     ]
 
@@ -405,3 +409,75 @@ def test_chat_supports_research_tool_assisted_mode(client: TestClient, monkeypat
     assert traces[0].metadata_json["analysis_focus"] == "Current research question"
     assert traces[0].metadata_json["search_query"] == "current research question"
     assert traces[0].metadata_json["degraded_reason"] == "no_grounded_matches"
+
+def test_chat_supports_research_external_context_mode(client: TestClient, monkeypatch: MonkeyPatch) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    def fake_run_research_external_context_chat(*, workspace_id: str, user_id: str, question: str) -> ResearchExternalContextChatResult:
+        assert workspace_id
+        assert user_id
+        assert question == "Please combine workspace material with external context"
+        return ResearchExternalContextChatResult(
+            answer="This pass blends workspace evidence with approved external context.",
+            prompt="external context prompt",
+            sources=[
+                SourceReference(
+                    document_id="doc-1",
+                    chunk_id="chunk-1",
+                    document_title="workspace-notes.txt",
+                    chunk_index=0,
+                    snippet="Workspace evidence snippet.",
+                    source_kind="workspace_document",
+                ),
+                SourceReference(
+                    document_id="external:market-cost-pressure",
+                    chunk_id="external:market-cost-pressure",
+                    document_title="Analyst note: margin pressure and price discipline",
+                    chunk_index=0,
+                    snippet="External analyst context.",
+                    source_kind="external_context",
+                ),
+            ],
+            tool_steps=[
+                ChatToolStep(
+                    tool_name="research_external_context",
+                    summary="Found approved external context.",
+                )
+            ],
+            token_input=21,
+            token_output=10,
+            analysis_focus="Blend internal and external evidence",
+            search_query="pricing pressure",
+            degraded_reason=None,
+            connector_consent_state="granted",
+            external_context_used=True,
+            external_match_count=1,
+        )
+
+    monkeypatch.setattr(
+        retrieval_service,
+        "run_research_external_context_chat",
+        fake_run_research_external_context_chat,
+    )
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/chat",
+        json={"question": "Please combine workspace material with external context", "mode": "research_external_context"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mode"] == "research_external_context"
+    assert data["tool_steps"][0]["tool_name"] == "research_external_context"
+    assert data["sources"][0]["source_kind"] == "workspace_document"
+    assert data["sources"][1]["source_kind"] == "external_context"
+
+    with session_scope() as session:
+        traces = list(session.scalars(select(Trace)))
+
+    assert len(traces) == 1
+    assert traces[0].trace_type == "research_external_context"
+    assert traces[0].metadata_json["connector_id"] == "research_external_context"
+    assert traces[0].metadata_json["external_context_used"] is True

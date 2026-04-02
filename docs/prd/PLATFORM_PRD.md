@@ -174,8 +174,7 @@ The current implemented platform increment includes:
   answer delivery, tool-step visibility, and trace linkage on the same workspace surface
 - one operator-visible regression review path for recent terminal Research analysis runs, so resumed-run memory,
   degraded-path honesty, and tool-step visibility can be checked without opening raw trace JSON first
-- one bounded Stage I connector foundation with a shared external-context connector contract plus one explicit
-  workspace-level connector-consent API for Research workspaces
+- one bounded Stage I connector foundation with a shared external-context connector contract plus one explicit`r`n  workspace-level connector-consent API for Research workspaces`r`n- one bounded external-context Research pilot that can combine approved external context with internal workspace`r`n  evidence on the main Research surface while keeping the two evidence paths and degraded outcomes visibly distinct
 
 The repository does not yet implement:
 

@@ -186,6 +186,7 @@ export type ResearchMatch = {
   document_title: string;
   chunk_index: number;
   snippet: string;
+  source_kind: "workspace_document" | "external_context";
 };
 
 export type ResearchArtifacts = {
@@ -737,7 +738,7 @@ export type DocumentRecord = {
 export type ChatRequestPayload = {
   question: string;
   conversation_id?: string;
-  mode?: 'rag' | 'research_tool_assisted';
+  mode?: 'rag' | 'research_tool_assisted' | 'research_external_context';
 };
 
 export type ChatSource = {
@@ -746,6 +747,7 @@ export type ChatSource = {
   document_title: string;
   chunk_index: number;
   snippet: string;
+  source_kind: "workspace_document" | "external_context";
 };
 
 export type ChatToolStep = {
@@ -758,7 +760,7 @@ export type ChatResponsePayload = {
   answer: string;
   sources: ChatSource[];
   trace_id: string;
-  mode: 'rag' | 'research_tool_assisted';
+  mode: 'rag' | 'research_tool_assisted' | 'research_external_context';
   tool_steps: ChatToolStep[];
 };
 
@@ -767,7 +769,7 @@ export type ResearchAnalysisRunStatus = "pending" | "running" | "completed" | "d
 export type ResearchAnalysisRunCreatePayload = {
   question: string;
   conversation_id?: string;
-  mode?: "research_tool_assisted";
+  mode?: "research_tool_assisted" | "research_external_context";
 };
 
 export type ResearchAnalysisRunMemoryRecord = {
@@ -785,7 +787,7 @@ export type ResearchAnalysisRunRecord = {
   created_by: string;
   status: ResearchAnalysisRunStatus;
   question: string;
-  mode: "research_tool_assisted";
+  mode: "research_tool_assisted" | "research_external_context";
   resumed_from_run_id?: string | null;
   answer?: string | null;
   trace_id?: string | null;
@@ -952,4 +954,29 @@ export type TaskRecord = {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type ConnectorDefinitionRecord = {
+  id: string;
+  display_name: string;
+  summary: string;
+  kind: "external_context";
+  consent_scope: "workspace";
+  module_types: string[];
+  requires_consent: boolean;
+  pilot_status: "bounded_pilot";
+};
+
+export type WorkspaceConnectorStatusRecord = {
+  connector: ConnectorDefinitionRecord;
+  workspace_id: string;
+  consent_state: "not_granted" | "granted";
+  granted_by?: string | null;
+  consent_note?: string | null;
+  granted_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ConnectorConsentGrantPayload = {
+  consent_note?: string;
 };

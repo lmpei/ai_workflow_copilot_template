@@ -79,17 +79,25 @@ Stable system boundaries only. This is the short architecture summary. The long-
     flow without creating a separate agent runtime surface
 - `server/app/services/research_analysis_run_service.py`
   - owns the next bounded Stage H deepening step: create, queue, list, resume, and complete explicit Research
-    background analysis runs that reuse the tool-assisted pilot while keeping run status, compact run memory, answer
-    delivery, and trace linkage honest on the same workspace surface
+    background analysis runs that now support both the internal tool-assisted path and the Stage I external-context
+    path while keeping run status, compact run memory, answer delivery, and trace linkage honest on the same workspace
+    surface
 - `server/app/services/research_analysis_review_service.py`
   - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
     their traces and applying the replay/regression baseline before any broader eval flywheel exists
 - `server/app/services/connector_service.py`
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, and reusable
-    permission-gate helpers before any actual external-context pilot is wired in
+    permission-gate helpers for the first external-context pilot
+- `server/app/services/research_external_context_service.py`
+  - owns the bounded Stage I Research pilot that checks workspace connector consent, queries the approved external
+    context source, keeps internal and external evidence visibly distinct, and degrades honestly when consent or
+    connector availability is missing
+- `server/app/connectors/research_external_context_connector.py`
+  - owns one bounded external-context source contract for the first Research pilot instead of broad connector sprawl
 - `server/app/services/retrieval_service.py`
-  - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and now also
-    records the extra trace metadata needed when that pilot is delivered through explicit background analysis runs
+  - owns the branch between ordinary grounded chat, the internal `research_tool_assisted` pilot, and the new
+    `research_external_context` pilot mode, and now also records the extra trace metadata needed when those pilots
+    are delivered through direct chat or explicit background analysis runs
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps and honest degraded no-source paths

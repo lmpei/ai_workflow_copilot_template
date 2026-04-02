@@ -129,7 +129,7 @@ Stage I is successful when:
 The first executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md` (complete)
-2. `tasks/stage-i-03-research-external-context-pilot.md`
+2. `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md` (complete)
 3. `tasks/stage-i-04-connector-trace-and-consent-visibility.md`
 
 ### Why This Wave Exists
@@ -148,5 +148,8 @@ layer before any broader MCP or orchestration work opens.
 
 - complete: `stage-i-02`, which established one bounded connector definition plus one explicit workspace-level consent
   record and API for the Research-first pilot
-- active now: `stage-i-03`, which should connect one real external context source to the Research workflow without
-  collapsing internal retrieval and connector-backed context into the same surface
+- complete: `stage-i-03`, which connected one bounded external context source to the main Research workflow while
+  keeping internal workspace evidence and connector-backed context visibly distinct and honest under denied or
+  unavailable conditions
+- active now: `stage-i-04`, which should make connector consent state, usage, and degraded outcomes readable in trace
+  and operator-facing review surfaces

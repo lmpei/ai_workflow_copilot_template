@@ -2,6 +2,10 @@ from datetime import UTC, datetime
 
 from app.repositories import conversation_repository, workspace_repository
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.research_external_context_service import (
+    ResearchExternalContextChatResult,
+    run_research_external_context_chat,
+)
 from app.services.research_tool_assisted_chat_service import (
     ToolAssistedResearchChatResult,
     run_tool_assisted_research_chat,
@@ -97,6 +101,32 @@ def process_chat_request(
                 "degraded_reason": generated_tool_assisted.degraded_reason,
                 "tool_steps": tool_steps,
             }
+        elif payload.mode == "research_external_context":
+            if workspace.module_type != "research":
+                raise ChatProcessingError("External-context analysis pilot is only available in Research workspaces")
+
+            generated_external_context: ResearchExternalContextChatResult = run_research_external_context_chat(
+                workspace_id=workspace_id,
+                user_id=user_id,
+                question=payload.question,
+            )
+            answer = generated_external_context.answer
+            sources = generated_external_context.sources
+            prompt = generated_external_context.prompt
+            token_input = generated_external_context.token_input
+            token_output = generated_external_context.token_output
+            tool_steps = [step.model_dump() for step in generated_external_context.tool_steps]
+            trace_type = "research_external_context"
+            trace_metadata_extra = {
+                "analysis_focus": generated_external_context.analysis_focus,
+                "search_query": generated_external_context.search_query,
+                "degraded_reason": generated_external_context.degraded_reason,
+                "tool_steps": tool_steps,
+                "connector_id": generated_external_context.connector_id,
+                "connector_consent_state": generated_external_context.connector_consent_state,
+                "external_context_used": generated_external_context.external_context_used,
+                "external_match_count": generated_external_context.external_match_count,
+            }
         else:
             retriever: Retriever = get_retriever()
             answer_generator: AnswerGenerator = get_answer_generator()
@@ -148,6 +178,10 @@ def process_chat_request(
                 "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
                 "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
                 "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+                "connector_id": trace_metadata_extra.get("connector_id") if trace_metadata_extra else None,
+                "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
+                "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
+                "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -184,6 +218,10 @@ def process_chat_request(
                 "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
                 "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
                 "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+                "connector_id": trace_metadata_extra.get("connector_id") if trace_metadata_extra else None,
+                "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
+                "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
+                "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -214,6 +252,10 @@ def process_chat_request(
                 "analysis_focus": trace_metadata_extra.get("analysis_focus") if trace_metadata_extra else None,
                 "search_query": trace_metadata_extra.get("search_query") if trace_metadata_extra else None,
                 "degraded_reason": trace_metadata_extra.get("degraded_reason") if trace_metadata_extra else None,
+                "connector_id": trace_metadata_extra.get("connector_id") if trace_metadata_extra else None,
+                "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
+                "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
+                "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )

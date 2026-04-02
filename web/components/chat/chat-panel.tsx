@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   createWorkspaceResearchAnalysisRun,
   getResearchAnalysisRun,
+  getWorkspaceConnectorStatus,
+  grantWorkspaceConnectorConsent,
   isApiClientError,
   listWorkspaceResearchAnalysisRuns,
   sendWorkspaceChat,
@@ -14,6 +16,7 @@ import type {
   ChatToolStep,
   ResearchAnalysisRunRecord,
   ResearchAnalysisRunStatus,
+  WorkspaceConnectorStatusRecord,
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
@@ -30,7 +33,7 @@ type ChatPanelProps = {
   primaryActionLabel?: string;
   outputTitle?: string;
   modes?: Array<{
-    value: "rag" | "research_tool_assisted";
+    value: "rag" | "research_tool_assisted" | "research_external_context";
     label: string;
     description: string;
   }>;
@@ -50,13 +53,14 @@ type ChatEntry = {
   question: string;
   answer: string;
   traceId: string;
-  mode: "rag" | "research_tool_assisted";
+  mode: "rag" | "research_tool_assisted" | "research_external_context";
   toolSteps: ChatToolStep[];
   sources: ChatSource[];
 };
 
 const RUN_TERMINAL_STATUSES: ResearchAnalysisRunStatus[] = ["completed", "degraded", "failed"];
 const RUN_ACTIVE_STATUSES: ResearchAnalysisRunStatus[] = ["pending", "running"];
+const RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID = "research_external_context";
 
 function PromptCard({
   active,
@@ -166,9 +170,9 @@ function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
 function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: string | null }) {
   return (
     <details style={{ marginTop: 12 }}>
-      <summary>View grounded sources</summary>
+      <summary>View analysis evidence</summary>
       {sources.length === 0 ? (
-        <p style={{ color: "#64748b", marginBottom: 0 }}>No grounded sources were returned for this pass.</p>
+        <p style={{ color: "#64748b", marginBottom: 0 }}>No visible evidence was returned for this pass.</p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
           {sources.map((source) => (
@@ -183,7 +187,21 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
                 padding: 12,
               }}
             >
-              <strong>{source.document_title}</strong>
+              <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
+                <strong>{source.document_title}</strong>
+                <span
+                  style={{
+                    backgroundColor: source.source_kind === "external_context" ? "#ede9fe" : "#e0f2fe",
+                    borderRadius: 999,
+                    color: source.source_kind === "external_context" ? "#5b21b6" : "#0c4a6e",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    padding: "4px 10px",
+                  }}
+                >
+                  {source.source_kind === "external_context" ? "External context" : "Workspace material"}
+                </span>
+              </div>
               <div style={{ color: "#475569", fontSize: 13 }}>
                 Chunk {source.chunk_index} / Document {source.document_id}
               </div>
@@ -250,6 +268,20 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
                 }}
               >
                 Tool-assisted pilot
+              </span>
+            ) : null}
+            {entry.mode === "research_external_context" ? (
+              <span
+                style={{
+                  backgroundColor: "#ede9fe",
+                  borderRadius: 999,
+                  color: "#5b21b6",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: "4px 10px",
+                }}
+              >
+                External-context pilot
               </span>
             ) : null}
             <span style={{ color: "#64748b", fontSize: 12 }}>Trace ID: {entry.traceId}</span>
@@ -398,6 +430,8 @@ export default function ChatPanel({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingRuns, setIsLoadingRuns] = useState(false);
+  const [connectorStatus, setConnectorStatus] = useState<WorkspaceConnectorStatusRecord | null>(null);
+  const [isGrantingConnectorConsent, setIsGrantingConnectorConsent] = useState(false);
   const availableModes = useMemo(
     () =>
       modes && modes.length > 0
@@ -405,7 +439,9 @@ export default function ChatPanel({
         : [{ value: "rag" as const, label: "Standard analysis", description: "Use the current material directly for one grounded analysis pass." }],
     [modes],
   );
-  const [mode, setMode] = useState<"rag" | "research_tool_assisted">(availableModes[0]?.value ?? "rag");
+  const [mode, setMode] = useState<"rag" | "research_tool_assisted" | "research_external_context">(
+    availableModes[0]?.value ?? "rag",
+  );
 
   const prompts = useMemo(
     () =>
@@ -430,6 +466,7 @@ export default function ChatPanel({
   );
   const latestRun = analysisRuns[0] ?? null;
   const lastTraceId = latestRun?.trace_id ?? entries.at(-1)?.traceId ?? null;
+  const requiresExternalContextConnector = mode === "research_external_context";
 
   useEffect(() => {
     if (!availableModes.some((candidate) => candidate.value === mode)) {
@@ -488,9 +525,7 @@ export default function ChatPanel({
     let cancelled = false;
     const refreshActiveRuns = async () => {
       try {
-        const refreshedRuns = await Promise.all(
-          activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)),
-        );
+        const refreshedRuns = await Promise.all(activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)));
         if (!cancelled) {
           setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, refreshedRuns));
         }
@@ -512,6 +547,60 @@ export default function ChatPanel({
     };
   }, [activeRuns, session]);
 
+  useEffect(() => {
+    if (!session || !requiresExternalContextConnector) {
+      setConnectorStatus(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadConnectorStatus = async () => {
+      try {
+        const status = await getWorkspaceConnectorStatus(
+          session.accessToken,
+          workspaceId,
+          RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        );
+        if (!cancelled) {
+          setConnectorStatus(status);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(isApiClientError(error) ? error.message : "Unable to load connector consent state.");
+        }
+      }
+    };
+
+    void loadConnectorStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [requiresExternalContextConnector, session, workspaceId]);
+
+  const handleGrantConnectorConsent = async () => {
+    if (!session) {
+      return;
+    }
+
+    setIsGrantingConnectorConsent(true);
+    setErrorMessage(null);
+    try {
+      const status = await grantWorkspaceConnectorConsent(
+        session.accessToken,
+        workspaceId,
+        RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        {
+          consent_note: "Allow one bounded Research external-context pilot for this workspace.",
+        },
+      );
+      setConnectorStatus(status);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to grant connector consent.");
+    } finally {
+      setIsGrantingConnectorConsent(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -524,11 +613,11 @@ export default function ChatPanel({
     setErrorMessage(null);
 
     try {
-      if (mode === "research_tool_assisted" && supportsBackgroundRuns) {
+      if ((mode === "research_tool_assisted" || mode === "research_external_context") && supportsBackgroundRuns) {
         const run = await createWorkspaceResearchAnalysisRun(session.accessToken, workspaceId, {
           question: trimmedQuestion,
           conversation_id: latestRun?.conversation_id,
-          mode: "research_tool_assisted",
+          mode,
         });
         setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, [run]));
       } else {
@@ -621,6 +710,56 @@ export default function ChatPanel({
           ))}
         </div>
       </section>
+
+      {requiresExternalContextConnector ? (
+        <section
+          style={{
+            backgroundColor: connectorStatus?.consent_state === "granted" ? "#ecfdf5" : "#fff7ed",
+            border: `1px solid ${connectorStatus?.consent_state === "granted" ? "#bbf7d0" : "#fed7aa"}`,
+            borderRadius: 18,
+            display: "grid",
+            gap: 10,
+            padding: 16,
+          }}
+        >
+          <strong style={{ color: "#0f172a" }}>External context pilot</strong>
+          <div style={{ color: "#475569", lineHeight: 1.7 }}>
+            {connectorStatus?.consent_state === "granted"
+              ? "This workspace has granted consent. The next pass may combine workspace material with approved external context."
+              : "This workspace has not granted connector consent yet. You can still run the pilot, but it will degrade honestly until consent is granted."}
+          </div>
+          <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <button
+              disabled={connectorStatus?.consent_state === "granted" || isGrantingConnectorConsent}
+              onClick={() => {
+                void handleGrantConnectorConsent();
+              }}
+              style={{
+                backgroundColor: connectorStatus?.consent_state === "granted" ? "#dcfce7" : "#0f172a",
+                border: "none",
+                borderRadius: 999,
+                color: connectorStatus?.consent_state === "granted" ? "#166534" : "#ffffff",
+                fontSize: 13,
+                fontWeight: 800,
+                minHeight: 40,
+                padding: "0 14px",
+              }}
+              type="button"
+            >
+              {connectorStatus?.consent_state === "granted"
+                ? "Consent granted"
+                : isGrantingConnectorConsent
+                  ? "Granting..."
+                  : "Grant connector consent"}
+            </button>
+            {connectorStatus?.consent_state === "granted" && connectorStatus.granted_at ? (
+              <span style={{ color: "#166534", fontSize: 13 }}>
+                Granted for this workspace at {new Date(connectorStatus.granted_at).toLocaleString()}
+              </span>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 8 }}>

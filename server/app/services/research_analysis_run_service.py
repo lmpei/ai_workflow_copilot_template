@@ -10,6 +10,10 @@ from app.schemas.research_analysis_run import (
     ResearchAnalysisRunMemory,
     ResearchAnalysisRunResponse,
 )
+from app.services.research_external_context_service import (
+    ResearchExternalContextChatResult,
+    run_research_external_context_chat,
+)
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
     run_tool_assisted_research_chat,
@@ -86,6 +90,12 @@ def _build_run_memory(
         evidence_state = "no_grounded_matches"
     elif degraded_reason == "no_documents":
         evidence_state = "no_documents"
+    elif degraded_reason == "connector_consent_required":
+        evidence_state = "connector_consent_required"
+    elif degraded_reason == "external_context_unavailable":
+        evidence_state = "external_context_unavailable"
+    elif degraded_reason == "external_context_no_useful_matches":
+        evidence_state = "external_context_no_useful_matches"
 
     summary = answer.strip()
     if len(summary) > 600:
@@ -103,6 +113,12 @@ def _build_run_memory(
         next_step = "Upload and index more material before resuming the next bounded analysis pass."
     elif degraded_reason == "no_grounded_matches":
         next_step = "Refine the research question or connect stronger grounded material before the next pass."
+    elif degraded_reason == "connector_consent_required":
+        next_step = "Grant connector consent before asking for external context in the next pass."
+    elif degraded_reason == "external_context_unavailable":
+        next_step = "Retry later or continue with workspace material only until the external context pilot is available again."
+    elif degraded_reason == "external_context_no_useful_matches":
+        next_step = "Refine the question or try stronger workspace material before asking for more external context."
     else:
         next_step = "Use this bounded summary as the starting point for the next pass or generate a formal output."
 
@@ -156,9 +172,9 @@ async def create_research_analysis_run(
     payload: ResearchAnalysisRunCreate,
 ) -> ResearchAnalysisRunResponse:
     _get_research_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
-    if payload.mode != "research_tool_assisted":
+    if payload.mode not in {"research_tool_assisted", "research_external_context"}:
         raise ResearchAnalysisRunValidationError(
-            "Background analysis runs currently support the research_tool_assisted mode only"
+            "Background analysis runs currently support the research_tool_assisted and research_external_context modes only"
         )
 
     conversation = _ensure_conversation(
@@ -251,6 +267,7 @@ def _record_run_trace(
     error_message: str | None = None,
 ) -> str:
     latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
+    trace_type = "research_external_context_run" if run.mode == "research_external_context" else "research_tool_assisted_run"
     return record_chat_trace(
         workspace_id=run.workspace_id,
         conversation_id=run.conversation_id,
@@ -265,7 +282,7 @@ def _record_run_trace(
         token_output=token_output,
         estimated_cost=0.0,
         error=error_message,
-        trace_type="research_tool_assisted_run",
+        trace_type=trace_type,
         extra_response_json={
             "research_analysis_run_id": run.id,
             "run_status": "failed" if error_message else ("degraded" if degraded_reason else "completed"),
@@ -275,6 +292,8 @@ def _record_run_trace(
             "degraded_reason": degraded_reason,
             "resumed_from_run_id": resumed_from_run_id,
             "run_memory": run_memory_json,
+            "connector_id": "research_external_context" if run.mode == "research_external_context" else None,
+            "external_context_used": run.mode == "research_external_context" and degraded_reason is None,
         },
         extra_metadata_json={
             "research_analysis_run_id": run.id,
@@ -285,6 +304,7 @@ def _record_run_trace(
             "resumed_from_run_id": resumed_from_run_id,
             "used_run_memory": resumed_from_run_id is not None,
             "run_memory": run_memory_json,
+            "connector_id": "research_external_context" if run.mode == "research_external_context" else None,
         },
     )
 
@@ -311,12 +331,21 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
     prior_memory = _load_prior_memory_context(running_run)
     started_at = datetime.now(UTC)
     try:
-        result = run_tool_assisted_research_chat(
-            workspace_id=running_run.workspace_id,
-            user_id=running_run.created_by,
-            question=running_run.question,
-            prior_memory=prior_memory,
-        )
+        result: ToolAssistedResearchChatResult | ResearchExternalContextChatResult
+        if running_run.mode == "research_external_context":
+            result = run_research_external_context_chat(
+                workspace_id=running_run.workspace_id,
+                user_id=running_run.created_by,
+                question=running_run.question,
+                prior_memory=prior_memory,
+            )
+        else:
+            result = run_tool_assisted_research_chat(
+                workspace_id=running_run.workspace_id,
+                user_id=running_run.created_by,
+                question=running_run.question,
+                prior_memory=prior_memory,
+            )
         sources_json = [source.model_dump() for source in result.sources]
         tool_steps_json = [step.model_dump() for step in result.tool_steps]
         run_memory_json = _build_run_memory(
