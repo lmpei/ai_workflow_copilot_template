@@ -132,12 +132,25 @@ function isExternalContextTrace(trace: TraceRecord): boolean {
 
 function formatConsentState(state: string | null | undefined): string {
   if (state === "granted") {
-    return "已授权";
+    return "???";
+  }
+  if (state === "revoked") {
+    return "???";
   }
   if (state === "not_granted") {
-    return "未授权";
+    return "???";
   }
-  return "未记录";
+  return "???";
+}
+
+function formatResourceSelectionMode(mode: ResearchAnalysisReviewRecord["resource_selection_mode"]): string {
+  if (mode === "explicit") {
+    return "????";
+  }
+  if (mode === "auto") {
+    return "??????";
+  }
+  return "?????";
 }
 
 function renderJson(payload: JsonObject): string {
@@ -147,39 +160,52 @@ function renderJson(payload: JsonObject): string {
 function formatReviewIssue(issue: string): string {
   switch (issue) {
     case "run_failed":
-      return "运行以失败状态结束";
+      return "?????????";
     case "missing_trace_link":
-      return "缺少追踪链接";
+      return "??????";
     case "invalid_trace_type":
-      return "追踪类型不是预期的 Research 运行类型";
+      return "????????? Research ????";
     case "missing_prompt":
-      return "追踪元数据里缺少 prompt";
+      return "???????? prompt";
     case "missing_answer":
-      return "非失败运行缺少回答";
+      return "?????????";
     case "missing_tool_steps":
-      return "工具步骤不可见";
+      return "???????";
     case "missing_run_memory":
-      return "缺少压缩后的运行记忆";
+      return "??????????";
     case "missing_grounding_or_honest_degraded_reason":
-      return "既没有可见证据，也没有诚实降级原因";
+      return "?????????????????";
     case "missing_resumed_memory_visibility":
-      return "延续运行的记忆链路不可见";
+      return "????????????";
     case "missing_connector_id_visibility":
-      return "连接器标识不可见";
+      return "????????";
     case "missing_connector_consent_state_visibility":
-      return "连接器授权状态不可见";
+      return "??????????";
     case "missing_external_context_usage_visibility":
-      return "是否使用外部信息不可见";
+      return "???????????";
     case "missing_external_match_count_visibility":
-      return "外部信息命中数量不可见";
+      return "???????????";
+    case "missing_selected_resource_snapshot_visibility":
+      return "??????????????";
+    case "missing_resource_snapshot_visibility":
+      return "??????????????";
     case "inconsistent_external_context_visibility":
-      return "外部信息使用情况与来源展示不一致";
+      return "????????????????";
+    case "inconsistent_resource_selection_visibility":
+      return "????????????????";
+    case "inconsistent_connector_consent_lifecycle":
+      return "??????????????";
     default:
       return issue;
   }
 }
 
 function renderReviewCard(review: ResearchAnalysisReviewRecord) {
+  const selectedSnapshotLabel =
+    review.selected_external_resource_snapshot_title ?? review.selected_external_resource_snapshot_id;
+  const usedSnapshotLabel =
+    review.external_resource_snapshot_title ?? review.external_resource_snapshot_id;
+
   return (
     <div
       key={review.run_id}
@@ -195,37 +221,44 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
         <strong style={{ color: "#0f172a" }}>{review.question}</strong>
         <span style={{ color: review.passed ? "#166534" : "#b91c1c", fontSize: 13, fontWeight: 700 }}>
-          {review.passed ? "通过" : "需要复核"}
+          {review.passed ? "??" : "????"}
         </span>
       </div>
       <div style={{ color: "#475569", fontSize: 13 }}>
-        状态：{review.status}
-        {review.trace_id ? ` | 追踪：${review.trace_id}` : ""}
+        ???{review.status}
+        {review.trace_id ? ` | ???${review.trace_id}` : ""}
       </div>
       <div style={{ color: "#475569", fontSize: 13 }}>
-        模式：{review.mode === "research_external_context" ? "外部信息试点" : "工具辅助试点"}
+        ???{review.mode === "research_external_context" ? "??????" : "??????"}
       </div>
       {review.connector_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
-          连接器：{review.connector_id} | 授权状态：{formatConsentState(review.connector_consent_state)} | 外部信息：
-          {review.external_context_used === true ? "已使用" : review.external_context_used === false ? "未使用" : "未记录"}
-          {typeof review.external_match_count === "number" ? ` | 命中数：${review.external_match_count}` : ""}
+          ????{review.connector_id} | ?????{formatConsentState(review.connector_consent_state)} | ?????
+          {review.external_context_used === true ? "???" : review.external_context_used === false ? "???" : "???"}
+          {typeof review.external_match_count === "number" ? ` | ????${review.external_match_count}` : ""}
+        </div>
+      ) : null}
+      {review.connector_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>
+          ?????{formatResourceSelectionMode(review.resource_selection_mode)}
+          {selectedSnapshotLabel ? ` | ?????${selectedSnapshotLabel}` : ""}
+          {usedSnapshotLabel ? ` | ?????${usedSnapshotLabel}` : ""}
         </div>
       ) : null}
       {review.resumed_from_run_id ? (
-        <div style={{ color: "#475569", fontSize: 13 }}>延续自运行：{review.resumed_from_run_id}</div>
+        <div style={{ color: "#475569", fontSize: 13 }}>??????{review.resumed_from_run_id}</div>
       ) : null}
       {review.degraded_reason ? (
-        <div style={{ color: "#475569", fontSize: 13 }}>降级原因：{review.degraded_reason}</div>
+        <div style={{ color: "#475569", fontSize: 13 }}>?????{review.degraded_reason}</div>
       ) : null}
       {review.run_memory_summary ? (
         <div style={{ color: "#334155" }}>
-          <strong>压缩后的运行记忆：</strong> {review.run_memory_summary}
+          <strong>?????????</strong> {review.run_memory_summary}
         </div>
       ) : null}
       {review.issues.length > 0 ? (
         <div style={{ display: "grid", gap: 4 }}>
-          <strong style={{ color: "#0f172a" }}>回归问题</strong>
+          <strong style={{ color: "#0f172a" }}>????</strong>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {review.issues.map((issue) => (
               <li key={`${review.run_id}-${issue}`} style={{ color: "#475569" }}>
@@ -235,7 +268,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           </ul>
         </div>
       ) : (
-        <div style={{ color: "#166534" }}>这一轮运行已通过所有有边界的回归检查。</div>
+        <div style={{ color: "#166534" }}>???????????????????????</div>
       )}
     </div>
   );

@@ -295,12 +295,14 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
                 "recommended_next_step": "整理正式输出。",
             },
             "resumed_from_run_id": None,
+            "external_resource_snapshot_id": "snapshot-auto-1",
         },
         trace_response_json={
             "connector_id": "research_external_context",
             "connector_consent_state": "granted",
             "external_context_used": True,
             "external_match_count": 1,
+            "external_resource_snapshot_id": "snapshot-auto-1",
         },
         trace_metadata={"prompt": "analysis prompt"},
         trace_type="research_external_context_run",
@@ -311,3 +313,75 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
     assert review["signals"]["connector_id"] == "research_external_context"
     assert review["signals"]["external_context_used"] is True
     assert review["signals"]["external_match_count"] == 1
+    assert review["signals"]["resource_selection_mode"] == "auto"
+
+
+def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_selection() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "completed",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-2",
+            "answer": "显式选择的外部资源快照确认了工作区里的判断。",
+            "sources": [
+                {"document_title": "workspace-notes.txt", "source_kind": "workspace_document"},
+                {"document_title": "Selected analyst note", "source_kind": "external_context"},
+            ],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "已显式复用外部资源快照。"},
+            ],
+            "run_memory": {
+                "summary": "显式选择的快照强化了价格压力判断。",
+                "recommended_next_step": "生成正式研究结论。",
+            },
+            "selected_external_resource_snapshot_id": "snapshot-explicit-1",
+            "external_resource_snapshot_id": "snapshot-explicit-1",
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "granted",
+            "external_context_used": True,
+            "external_match_count": 1,
+            "selected_external_resource_snapshot_id": "snapshot-explicit-1",
+            "external_resource_snapshot_id": "snapshot-explicit-1",
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is True
+    assert review["issues"] == []
+    assert review["signals"]["resource_selection_mode"] == "explicit"
+    assert review["signals"]["selected_external_resource_snapshot_id"] == "snapshot-explicit-1"
+    assert review["signals"]["external_resource_snapshot_id"] == "snapshot-explicit-1"
+
+
+def test_evaluate_research_analysis_run_regression_detects_revoked_consent_visibility_gap() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "degraded",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-3",
+            "answer": "这次只能回退到工作区资料。",
+            "sources": [],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "授权已撤销。"},
+            ],
+            "run_memory": {
+                "summary": "授权撤销，未使用外部资源。",
+                "recommended_next_step": "重新授权后再试。",
+            },
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "revoked",
+            "external_context_used": False,
+            "external_match_count": 0,
+            "degraded_reason": "connector_consent_required",
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is False
+    assert "inconsistent_connector_consent_lifecycle" in review["issues"]

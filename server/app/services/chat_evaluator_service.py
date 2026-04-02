@@ -12,7 +12,7 @@ from app.services.model_interface_service import (
 )
 
 DEFAULT_PASS_THRESHOLD = 0.7
-RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_connector_visibility_v1"
+RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_resource_aware_review_v1"
 
 
 class ChatEvaluatorError(Exception):
@@ -339,6 +339,23 @@ def evaluate_research_analysis_run_regression(
         response_json.get("external_match_count"),
         metadata_json.get("external_match_count"),
     )
+    selected_external_resource_snapshot_id = _read_string(
+        run_json.get("selected_external_resource_snapshot_id"),
+        response_json.get("selected_external_resource_snapshot_id"),
+        metadata_json.get("selected_external_resource_snapshot_id"),
+    )
+    external_resource_snapshot_id = _read_string(
+        run_json.get("external_resource_snapshot_id"),
+        response_json.get("external_resource_snapshot_id"),
+        metadata_json.get("external_resource_snapshot_id"),
+    )
+    resource_selection_mode = (
+        "explicit"
+        if selected_external_resource_snapshot_id
+        else "auto"
+        if external_resource_snapshot_id
+        else "none"
+    )
 
     is_external_context_run = (
         mode == "research_external_context"
@@ -364,11 +381,17 @@ def evaluate_research_analysis_run_regression(
         "connector_id_visible_when_applicable": (not is_external_context_run)
         or connector_id == "research_external_context",
         "connector_consent_state_visible_when_applicable": (not is_external_context_run)
-        or connector_consent_state in {"granted", "not_granted"},
+        or connector_consent_state in {"granted", "not_granted", "revoked"},
         "external_context_usage_visible_when_applicable": (not is_external_context_run)
         or isinstance(external_context_used, bool),
         "external_match_count_visible_when_applicable": (not is_external_context_run)
         or (isinstance(external_match_count, int) and external_match_count >= 0),
+        "selected_resource_snapshot_visibility_when_applicable": (not is_external_context_run)
+        or resource_selection_mode != "explicit"
+        or bool(selected_external_resource_snapshot_id),
+        "resource_snapshot_visibility_when_applicable": (not is_external_context_run)
+        or external_context_used is not True
+        or bool(external_resource_snapshot_id),
         "external_context_visibility_consistent_when_applicable": (not is_external_context_run)
         or (
             isinstance(external_context_used, bool)
@@ -377,6 +400,32 @@ def evaluate_research_analysis_run_regression(
                 (external_context_used is True and has_external_sources and external_match_count > 0)
                 or (external_context_used is False and not has_external_sources and external_match_count == 0)
             )
+        ),
+        "resource_selection_consistent_when_applicable": (not is_external_context_run)
+        or (
+            (resource_selection_mode == "explicit" and external_context_used is True and external_resource_snapshot_id == selected_external_resource_snapshot_id)
+            or (resource_selection_mode == "explicit" and external_context_used is False and external_resource_snapshot_id is None)
+            or (resource_selection_mode == "auto" and external_context_used is True and bool(external_resource_snapshot_id))
+            or (resource_selection_mode == "none" and external_context_used is False and external_resource_snapshot_id is None)
+            or (resource_selection_mode == "none" and external_context_used is True and bool(external_resource_snapshot_id))
+        ),
+        "consent_lifecycle_consistent_when_applicable": (not is_external_context_run)
+        or connector_consent_state == "granted"
+        or (
+            connector_consent_state == "not_granted"
+            and external_context_used is False
+            and external_match_count == 0
+            and not has_external_sources
+            and degraded_reason == "connector_consent_required"
+            and external_resource_snapshot_id is None
+        )
+        or (
+            connector_consent_state == "revoked"
+            and external_context_used is False
+            and external_match_count == 0
+            and not has_external_sources
+            and degraded_reason == "connector_consent_revoked"
+            and external_resource_snapshot_id is None
         ),
     }
 
@@ -407,8 +456,16 @@ def evaluate_research_analysis_run_regression(
         issues.append("missing_external_context_usage_visibility")
     if checks["external_match_count_visible_when_applicable"] is False:
         issues.append("missing_external_match_count_visibility")
+    if checks["selected_resource_snapshot_visibility_when_applicable"] is False:
+        issues.append("missing_selected_resource_snapshot_visibility")
+    if checks["resource_snapshot_visibility_when_applicable"] is False:
+        issues.append("missing_resource_snapshot_visibility")
     if checks["external_context_visibility_consistent_when_applicable"] is False:
         issues.append("inconsistent_external_context_visibility")
+    if checks["resource_selection_consistent_when_applicable"] is False:
+        issues.append("inconsistent_resource_selection_visibility")
+    if checks["consent_lifecycle_consistent_when_applicable"] is False:
+        issues.append("inconsistent_connector_consent_lifecycle")
 
     passed = all(checks.values()) and not issues
 
@@ -430,6 +487,9 @@ def evaluate_research_analysis_run_regression(
             "connector_consent_state": connector_consent_state,
             "external_context_used": external_context_used,
             "external_match_count": external_match_count,
+            "selected_external_resource_snapshot_id": selected_external_resource_snapshot_id,
+            "external_resource_snapshot_id": external_resource_snapshot_id,
+            "resource_selection_mode": resource_selection_mode,
         },
     }
 

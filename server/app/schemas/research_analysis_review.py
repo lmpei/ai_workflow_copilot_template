@@ -16,6 +16,11 @@ class ResearchAnalysisReviewRecord(BaseModel):
     connector_consent_state: str | None = None
     external_context_used: bool | None = None
     external_match_count: int | None = None
+    selected_external_resource_snapshot_id: str | None = None
+    selected_external_resource_snapshot_title: str | None = None
+    external_resource_snapshot_id: str | None = None
+    external_resource_snapshot_title: str | None = None
+    resource_selection_mode: str | None = None
     passed: bool
     issues: list[str]
     regression_baseline: dict[str, object]

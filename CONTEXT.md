@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-02
+- Last Updated: 2026-04-03
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -71,9 +71,13 @@ main Research and observability views without collapsing them into ordinary work
 The second task in the second Stage I wave is now complete as well: the Research connector path can now expose
 explicit consent lifecycle and explicit snapshot selection instead of relying only on hidden grant state or
 auto-selected external context.
+The third task in the second Stage I wave is now also complete: recent terminal Research connector runs now surface one
+resource-aware review baseline that makes selected snapshots, actual used snapshots, resource-selection mode, and
+consent-lifecycle consistency visible to operators instead of leaving those checks implicit in raw trace payloads.
 
-The next bounded Stage I step is now to deepen replay or review around that more explicit resource-backed path before
-any broader MCP or multi-module rollout opens.
+Stage I remains active, but there is no further active execution task yet. The next bounded step is now a human choice:
+either close Stage I after the second wave, or define one more narrow connector/context-plane follow-through before any
+broader MCP or multi-module rollout opens.
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented

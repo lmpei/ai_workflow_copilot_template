@@ -841,9 +841,14 @@ export type ResearchAnalysisReviewRecord = {
   degraded_reason?: string | null;
   run_memory_summary?: string | null;
   connector_id?: string | null;
-  connector_consent_state?: "granted" | "not_granted" | null;
+  connector_consent_state?: "granted" | "not_granted" | "revoked" | null;
   external_context_used?: boolean | null;
   external_match_count?: number | null;
+  selected_external_resource_snapshot_id?: string | null;
+  selected_external_resource_snapshot_title?: string | null;
+  external_resource_snapshot_id?: string | null;
+  external_resource_snapshot_title?: string | null;
+  resource_selection_mode?: "explicit" | "auto" | "none" | null;
   passed: boolean;
   issues: string[];
   regression_baseline: JsonObject;

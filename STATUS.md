@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-02
+- Last Updated: 2026-04-03
 
 ## Project Mode
 
@@ -25,13 +25,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the second bounded Stage I connector and context-plane wave by turning the first Research external-context
-  pilot into a more explicit resource-backed context path with consent lifecycle, resource selection, and resource-aware
-  replay or review, while keeping the live product hosts stable
+- review the completed second bounded Stage I connector and context-plane wave, keep the live product hosts stable,
+  and decide whether Stage I should close or open one further bounded wave
 
 ## Active Task
 
-- `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
+- none; Stage I second wave is complete and awaiting the next bounded task decision
 
 ## Verification Status
 
@@ -46,11 +45,13 @@ Current state only. Keep this file short, current, and action-oriented.
   the main Research surface has one explicit external-context pilot that can blend approved external context with
   internal workspace material while keeping the two evidence paths visibly distinct, and the operator-facing review
   layer now exposes connector consent state, connector use, external-match visibility, and degraded-path honesty for
-  that pilot. The second Stage I wave is now in progress: the repo has one persisted external-resource snapshot layer
+  that pilot. The second Stage I wave first added one persisted external-resource snapshot layer:
   for approved Research connector matches, direct chat and background analysis runs can now point to the snapshot they
   actually used, recent snapshots are visible on the main Research and observability surfaces, and the Research path
-  now exposes explicit consent lifecycle plus snapshot selection before execution begins. The current next step is to
-  deepen replay or review around that more explicit resource-backed path.
+  now exposes explicit consent lifecycle plus snapshot selection before execution begins. The second Stage I wave is
+  now also complete: recent terminal connector-backed runs can be reviewed with explicit visibility into selected
+  snapshots, actual used snapshots, resource-selection mode, and consent lifecycle consistency. The current next step
+  is to decide whether Stage I should close or deepen further.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -68,14 +69,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- where explicit consent changes and snapshot selection should live on the Research surface before broader MCP or
-  context-plane work opens
+- whether Stage I should close after the second bounded wave or open one further connector/context-plane follow-through
 
 ## Ready Now
 
-1. implement `stage-i-08` to add a resource-aware replay or review baseline on top of explicit snapshot selection
-2. make replay and review distinguish auto-selected external context from explicitly selected resource snapshots
-3. keep the live `weave` and `api` hosts stable while replay or review deepens around the bounded connector path
+1. review the completed `stage-i-08` implementation and decide whether to close Stage I or define one more bounded wave
+2. keep the live `weave` and `api` hosts stable while the next Stage I boundary is selected
+3. avoid opening broad MCP or multi-agent scope before the next bounded stage decision is fixed in text
 
 ## Parked / Later
 
@@ -85,7 +85,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
+- `tasks/archive/stage-i/stage-i-08-resource-aware-replay-and-review-baseline.md`
 
 ## Recent Decisions
 
@@ -139,3 +139,5 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-02-100` complete `stage-i-06`, persist approved external-context matches as explicit Research external
   resource snapshots, expose those snapshots on chat, runs, and observability surfaces, archive the task, and move
   Stage I to consent lifecycle and resource selection follow-through
+- `DEC-2026-04-03-102` complete `stage-i-08`, extend the bounded Research run-review baseline so operators can see
+  selected resource snapshots, actual used snapshots, resource-selection mode, and consent-lifecycle consistency

@@ -9,7 +9,7 @@
 - Status: active
 - Opened At: 2026-04-02
 - First Task Wave: complete
-- Second Task Wave: in progress
+- Second Task Wave: complete
 
 ## Position In The Project
 
@@ -159,14 +159,15 @@ layer before any broader MCP or orchestration work opens.
   back on the main product and observability views
 - complete: `stage-i-07`, which made consent changes and explicit snapshot selection more inspectable on that same
   bounded Research path
-- active now: `stage-i-08`, which should deepen replay or review around that more explicit resource-backed connector flow
+- complete: `stage-i-08`, which made replay or review aware of selected snapshots, actual used snapshots, resource-selection mode, and consent-lifecycle consistency on that same bounded Research path
+- active now: none; Stage I is waiting for the next bounded task-wave or closeout decision
 ## Second Task Wave
 
 The second executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
 2. `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
-3. `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
+3. `tasks/archive/stage-i/stage-i-08-resource-aware-replay-and-review-baseline.md`
 
 ### Why This Wave Exists
 
@@ -185,3 +186,12 @@ The next Wave 2 learning question is narrower and more structural:
 
 This wave should stay inside the same Research-first pilot instead of broadening into multiple connectors or broader
 module rollout.
+
+### Current Second-Wave Outcome
+
+The second Stage I wave is now complete:
+
+- approved external-context matches can persist as explicit Research resource snapshots
+- direct chat and background analysis runs can now distinguish selected snapshots from actual used snapshots
+- consent lifecycle is explicit enough for the bounded connector pilot to support grant, revoke, and honest degraded behavior
+- recent terminal connector-backed runs now expose one resource-aware review baseline instead of relying only on raw trace inspection

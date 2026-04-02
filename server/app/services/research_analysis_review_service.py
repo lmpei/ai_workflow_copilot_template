@@ -51,6 +51,8 @@ def list_workspace_research_analysis_review(
                 "run_memory": run.run_memory_json,
                 "degraded_reason": run.degraded_reason,
                 "resumed_from_run_id": run.resumed_from_run_id,
+                "selected_external_resource_snapshot_id": run.selected_external_resource_snapshot_id,
+                "external_resource_snapshot_id": run.external_resource_snapshot_id,
             },
             trace_response_json=trace.response_json if trace is not None else None,
             trace_metadata=trace.metadata_json if trace is not None else None,
@@ -62,6 +64,26 @@ def list_workspace_research_analysis_review(
             summary = run.run_memory_json.get("summary")
             if isinstance(summary, str) and summary.strip():
                 run_memory_summary = summary.strip()
+        selected_snapshot_id = (
+            signals.get("selected_external_resource_snapshot_id")
+            if isinstance(signals.get("selected_external_resource_snapshot_id"), str)
+            else None
+        )
+        external_snapshot_id = (
+            signals.get("external_resource_snapshot_id")
+            if isinstance(signals.get("external_resource_snapshot_id"), str)
+            else None
+        )
+        selected_snapshot_title = None
+        external_snapshot_title = None
+        if selected_snapshot_id:
+            selected_snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(selected_snapshot_id)
+            if selected_snapshot is not None:
+                selected_snapshot_title = selected_snapshot.title
+        if external_snapshot_id:
+            external_snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(external_snapshot_id)
+            if external_snapshot is not None:
+                external_snapshot_title = external_snapshot.title
 
         items.append(
             ResearchAnalysisReviewRecord(
@@ -87,6 +109,15 @@ def list_workspace_research_analysis_review(
                 external_match_count=(
                     signals.get("external_match_count")
                     if isinstance(signals.get("external_match_count"), int)
+                    else None
+                ),
+                selected_external_resource_snapshot_id=selected_snapshot_id,
+                selected_external_resource_snapshot_title=selected_snapshot_title,
+                external_resource_snapshot_id=external_snapshot_id,
+                external_resource_snapshot_title=external_snapshot_title,
+                resource_selection_mode=(
+                    signals.get("resource_selection_mode")
+                    if isinstance(signals.get("resource_selection_mode"), str)
                     else None
                 ),
                 passed=bool(baseline["passed"]),

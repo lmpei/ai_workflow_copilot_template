@@ -86,9 +86,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
     surface
 - `server/app/services/research_analysis_review_service.py`
   - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
-    their traces and applying the replay/regression baseline before any broader eval flywheel exists; it now also
-    surfaces connector consent state, external-context use, match-count visibility, and degraded-path honesty for the
-    Stage I pilot
+  their traces and applying the replay/regression baseline before any broader eval flywheel exists; it now also
+  surfaces connector consent state, external-context use, match-count visibility, selected versus actual resource
+  snapshot visibility, resource-selection mode, and degraded-path honesty for the Stage I pilot
 - `server/app/services/connector_service.py`
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, explicit grant or revoke
     lifecycle, and reusable permission-gate helpers for the first external-context pilot
@@ -108,7 +108,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
     are delivered through direct chat or explicit background analysis runs
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
-    visible tool steps and honest degraded no-source paths
+    visible tool steps, honest degraded no-source paths, and Stage I resource-selection plus consent-lifecycle
+    consistency
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor

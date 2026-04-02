@@ -438,7 +438,7 @@ def test_list_workspace_research_analysis_run_review_returns_regression_summary(
     )
     assert review_response.status_code == 200
     payload = review_response.json()
-    assert payload["baseline_version"] == "stage_i_connector_visibility_v1"
+    assert payload["baseline_version"] == "stage_i_resource_aware_review_v1"
     assert payload["reviewed_count"] == 1
     assert payload["passing_count"] == 1
     assert payload["failing_count"] == 0
@@ -727,3 +727,108 @@ def test_run_research_analysis_run_execution_can_reuse_selected_external_resourc
         traces = list(session.scalars(select(Trace)))
 
     assert traces[0].response_json["selected_external_resource_snapshot_id"] == snapshot.id
+
+
+def test_research_analysis_run_review_exposes_resource_selection_visibility(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="reviewer@example.com", name="Reviewer")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    async def fake_enqueue(run_id: str) -> str:
+        return "job-1"
+
+    monkeypatch.setattr(research_analysis_run_service, "enqueue_research_analysis_run_execution", fake_enqueue)
+
+    snapshot = create_research_external_resource_snapshot(
+        workspace_id=workspace_id,
+        conversation_id=None,
+        created_by=auth["user_id"],
+        connector_id="research_external_context",
+        search_query="pricing pressure",
+        analysis_focus="Reuse the selected snapshot",
+        matches=[
+            ResearchExternalContextEntry(
+                context_id="external-1",
+                title="Analyst note",
+                source_label="External market note",
+                keywords=("pricing", "pressure"),
+                snippet="External analysts also see sustained pricing pressure.",
+            )
+        ],
+    )
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs",
+        json={
+            "question": "Reuse the selected snapshot",
+            "mode": "research_external_context",
+            "external_resource_snapshot_id": snapshot.id,
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    run_id = create_response.json()["id"]
+
+    def fake_run_research_external_context_chat(
+        *,
+        workspace_id: str,
+        user_id: str,
+        question: str,
+        prior_memory: ResearchRunMemoryContext | None = None,
+        selected_external_resource_snapshot=None,
+    ) -> ResearchExternalContextChatResult:
+        return ResearchExternalContextChatResult(
+            answer="Used the selected external snapshot.",
+            prompt="selected snapshot prompt",
+            sources=[
+                SourceReference(
+                    document_id="external:selected",
+                    chunk_id="external:selected",
+                    document_title="Selected snapshot evidence",
+                    chunk_index=0,
+                    snippet="Selected snapshot evidence.",
+                    source_kind="external_context",
+                )
+            ],
+            tool_steps=[
+                ChatToolStep(
+                    tool_name="research_external_context",
+                    summary="Used the selected external resource snapshot.",
+                )
+            ],
+            token_input=12,
+            token_output=8,
+            analysis_focus="Reuse the selected snapshot",
+            search_query="pricing pressure",
+            degraded_reason=None,
+            connector_consent_state="granted",
+            external_context_used=True,
+            external_match_count=1,
+            external_matches=[],
+            selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+        )
+
+    monkeypatch.setattr(
+        research_analysis_run_service,
+        "run_research_external_context_chat",
+        fake_run_research_external_context_chat,
+    )
+    research_analysis_run_service.run_research_analysis_run_execution(run_id)
+
+    review_response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs/review",
+        headers=headers,
+    )
+    assert review_response.status_code == 200
+    payload = review_response.json()
+    assert payload["reviewed_count"] == 1
+    review_item = payload["items"][0]
+    assert review_item["run_id"] == run_id
+    assert review_item["resource_selection_mode"] == "explicit"
+    assert review_item["selected_external_resource_snapshot_id"] == snapshot.id
+    assert review_item["selected_external_resource_snapshot_title"] == snapshot.title
+    assert review_item["external_resource_snapshot_id"] == snapshot.id
+    assert review_item["external_resource_snapshot_title"] == snapshot.title

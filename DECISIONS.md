@@ -1583,3 +1583,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: the Research external-context path now has a clearer consent lifecycle and an explicit snapshot-selection step, and the next Stage I work can focus on replay or review around that more inspectable connector behavior.
 - Related Task: `tasks/archive/stage-i/stage-i-07-consent-lifecycle-and-resource-selection.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-102
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-08 resource-aware replay and review baseline
+- Context: the second Stage I wave had already turned approved external matches into persisted resource snapshots and made consent changes plus explicit snapshot selection visible on the Research surface, but the operator-facing review layer still treated connector-backed runs mostly like generic external-context runs.
+- Choice: extend the bounded Research run-review baseline so recent terminal connector runs expose selected snapshot visibility, actual used snapshot visibility, resource-selection mode, and consent-lifecycle consistency; archive `stage-i-08`; and return Stage I to human selection of the next bounded step.
+- Why: a resource-backed connector pilot should let operators review not just whether external context was used, but also which resource was chosen, which snapshot actually entered the run, and whether consent-state changes stayed consistent with the run outcome.
+- Impact: Stage I now has one clearer replay/review contract for recent Research connector runs, and the next project decision can focus on whether to close Stage I or deepen the connector/context-plane work further.
+- Related Task: `tasks/archive/stage-i/stage-i-08-resource-aware-replay-and-review-baseline.md`
+- Supersedes:
