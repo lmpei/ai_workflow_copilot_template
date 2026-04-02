@@ -21,6 +21,7 @@ from app.models.tool_call import ToolCall
 from app.models.trace import Trace
 from app.models.user import User
 from app.models.workspace import Workspace
+from app.models.workspace_connector_consent import WorkspaceConnectorConsent
 from app.models.workspace_member import WorkspaceMember
 
 __all__ = [
@@ -47,5 +48,6 @@ __all__ = [
     "ToolCall",
     "User",
     "Workspace",
+    "WorkspaceConnectorConsent",
     "WorkspaceMember",
 ]

@@ -6,7 +6,7 @@
 
 ## Status
 
-- Status: active
+- Status: complete and closed
 - Opened At: 2026-04-01
 - First Task Wave: complete
 - Second Task Wave: complete

@@ -120,13 +120,14 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage E`, documented in `docs/prd/STAGE_E_PLAN.md`, is now complete and closed.
 `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`, is now complete and closed.
 `Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage H`, documented in `docs/prd/STAGE_H_PLAN.md`.
+`Stage H`, documented in `docs/prd/STAGE_H_PLAN.md`, is now complete and closed.
+The active formal planning unit is now `Stage I`, documented in `docs/prd/STAGE_I_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage G`,
-and is now executing `Stage H`.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage H`,
+and is now executing `Stage I`.
 
 The current implemented platform increment includes:
 
@@ -173,6 +174,8 @@ The current implemented platform increment includes:
   answer delivery, tool-step visibility, and trace linkage on the same workspace surface
 - one operator-visible regression review path for recent terminal Research analysis runs, so resumed-run memory,
   degraded-path honesty, and tool-step visibility can be checked without opening raw trace JSON first
+- one bounded Stage I connector foundation with a shared external-context connector contract plus one explicit
+  workspace-level connector-consent API for Research workspaces
 
 The repository does not yet implement:
 
@@ -193,12 +196,16 @@ complete and closed.
 closed.
 `Stage G: Multi-Subdomain Product Split and Shared Edge Routing`, documented in `docs/prd/STAGE_G_PLAN.md`, is complete
 and closed.
-The active formal planning unit is `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented
-in `docs/prd/STAGE_H_PLAN.md`.
+`Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented in `docs/prd/STAGE_H_PLAN.md`, is
+complete and closed.
+The active formal planning unit is `Stage I: Connector and Context Plane Pilot`, documented in
+`docs/prd/STAGE_I_PLAN.md`.
 
-The first Stage H task wave is complete, and the second Stage H task wave is now complete as well. The bounded
-Research-first capability path now includes explicit background analysis runs, compact resumed-run memory, and one
-operator-visible replay/regression baseline before the roadmap opens connector or multi-agent work.
+Stage H is now complete. The bounded Research-first capability path now includes explicit background analysis runs,
+compact resumed-run memory, and one operator-visible replay/regression baseline before the roadmap opens connector or
+multi-agent work. Stage I is now active, and its first foundation is already in place: one bounded connector contract
+and one explicit workspace-level consent boundary exist before the first external-context pilot is wired into the
+Research surface.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

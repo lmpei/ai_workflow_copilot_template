@@ -11,7 +11,7 @@ visible without overloading the next bounded planning unit.
 
 - Status: active direction document
 - Created At: 2026-03-26
-- Current bounded stage: `docs/prd/STAGE_H_PLAN.md`
+- Current bounded stage: `docs/prd/STAGE_I_PLAN.md`
 
 ## Primary Intent
 
@@ -142,7 +142,7 @@ Exit signal:
 - at least one module uses the modern model/tool interface in a way that is visible through traces, evals, and honest
   public-demo behavior
 
-This wave is now the active bounded next stage in `docs/prd/STAGE_H_PLAN.md`.
+This wave is now materially delivered as a bounded baseline through `docs/prd/STAGE_H_PLAN.md`.
 
 #### Wave 2: Connector and Context Plane
 
@@ -351,7 +351,7 @@ Use:
 
 - `STATUS.md`
   - for the current objective and active task
-- `docs/prd/STAGE_D_PLAN.md`
+- `docs/prd/STAGE_I_PLAN.md`
   - for the current bounded stage
 - `tasks/`
   - for execution-ready work

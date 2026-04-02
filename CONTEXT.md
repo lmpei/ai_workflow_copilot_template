@@ -26,9 +26,9 @@ surfaces. Stage G is now also complete and closed after the host-boundary split:
 product frontend at `https://weave.lmpai.online` plus the dedicated backend API at
 `https://api.lmpai.online/api/v1` behind one shared Cloudflare -> Caddy edge.
 
-The active work is now Stage H. Stage H opens the first bounded post-split AI-capability wave: modernize the model
-interface, keep Research as the reference workflow, pilot one visible tool-assisted path, and make tool behavior
-honest in traces and eval surfaces before any broader capability expansion begins.
+Stage H is now complete and closed. It delivered the first bounded post-split AI-capability wave: one shared
+model-interface layer, one visible Research-first tool-assisted path, explicit background analysis runs, bounded
+resumed-run memory, and one operator-facing replay/regression baseline around that path.
 
 The first Stage H foundation is now in place: one shared backend model-interface layer sits underneath chat
 generation, embedding generation, and eval judging, so later capability work can build on one contract instead of on
@@ -52,15 +52,20 @@ That second Stage H wave is now complete as well: recent terminal Research analy
 operator-facing regression review alongside the existing trace view, so replay and resumed-run honesty can be reviewed
 without pretending the repo already has a full optimization flywheel.
 
-The next bounded Stage H work is not fixed yet and should be chosen explicitly before any connector or multi-agent work
-begins.
+The active work is now Stage I. Stage I opens the next bounded roadmap wave: move from internal-only tool use toward
+one connector and context-plane pilot, keep Research as the reference workflow, and add explicit consent and degraded
+behavior before any broader connector surface or multi-agent work begins.
+
+The first Stage I foundation is now in place as well: the backend has one bounded external-context connector contract
+and one workspace-level connector consent boundary for Research workspaces, so the next step can add one real external
+context pilot without inventing ad hoc permission rules.
 
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
 - Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, Stage F
-  complete, Stage G complete, and Stage H active
+  complete, Stage G complete, Stage H complete, and Stage I active
 
 ## Success Criteria
 
@@ -102,11 +107,13 @@ and eval baseline for that workflow.
 - `docs/prd/STAGE_G_PLAN.md`
   - closed Stage G planning document for the product-only multi-subdomain deployment split
 - `docs/prd/STAGE_H_PLAN.md`
-  - active Stage H planning document for the first bounded model-interface modernization wave
+  - closed Stage H planning document for the first bounded model-interface modernization wave
+- `docs/prd/STAGE_I_PLAN.md`
+  - active Stage I planning document for the bounded connector and context-plane pilot wave
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage H work uses `stage-h-*`
+  - active Stage I work uses `stage-i-*`
 - root control-plane docs
   - `AGENTS.md`, `CONTEXT.md`, `STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`
 
@@ -137,8 +144,11 @@ and eval baseline for that workflow.
   - a product-only stack from this repo, intended to run behind one shared host-level Caddy edge as
     `weave.lmpai.online` plus `api.lmpai.online`
 - `stage-h-capability-wave`
-  - the same product-only stack, but now treated as the bounded environment where one model-interface modernization wave
-    can ship without collapsing the stable public-demo boundary
+  - the bounded product-only stack where the first model-interface modernization wave shipped without collapsing the
+    stable public-demo boundary
+- `stage-i-connector-wave`
+  - the same product-only stack, but now treated as the bounded environment where one connector and context-plane pilot
+    can ship with explicit consent and degraded-path visibility
 
 ## Verification
 

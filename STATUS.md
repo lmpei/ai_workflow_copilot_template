@@ -20,27 +20,30 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage E complete and closed
 - Stage F complete and closed
 - Stage G complete and closed
-- Stage H active
+- Stage H complete and closed
+- Stage I active
 
 ## Current Objective
 
-- keep Stage H active while the second bounded Research-first capability wave is now complete and ready for human
-  review plus next-wave selection
+- execute the first bounded Stage I connector and context-plane wave by delivering one Research-first external-context
+  pilot on top of the new connector contract and explicit workspace-consent boundary, while keeping connector failure
+  states visible and public product boundaries stable
 
 ## Active Task
 
-- none; waiting for the next bounded Stage H task wave
+- `tasks/stage-i-03-research-external-context-pilot.md`
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. The live product stack now runs behind one
   shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
-  outside this repository. Stage H first wave is complete: the shared model-interface foundation is in place, one
-  bounded Research tool-assisted chat pilot is live behind the Research workspace surface, and that pilot now has
-  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave is now two
-  steps deep: Research can launch one explicit background analysis run, resume a later pass from one bounded compact
-  memory, expose that resumed-memory contract on both the run surface and the trace-review surface, and review recent
-  terminal runs through one operator-visible regression baseline instead of raw trace inspection alone.
+  outside this repository. Stage H is now also complete and closed: the shared model-interface foundation is in place,
+  one bounded Research tool-assisted path is live, that path has explicit background analysis runs plus compact resumed
+  memory, and recent terminal runs now surface one operator-facing regression review baseline. Stage I is now active as
+  the next bounded roadmap step: move from internal-only tools toward one connector or context-plane pilot with
+  explicit consent, honest degraded behavior, and visible trace boundaries. The first Stage I foundation is now in
+  place: the backend has one bounded external-context connector contract plus one workspace-level consent record and API
+  surface before any actual external-context call path is enabled.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -58,15 +61,14 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which bounded Stage H capability wave should follow the now-complete Research-first replay and regression baseline
+- which single external context source should back the first Research pilot without creating premature connector sprawl
 
 ## Ready Now
 
-1. review the completed second Stage H wave and decide whether to deepen Research further or define the next bounded
-   capability wave
-2. keep the live `weave` and `api` hosts stable while Stage H planning resumes from the completed replay/regression
-   baseline
-3. preserve the current honest pilot visibility baseline until the next bounded wave is fixed in text
+1. implement `stage-i-03` to make one Research path use approved external context while keeping internal retrieval and
+   connector-backed context visibly distinct
+2. keep the live `weave` and `api` hosts stable while Stage I extends the Research-first pilot toward external context
+3. preserve the current trace and degraded-path honesty baseline as connector capabilities are introduced
 
 ## Parked / Later
 
@@ -76,7 +78,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-h/stage-h-09-tool-aware-replay-and-regression-baseline.md`
+- `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md`
 
 ## Recent Decisions
 
@@ -113,3 +115,9 @@ Current state only. Keep this file short, current, and action-oriented.
   background analysis runs, archive the task, and move Stage H to tool-aware replay/regression follow-through
 - `DEC-2026-04-02-093` complete `stage-h-09`, add one operator-visible regression review path for terminal Research
   analysis runs, archive the task, and return Stage H to human selection of the next bounded wave
+- `DEC-2026-04-02-094` close Stage H after the full Wave 1 model-interface and built-in-tool baseline is materially
+  delivered, and open Stage I as the bounded connector and context-plane pilot stage
+- `DEC-2026-04-02-095` define the first Stage I wave as connector-contract foundation, one Research external-context
+  pilot, and one connector trace/consent visibility follow-through
+- `DEC-2026-04-02-096` complete `stage-i-02`, add one bounded connector contract plus one workspace-level consent API,
+  archive the task, and move Stage I to the visible Research external-context pilot

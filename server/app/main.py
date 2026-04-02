@@ -5,6 +5,7 @@ from app.api.routes import (
     agents,
     auth,
     chat,
+    connectors,
     documents,
     evals,
     health,
@@ -39,6 +40,7 @@ app.include_router(public_demo.router, prefix=settings.api_prefix, tags=["public
 app.include_router(auth.router, prefix=settings.api_prefix, tags=["auth"])
 app.include_router(scenarios.router, prefix=settings.api_prefix, tags=["scenarios"])
 app.include_router(workspaces.router, prefix=settings.api_prefix, tags=["workspaces"])
+app.include_router(connectors.router, prefix=settings.api_prefix, tags=["connectors"])
 app.include_router(documents.router, prefix=settings.api_prefix, tags=["documents"])
 app.include_router(chat.router, prefix=settings.api_prefix, tags=["chat"])
 app.include_router(tasks.router, prefix=settings.api_prefix, tags=["tasks"])

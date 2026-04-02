@@ -1443,3 +1443,53 @@ Append-only log. Add new entries at the bottom.
 - Impact: recent terminal Research analysis runs can now be reviewed through one explicit operator-facing baseline instead of only through raw trace JSON, and the next Stage H wave can start from a more durable replay/regression contract.
 - Related Task: `tasks/archive/stage-h/stage-h-09-tool-aware-replay-and-regression-baseline.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-094
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human
+- Topic: close Stage H and open Stage I
+- Context: Stage H has now materially delivered the roadmap's Wave 1 baseline: one shared model-interface layer, one visible Research-first tool-assisted path, one explicit background-run path, one bounded resumed-run memory contract, and one operator-visible replay/regression review surface.
+- Choice: close `Stage H: Model Interface Modernization and Tool-Visible Research Pilot` and open `Stage I: Connector and Context Plane Pilot`.
+- Why: the next bounded learning step in the roadmap is no longer deeper internal-only tool work; it is one external-context and connector pilot with explicit consent and honest degraded behavior.
+- Impact: control-plane docs now treat Stage H as complete and closed, while Stage I becomes the active planning and execution unit.
+- Related Task: `tasks/archive/stage-i/stage-i-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-095
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human
+- Topic: Stage I first task wave
+- Context: Stage I needs one bounded first wave that follows the roadmap's connector and context-plane theme without broadening into a connector marketplace, multi-agent orchestration, or a multi-module rollout.
+- Choice: define the first Stage I wave as:
+  - `tasks/stage-i-02-connector-contract-and-consent-foundation.md`
+  - `tasks/stage-i-03-research-external-context-pilot.md`
+  - `tasks/stage-i-04-connector-trace-and-consent-visibility.md`
+- Why: this keeps Research as the first visible pilot, forces explicit consent and permission boundaries before live connector use, and preserves honest trace and degraded-path review around the first external-context capability.
+- Impact: `stage-i-02` becomes the new active task and Stage I now has one explicit, bounded execution stack.
+- Related Task: `tasks/archive/stage-i/stage-i-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-096
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-02 connector contract and consent foundation
+- Context: Stage I needed one explicit contract and one explicit permission boundary before the repository could expose
+  any real external-context behavior. Until now, the product had internal tool and trace boundaries but no shared
+  connector-facing consent layer.
+- Choice: add one bounded connector definition registry, one workspace-level connector consent persistence model plus
+  API, one reusable consent gate for future connector-backed flows, archive `stage-i-02`, and move the active task to
+  the visible Research external-context pilot.
+- Why: the first connector wave should not begin with ad hoc external calls or hidden permission rules.
+- Impact: the repository now has one stable Stage I connector contract and one explicit workspace-consent boundary that
+  later Research connector work can reuse without reopening the Stage H tool-only abstractions.
+- Related Task: `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md`
+- Supersedes:

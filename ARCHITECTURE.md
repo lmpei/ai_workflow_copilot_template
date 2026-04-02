@@ -33,6 +33,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - PostgreSQL also persists the non-Research workbench state through Support case / Support case event and Job hiring
   packet / Job hiring packet event records, and now also persists bounded Research background analysis run state
   through `research_analysis_run` records.
+- PostgreSQL now also persists bounded workspace-level connector consent state through
+  `workspace_connector_consent` records before any external-context connector call path is enabled.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
@@ -55,6 +57,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
     execution detail, or deeper document inspection belong to summoned supporting surfaces instead of equal peer
     destinations
 - FastAPI API in `server/app/api/routes/`
+- `server/app/api/routes/connectors.py`
+  - owns the bounded Stage I consent-check and consent-grant API surface for Research-first connector use
 - orchestration in `server/app/services/`
 - persistence in `server/app/repositories/`
 - worker entrypoints in `server/app/workers/`
@@ -80,6 +84,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/research_analysis_review_service.py`
   - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
     their traces and applying the replay/regression baseline before any broader eval flywheel exists
+- `server/app/services/connector_service.py`
+  - owns the bounded Stage I connector definition registry, workspace-level consent boundary, and reusable
+    permission-gate helpers before any actual external-context pilot is wired in
 - `server/app/services/retrieval_service.py`
   - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and now also
     records the extra trace metadata needed when that pilot is delivered through explicit background analysis runs
@@ -102,6 +109,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/repositories/research_analysis_run_repository.py`
   - owns `research_analysis_run` persistence, resumed-run lookup, and run-status queries for the bounded Stage H
     background-run path
+- `server/app/repositories/workspace_connector_consent_repository.py`
+  - owns `workspace_connector_consent` persistence for the bounded Stage I connector-consent foundation
 - `server/app/agents/graph.py`
   - owns one shared workspace-agent execution skeleton with module-specific compose steps
 - `server/app/workers/task_worker.py`
