@@ -174,7 +174,12 @@ The current implemented platform increment includes:
   answer delivery, tool-step visibility, and trace linkage on the same workspace surface
 - one operator-visible regression review path for recent terminal Research analysis runs, so resumed-run memory,
   degraded-path honesty, and tool-step visibility can be checked without opening raw trace JSON first
-- one bounded Stage I connector foundation with a shared external-context connector contract plus one explicit`r`n  workspace-level connector-consent API for Research workspaces`r`n- one bounded external-context Research pilot that can combine approved external context with internal workspace`r`n  evidence on the main Research surface while keeping the two evidence paths and degraded outcomes visibly distinct
+- one bounded Stage I connector foundation with a shared external-context connector contract plus one explicit
+  workspace-level connector-consent API for Research workspaces
+- one bounded external-context Research pilot that can combine approved external context with internal workspace
+  evidence on the main Research surface while keeping the two evidence paths and degraded outcomes visibly distinct
+- one operator-facing connector review baseline that can expose connector consent state, external-context use, external
+  match visibility, and degraded-path honesty for recent Research analysis runs
 
 The repository does not yet implement:
 
@@ -202,9 +207,9 @@ The active formal planning unit is `Stage I: Connector and Context Plane Pilot`,
 
 Stage H is now complete. The bounded Research-first capability path now includes explicit background analysis runs,
 compact resumed-run memory, and one operator-visible replay/regression baseline before the roadmap opens connector or
-multi-agent work. Stage I is now active, and its first foundation is already in place: one bounded connector contract
-and one explicit workspace-level consent boundary exist before the first external-context pilot is wired into the
-Research surface.
+multi-agent work. Stage I is now active, and its first wave is now complete: one bounded connector contract, one
+explicit workspace-level consent boundary, one visible external-context Research pilot, and one connector-aware review
+baseline now exist on the product surface.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

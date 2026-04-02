@@ -443,7 +443,7 @@ def test_chat_supports_research_external_context_mode(client: TestClient, monkey
             tool_steps=[
                 ChatToolStep(
                     tool_name="research_external_context",
-                    summary="Found approved external context.",
+                    summary="已命中已授权外部信息。",
                 )
             ],
             token_input=21,

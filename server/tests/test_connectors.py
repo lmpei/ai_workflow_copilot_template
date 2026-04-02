@@ -62,14 +62,14 @@ def test_grant_workspace_connector_consent_persists_granted_state(client: TestCl
 
     response = client.post(
         f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}/consent",
-        json={"consent_note": "Use one bounded external context pilot for this workspace."},
+        json={"consent_note": "允许这个工作区使用一次有边界的外部信息试点。"},
         headers=headers,
     )
     assert response.status_code == 201
     payload = response.json()
     assert payload["consent_state"] == "granted"
     assert payload["granted_by"] == auth["user_id"]
-    assert payload["consent_note"] == "Use one bounded external context pilot for this workspace."
+    assert payload["consent_note"] == "允许这个工作区使用一次有边界的外部信息试点。"
 
     get_response = client.get(
         f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}",
@@ -89,7 +89,7 @@ def test_connectors_reject_non_research_workspace(client: TestClient) -> None:
         headers=headers,
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Connector pilot is only available in Research workspaces"
+    assert response.json()["detail"] == "连接器试点目前只对 Research 工作区开放"
 
 
 def test_require_workspace_connector_consent_enforces_explicit_grant(client: TestClient) -> None:
@@ -103,7 +103,7 @@ def test_require_workspace_connector_consent_enforces_explicit_grant(client: Tes
             connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
         )
     except connector_service.ConnectorConsentRequiredError as error:
-        assert str(error) == "Connector consent is required before using this external context pilot"
+        assert str(error) == "使用这个外部信息试点前，必须先完成工作区授权"
     else:
         raise AssertionError("Expected connector consent to be required")
 

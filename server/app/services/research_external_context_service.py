@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 
 from app.connectors.research_external_context_connector import (
     ResearchExternalContextConnectorUnavailableError,
@@ -66,11 +66,11 @@ def _summarize_external_context_step(
     matches: list[ResearchExternalContextEntry],
     search_query: str,
 ) -> ChatToolStep:
-    top_titles = ", ".join(match.title for match in matches[:2])
+    top_titles = "、".join(match.title for match in matches[:2])
     return ChatToolStep(
         tool_name="research_external_context",
-        summary=f"Found {len(matches)} approved external-context matches for '{search_query}'.",
-        detail=f"Most visible external context: {top_titles}",
+        summary=f"已为“{search_query}”命中 {len(matches)} 条已授权外部信息。",
+        detail=f"最明显的外部信息来源：{top_titles}" if top_titles else None,
     )
 
 
@@ -78,19 +78,19 @@ def _summarize_external_context_degraded_step(*, reason: str) -> ChatToolStep:
     if reason == "connector_consent_required":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="External context was not used because this workspace has not granted connector consent yet.",
-            detail="Grant workspace consent before using the Research external-context pilot.",
+            summary="这次没有使用外部信息，因为当前工作区还没有完成连接器授权。",
+            detail="先授权工作区，再运行外部信息试点。",
         )
     if reason == "external_context_unavailable":
         return ChatToolStep(
             tool_name="research_external_context",
-            summary="External context was approved but unavailable during this pass.",
-            detail="The analysis continued with workspace material only.",
+            summary="这次外部信息已获授权，但当前暂时不可用。",
+            detail="系统已退回到只使用工作区资料的路径。",
         )
     return ChatToolStep(
         tool_name="research_external_context",
-        summary="The external context pilot returned no useful matches for this pass.",
-        detail="The analysis continued with workspace material only.",
+        summary="这次外部信息试点没有找到足够有用的补充信息。",
+        detail="系统已退回到只使用工作区资料的路径。",
     )
 
 
@@ -201,7 +201,7 @@ def run_research_external_context_chat(
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(
                 internal_result.answer,
-                "External context was not used because this workspace has not granted consent for the pilot.",
+                "这次没有使用外部信息，因为当前工作区还没有为这个试点完成授权。",
             ),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
@@ -227,7 +227,7 @@ def run_research_external_context_chat(
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(
                 internal_result.answer,
-                "Approved external context was unavailable during this pass, so the answer only reflects workspace material.",
+                "这次已获授权的外部信息暂时不可用，所以答案只反映当前工作区资料。",
             ),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
@@ -248,7 +248,7 @@ def run_research_external_context_chat(
         return ResearchExternalContextChatResult(
             answer=_append_answer_note(
                 internal_result.answer,
-                "The approved external-context pilot did not find useful additional context for this pass.",
+                "这次已授权的外部信息没有找到足够有用的补充内容。",
             ),
             prompt=internal_result.prompt,
             sources=internal_result.sources,

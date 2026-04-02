@@ -84,14 +84,16 @@ Stable system boundaries only. This is the short architecture summary. The long-
     surface
 - `server/app/services/research_analysis_review_service.py`
   - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
-    their traces and applying the replay/regression baseline before any broader eval flywheel exists
+    their traces and applying the replay/regression baseline before any broader eval flywheel exists; it now also
+    surfaces connector consent state, external-context use, match-count visibility, and degraded-path honesty for the
+    Stage I pilot
 - `server/app/services/connector_service.py`
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, and reusable
     permission-gate helpers for the first external-context pilot
 - `server/app/services/research_external_context_service.py`
   - owns the bounded Stage I Research pilot that checks workspace connector consent, queries the approved external
-    context source, keeps internal and external evidence visibly distinct, and degrades honestly when consent or
-    connector availability is missing
+    context source, keeps internal and external evidence visibly distinct, and degrades honestly when consent, connector
+    availability, or useful external matches are missing
 - `server/app/connectors/research_external_context_connector.py`
   - owns one bounded external-context source contract for the first Research pilot instead of broad connector sprawl
 - `server/app/services/retrieval_service.py`

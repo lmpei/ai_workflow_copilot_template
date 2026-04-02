@@ -1,4 +1,4 @@
-from app.models.workspace_connector_consent import WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED
+﻿from app.models.workspace_connector_consent import WORKSPACE_CONNECTOR_CONSENT_STATUS_GRANTED
 from app.repositories import workspace_connector_consent_repository, workspace_repository
 from app.schemas.connector import (
     ConnectorDefinition,
@@ -11,8 +11,8 @@ RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID = "research_external_context"
 _CONNECTOR_DEFINITIONS: dict[str, ConnectorDefinition] = {
     RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID: ConnectorDefinition(
         id=RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
-        display_name="Research External Context",
-        summary="Allows one bounded Research pilot to use approved external context beyond workspace documents.",
+        display_name="Research 外部信息",
+        summary="允许一个有边界的 Research 试点在工作区资料之外使用已授权的外部信息。",
         kind="external_context",
         consent_scope="workspace",
         module_types=["research"],
@@ -47,22 +47,22 @@ def get_connector_definition(connector_id: str) -> ConnectorDefinition | None:
 def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
-        raise ConnectorAccessError("Workspace not found")
+        raise ConnectorAccessError("工作区不存在")
     if workspace.module_type != "research":
-        raise ConnectorValidationError("Connector pilot is only available in Research workspaces")
+        raise ConnectorValidationError("连接器试点目前只对 Research 工作区开放")
     return workspace
 
 
 def _get_connector_definition_or_raise(connector_id: str) -> ConnectorDefinition:
     connector = get_connector_definition(connector_id)
     if connector is None:
-        raise ConnectorValidationError(f"Unsupported connector: {connector_id}")
+        raise ConnectorValidationError(f"不支持的连接器：{connector_id}")
     return connector
 
 
 def _ensure_connector_available_for_workspace(*, workspace, connector: ConnectorDefinition) -> None:
     if workspace.module_type not in connector.module_types:
-        raise ConnectorValidationError("Connector is not available in this workspace")
+        raise ConnectorValidationError("这个工作区不能使用该连接器")
 
 
 def _build_workspace_connector_status(
@@ -160,5 +160,5 @@ def require_workspace_connector_consent(
         connector_id=connector_id,
     )
     if status.consent_state != "granted":
-        raise ConnectorConsentRequiredError("Connector consent is required before using this external context pilot")
+        raise ConnectorConsentRequiredError("使用这个外部信息试点前，必须先完成工作区授权")
     return status

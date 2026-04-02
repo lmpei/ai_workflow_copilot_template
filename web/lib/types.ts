@@ -808,10 +808,15 @@ export type ResearchAnalysisReviewRecord = {
   run_id: string;
   question: string;
   status: ResearchAnalysisRunStatus;
+  mode: "research_tool_assisted" | "research_external_context";
   trace_id?: string | null;
   resumed_from_run_id?: string | null;
   degraded_reason?: string | null;
   run_memory_summary?: string | null;
+  connector_id?: string | null;
+  connector_consent_state?: "granted" | "not_granted" | null;
+  external_context_used?: boolean | null;
+  external_match_count?: number | null;
   passed: boolean;
   issues: string[];
   regression_baseline: JsonObject;

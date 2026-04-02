@@ -101,16 +101,17 @@ function PromptCard({
 
 function StatusBadge({ status }: { status: ResearchAnalysisRunStatus }) {
   const palette: Record<ResearchAnalysisRunStatus, { label: string; color: string; background: string }> = {
-    pending: { label: "Queued", color: "#92400e", background: "#fef3c7" },
-    running: { label: "Running", color: "#1d4ed8", background: "#dbeafe" },
-    completed: { label: "Completed", color: "#166534", background: "#dcfce7" },
-    degraded: { label: "Degraded", color: "#7c2d12", background: "#ffedd5" },
-    failed: { label: "Failed", color: "#b91c1c", background: "#fee2e2" },
+    pending: { label: "排队中", color: "#92400e", background: "#fef3c7" },
+    running: { label: "运行中", color: "#1d4ed8", background: "#dbeafe" },
+    completed: { label: "已完成", color: "#166534", background: "#dcfce7" },
+    degraded: { label: "降级完成", color: "#7c2d12", background: "#ffedd5" },
+    failed: { label: "失败", color: "#b91c1c", background: "#fee2e2" },
   };
   const token = palette[status];
   return (
     <span
       style={{
+        alignItems: "center",
         backgroundColor: token.background,
         borderRadius: 999,
         color: token.color,
@@ -119,7 +120,6 @@ function StatusBadge({ status }: { status: ResearchAnalysisRunStatus }) {
         fontWeight: 800,
         minHeight: 28,
         padding: "0 10px",
-        alignItems: "center",
       }}
     >
       {token.label}
@@ -144,7 +144,7 @@ function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
         padding: 12,
       }}
     >
-      <strong style={{ color: "#0f172a", fontSize: 14 }}>Tool steps in this pass</strong>
+      <strong style={{ color: "#0f172a", fontSize: 14 }}>本次分析步骤</strong>
       <div style={{ display: "grid", gap: 8 }}>
         {toolSteps.map((step, index) => (
           <div
@@ -170,9 +170,9 @@ function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
 function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: string | null }) {
   return (
     <details style={{ marginTop: 12 }}>
-      <summary>View analysis evidence</summary>
+      <summary>查看分析依据</summary>
       {sources.length === 0 ? (
-        <p style={{ color: "#64748b", marginBottom: 0 }}>No visible evidence was returned for this pass.</p>
+        <p style={{ color: "#64748b", marginBottom: 0 }}>这一轮没有返回可见的证据。</p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
           {sources.map((source) => (
@@ -199,11 +199,11 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
                     padding: "4px 10px",
                   }}
                 >
-                  {source.source_kind === "external_context" ? "External context" : "Workspace material"}
+                  {source.source_kind === "external_context" ? "外部信息" : "工作区资料"}
                 </span>
               </div>
               <div style={{ color: "#475569", fontSize: 13 }}>
-                Chunk {source.chunk_index} / Document {source.document_id}
+                分片 {source.chunk_index} / 文档 {source.document_id}
               </div>
               <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
             </div>
@@ -227,7 +227,7 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
             padding: "16px 18px",
           }}
         >
-          <div style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Your question</div>
+          <div style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>你的问题</div>
           <div style={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{entry.question}</div>
         </div>
       </div>
@@ -267,7 +267,7 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
                   padding: "4px 10px",
                 }}
               >
-                Tool-assisted pilot
+                工具辅助试点
               </span>
             ) : null}
             {entry.mode === "research_external_context" ? (
@@ -281,10 +281,10 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
                   padding: "4px 10px",
                 }}
               >
-                External-context pilot
+                外部信息试点
               </span>
             ) : null}
-            <span style={{ color: "#64748b", fontSize: 12 }}>Trace ID: {entry.traceId}</span>
+            <span style={{ color: "#64748b", fontSize: 12 }}>追踪 ID：{entry.traceId}</span>
           </div>
           <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
           <ToolSteps toolSteps={entry.toolSteps} />
@@ -297,11 +297,11 @@ function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: 
 
 function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
   const outcomeCopy: Record<ResearchAnalysisRunStatus, string> = {
-    pending: "The run has been queued and will start shortly.",
-    running: "The assistant is reading connected material, planning the next step, and synthesizing a result.",
-    completed: "The bounded analysis pass completed successfully.",
-    degraded: "The pass completed honestly, but the evidence path was weak and has been called out.",
-    failed: "The background analysis run failed before it could complete.",
+    pending: "这次分析已经进入队列，很快会开始。",
+    running: "系统正在读取资料、规划下一步，并合成结果。",
+    completed: "这次有边界的分析已经成功完成。",
+    degraded: "这次分析已诚实完成，但证据路径较弱，系统已经明确标出。",
+    failed: "后台分析在完成前失败了。",
   };
 
   return (
@@ -319,7 +319,7 @@ function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
       <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
         <div style={{ display: "grid", gap: 4 }}>
           <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-            Background analysis run
+            后台分析运行
           </span>
           <strong style={{ color: "#0f172a", lineHeight: 1.6 }}>{run.question}</strong>
         </div>
@@ -330,18 +330,18 @@ function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
 
       <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
         <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-          <span style={{ color: "#64748b", fontSize: 12 }}>Analysis focus</span>
-          <strong style={{ color: "#0f172a" }}>{run.analysis_focus ?? "Waiting for the planner to set focus"}</strong>
+          <span style={{ color: "#64748b", fontSize: 12 }}>分析焦点</span>
+          <strong style={{ color: "#0f172a" }}>{run.analysis_focus ?? "等待系统确定分析焦点"}</strong>
         </div>
         <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-          <span style={{ color: "#64748b", fontSize: 12 }}>Search query</span>
-          <strong style={{ color: "#0f172a" }}>{run.search_query ?? "Not available yet"}</strong>
+          <span style={{ color: "#64748b", fontSize: 12 }}>搜索词</span>
+          <strong style={{ color: "#0f172a" }}>{run.search_query ?? "暂时还没有"}</strong>
         </div>
       </div>
 
       {run.resumed_from_run_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
-          Resumed from run: <strong style={{ color: "#0f172a" }}>{run.resumed_from_run_id}</strong>
+          延续自运行：<strong style={{ color: "#0f172a" }}>{run.resumed_from_run_id}</strong>
         </div>
       ) : null}
 
@@ -356,25 +356,25 @@ function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
             padding: 14,
           }}
         >
-          <strong style={{ color: "#0f172a" }}>Compacted run memory</strong>
+          <strong style={{ color: "#0f172a" }}>压缩后的运行记忆</strong>
           <div style={{ color: "#334155", lineHeight: 1.7 }}>{run.run_memory.summary}</div>
           <div style={{ color: "#475569", fontSize: 13 }}>
-            Evidence state: <strong style={{ color: "#0f172a" }}>{run.run_memory.evidence_state}</strong>
+            证据状态：<strong style={{ color: "#0f172a" }}>{run.run_memory.evidence_state}</strong>
           </div>
           <div style={{ color: "#475569", fontSize: 13 }}>
-            Recommended next step: {run.run_memory.recommended_next_step}
+            建议下一步：{run.run_memory.recommended_next_step}
           </div>
           {run.run_memory.source_titles.length > 0 ? (
             <div style={{ color: "#475569", fontSize: 13 }}>
-              Source titles carried forward: {run.run_memory.source_titles.join(", ")}
+              保留下来的资料标题：{run.run_memory.source_titles.join("、")}
             </div>
           ) : null}
         </section>
       ) : null}
 
-      {run.trace_id ? <div style={{ color: "#64748b", fontSize: 13 }}>Trace ID: {run.trace_id}</div> : null}
-      {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>Degraded reason: {run.degraded_reason}</div> : null}
-      {run.error_message ? <div style={{ color: "#b91c1c", fontSize: 13 }}>Error: {run.error_message}</div> : null}
+      {run.trace_id ? <div style={{ color: "#64748b", fontSize: 13 }}>追踪 ID：{run.trace_id}</div> : null}
+      {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>降级原因：{run.degraded_reason}</div> : null}
+      {run.error_message ? <div style={{ color: "#b91c1c", fontSize: 13 }}>错误：{run.error_message}</div> : null}
 
       {run.answer ? (
         <div
@@ -412,13 +412,13 @@ function mergeRuns(
 export default function ChatPanel({
   workspaceId,
   assistantLabel = "Research Assistant",
-  workflowLabel = "Research workflow",
-  introTitle = "Start from one research question",
-  introBody = "Pick one prompt or type your own question, then start the analysis.",
-  placeholder = "For example: summarize the strongest market signals in the current material and tell me what evidence is still missing before we can make a formal conclusion.",
+  workflowLabel = "Research 工作流",
+  introTitle = "从一个研究问题开始",
+  introBody = "先点一个提示问题，或者直接输入你的研究问题，然后开始分析。",
+  placeholder = "例如：总结当前资料里最强的市场信号，并告诉我在形成正式结论前还缺少哪些关键证据。",
   suggestedPrompts,
-  primaryActionLabel = "Start analysis",
-  outputTitle = "Analysis flow and conclusions",
+  primaryActionLabel = "开始分析",
+  outputTitle = "分析过程与结论",
   modes,
   supportsBackgroundRuns = false,
   onStatusChange,
@@ -432,13 +432,15 @@ export default function ChatPanel({
   const [isLoadingRuns, setIsLoadingRuns] = useState(false);
   const [connectorStatus, setConnectorStatus] = useState<WorkspaceConnectorStatusRecord | null>(null);
   const [isGrantingConnectorConsent, setIsGrantingConnectorConsent] = useState(false);
+
   const availableModes = useMemo(
     () =>
       modes && modes.length > 0
         ? modes
-        : [{ value: "rag" as const, label: "Standard analysis", description: "Use the current material directly for one grounded analysis pass." }],
+        : [{ value: "rag" as const, label: "标准分析", description: "直接基于当前资料完成一次有依据的分析。" }],
     [modes],
   );
+
   const [mode, setMode] = useState<"rag" | "research_tool_assisted" | "research_external_context">(
     availableModes[0]?.value ?? "rag",
   );
@@ -448,9 +450,9 @@ export default function ChatPanel({
       suggestedPrompts && suggestedPrompts.length > 0
         ? suggestedPrompts
         : [
-            "Summarize the most important findings in the current material.",
-            "Tell me which missing material would unblock the next research step.",
-            "Point out which conclusions are still weak and need more verification.",
+            "总结当前资料里最重要的发现。",
+            "告诉我还缺哪些资料，才能推进下一步研究。",
+            "指出哪些结论目前还不够稳，需要继续验证。",
           ],
     [suggestedPrompts],
   );
@@ -502,7 +504,7 @@ export default function ChatPanel({
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "Unable to load background analysis runs.");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法加载后台分析运行记录。");
         }
       } finally {
         if (!cancelled) {
@@ -531,7 +533,7 @@ export default function ChatPanel({
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "Unable to refresh the background analysis run.");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法刷新后台分析运行状态。");
         }
       }
     };
@@ -566,7 +568,7 @@ export default function ChatPanel({
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "Unable to load connector consent state.");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法加载连接器授权状态。");
         }
       }
     };
@@ -590,12 +592,12 @@ export default function ChatPanel({
         workspaceId,
         RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
         {
-          consent_note: "Allow one bounded Research external-context pilot for this workspace.",
+          consent_note: "允许这个工作区使用一次有边界的 Research 外部信息试点。",
         },
       );
       setConnectorStatus(status);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to grant connector consent.");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法完成连接器授权。");
     } finally {
       setIsGrantingConnectorConsent(false);
     }
@@ -639,18 +641,18 @@ export default function ChatPanel({
       }
       setQuestion("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to start the analysis.");
+      setErrorMessage(isApiClientError(error) ? error.message : "无法启动这次分析。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Research workflow">Loading session...</SectionCard>;
+    return <SectionCard title="Research 工作流">正在加载会话...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="Sign in before starting a research workflow." />;
+    return <AuthRequired description="请先登录，再开始 Research 工作流。" />;
   }
 
   return (
@@ -669,7 +671,7 @@ export default function ChatPanel({
       <section style={{ display: "grid", gap: 10 }}>
         <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
           <span style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em" }}>{workflowLabel}</span>
-          <span style={{ color: "#64748b", fontSize: 13 }}>Prompt cards are clickable and insert directly into the draft box.</span>
+          <span style={{ color: "#64748b", fontSize: 13 }}>这些提示卡片可以点击，点击后会直接填入输入框。</span>
         </div>
         {availableModes.length > 1 ? (
           <div style={{ display: "grid", gap: 10 }}>
@@ -722,11 +724,11 @@ export default function ChatPanel({
             padding: 16,
           }}
         >
-          <strong style={{ color: "#0f172a" }}>External context pilot</strong>
+          <strong style={{ color: "#0f172a" }}>外部信息试点</strong>
           <div style={{ color: "#475569", lineHeight: 1.7 }}>
             {connectorStatus?.consent_state === "granted"
-              ? "This workspace has granted consent. The next pass may combine workspace material with approved external context."
-              : "This workspace has not granted connector consent yet. You can still run the pilot, but it will degrade honestly until consent is granted."}
+              ? "这个工作区已经完成授权。下一轮分析可以把工作区资料和已批准的外部信息结合起来。"
+              : "这个工作区还没有授权连接器。你仍然可以运行试点，但在授权前系统会诚实降级。"}
           </div>
           <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
             <button
@@ -747,14 +749,14 @@ export default function ChatPanel({
               type="button"
             >
               {connectorStatus?.consent_state === "granted"
-                ? "Consent granted"
+                ? "已授权"
                 : isGrantingConnectorConsent
-                  ? "Granting..."
-                  : "Grant connector consent"}
+                  ? "授权中..."
+                  : "授权连接器"}
             </button>
             {connectorStatus?.consent_state === "granted" && connectorStatus.granted_at ? (
               <span style={{ color: "#166534", fontSize: 13 }}>
-                Granted for this workspace at {new Date(connectorStatus.granted_at).toLocaleString()}
+                这个工作区已于 {new Date(connectorStatus.granted_at).toLocaleString()} 完成授权
               </span>
             ) : null}
           </div>
@@ -763,7 +765,7 @@ export default function ChatPanel({
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>Current research question</span>
+          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>当前研究问题</span>
           <textarea
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={placeholder}
@@ -796,7 +798,7 @@ export default function ChatPanel({
             }}
             type="submit"
           >
-            {isSubmitting ? "Starting..." : primaryActionLabel}
+            {isSubmitting ? "启动中..." : primaryActionLabel}
           </button>
         </div>
       </form>
@@ -815,7 +817,7 @@ export default function ChatPanel({
         <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
           <strong style={{ color: "#0f172a", fontSize: 18 }}>{outputTitle}</strong>
           <span style={{ color: "#64748b", fontSize: 13 }}>
-            {entries.length + analysisRuns.length > 0 ? `${entries.length + analysisRuns.length} passes recorded` : "No analysis pass yet"}
+            {entries.length + analysisRuns.length > 0 ? `${entries.length + analysisRuns.length} 次分析记录` : "还没有分析记录"}
           </span>
         </div>
 
@@ -831,7 +833,7 @@ export default function ChatPanel({
               padding: 8,
             }}
           >
-            Start one analysis pass. This area will show background run status, assistant conclusions, trace links, and grounded sources.
+            先开始一轮分析。这里会显示后台运行状态、系统结论、追踪链接和有依据的资料来源。
           </div>
         ) : null}
 
@@ -847,8 +849,8 @@ export default function ChatPanel({
               padding: 16,
             }}
           >
-            <strong>Submitting the analysis request</strong>
-            <span style={{ color: "#475569" }}>The run will appear here as soon as the server accepts it.</span>
+            <strong>正在提交分析请求</strong>
+            <span style={{ color: "#475569" }}>服务端接受后，这次运行会立刻出现在这里。</span>
           </section>
         ) : null}
 

@@ -1507,3 +1507,22 @@ Append-only log. Add new entries at the bottom.
 - Impact: the repository now has one visible Stage I external-context pilot with explicit consent behavior and a reusable path for the next trace/review follow-through.
 - Related Task: `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-098
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-04 connector trace and consent visibility
+- Context: the first Stage I connector pilot was live after `stage-i-03`, but connector consent state, connector use,
+  external-match visibility, and degraded outcomes were still too implicit in traces and operator review surfaces.
+- Choice: extend the Research analysis-run trace and regression-review baseline so connector consent state, connector
+  identity, external-context use, external-match count, and degraded-path honesty appear explicitly in the operator-
+  facing review surface; archive `stage-i-04`; and return Stage I to human selection of the next bounded wave.
+- Why: the first connector wave should end with honest operator visibility instead of with a success-only demo surface.
+- Impact: the repository now has one complete first Stage I wave: connector contract, explicit consent, one visible
+  Research external-context pilot, and one review surface that exposes connector behavior and degraded outcomes clearly
+  enough for bounded human inspection.
+- Related Task: `tasks/archive/stage-i/stage-i-04-connector-trace-and-consent-visibility.md`
+- Supersedes:

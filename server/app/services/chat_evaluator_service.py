@@ -12,7 +12,7 @@ from app.services.model_interface_service import (
 )
 
 DEFAULT_PASS_THRESHOLD = 0.7
-RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_h_research_run_regression_v1"
+RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_connector_visibility_v1"
 
 
 class ChatEvaluatorError(Exception):
@@ -254,7 +254,28 @@ def evaluate_research_analysis_run_regression(
     response_json = trace_response_json or {}
     metadata_json = trace_metadata or {}
 
+    def _read_string(*values: object) -> str | None:
+        for value in values:
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return None
+
+    def _read_int(*values: object) -> int | None:
+        for value in values:
+            if isinstance(value, bool):
+                continue
+            if isinstance(value, int):
+                return value
+        return None
+
+    def _read_bool(*values: object) -> bool | None:
+        for value in values:
+            if isinstance(value, bool):
+                return value
+        return None
+
     status = run_json.get("status")
+    mode = _read_string(run_json.get("mode"))
     answer = run_json.get("answer")
     answer_text = answer.strip() if isinstance(answer, str) else ""
     trace_id = run_json.get("trace_id")
@@ -267,16 +288,18 @@ def evaluate_research_analysis_run_regression(
     run_memory = run_json.get("run_memory")
     run_memory_json = run_memory if isinstance(run_memory, dict) else {}
 
-    degraded_reason = run_json.get("degraded_reason")
-    if not isinstance(degraded_reason, str) or not degraded_reason:
-        degraded_reason = response_json.get("degraded_reason")
-    if not isinstance(degraded_reason, str) or not degraded_reason:
-        degraded_reason = metadata_json.get("degraded_reason")
-    normalized_degraded_reason = degraded_reason if isinstance(degraded_reason, str) and degraded_reason else None
+    degraded_reason = _read_string(
+        run_json.get("degraded_reason"),
+        response_json.get("degraded_reason"),
+        metadata_json.get("degraded_reason"),
+    )
+    prompt_present = isinstance(metadata_json.get("prompt"), str) and bool(str(metadata_json.get("prompt")).strip())
 
-    prompt = metadata_json.get("prompt")
-    prompt_present = isinstance(prompt, str) and bool(prompt.strip())
     has_sources = len(sources) > 0
+    has_external_sources = any(
+        isinstance(source, dict) and source.get("source_kind") == "external_context"
+        for source in sources
+    )
     has_tool_steps = len(tool_steps) > 0
     has_run_memory = (
         bool(run_memory_json)
@@ -296,21 +319,65 @@ def evaluate_research_analysis_run_regression(
         )
     )
 
+    connector_id = _read_string(
+        run_json.get("connector_id"),
+        response_json.get("connector_id"),
+        metadata_json.get("connector_id"),
+    )
+    connector_consent_state = _read_string(
+        run_json.get("connector_consent_state"),
+        response_json.get("connector_consent_state"),
+        metadata_json.get("connector_consent_state"),
+    )
+    external_context_used = _read_bool(
+        run_json.get("external_context_used"),
+        response_json.get("external_context_used"),
+        metadata_json.get("external_context_used"),
+    )
+    external_match_count = _read_int(
+        run_json.get("external_match_count"),
+        response_json.get("external_match_count"),
+        metadata_json.get("external_match_count"),
+    )
+
+    is_external_context_run = (
+        mode == "research_external_context"
+        or trace_type == "research_external_context_run"
+        or connector_id == "research_external_context"
+    )
+
     checks = {
         "terminal_status_valid": status in {"completed", "degraded", "failed"},
         "trace_link_present": isinstance(trace_id, str) and bool(trace_id.strip()),
-        "trace_type_valid": trace_type == "research_tool_assisted_run",
+        "trace_type_valid": trace_type in {"research_tool_assisted_run", "research_external_context_run"},
         "prompt_present": prompt_present,
         "answer_present_when_not_failed": (status == "failed") or bool(answer_text),
         "tool_steps_visible_when_not_failed": (status == "failed") or has_tool_steps,
         "run_memory_present_when_not_failed": (status == "failed") or has_run_memory,
         "grounded_or_honest_degraded_when_not_failed": (status == "failed")
         or has_sources
-        or bool(normalized_degraded_reason),
+        or bool(degraded_reason),
         "resumed_memory_visible_when_applicable": (
             not isinstance(resumed_from_run_id, str) or not resumed_from_run_id
         )
         or resumed_visible,
+        "connector_id_visible_when_applicable": (not is_external_context_run)
+        or connector_id == "research_external_context",
+        "connector_consent_state_visible_when_applicable": (not is_external_context_run)
+        or connector_consent_state in {"granted", "not_granted"},
+        "external_context_usage_visible_when_applicable": (not is_external_context_run)
+        or isinstance(external_context_used, bool),
+        "external_match_count_visible_when_applicable": (not is_external_context_run)
+        or (isinstance(external_match_count, int) and external_match_count >= 0),
+        "external_context_visibility_consistent_when_applicable": (not is_external_context_run)
+        or (
+            isinstance(external_context_used, bool)
+            and isinstance(external_match_count, int)
+            and (
+                (external_context_used is True and has_external_sources and external_match_count > 0)
+                or (external_context_used is False and not has_external_sources and external_match_count == 0)
+            )
+        ),
     }
 
     issues: list[str] = []
@@ -332,6 +399,16 @@ def evaluate_research_analysis_run_regression(
         issues.append("missing_grounding_or_honest_degraded_reason")
     if checks["resumed_memory_visible_when_applicable"] is False:
         issues.append("missing_resumed_memory_visibility")
+    if checks["connector_id_visible_when_applicable"] is False:
+        issues.append("missing_connector_id_visibility")
+    if checks["connector_consent_state_visible_when_applicable"] is False:
+        issues.append("missing_connector_consent_state_visibility")
+    if checks["external_context_usage_visible_when_applicable"] is False:
+        issues.append("missing_external_context_usage_visibility")
+    if checks["external_match_count_visible_when_applicable"] is False:
+        issues.append("missing_external_match_count_visibility")
+    if checks["external_context_visibility_consistent_when_applicable"] is False:
+        issues.append("inconsistent_external_context_visibility")
 
     passed = all(checks.values()) and not issues
 
@@ -342,11 +419,17 @@ def evaluate_research_analysis_run_regression(
         "issues": issues,
         "signals": {
             "status": status,
+            "mode": mode,
             "has_sources": has_sources,
-            "degraded_reason": normalized_degraded_reason,
+            "has_external_sources": has_external_sources,
+            "degraded_reason": degraded_reason,
             "resumed_from_run_id": resumed_from_run_id,
             "trace_type": trace_type,
             "used_run_memory": isinstance(resumed_from_run_id, str) and bool(resumed_from_run_id),
+            "connector_id": connector_id,
+            "connector_consent_state": connector_consent_state,
+            "external_context_used": external_context_used,
+            "external_match_count": external_match_count,
         },
     }
 

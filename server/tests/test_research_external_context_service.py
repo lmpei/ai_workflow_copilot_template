@@ -74,7 +74,7 @@ def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeyp
     assert result.degraded_reason == "connector_consent_required"
     assert result.external_context_used is False
     assert result.connector_consent_state == "not_granted"
-    assert "has not granted consent" in result.answer
+    assert "还没有为这个试点完成授权" in result.answer
     assert result.tool_steps[-1].tool_name == "research_external_context"
 
 
@@ -149,4 +149,4 @@ def test_external_context_chat_degrades_when_connector_is_unavailable(monkeypatc
 
     assert result.degraded_reason == "external_context_unavailable"
     assert result.external_context_used is False
-    assert "unavailable during this pass" in result.answer
+    assert "外部信息暂时不可用" in result.answer

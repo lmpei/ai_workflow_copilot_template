@@ -8,7 +8,7 @@
 
 - Status: active
 - Opened At: 2026-04-02
-- First Task Wave: in progress
+- First Task Wave: complete
 
 ## Position In The Project
 
@@ -130,7 +130,7 @@ The first executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-02-connector-contract-and-consent-foundation.md` (complete)
 2. `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md` (complete)
-3. `tasks/stage-i-04-connector-trace-and-consent-visibility.md`
+3. `tasks/archive/stage-i/stage-i-04-connector-trace-and-consent-visibility.md` (complete)
 
 ### Why This Wave Exists
 
@@ -151,5 +151,8 @@ layer before any broader MCP or orchestration work opens.
 - complete: `stage-i-03`, which connected one bounded external context source to the main Research workflow while
   keeping internal workspace evidence and connector-backed context visibly distinct and honest under denied or
   unavailable conditions
-- active now: `stage-i-04`, which should make connector consent state, usage, and degraded outcomes readable in trace
-  and operator-facing review surfaces
+- complete: `stage-i-04`, which made connector consent state, connector use, external-match visibility, and degraded
+  outcomes readable in trace and operator-facing review surfaces
+
+The next Stage I step is not yet fixed. The first bounded wave is complete and ready for human selection of the next
+connector or context-plane follow-through.

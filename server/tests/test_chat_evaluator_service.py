@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+﻿from types import SimpleNamespace
 
 import pytest
 
@@ -274,3 +274,40 @@ def test_evaluate_research_analysis_run_regression_detects_missing_resumed_memor
     assert review["passed"] is False
     assert "missing_resumed_memory_visibility" in review["issues"]
 
+
+
+def test_evaluate_research_analysis_run_regression_passes_for_visible_external_context_run() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "completed",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-1",
+            "answer": "工作区资料与已授权外部信息都指向同一个价格压力信号。",
+            "sources": [
+                {"document_title": "workspace-notes.txt", "source_kind": "workspace_document"},
+                {"document_title": "Analyst note", "source_kind": "external_context"},
+            ],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "已命中外部信息。"},
+            ],
+            "run_memory": {
+                "summary": "价格压力仍然是最强信号。",
+                "recommended_next_step": "整理正式输出。",
+            },
+            "resumed_from_run_id": None,
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "granted",
+            "external_context_used": True,
+            "external_match_count": 1,
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is True
+    assert review["issues"] == []
+    assert review["signals"]["connector_id"] == "research_external_context"
+    assert review["signals"]["external_context_used"] is True
+    assert review["signals"]["external_match_count"] == 1

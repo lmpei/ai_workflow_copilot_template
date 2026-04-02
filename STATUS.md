@@ -25,13 +25,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- execute the first bounded Stage I connector and context-plane wave by delivering one Research-first external-context
-  pilot on top of the new connector contract and explicit workspace-consent boundary, while keeping connector failure
-  states visible and public product boundaries stable
+- close the first bounded Stage I connector and context-plane wave after the Research-first external-context pilot now
+  has explicit connector-consent, connector-usage, and degraded-path visibility in operator-facing trace and review
+  surfaces, and prepare the next bounded Stage I wave definition without destabilizing the live product hosts
 
 ## Active Task
 
-- `tasks/stage-i-04-connector-trace-and-consent-visibility.md`
+- none yet; Stage I first wave is complete and awaiting the next bounded task-wave definition
 
 ## Verification Status
 
@@ -41,11 +41,12 @@ Current state only. Keep this file short, current, and action-oriented.
   one bounded Research tool-assisted path is live, that path has explicit background analysis runs plus compact resumed
   memory, and recent terminal runs now surface one operator-facing regression review baseline. Stage I is now active as
   the next bounded roadmap step: move from internal-only tools toward one connector or context-plane pilot with
-  explicit consent, honest degraded behavior, and visible trace boundaries. The first two Stage I steps are now in
-  place: the backend has one bounded external-context connector contract plus one workspace-level consent record and API
-  surface, and the main Research surface now has one explicit external-context pilot that can blend approved external
-  context with internal workspace material while keeping the two evidence paths visibly distinct and honest when consent
-  or connector availability is missing.
+  explicit consent, honest degraded behavior, and visible trace boundaries. The first Stage I wave is now complete: the
+  backend has one bounded external-context connector contract plus one workspace-level consent record and API surface,
+  the main Research surface has one explicit external-context pilot that can blend approved external context with
+  internal workspace material while keeping the two evidence paths visibly distinct, and the operator-facing review
+  layer now exposes connector consent state, connector use, external-match visibility, and degraded-path honesty for
+  that pilot.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -63,13 +64,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how connector consent and degraded outcomes should appear in the operator-facing trace and review surfaces before broader connector work opens
+- which single next Stage I expansion should follow the first connector wave without broadening prematurely into generic
+  connector sprawl or early multi-agent work
 
 ## Ready Now
 
-1. implement `stage-i-04` to make connector consent state, usage, and degraded outcomes visible in trace and review surfaces
-2. keep the live `weave` and `api` hosts stable while the external-context pilot gains operator-facing visibility
-3. preserve the current distinction between internal workspace evidence and approved external context as trace surfaces deepen
+1. review the completed Stage I first wave and decide the next bounded Stage I task stack
+2. keep the live `weave` and `api` hosts stable while the new connector-consent review baseline remains inspectable
+3. preserve the current distinction between internal workspace evidence and approved external context as future
+   connector work deepens
 
 ## Parked / Later
 
@@ -79,7 +82,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-03-research-external-context-pilot.md`
+- `tasks/archive/stage-i/stage-i-04-connector-trace-and-consent-visibility.md`
 
 ## Recent Decisions
 
@@ -124,3 +127,6 @@ Current state only. Keep this file short, current, and action-oriented.
   archive the task, and move Stage I to the visible Research external-context pilot
 - `DEC-2026-04-02-097` complete `stage-i-03`, add one bounded Research external-context pilot on top of the Stage I
   connector consent boundary, archive the task, and move Stage I to connector trace and consent visibility follow-through
+- `DEC-2026-04-02-098` complete `stage-i-04`, make connector consent state, connector use, and degraded outcomes
+  readable in operator-facing trace and review surfaces, archive the task, and return Stage I to human selection of the
+  next bounded wave

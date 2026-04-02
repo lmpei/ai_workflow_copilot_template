@@ -60,6 +60,10 @@ The first Stage I foundation is now in place as well: the backend has one bounde
 
 The first bounded Stage I pilot is now also in place: Research workspaces can switch to one explicit external-context mode that reuses the existing tool-assisted analysis path, checks workspace consent first, and then either blends approved external context with internal workspace evidence or degrades honestly when consent is missing, the connector is unavailable, or no useful external matches are found.
 
+That first Stage I wave is now complete: the operator-facing review layer can distinguish connector consent state,
+connector use, external-match visibility, and degraded-path honesty for the Research external-context pilot instead of
+leaving that pilot as a success-only demo.
+
 
 ## Current Phase
 

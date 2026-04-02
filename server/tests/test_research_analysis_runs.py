@@ -436,7 +436,7 @@ def test_list_workspace_research_analysis_run_review_returns_regression_summary(
     )
     assert review_response.status_code == 200
     payload = review_response.json()
-    assert payload["baseline_version"] == "stage_h_research_run_regression_v1"
+    assert payload["baseline_version"] == "stage_i_connector_visibility_v1"
     assert payload["reviewed_count"] == 1
     assert payload["passing_count"] == 1
     assert payload["failing_count"] == 0

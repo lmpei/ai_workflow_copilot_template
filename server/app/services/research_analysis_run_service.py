@@ -264,6 +264,10 @@ def _record_run_trace(
     started_at: datetime,
     resumed_from_run_id: str | None,
     run_memory_json: dict[str, object] | None,
+    connector_id: str | None = None,
+    connector_consent_state: str | None = None,
+    external_context_used: bool | None = None,
+    external_match_count: int | None = None,
     error_message: str | None = None,
 ) -> str:
     latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
@@ -292,8 +296,10 @@ def _record_run_trace(
             "degraded_reason": degraded_reason,
             "resumed_from_run_id": resumed_from_run_id,
             "run_memory": run_memory_json,
-            "connector_id": "research_external_context" if run.mode == "research_external_context" else None,
-            "external_context_used": run.mode == "research_external_context" and degraded_reason is None,
+            "connector_id": connector_id,
+            "connector_consent_state": connector_consent_state,
+            "external_context_used": external_context_used,
+            "external_match_count": external_match_count,
         },
         extra_metadata_json={
             "research_analysis_run_id": run.id,
@@ -304,7 +310,10 @@ def _record_run_trace(
             "resumed_from_run_id": resumed_from_run_id,
             "used_run_memory": resumed_from_run_id is not None,
             "run_memory": run_memory_json,
-            "connector_id": "research_external_context" if run.mode == "research_external_context" else None,
+            "connector_id": connector_id,
+            "connector_consent_state": connector_consent_state,
+            "external_context_used": external_context_used,
+            "external_match_count": external_match_count,
         },
     )
 
@@ -368,6 +377,10 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             started_at=started_at,
             resumed_from_run_id=running_run.resumed_from_run_id,
             run_memory_json=run_memory_json,
+            connector_id=getattr(result, "connector_id", None),
+            connector_consent_state=getattr(result, "connector_consent_state", None),
+            external_context_used=getattr(result, "external_context_used", None),
+            external_match_count=getattr(result, "external_match_count", None),
         )
         conversation_repository.create_message(
             conversation_id=running_run.conversation_id,
@@ -420,6 +433,10 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             started_at=started_at,
             resumed_from_run_id=running_run.resumed_from_run_id,
             run_memory_json=None,
+            connector_id="research_external_context" if running_run.mode == "research_external_context" else None,
+            connector_consent_state=None,
+            external_context_used=False if running_run.mode == "research_external_context" else None,
+            external_match_count=0 if running_run.mode == "research_external_context" else None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(
@@ -446,6 +463,10 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             started_at=started_at,
             resumed_from_run_id=running_run.resumed_from_run_id,
             run_memory_json=None,
+            connector_id="research_external_context" if running_run.mode == "research_external_context" else None,
+            connector_consent_state=None,
+            external_context_used=False if running_run.mode == "research_external_context" else None,
+            external_match_count=0 if running_run.mode == "research_external_context" else None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(
