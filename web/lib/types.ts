@@ -770,6 +770,14 @@ export type ResearchAnalysisRunCreatePayload = {
   mode?: "research_tool_assisted";
 };
 
+export type ResearchAnalysisRunMemoryRecord = {
+  memory_version: number;
+  summary: string;
+  evidence_state: string;
+  recommended_next_step: string;
+  source_titles: string[];
+};
+
 export type ResearchAnalysisRunRecord = {
   id: string;
   workspace_id: string;
@@ -778,10 +786,12 @@ export type ResearchAnalysisRunRecord = {
   status: ResearchAnalysisRunStatus;
   question: string;
   mode: "research_tool_assisted";
+  resumed_from_run_id?: string | null;
   answer?: string | null;
   trace_id?: string | null;
   sources: ChatSource[];
   tool_steps: ChatToolStep[];
+  run_memory?: ResearchAnalysisRunMemoryRecord | null;
   analysis_focus?: string | null;
   search_query?: string | null;
   degraded_reason?: string | null;

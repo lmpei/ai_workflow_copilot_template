@@ -157,6 +157,10 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
           const searchQuery = readString(trace.response_json["search_query"]) ?? readString(trace.metadata_json["search_query"]);
           const toolSteps = readToolSteps(trace);
           const degradedReason = getPilotDegradedReason(trace);
+          const resumedFromRunId = readString(trace.response_json["resumed_from_run_id"]) ?? readString(trace.metadata_json["resumed_from_run_id"]);
+          const runMemory = (trace.response_json["run_memory"] ?? trace.metadata_json["run_memory"]) as JsonObject | undefined;
+          const runMemorySummary = runMemory ? readString(runMemory["summary"]) : null;
+          const runMemoryNextStep = runMemory ? readString(runMemory["recommended_next_step"]) : null;
 
           return (
             <li
@@ -218,6 +222,18 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
                   {degradedReason ? (
                     <div>
                       <strong>Degraded reason:</strong> {degradedReason}
+                    </div>
+                  ) : null}
+                  {resumedFromRunId ? (
+                    <div>
+                      <strong>Resumed from run:</strong> {resumedFromRunId}
+                    </div>
+                  ) : null}
+                  {runMemorySummary ? (
+                    <div style={{ display: "grid", gap: 4 }}>
+                      <strong>Compacted run memory</strong>
+                      <div>{runMemorySummary}</div>
+                      {runMemoryNextStep ? <div style={{ color: "#64748b" }}>Next step: {runMemoryNextStep}</div> : null}
                     </div>
                   ) : null}
                   {toolSteps.length > 0 ? (

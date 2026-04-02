@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-01
+- Last Updated: 2026-04-02
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -42,12 +42,15 @@ That first pilot now also has an honest review baseline: recent Research tool-as
 focus, search query, visible tool steps, and degraded-path reason, while the backend has one bounded regression
 evaluator for tool-step visibility and honest no-source degradation.
 
-The first task in that second Stage H wave is now complete: Research workspaces can launch one explicit background
+The first two tasks in that second Stage H wave are now complete: Research workspaces can launch one explicit background
 analysis run, keep that run visible through queued, running, completed, degraded, or failed state, and write the
-resulting answer, tool-step summary, and trace linkage back into the same workspace flow.
+resulting answer, tool-step summary, and trace linkage back into the same workspace flow. That run path now also has
+one bounded resumed-run memory contract: later passes in the same conversation can reuse one compact prior summary, and
+that carried-forward state is visible in both the run surface and the trace-review surface.
 
-The next bounded Stage H work now focuses on context compaction and run memory on top of that new background-run
-boundary, followed by replayable tool-aware review before any connector or multi-agent work begins.
+The next bounded Stage H work now focuses on replayable tool-aware review before any connector or multi-agent work
+begins.
+
 
 ## Current Phase
 

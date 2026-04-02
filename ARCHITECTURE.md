@@ -3,7 +3,7 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-## Metadata
+- Last Updated: 2026-04-02
 
 - Last Updated: 2026-04-01
 
@@ -27,8 +27,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - evals
   - dataset -> eval run -> per-case execution -> scoring -> summaries and traces
 - bounded Research background analysis runs
-  - create run -> queue worker job -> tool-assisted synthesis -> assistant answer, tool steps, and trace linkage
-
+  - create run -> queue worker job -> optional resumed-run memory -> tool-assisted synthesis -> assistant answer, tool
+    steps, compact memory, and trace linkage
 ## State and Persistence
 
 - PostgreSQL is the system of record for product and workflow state.
@@ -76,9 +76,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
     workspace tools inline, synthesizes the grounded answer, and returns visible tool-step summaries to the main chat
     flow without creating a separate agent runtime surface
 - `server/app/services/research_analysis_run_service.py`
-  - owns the next bounded Stage H deepening step: create, queue, list, and complete explicit Research background
-    analysis runs that reuse the tool-assisted pilot while keeping run status, answer delivery, and trace linkage
-    honest on the same workspace surface
+  - owns the next bounded Stage H deepening step: create, queue, list, resume, and complete explicit Research
+    background analysis runs that reuse the tool-assisted pilot while keeping run status, compact run memory, answer
+    delivery, and trace linkage honest on the same workspace surface
 - `server/app/services/retrieval_service.py`
   - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and now also
     records the extra trace metadata needed when that pilot is delivered through explicit background analysis runs
@@ -99,7 +99,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/repositories/job_hiring_packet_repository.py`
   - owns Job hiring packet and Job hiring packet event persistence
 - `server/app/repositories/research_analysis_run_repository.py`
-  - owns `research_analysis_run` persistence and run-status queries for the bounded Stage H background-run path
+  - owns `research_analysis_run` persistence, resumed-run lookup, and run-status queries for the bounded Stage H
+    background-run path
 - `server/app/agents/graph.py`
   - owns one shared workspace-agent execution skeleton with module-specific compose steps
 - `server/app/workers/task_worker.py`

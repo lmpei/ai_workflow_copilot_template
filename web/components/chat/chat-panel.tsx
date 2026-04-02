@@ -185,7 +185,7 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
             >
               <strong>{source.document_title}</strong>
               <div style={{ color: "#475569", fontSize: 13 }}>
-                Chunk {source.chunk_index} · Document {source.document_id}
+                Chunk {source.chunk_index} / Document {source.document_id}
               </div>
               <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
             </div>
@@ -306,6 +306,39 @@ function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
           <strong style={{ color: "#0f172a" }}>{run.search_query ?? "Not available yet"}</strong>
         </div>
       </div>
+
+      {run.resumed_from_run_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>
+          Resumed from run: <strong style={{ color: "#0f172a" }}>{run.resumed_from_run_id}</strong>
+        </div>
+      ) : null}
+
+      {run.run_memory ? (
+        <section
+          style={{
+            backgroundColor: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            display: "grid",
+            gap: 8,
+            padding: 14,
+          }}
+        >
+          <strong style={{ color: "#0f172a" }}>Compacted run memory</strong>
+          <div style={{ color: "#334155", lineHeight: 1.7 }}>{run.run_memory.summary}</div>
+          <div style={{ color: "#475569", fontSize: 13 }}>
+            Evidence state: <strong style={{ color: "#0f172a" }}>{run.run_memory.evidence_state}</strong>
+          </div>
+          <div style={{ color: "#475569", fontSize: 13 }}>
+            Recommended next step: {run.run_memory.recommended_next_step}
+          </div>
+          {run.run_memory.source_titles.length > 0 ? (
+            <div style={{ color: "#475569", fontSize: 13 }}>
+              Source titles carried forward: {run.run_memory.source_titles.join(", ")}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {run.trace_id ? <div style={{ color: "#64748b", fontSize: 13 }}>Trace ID: {run.trace_id}</div> : null}
       {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>Degraded reason: {run.degraded_reason}</div> : null}
@@ -494,6 +527,7 @@ export default function ChatPanel({
       if (mode === "research_tool_assisted" && supportsBackgroundRuns) {
         const run = await createWorkspaceResearchAnalysisRun(session.accessToken, workspaceId, {
           question: trimmedQuestion,
+          conversation_id: latestRun?.conversation_id,
           mode: "research_tool_assisted",
         });
         setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, [run]));

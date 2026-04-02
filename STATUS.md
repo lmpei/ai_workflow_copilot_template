@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-01
+- Last Updated: 2026-04-02
 
 ## Project Mode
 
@@ -30,7 +30,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- `tasks/stage-h-08-research-context-compaction-and-run-memory.md`
+- `tasks/stage-h-09-tool-aware-replay-and-regression-baseline.md`
 
 ## Verification Status
 
@@ -38,10 +38,10 @@ Current state only. Keep this file short, current, and action-oriented.
   shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
   outside this repository. Stage H first wave is complete: the shared model-interface foundation is in place, one
   bounded Research tool-assisted chat pilot is live behind the Research workspace surface, and that pilot now has
-  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave has now begun:
-  Research can launch one explicit background analysis run with visible queued, running, completed, degraded, or failed
-  state, and that run writes its answer, tool steps, and trace linkage back into the same workspace flow.
-- Last Verified At: 2026-04-01
+  trace-visible tool steps plus a bounded regression baseline for honest review. The second Stage H wave is now two
+  steps deep: Research can launch one explicit background analysis run, resume a later pass from one bounded compact
+  memory, and expose that resumed-memory contract on both the run surface and the trace-review surface.
+- Last Verified At: 2026-04-02
 
 ## Current Blockers
 
@@ -58,16 +58,15 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how much of run-state compaction should remain visible to users versus staying operator-only in the second Stage H wave
-- which run-memory summary fields are durable enough to support later replay/regression work without drifting into a
-  broader agent-orchestration surface too early
+- which replay and regression contracts are strong enough to validate resumed runs without drifting into a broader
+  orchestration surface too early
 
 ## Ready Now
 
-1. implement `stage-h-08` to add bounded context compaction and run memory on top of the new Research background-run path
+1. implement `stage-h-09` to add replay and regression depth around the resumed-run Research path
 2. keep the live `weave` and `api` hosts stable while the second capability wave deepens Research instead of broadening
    prematurely
-3. preserve the current honest pilot visibility baseline while `stage-h-09` adds replay/regression depth
+3. preserve the current honest pilot visibility baseline while replayability becomes stronger and more inspectable
 
 ## Parked / Later
 
@@ -77,7 +76,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
+- `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md`
 
 ## Recent Decisions
 
@@ -110,3 +109,5 @@ Current state only. Keep this file short, current, and action-oriented.
   or multi-agent work yet
 - `DEC-2026-04-01-091` complete `stage-h-07`, add one explicit Research background analysis run path with visible run
   status and trace linkage, archive the task, and move Stage H to bounded compaction and run-memory follow-through
+- `DEC-2026-04-02-092` complete `stage-h-08`, add one bounded resumed-run memory contract on top of Research
+  background analysis runs, archive the task, and move Stage H to tool-aware replay/regression follow-through

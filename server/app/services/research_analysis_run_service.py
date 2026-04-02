@@ -5,8 +5,15 @@ from arq import create_pool
 from app.core.config import get_settings
 from app.core.queue import build_redis_settings
 from app.repositories import conversation_repository, research_analysis_run_repository, workspace_repository
-from app.schemas.research_analysis_run import ResearchAnalysisRunCreate, ResearchAnalysisRunResponse
-from app.services.research_tool_assisted_chat_service import run_tool_assisted_research_chat
+from app.schemas.research_analysis_run import (
+    ResearchAnalysisRunCreate,
+    ResearchAnalysisRunMemory,
+    ResearchAnalysisRunResponse,
+)
+from app.services.research_tool_assisted_chat_service import (
+    ResearchRunMemoryContext,
+    run_tool_assisted_research_chat,
+)
 from app.services.retrieval_generation_service import ChatProcessingError
 from app.services.trace_service import record_chat_trace
 
@@ -67,6 +74,66 @@ def _ensure_conversation(
     return conversation
 
 
+def _build_run_memory(
+    *,
+    run_id: str,
+    answer: str,
+    degraded_reason: str | None,
+    sources_json: list[dict[str, object]],
+) -> dict[str, object]:
+    evidence_state = "grounded_matches"
+    if degraded_reason == "no_grounded_matches":
+        evidence_state = "no_grounded_matches"
+    elif degraded_reason == "no_documents":
+        evidence_state = "no_documents"
+
+    summary = answer.strip()
+    if len(summary) > 600:
+        summary = f"{summary[:597].rstrip()}..."
+
+    source_titles: list[str] = []
+    for source in sources_json:
+        if not isinstance(source, dict):
+            continue
+        title = source.get("document_title")
+        if isinstance(title, str) and title and title not in source_titles:
+            source_titles.append(title)
+
+    if degraded_reason == "no_documents":
+        next_step = "Upload and index more material before resuming the next bounded analysis pass."
+    elif degraded_reason == "no_grounded_matches":
+        next_step = "Refine the research question or connect stronger grounded material before the next pass."
+    else:
+        next_step = "Use this bounded summary as the starting point for the next pass or generate a formal output."
+
+    return ResearchAnalysisRunMemory(
+        summary=summary,
+        evidence_state=evidence_state,
+        recommended_next_step=next_step,
+        source_titles=source_titles,
+    ).model_dump()
+
+
+def _load_prior_memory_context(run) -> ResearchRunMemoryContext | None:
+    resumed_from_run_id = getattr(run, "resumed_from_run_id", None)
+    if not resumed_from_run_id:
+        return None
+
+    previous_run = research_analysis_run_repository.get_research_analysis_run(resumed_from_run_id)
+    if previous_run is None or not previous_run.run_memory_json:
+        return None
+
+    memory = ResearchAnalysisRunMemory.model_validate(previous_run.run_memory_json)
+    return ResearchRunMemoryContext(
+        source_run_id=previous_run.id,
+        summary=memory.summary,
+        evidence_state=memory.evidence_state,
+        recommended_next_step=memory.recommended_next_step,
+        source_titles=memory.source_titles,
+        memory_version=memory.memory_version,
+    )
+
+
 async def enqueue_research_analysis_run_execution(run_id: str) -> str:
     redis = await create_pool(build_redis_settings())
     job = await redis.enqueue_job(
@@ -100,12 +167,17 @@ async def create_research_analysis_run(
         question=payload.question,
         conversation_id=payload.conversation_id,
     )
+    resumed_from_run = research_analysis_run_repository.get_latest_resumable_research_analysis_run(
+        conversation_id=conversation.id,
+        user_id=user_id,
+    )
     run = research_analysis_run_repository.create_research_analysis_run(
         workspace_id=workspace_id,
         conversation_id=conversation.id,
         created_by=user_id,
         question=payload.question.strip(),
         mode=payload.mode,
+        resumed_from_run_id=resumed_from_run.id if resumed_from_run else None,
     )
     conversation_repository.create_message(
         conversation_id=conversation.id,
@@ -115,6 +187,7 @@ async def create_research_analysis_run(
             "mode": payload.mode,
             "research_analysis_run_id": run.id,
             "delivery": "background_run",
+            "resumed_from_run_id": run.resumed_from_run_id,
         },
     )
     conversation_repository.touch_conversation(conversation.id)
@@ -144,7 +217,12 @@ def get_research_analysis_run(*, run_id: str, user_id: str) -> ResearchAnalysisR
     return ResearchAnalysisRunResponse.from_model(run)
 
 
-def list_workspace_research_analysis_runs(*, workspace_id: str, user_id: str, limit: int = 12) -> list[ResearchAnalysisRunResponse]:
+def list_workspace_research_analysis_runs(
+    *,
+    workspace_id: str,
+    user_id: str,
+    limit: int = 12,
+) -> list[ResearchAnalysisRunResponse]:
     _get_research_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
     normalized_limit = max(1, min(limit, 20))
     runs = research_analysis_run_repository.list_workspace_research_analysis_runs(
@@ -168,6 +246,8 @@ def _record_run_trace(
     token_input: int,
     token_output: int,
     started_at: datetime,
+    resumed_from_run_id: str | None,
+    run_memory_json: dict[str, object] | None,
     error_message: str | None = None,
 ) -> str:
     latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
@@ -193,6 +273,8 @@ def _record_run_trace(
             "analysis_focus": analysis_focus,
             "search_query": search_query,
             "degraded_reason": degraded_reason,
+            "resumed_from_run_id": resumed_from_run_id,
+            "run_memory": run_memory_json,
         },
         extra_metadata_json={
             "research_analysis_run_id": run.id,
@@ -200,6 +282,9 @@ def _record_run_trace(
             "search_query": search_query,
             "degraded_reason": degraded_reason,
             "tool_steps": tool_steps,
+            "resumed_from_run_id": resumed_from_run_id,
+            "used_run_memory": resumed_from_run_id is not None,
+            "run_memory": run_memory_json,
         },
     )
 
@@ -223,15 +308,23 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
     if running_run is None:
         raise ResearchAnalysisRunExecutionError("Research analysis run not found")
 
+    prior_memory = _load_prior_memory_context(running_run)
     started_at = datetime.now(UTC)
     try:
         result = run_tool_assisted_research_chat(
             workspace_id=running_run.workspace_id,
             user_id=running_run.created_by,
             question=running_run.question,
+            prior_memory=prior_memory,
         )
         sources_json = [source.model_dump() for source in result.sources]
         tool_steps_json = [step.model_dump() for step in result.tool_steps]
+        run_memory_json = _build_run_memory(
+            run_id=running_run.id,
+            answer=result.answer,
+            degraded_reason=result.degraded_reason,
+            sources_json=sources_json,
+        )
         trace_id = _record_run_trace(
             run=running_run,
             answer=result.answer,
@@ -244,6 +337,8 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             token_input=result.token_input,
             token_output=result.token_output,
             started_at=started_at,
+            resumed_from_run_id=running_run.resumed_from_run_id,
+            run_memory_json=run_memory_json,
         )
         conversation_repository.create_message(
             conversation_id=running_run.conversation_id,
@@ -254,6 +349,8 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
                 "sources": sources_json,
                 "research_analysis_run_id": running_run.id,
                 "delivery": "background_run",
+                "resumed_from_run_id": running_run.resumed_from_run_id,
+                "run_memory": run_memory_json,
             },
         )
         conversation_repository.touch_conversation(running_run.conversation_id)
@@ -267,6 +364,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             trace_id=trace_id,
             sources_json=sources_json,
             tool_steps_json=tool_steps_json,
+            run_memory_json=run_memory_json,
             analysis_focus=result.analysis_focus,
             search_query=result.search_query,
             degraded_reason=result.degraded_reason,
@@ -291,6 +389,8 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             token_input=0,
             token_output=0,
             started_at=started_at,
+            resumed_from_run_id=running_run.resumed_from_run_id,
+            run_memory_json=None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(
@@ -315,6 +415,8 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             token_input=0,
             token_output=0,
             started_at=started_at,
+            resumed_from_run_id=running_run.resumed_from_run_id,
+            run_memory_json=None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(

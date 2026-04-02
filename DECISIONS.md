@@ -1415,3 +1415,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Research now has one persisted background-run path with visible status, answer delivery, tool-step summaries, and trace linkage, and the next active work can focus on compaction and replay discipline instead of on basic background execution wiring.
 - Related Task: `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-092
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-08 Research context compaction and run memory
+- Context: `stage-h-07` made the Research pilot durable enough to run in the background, but later passes in the same conversation still had no bounded way to resume key context without growing prompt state or hiding what was carried forward.
+- Choice: add one bounded resumed-run memory contract to `research_analysis_run`, persist one compact memory summary on completed or degraded runs, let later runs in the same conversation resume from the latest terminal run, expose that carried-forward memory on both the run surface and the trace-review surface, archive `stage-h-08`, and move the active task to tool-aware replay and regression follow-through.
+- Why: the second Stage H wave should learn how durable tool-assisted analysis resumes key state without prematurely becoming a broader agent-memory or orchestration system.
+- Impact: Research background runs now have one explicit compaction boundary, later runs can resume from a compact prior summary instead of from unbounded prompt growth, and the replay/regression task can now evaluate a more durable visible contract.
+- Related Task: `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md`
+- Supersedes:

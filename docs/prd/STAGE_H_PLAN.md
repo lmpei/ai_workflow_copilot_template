@@ -138,6 +138,7 @@ The first executable Stage H wave is:
 - `tasks/archive/stage-h/stage-h-03-research-tool-assisted-analysis-pilot.md`
 - `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
 - `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
+- `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md`
 
 The repository now has one shared backend model-interface layer beneath chat generation, embeddings, and eval judging.
 The repository also now has one bounded Research tool-assisted chat pilot on top of that layer: the main Research chat
@@ -146,28 +147,28 @@ returns visible tool-step summaries alongside the grounded answer. That pilot no
 follow-through: recent traces surface the planning focus, search query, visible tool steps, and degraded-path reason,
 while the backend has one bounded regression baseline for visible tool steps plus honest no-source degradation.
 
-The second wave has now started to deepen that path: Research workspaces can launch one explicit background analysis
+The second wave has now deepened that path twice: Research workspaces can launch one explicit background analysis
 run, watch it move through queued, running, completed, degraded, or failed state, and receive the resulting answer,
-tool steps, and trace linkage back on the same workspace surface.
+tool steps, and trace linkage back on the same workspace surface. That run path now also supports one bounded
+resumed-run memory contract so later passes in the same conversation can carry forward one compact prior summary
+without growing prompt state unboundedly.
 
 ## Second Task Wave
-
 The second executable Stage H wave is now:
 
 1. `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md` (complete)
-2. `tasks/stage-h-08-research-context-compaction-and-run-memory.md`
+2. `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md` (complete)
 3. `tasks/stage-h-09-tool-aware-replay-and-regression-baseline.md`
 
 ### Why This Wave Exists
 
 The first Stage H wave proved that one visible Research-first tool-assisted path can exist honestly on the main product
 surface. `stage-h-07` completed the first deepening step by turning that path into one explicit background-capable run
-with persisted run state, assistant answer delivery, and trace linkage. The remaining bounded learning step should not
-broaden into another module or leap into connectors or multi-agent handoffs. It should deepen that one visible path so
-the repository learns:
-
-- how conversation state and tool results should be compacted or resumed without hiding important reasoning context
-- which run-memory summary should persist between explicit analysis runs without pretending to implement a broader
-  orchestration surface
-- how replay, regression, and operator review should evolve once tool-assisted analysis becomes more durable than one
-  chat response
+with persisted run state, assistant answer delivery, and trace linkage. `stage-h-08` then added one bounded
+resumed-run memory contract on top of that path. The remaining bounded learning step should not broaden into another
+module or leap into connectors or multi-agent handoffs. It should deepen that one visible path so the repository
+learns:
+- how replay and regression should validate a resumed bounded run instead of a one-shot tool-assisted answer
+- which visible trace or run-memory fields are durable enough to support honest operator review and replay
+- how the repository should measure regression once tool-assisted analysis has both background execution and compacted
+  memory continuity

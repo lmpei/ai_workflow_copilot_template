@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 
 from app.core.database import session_scope
 from app.models.research_analysis_run import (
@@ -13,6 +13,8 @@ from app.models.research_analysis_run import (
 )
 from app.models.workspace_member import WorkspaceMember
 
+_TERMINAL_MEMORY_STATUSES = ("completed", "degraded")
+
 
 def create_research_analysis_run(
     *,
@@ -22,6 +24,7 @@ def create_research_analysis_run(
     question: str,
     mode: str = "research_tool_assisted",
     status: str = RESEARCH_ANALYSIS_RUN_STATUS_PENDING,
+    resumed_from_run_id: str | None = None,
 ) -> ResearchAnalysisRun:
     if not is_valid_research_analysis_run_status(status):
         raise ValueError(f"Unsupported research analysis run status: {status}")
@@ -35,11 +38,13 @@ def create_research_analysis_run(
         status=status,
         question=question,
         mode=mode,
+        resumed_from_run_id=resumed_from_run_id,
         prompt=None,
         answer=None,
         trace_id=None,
         sources_json=[],
         tool_steps_json=[],
+        run_memory_json={},
         analysis_focus=None,
         search_query=None,
         degraded_reason=None,
@@ -74,6 +79,25 @@ def get_research_analysis_run_for_user(run_id: str, user_id: str) -> ResearchAna
         return session.scalar(statement)
 
 
+def get_latest_resumable_research_analysis_run(
+    *,
+    conversation_id: str,
+    user_id: str,
+) -> ResearchAnalysisRun | None:
+    with session_scope() as session:
+        statement = (
+            select(ResearchAnalysisRun)
+            .where(
+                ResearchAnalysisRun.conversation_id == conversation_id,
+                ResearchAnalysisRun.created_by == user_id,
+                ResearchAnalysisRun.status.in_(_TERMINAL_MEMORY_STATUSES),
+            )
+            .order_by(desc(ResearchAnalysisRun.completed_at), desc(ResearchAnalysisRun.updated_at))
+            .limit(1)
+        )
+        return session.scalar(statement)
+
+
 def list_workspace_research_analysis_runs(
     workspace_id: str,
     user_id: str,
@@ -103,6 +127,7 @@ def update_research_analysis_run(
     trace_id: str | None = None,
     sources_json: list[dict[str, object]] | None = None,
     tool_steps_json: list[dict[str, object]] | None = None,
+    run_memory_json: dict[str, object] | None = None,
     analysis_focus: str | None = None,
     search_query: str | None = None,
     degraded_reason: str | None = None,
@@ -136,6 +161,8 @@ def update_research_analysis_run(
             run.sources_json = sources_json
         if tool_steps_json is not None:
             run.tool_steps_json = tool_steps_json
+        if run_memory_json is not None:
+            run.run_memory_json = run_memory_json
         if analysis_focus is not None:
             run.analysis_focus = analysis_focus
         if search_query is not None:
