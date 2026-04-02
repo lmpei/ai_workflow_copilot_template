@@ -1597,3 +1597,60 @@ Append-only log. Add new entries at the bottom.
 - Impact: Stage I now has one clearer replay/review contract for recent Research connector runs, and the next project decision can focus on whether to close Stage I or deepen the connector/context-plane work further.
 - Related Task: `tasks/archive/stage-i/stage-i-08-resource-aware-replay-and-review-baseline.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-103
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Documentation Cleanup
+- Topic: clarify bounded-stage versus roadmap-wave interpretation
+- Context: recent discussion showed that the control-plane docs made it too easy to treat a completed bounded task wave
+  as if it automatically meant the entire roadmap concept family was exhausted, especially around Stage I and the
+  broader Wave 2 MCP questions.
+- Choice: document that `STAGE_*_PLAN.md` files define bounded execution units, while `LONG_TERM_ROADMAP.md` defines
+  broader capability waves with minimum exit signals; meeting a bounded stage closeout does not require exhausting
+  every concept listed under the broader roadmap wave.
+- Why: the project needs a stable way to judge whether Stage I can close after a connector-backed baseline while still
+  acknowledging that deeper MCP-specific work may remain deferred or may return in a later bounded wave.
+- Impact: `STATUS.md`, `CONTEXT.md`, `STAGE_I_PLAN.md`, `LONG_TERM_ROADMAP.md`, and related control-plane docs now
+  distinguish current execution state from broader roadmap concept coverage more explicitly.
+- Related Task: `tasks/archive/stage-i/stage-i-09-control-plane-roadmap-alignment-clarity.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-104
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human
+- Topic: keep Stage I open for one MCP-specific third wave
+- Context: after the second Stage I wave completed, the repo had already met the minimum connector-backed Wave 2 exit
+  signal, but explicit MCP host, resource, and review behavior still had not entered any actual bounded task stack.
+- Choice: keep Stage I active and define one third bounded wave focused on a minimal MCP-backed Research path instead of
+  closing Stage I or jumping early into Wave 3 orchestration work.
+- Why: the project wants MCP to appear in real implementation work, but still in a narrow way that builds on the
+  existing connector, consent, snapshot, and review baseline.
+- Impact: Stage I now gains a third bounded wave centered on MCP contract foundation, one Research MCP context path,
+  and one MCP-aware review surface instead of closing after connector-backed integration alone.
+- Related Task: `tasks/archive/stage-i/stage-i-10-wave-three-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-105
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-11 MCP contract and local server foundation
+- Context: Stage I stayed open for one narrow MCP-specific third wave because the repository had a connector-backed
+  Research baseline but still lacked any actual MCP contract, server, or resource shape inside the codebase.
+- Choice: add one bounded local MCP server foundation, one bounded MCP resource contract, one connector-to-MCP binding
+  API surface, and one Research-first permission boundary that reuses the existing connector-consent model; archive
+  `stage-i-11`; and move the active task to the visible Research MCP resource-context pilot.
+- Why: the project wanted MCP to enter the real task stack without broadening into generic connector sprawl or jumping
+  early into broader Wave 3 orchestration work.
+- Impact: the repository now has a concrete MCP server and resource shape behind the current Research connector
+  boundary, and later Stage I tasks can build a visible MCP-backed product path on top of that foundation.
+- Related Task: `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
+- Supersedes:

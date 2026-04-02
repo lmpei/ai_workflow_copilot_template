@@ -10,6 +10,7 @@
 - Opened At: 2026-04-02
 - First Task Wave: complete
 - Second Task Wave: complete
+- Third Task Wave: active
 
 ## Position In The Project
 
@@ -17,6 +18,24 @@ Stage I begins after the closeout of Stage H. Stage H delivered the first bounde
 baseline on the product hosts. With that baseline now stable enough to inspect and review, the next bounded roadmap
 step should move from internal-only tools toward one connector and context-plane pilot rather than jumping early into
 multi-agent orchestration.
+
+## Roadmap Alignment
+
+- Roadmap theme:
+  - `Theme 3: Staged AI Capability Expansion`
+- Roadmap wave:
+  - `Wave 2: Connector and Context Plane`
+- Stage-I interpretation:
+  - this plan defines the bounded execution unit for one connector-backed baseline
+- Wave interpretation:
+  - Wave 2 remains the broader concept family; Stage I closeout does not require exhausting every Wave 2 concept
+- Current Stage-I baseline:
+  - one connector-backed Research integration with explicit consent, resource snapshots, and operator review
+  - one bounded local MCP server and MCP resource contract behind that same Research-first permission model
+- Still optional follow-through:
+  - the visible MCP-backed Research path itself
+  - most MCP breadth beyond the first bounded path
+  - broader connector rollout outside the same Research-first surface
 
 ## Stage Goal
 
@@ -124,6 +143,8 @@ Stage I is successful when:
 - one connector or context-plane contract exists behind the current product hosts
 - one Research workflow visibly uses one bounded external context source with explicit consent
 - connector behavior appears in traces and review-facing surfaces honestly enough to support later capability waves
+- this bounded stage can be judged complete without claiming exhaustive MCP coverage, because the roadmap wave uses a
+  minimum exit signal rather than a full concept checklist
 
 ## First Task Wave
 
@@ -159,8 +180,11 @@ layer before any broader MCP or orchestration work opens.
   back on the main product and observability views
 - complete: `stage-i-07`, which made consent changes and explicit snapshot selection more inspectable on that same
   bounded Research path
-- complete: `stage-i-08`, which made replay or review aware of selected snapshots, actual used snapshots, resource-selection mode, and consent-lifecycle consistency on that same bounded Research path
-- active now: none; Stage I is waiting for the next bounded task-wave or closeout decision
+- complete: `stage-i-08`, which made replay or review aware of selected snapshots, actual used snapshots,
+  resource-selection mode, and consent-lifecycle consistency on that same bounded Research path
+- complete: `stage-i-11`, which added one bounded local MCP server and one MCP resource contract behind the existing
+  Research connector consent boundary
+- active now: `stage-i-12`, which will connect one visible Research path to that MCP resource foundation
 ## Second Task Wave
 
 The second executable Stage I wave is:
@@ -195,3 +219,37 @@ The second Stage I wave is now complete:
 - direct chat and background analysis runs can now distinguish selected snapshots from actual used snapshots
 - consent lifecycle is explicit enough for the bounded connector pilot to support grant, revoke, and honest degraded behavior
 - recent terminal connector-backed runs now expose one resource-aware review baseline instead of relying only on raw trace inspection
+
+### Remaining Optional Follow-Through
+
+These items are still valid future work, but they are not required to treat the current Stage I connector-backed
+baseline as delivered:
+
+- broader MCP breadth after the first bounded path is proven
+- broader connector rollout outside the same bounded Research-first path
+
+## Third Task Wave
+
+The third executable Stage I wave is:
+
+1. `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
+2. `tasks/stage-i-12-research-mcp-resource-context-pilot.md`
+3. `tasks/stage-i-13-mcp-trace-and-review-visibility.md`
+
+### Why This Wave Exists
+
+The first two Stage I waves already answered the bounded connector questions:
+
+- one explicit connector contract
+- one explicit consent boundary
+- one visible external-context pilot
+- one explicit resource and review layer
+
+But MCP has still not entered the actual task stack. This third wave keeps Stage I open only long enough to answer the
+next narrower Wave 2 question:
+
+- how one explicit MCP server or resource contract should appear in this repo
+- how that MCP path should stay bounded to one Research-first product surface
+- how MCP use should stay visible in trace and review instead of appearing as a hidden transport detail
+
+This wave should still avoid generic MCP sprawl, broad connector marketplaces, or multi-module rollout.

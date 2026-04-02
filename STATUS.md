@@ -25,34 +25,41 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- review the completed second bounded Stage I connector and context-plane wave, keep the live product hosts stable,
-  and decide whether Stage I should close or open one further bounded wave
+- keep the live product hosts stable while opening one narrow third Stage I wave for MCP-specific follow-through on top
+  of the existing connector-backed baseline
 
 ## Active Task
 
-- none; Stage I second wave is complete and awaiting the next bounded task decision
+- `tasks/stage-i-12-research-mcp-resource-context-pilot.md`
+
+## Current Roadmap Alignment
+
+- Current roadmap theme:
+  - `Theme 3: Staged AI Capability Expansion`
+- Current roadmap wave:
+  - `Wave 2: Connector and Context Plane`
+- Interpretation rule:
+  - the active `Stage I` plan is the bounded execution unit; the roadmap wave remains the broader concept family
+- Current Wave 2 baseline:
+  - one connector-backed Research integration with explicit consent, snapshots, and review is already in place
+- Newly delivered:
+  - one bounded local MCP server foundation
+  - one bounded MCP resource contract wired to the existing Research connector consent boundary
+- Still not covered:
+  - a real product-facing MCP-backed Research path
+  - MCP trace and review visibility on that path
 
 ## Verification Status
 
-- Summary: Stage G is complete and closed after the multi-subdomain cutover. The live product stack now runs behind one
-  shared Cloudflare -> Caddy edge as `weave.lmpai.online` plus `api.lmpai.online`, while the root homepage lives
-  outside this repository. Stage H is now also complete and closed: the shared model-interface foundation is in place,
-  one bounded Research tool-assisted path is live, that path has explicit background analysis runs plus compact resumed
-  memory, and recent terminal runs now surface one operator-facing regression review baseline. Stage I is now active as
-  the next bounded roadmap step: move from internal-only tools toward one connector or context-plane pilot with
-  explicit consent, honest degraded behavior, and visible trace boundaries. The first Stage I wave is now complete: the
-  backend has one bounded external-context connector contract plus one workspace-level consent record and API surface,
-  the main Research surface has one explicit external-context pilot that can blend approved external context with
-  internal workspace material while keeping the two evidence paths visibly distinct, and the operator-facing review
-  layer now exposes connector consent state, connector use, external-match visibility, and degraded-path honesty for
-  that pilot. The second Stage I wave first added one persisted external-resource snapshot layer:
-  for approved Research connector matches, direct chat and background analysis runs can now point to the snapshot they
-  actually used, recent snapshots are visible on the main Research and observability surfaces, and the Research path
-  now exposes explicit consent lifecycle plus snapshot selection before execution begins. The second Stage I wave is
-  now also complete: recent terminal connector-backed runs can be reviewed with explicit visibility into selected
-  snapshots, actual used snapshots, resource-selection mode, and consent lifecycle consistency. The current next step
-  is to decide whether Stage I should close or deepen further.
-- Last Verified At: 2026-04-02
+- Summary: Stage G is complete and closed after the multi-subdomain cutover. Stage H is complete and closed after the
+  bounded model-interface and tool-visible Research baseline. Stage I has now completed two bounded connector and
+  context-plane waves, plus the first task in a third MCP-specific wave: connector contract plus consent, one visible
+  Research external-context pilot, connector-aware trace and review, explicit external-resource snapshots, explicit
+  consent lifecycle plus snapshot selection, one resource-aware review baseline, and now one bounded MCP contract plus
+  local server foundation wired to the same Research-first consent boundary. The control-plane distinction remains
+  explicit: `Stage I` is the active bounded execution unit, while `LONG_TERM_ROADMAP` Wave 2 remains the broader
+  concept family. The next bounded task is to connect one visible Research path to that local MCP resource foundation.
+- Last Verified At: 2026-04-03
 
 ## Current Blockers
 
@@ -69,13 +76,14 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- whether Stage I should close after the second bounded wave or open one further connector/context-plane follow-through
+- which single bounded MCP path should become the first real product-facing Stage I follow-through after the connector
+  baseline
 
 ## Ready Now
 
-1. review the completed `stage-i-08` implementation and decide whether to close Stage I or define one more bounded wave
-2. keep the live `weave` and `api` hosts stable while the next Stage I boundary is selected
-3. avoid opening broad MCP or multi-agent scope before the next bounded stage decision is fixed in text
+1. execute `stage-i-12` to connect one visible Research path to the new bounded MCP resource source
+2. keep the live `weave` and `api` hosts stable while the Stage I MCP pilot deepens
+3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first MCP path is complete
 
 ## Parked / Later
 
@@ -85,7 +93,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-08-resource-aware-replay-and-review-baseline.md`
+- `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
 
 ## Recent Decisions
 
@@ -141,3 +149,10 @@ Current state only. Keep this file short, current, and action-oriented.
   Stage I to consent lifecycle and resource selection follow-through
 - `DEC-2026-04-03-102` complete `stage-i-08`, extend the bounded Research run-review baseline so operators can see
   selected resource snapshots, actual used snapshots, resource-selection mode, and consent-lifecycle consistency
+- `DEC-2026-04-03-103` clarify the control-plane distinction between bounded stage completion and roadmap-wave exit
+  signals so Stage I closeout and optional MCP follow-through are judged explicitly instead of implicitly
+- `DEC-2026-04-03-104` keep Stage I open for one narrow third wave so MCP enters the actual bounded task stack instead
+  of remaining only a deferred Wave 2 concept
+- `DEC-2026-04-03-105` complete `stage-i-11`, add one bounded local MCP server and MCP resource contract behind the
+  existing Research connector consent boundary, archive the task, and move Stage I to one visible Research MCP
+  resource-context pilot

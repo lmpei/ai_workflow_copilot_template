@@ -12,6 +12,10 @@ visible without overloading the next bounded planning unit.
 - Status: active direction document
 - Created At: 2026-03-26
 - Current bounded stage: `docs/prd/STAGE_I_PLAN.md`
+- Current roadmap theme: `Theme 3: Staged AI Capability Expansion`
+- Current roadmap wave: `Wave 2: Connector and Context Plane`
+- Interpretation note: bounded stage closeout and roadmap-wave completion are related but not identical; the wave exit
+  signal defines the minimum learning baseline, not exhaustive concept coverage
 
 ## Primary Intent
 
@@ -174,6 +178,13 @@ Learning questions:
 Exit signal:
 
 - one bounded MCP-backed or connector-backed integration is publicly demonstrable with explicit permission boundaries
+
+Current Wave 2 baseline:
+
+- `Stage I` now materially satisfies the minimum exit signal through one connector-backed Research integration with
+  explicit permission boundaries
+- explicit MCP host, client, and server roles remain a possible later bounded follow-through rather than delivered
+  baseline
 
 #### Wave 3: Agent Orchestration and Human Approval
 

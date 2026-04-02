@@ -3,7 +3,7 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-02
+- Last Updated: 2026-04-03
 
 ## Main Modules
 
@@ -60,7 +60,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
     destinations
 - FastAPI API in `server/app/api/routes/`
 - `server/app/api/routes/connectors.py`
-  - owns the bounded Stage I consent-check and consent-grant API surface for Research-first connector use
+  - owns the bounded Stage I consent-check, consent-lifecycle, and connector-to-MCP binding API surface for the
+    Research-first connector and MCP pilot path
 - orchestration in `server/app/services/`
 - persistence in `server/app/repositories/`
 - worker entrypoints in `server/app/workers/`
@@ -92,6 +93,13 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/connector_service.py`
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, explicit grant or revoke
     lifecycle, and reusable permission-gate helpers for the first external-context pilot
+- `server/app/services/mcp_service.py`
+  - owns the bounded Stage I MCP foundation layer that binds the existing Research connector to one local MCP server
+    plus one MCP resource contract, and reuses the same workspace-level consent gate before any later MCP-backed
+    product path is allowed to read that resource
+- `server/app/mcp/research_context_local_server.py`
+  - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
+    that later Stage I tasks can connect to a visible product path
 - `server/app/services/research_external_context_service.py`
   - owns the bounded Stage I Research pilot that checks workspace connector consent, can reuse an explicitly selected
     external-resource snapshot or query the approved external context source, keeps internal and external evidence

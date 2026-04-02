@@ -52,9 +52,9 @@ That second Stage H wave is now complete as well: recent terminal Research analy
 operator-facing regression review alongside the existing trace view, so replay and resumed-run honesty can be reviewed
 without pretending the repo already has a full optimization flywheel.
 
-The active work is now Stage I. Stage I opens the next bounded roadmap wave: move from internal-only tool use toward
-one connector and context-plane pilot, keep Research as the reference workflow, and add explicit consent and degraded
-behavior before any broader connector surface or multi-agent work begins.
+The current bounded stage is Stage I. It moves the repo from internal-only tool use toward one connector and
+context-plane pilot, keeps Research as the reference workflow, and adds explicit consent and degraded behavior before
+any broader connector surface or multi-agent work begins.
 
 The first Stage I foundation is now in place as well: the backend has one bounded external-context connector contract and one workspace-level connector consent boundary for Research workspaces.
 
@@ -75,9 +75,26 @@ The third task in the second Stage I wave is now also complete: recent terminal 
 resource-aware review baseline that makes selected snapshots, actual used snapshots, resource-selection mode, and
 consent-lifecycle consistency visible to operators instead of leaving those checks implicit in raw trace payloads.
 
-Stage I remains active, but there is no further active execution task yet. The next bounded step is now a human choice:
-either close Stage I after the second wave, or define one more narrow connector/context-plane follow-through before any
-broader MCP or multi-module rollout opens.
+Stage I remains active. The third Stage I wave has now started with one bounded MCP contract and local server
+foundation, so the repo can learn one actual MCP-backed path instead of stopping at connector-backed context
+integration only.
+
+## Roadmap Alignment
+
+- Current roadmap theme:
+  - `Theme 3: Staged AI Capability Expansion`
+- Current roadmap wave:
+  - `Wave 2: Connector and Context Plane`
+- Interpretation rule:
+  - bounded stages are execution units; roadmap waves are broader concept families with minimum exit signals
+- Current Stage I baseline:
+  - one connector-backed Research integration with explicit consent, snapshots, and operator review is now delivered
+  - one bounded local MCP server and MCP resource contract now sit behind that same Research-first permission model
+- Still deferred:
+  - the visible MCP-backed Research path itself
+  - most MCP breadth across hosts, resources, prompts, and tools
+  - any broader multi-module rollout on top of MCP
+
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
@@ -87,9 +104,10 @@ broader MCP or multi-module rollout opens.
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
-forking the architecture. The active stage should preserve that shared-platform model while beginning the next modern
-AI-system layer in a bounded way: one clearer model interface, one visible tool-assisted workflow, and one honest trace
-and eval baseline for that workflow.
+forking the architecture. The active bounded stage should preserve that shared-platform model while adding one explicit
+connector-backed Research path with clear consent, resource, and review boundaries, plus one actual MCP-backed
+follow-through on top of that baseline. Roadmap-wave completion is a separate judgment against the exit signals in
+`docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
 
 ## Technology Stack
 
@@ -139,10 +157,9 @@ and eval baseline for that workflow.
 - Full stack local dev: `docker compose up --build`
 - Legacy single-stack public demo path: `docker compose -f docker-compose.public-demo.yml --env-file <env-file> ...`
 - New shared-edge subdomain path: `docker compose -f docker-compose.weave-stack.yml --env-file <env-file> ...`
-- Live current public demo web: `https://app.lmpai.online`
-- Live current public demo API: `https://api.lmpai.online/api/v1`
-- Target product web host after Stage G cutover: `https://weave.lmpai.online`
-- Target product API host after Stage G cutover: `https://api.lmpai.online/api/v1`
+- Legacy public-demo web: `https://app.lmpai.online`
+- Current product web host: `https://weave.lmpai.online`
+- Current product API host: `https://api.lmpai.online/api/v1`
 - Frontend local: `http://localhost:3000`
 - API base local: `http://localhost:8000/api/v1`
 - Health local: `http://localhost:8000/api/v1/health`

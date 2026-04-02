@@ -217,8 +217,13 @@ external-context matches can be persisted as explicit Research external-resource
 now expose consent lifecycle plus explicit snapshot selection on that same bounded connector flow. The third task in
 that second Stage I wave is now also complete: recent terminal Research connector runs can now be reviewed with
 resource-aware visibility into selected snapshots, actual used snapshots, resource-selection mode, and consent-
-lifecycle consistency. Stage I remains active, but there is no further active task until the next bounded wave or
-closeout decision is fixed in text.
+lifecycle consistency. Control-plane interpretation is now explicit: `Stage I` is the bounded execution unit for the
+current connector/context-plane baseline, while `docs/prd/LONG_TERM_ROADMAP.md` still describes the broader Wave 2
+concept family. The current repo baseline already satisfies the minimum Wave 2 exit signal through one connector-backed
+Research integration with explicit permission boundaries, but it does not claim exhaustive MCP host, client, or server
+coverage. The third Stage I wave is now active: the repo has one bounded local MCP server and one MCP resource
+contract wired to the existing Research connector consent boundary, and the current active task is to use that
+foundation in one visible Research MCP resource-context pilot instead of leaving MCP as deferred roadmap language.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

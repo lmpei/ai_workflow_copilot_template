@@ -89,7 +89,7 @@ def test_connectors_reject_non_research_workspace(client: TestClient) -> None:
         headers=headers,
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "连接器试点目前只对 Research 工作区开放"
+    assert response.json()["detail"] == "连接器试点目前只对 Research 工作区开放。"
 
 
 def test_require_workspace_connector_consent_enforces_explicit_grant(client: TestClient) -> None:
@@ -103,7 +103,7 @@ def test_require_workspace_connector_consent_enforces_explicit_grant(client: Tes
             connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
         )
     except connector_service.ConnectorConsentRequiredError as error:
-        assert str(error) == "使用这个外部信息试点前，必须先完成工作区授权"
+        assert str(error) == "使用这个外部信息试点前，必须先完成工作区授权。"
     else:
         raise AssertionError("Expected connector consent to be required")
 
@@ -179,3 +179,23 @@ def test_require_workspace_connector_consent_rejects_revoked_consent(client: Tes
         assert error.consent_state == "revoked"
     else:
         raise AssertionError("Expected revoked connector consent to block access")
+
+
+def test_get_workspace_connector_mcp_status_returns_local_server_foundation(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}/mcp",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["connector_status"]["connector"]["id"] == connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID
+    assert payload["connector_status"]["consent_state"] == "not_granted"
+    assert payload["server"]["id"] == "research_context_local"
+    assert payload["server"]["transport"] == "local_inproc"
+    assert len(payload["resources"]) == 1
+    assert payload["resources"][0]["id"] == "research.context.digest"
+    assert payload["resources"][0]["connector_id"] == connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID

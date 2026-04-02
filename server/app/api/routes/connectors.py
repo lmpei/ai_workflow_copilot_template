@@ -7,6 +7,7 @@ from app.schemas.connector import (
     ConnectorConsentRevokeRequest,
     WorkspaceConnectorStatusResponse,
 )
+from app.schemas.mcp import WorkspaceConnectorMcpStatusResponse
 from app.services.connector_service import (
     ConnectorAccessError,
     ConnectorValidationError,
@@ -14,6 +15,10 @@ from app.services.connector_service import (
     grant_workspace_connector_consent,
     list_workspace_connector_statuses,
     revoke_workspace_connector_consent,
+)
+from app.services.mcp_service import (
+    McpValidationError,
+    get_workspace_connector_mcp_status,
 )
 
 router = APIRouter()
@@ -56,6 +61,27 @@ async def get_workspace_connector(
     except ConnectorAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except ConnectorValidationError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get(
+    "/workspaces/{workspace_id}/connectors/{connector_id}/mcp",
+    response_model=WorkspaceConnectorMcpStatusResponse,
+)
+async def get_workspace_connector_mcp(
+    workspace_id: str,
+    connector_id: str,
+    current_user: User = Depends(get_current_user),
+) -> WorkspaceConnectorMcpStatusResponse:
+    try:
+        return get_workspace_connector_mcp_status(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+            connector_id=connector_id,
+        )
+    except ConnectorAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except (ConnectorValidationError, McpValidationError) as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
 

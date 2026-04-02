@@ -55,9 +55,9 @@ def get_connector_definition(connector_id: str) -> ConnectorDefinition | None:
 def _get_workspace_or_raise(*, workspace_id: str, user_id: str):
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
-        raise ConnectorAccessError("工作区不存在")
+        raise ConnectorAccessError("工作区不存在。")
     if workspace.module_type != "research":
-        raise ConnectorValidationError("连接器试点目前只对 Research 工作区开放")
+        raise ConnectorValidationError("连接器试点目前只对 Research 工作区开放。")
     return workspace
 
 
@@ -70,7 +70,7 @@ def _get_connector_definition_or_raise(connector_id: str) -> ConnectorDefinition
 
 def _ensure_connector_available_for_workspace(*, workspace, connector: ConnectorDefinition) -> None:
     if workspace.module_type not in connector.module_types:
-        raise ConnectorValidationError("这个工作区不能使用该连接器")
+        raise ConnectorValidationError("这个工作区不能使用该连接器。")
 
 
 def _build_workspace_connector_status(
@@ -209,7 +209,7 @@ def require_workspace_connector_consent(
                 consent_state="revoked",
             )
         raise ConnectorConsentRequiredError(
-            "使用这个外部信息试点前，必须先完成工作区授权",
+            "使用这个外部信息试点前，必须先完成工作区授权。",
             consent_state="not_granted",
         )
     return status

@@ -14,6 +14,8 @@ current state of the project.
 - Prefer one primary active task at a time.
 - Update `STATUS.md` to point at the current active task.
 - Add durable project choices to `DECISIONS.md` when they become confirmed.
+- Do not assume a completed bounded stage automatically means the broader roadmap wave is exhausted; use the stage
+  plan for current execution scope and `docs/prd/LONG_TERM_ROADMAP.md` for wave-level exit signals.
 
 ## Naming
 
