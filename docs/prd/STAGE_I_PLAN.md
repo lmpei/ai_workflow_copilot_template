@@ -9,6 +9,7 @@
 - Status: active
 - Opened At: 2026-04-02
 - First Task Wave: complete
+- Second Task Wave: in progress
 
 ## Position In The Project
 
@@ -153,6 +154,34 @@ layer before any broader MCP or orchestration work opens.
   unavailable conditions
 - complete: `stage-i-04`, which made connector consent state, connector use, external-match visibility, and degraded
   outcomes readable in trace and operator-facing review surfaces
+- complete: `stage-i-06`, which persisted approved external-context matches as explicit Research external-resource
+  snapshots, linked direct chat and background analysis runs to the snapshot they used, and surfaced recent snapshots
+  back on the main product and observability views
+- active now: `stage-i-07`, which should make consent changes and explicit snapshot selection more inspectable on that
+  same bounded Research path
 
-The next Stage I step is not yet fixed. The first bounded wave is complete and ready for human selection of the next
-connector or context-plane follow-through.
+## Second Task Wave
+
+The second executable Stage I wave is:
+
+1. `tasks/stage-i-06-research-external-resource-snapshots.md`
+2. `tasks/stage-i-07-consent-lifecycle-and-resource-selection.md`
+3. `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
+
+### Why This Wave Exists
+
+The first Stage I wave answered the basic connector questions:
+
+- one explicit connector contract
+- one explicit consent boundary
+- one visible external-context pilot
+- one connector-aware review surface
+
+The next Wave 2 learning question is narrower and more structural:
+
+- when approved external context should become an explicit reusable resource instead of a hidden transient input
+- where consent lifecycle and resource selection should live before broader MCP work opens
+- how replay and review should change once external context becomes more resource-like
+
+This wave should stay inside the same Research-first pilot instead of broadening into multiple connectors or broader
+module rollout.

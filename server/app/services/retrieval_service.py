@@ -6,6 +6,9 @@ from app.services.research_external_context_service import (
     ResearchExternalContextChatResult,
     run_research_external_context_chat,
 )
+from app.services.research_external_resource_snapshot_service import (
+    create_research_external_resource_snapshot,
+)
 from app.services.research_tool_assisted_chat_service import (
     ToolAssistedResearchChatResult,
     run_tool_assisted_research_chat,
@@ -77,6 +80,7 @@ def process_chat_request(
     tool_steps: list[dict[str, object]] = []
     trace_type = "rag"
     trace_metadata_extra: dict[str, object] | None = None
+    external_resource_snapshot = None
 
     try:
         if payload.mode == "research_tool_assisted":
@@ -116,6 +120,16 @@ def process_chat_request(
             token_input = generated_external_context.token_input
             token_output = generated_external_context.token_output
             tool_steps = [step.model_dump() for step in generated_external_context.tool_steps]
+            if generated_external_context.external_context_used and generated_external_context.external_matches:
+                external_resource_snapshot = create_research_external_resource_snapshot(
+                    workspace_id=workspace_id,
+                    conversation_id=conversation.id,
+                    created_by=user_id,
+                    connector_id=generated_external_context.connector_id,
+                    search_query=generated_external_context.search_query or payload.question,
+                    matches=generated_external_context.external_matches,
+                    analysis_focus=generated_external_context.analysis_focus,
+                )
             trace_type = "research_external_context"
             trace_metadata_extra = {
                 "analysis_focus": generated_external_context.analysis_focus,
@@ -126,6 +140,7 @@ def process_chat_request(
                 "connector_consent_state": generated_external_context.connector_consent_state,
                 "external_context_used": generated_external_context.external_context_used,
                 "external_match_count": generated_external_context.external_match_count,
+                "external_resource_snapshot_id": external_resource_snapshot.id if external_resource_snapshot else None,
             }
         else:
             retriever: Retriever = get_retriever()
@@ -151,7 +166,11 @@ def process_chat_request(
             conversation_id=conversation.id,
             role="assistant",
             content=answer,
-            metadata_json={"mode": payload.mode, "sources": serialized_sources},
+            metadata_json={
+                "mode": payload.mode,
+                "sources": serialized_sources,
+                "external_resource_snapshot_id": external_resource_snapshot.id if external_resource_snapshot else None,
+            },
         )
         conversation_repository.touch_conversation(conversation.id)
 
@@ -182,6 +201,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -191,6 +211,7 @@ def process_chat_request(
             trace_id=trace_id,
             mode=payload.mode,
             tool_steps=tool_steps,
+            external_resource_snapshot=external_resource_snapshot,
         )
     except ChatProcessingError as error:
         conversation_repository.touch_conversation(conversation.id)
@@ -222,6 +243,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )
@@ -256,6 +278,7 @@ def process_chat_request(
                 "connector_consent_state": trace_metadata_extra.get("connector_consent_state") if trace_metadata_extra else None,
                 "external_context_used": trace_metadata_extra.get("external_context_used") if trace_metadata_extra else None,
                 "external_match_count": trace_metadata_extra.get("external_match_count") if trace_metadata_extra else None,
+                "external_resource_snapshot_id": trace_metadata_extra.get("external_resource_snapshot_id") if trace_metadata_extra else None,
             },
             extra_metadata_json=trace_metadata_extra,
         )

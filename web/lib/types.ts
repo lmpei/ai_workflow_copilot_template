@@ -756,12 +756,36 @@ export type ChatToolStep = {
   detail?: string | null;
 };
 
+export type ResearchExternalResourceSnapshotItemRecord = {
+  resource_id: string;
+  title: string;
+  source_label: string;
+  snippet: string;
+};
+
+export type ResearchExternalResourceSnapshotRecord = {
+  id: string;
+  workspace_id: string;
+  conversation_id?: string | null;
+  created_by: string;
+  connector_id: string;
+  source_run_id?: string | null;
+  title: string;
+  analysis_focus?: string | null;
+  search_query: string;
+  resource_count: number;
+  resources: ResearchExternalResourceSnapshotItemRecord[];
+  created_at: string;
+  updated_at: string;
+};
+
 export type ChatResponsePayload = {
   answer: string;
   sources: ChatSource[];
   trace_id: string;
   mode: 'rag' | 'research_tool_assisted' | 'research_external_context';
   tool_steps: ChatToolStep[];
+  external_resource_snapshot?: ResearchExternalResourceSnapshotRecord | null;
 };
 
 export type ResearchAnalysisRunStatus = "pending" | "running" | "completed" | "degraded" | "failed";
@@ -793,6 +817,7 @@ export type ResearchAnalysisRunRecord = {
   trace_id?: string | null;
   sources: ChatSource[];
   tool_steps: ChatToolStep[];
+  external_resource_snapshot?: ResearchExternalResourceSnapshotRecord | null;
   run_memory?: ResearchAnalysisRunMemoryRecord | null;
   analysis_focus?: string | null;
   search_query?: string | null;

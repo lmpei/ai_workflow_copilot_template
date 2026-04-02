@@ -180,6 +180,9 @@ The current implemented platform increment includes:
   evidence on the main Research surface while keeping the two evidence paths and degraded outcomes visibly distinct
 - one operator-facing connector review baseline that can expose connector consent state, external-context use, external
   match visibility, and degraded-path honesty for recent Research analysis runs
+- one explicit external-resource snapshot layer for the bounded Research connector path, so approved external matches
+  can be inspected and linked back to direct chat or background analysis runs instead of living only in transient trace
+  data
 
 The repository does not yet implement:
 
@@ -209,7 +212,10 @@ Stage H is now complete. The bounded Research-first capability path now includes
 compact resumed-run memory, and one operator-visible replay/regression baseline before the roadmap opens connector or
 multi-agent work. Stage I is now active, and its first wave is now complete: one bounded connector contract, one
 explicit workspace-level consent boundary, one visible external-context Research pilot, and one connector-aware review
-baseline now exist on the product surface.
+baseline now exist on the product surface. The first task in the second Stage I wave is now also complete: approved
+external-context matches can be persisted as explicit Research external-resource snapshots and surfaced back on the
+product. The active Stage I follow-through is now to make consent lifecycle and resource selection more inspectable
+before replay or review deepens again around that more explicit context plane.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

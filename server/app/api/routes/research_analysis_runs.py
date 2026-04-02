@@ -4,7 +4,13 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.research_analysis_review import ResearchAnalysisReviewResponse
 from app.schemas.research_analysis_run import ResearchAnalysisRunCreate, ResearchAnalysisRunResponse
+from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services.research_analysis_review_service import list_workspace_research_analysis_review
+from app.services.research_external_resource_snapshot_service import (
+    ResearchExternalResourceSnapshotAccessError,
+    ResearchExternalResourceSnapshotValidationError,
+    list_workspace_research_external_resource_snapshots,
+)
 from app.services.research_analysis_run_service import (
     ResearchAnalysisRunAccessError,
     ResearchAnalysisRunExecutionError,
@@ -60,6 +66,27 @@ async def list_runs(
     except ResearchAnalysisRunAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     except ResearchAnalysisRunValidationError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get(
+    "/workspaces/{workspace_id}/research-external-resource-snapshots",
+    response_model=list[ResearchExternalResourceSnapshotResponse],
+)
+async def list_resource_snapshots(
+    workspace_id: str,
+    limit: int = Query(default=8, ge=1, le=20),
+    current_user: User = Depends(get_current_user),
+) -> list[ResearchExternalResourceSnapshotResponse]:
+    try:
+        return list_workspace_research_external_resource_snapshots(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+            limit=limit,
+        )
+    except ResearchExternalResourceSnapshotAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except ResearchExternalResourceSnapshotValidationError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
 

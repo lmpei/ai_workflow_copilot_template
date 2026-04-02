@@ -5,6 +5,7 @@ from pytest import MonkeyPatch
 from sqlalchemy import select
 
 from app.core.database import session_scope
+from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.research_analysis_run import ResearchAnalysisRun
@@ -511,6 +512,15 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
             connector_consent_state="granted",
             external_context_used=True,
             external_match_count=1,
+            external_matches=[
+                ResearchExternalContextEntry(
+                    context_id="market-cost-pressure",
+                    title="Analyst note: margin pressure and price discipline",
+                    source_label="External market note",
+                    keywords=("pricing", "pressure"),
+                    snippet="External analyst context.",
+                )
+            ],
         )
 
     monkeypatch.setattr(
@@ -532,6 +542,18 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
     assert payload["status"] == "completed"
     assert payload["sources"][0]["source_kind"] == "workspace_document"
     assert payload["sources"][1]["source_kind"] == "external_context"
+    assert payload["external_resource_snapshot"]["connector_id"] == "research_external_context"
+    assert payload["external_resource_snapshot"]["resource_count"] == 1
+    assert payload["external_resource_snapshot"]["source_run_id"] == run_id
+
+    list_snapshot_response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/research-external-resource-snapshots",
+        headers=headers,
+    )
+    assert list_snapshot_response.status_code == 200
+    snapshot_payload = list_snapshot_response.json()
+    assert len(snapshot_payload) == 1
+    assert snapshot_payload[0]["id"] == payload["external_resource_snapshot"]["id"]
 
     with session_scope() as session:
         traces = list(session.scalars(select(Trace)))
@@ -540,3 +562,4 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
     assert traces[0].trace_type == "research_external_context_run"
     assert traces[0].response_json["connector_id"] == "research_external_context"
     assert traces[0].response_json["external_context_used"] is True
+    assert traces[0].response_json["external_resource_snapshot_id"] == payload["external_resource_snapshot"]["id"]

@@ -21,6 +21,7 @@ import type {
   ResearchAnalysisRunCreatePayload,
   ResearchAnalysisRunRecord,
   ResearchAssetComparisonRecord,
+  ResearchExternalResourceSnapshotRecord,
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
   ScenarioModuleRecord,
@@ -310,6 +311,18 @@ export async function getResearchAnalysisRun(
   runId: string,
 ): Promise<ResearchAnalysisRunRecord> {
   return fetchBrowserApiJson<ResearchAnalysisRunRecord>(`/research-analysis-runs/${runId}`, {}, accessToken);
+}
+
+export async function listWorkspaceResearchExternalResourceSnapshots(
+  accessToken: string,
+  workspaceId: string,
+  limit = 8,
+): Promise<ResearchExternalResourceSnapshotRecord[]> {
+  return fetchBrowserApiJson<ResearchExternalResourceSnapshotRecord[]>(
+    `/workspaces/${workspaceId}/research-external-resource-snapshots?limit=${limit}`,
+    {},
+    accessToken,
+  );
 }
 export async function getWorkspaceConnectorStatus(
   accessToken: string,

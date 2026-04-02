@@ -35,6 +35,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   through `research_analysis_run` records.
 - PostgreSQL now also persists bounded workspace-level connector consent state through
   `workspace_connector_consent` records before any external-context connector call path is enabled.
+- PostgreSQL now also persists explicit bounded Research external-context matches as
+  `research_external_resource_snapshot` records so approved connector-backed context can outlive one answer or trace.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
@@ -94,6 +96,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the bounded Stage I Research pilot that checks workspace connector consent, queries the approved external
     context source, keeps internal and external evidence visibly distinct, and degrades honestly when consent, connector
     availability, or useful external matches are missing
+- `server/app/services/research_external_resource_snapshot_service.py`
+  - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
+    snapshots and exposes recent snapshots back to the product surface
 - `server/app/connectors/research_external_context_connector.py`
   - owns one bounded external-context source contract for the first Research pilot instead of broad connector sprawl
 - `server/app/services/retrieval_service.py`
@@ -118,7 +123,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns Job hiring packet and Job hiring packet event persistence
 - `server/app/repositories/research_analysis_run_repository.py`
   - owns `research_analysis_run` persistence, resumed-run lookup, and run-status queries for the bounded Stage H
-    background-run path
+    background-run path, and now also persists the bounded Research external resource snapshot records plus run-to-
+    snapshot linkage for Stage I Wave 2
 - `server/app/repositories/workspace_connector_consent_repository.py`
   - owns `workspace_connector_consent` persistence for the bounded Stage I connector-consent foundation
 - `server/app/agents/graph.py`

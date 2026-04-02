@@ -2,6 +2,10 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.schemas.research_external_resource_snapshot import (
+    ResearchExternalResourceSnapshotResponse,
+)
+
 ChatSourceKind = Literal["workspace_document", "external_context"]
 ChatMode = Literal["rag", "research_tool_assisted", "research_external_context"]
 
@@ -33,3 +37,4 @@ class ChatResponse(BaseModel):
     trace_id: str
     mode: ChatMode = "rag"
     tool_steps: list[ChatToolStep] = []
+    external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None

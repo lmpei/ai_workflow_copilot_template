@@ -9,6 +9,7 @@ import {
   grantWorkspaceConnectorConsent,
   isApiClientError,
   listWorkspaceResearchAnalysisRuns,
+  listWorkspaceResearchExternalResourceSnapshots,
   sendWorkspaceChat,
 } from "../../lib/api";
 import type {
@@ -16,6 +17,7 @@ import type {
   ChatToolStep,
   ResearchAnalysisRunRecord,
   ResearchAnalysisRunStatus,
+  ResearchExternalResourceSnapshotRecord,
   WorkspaceConnectorStatusRecord,
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
@@ -56,114 +58,77 @@ type ChatEntry = {
   mode: "rag" | "research_tool_assisted" | "research_external_context";
   toolSteps: ChatToolStep[];
   sources: ChatSource[];
+  externalResourceSnapshot?: ResearchExternalResourceSnapshotRecord | null;
 };
 
-const RUN_TERMINAL_STATUSES: ResearchAnalysisRunStatus[] = ["completed", "degraded", "failed"];
 const RUN_ACTIVE_STATUSES: ResearchAnalysisRunStatus[] = ["pending", "running"];
 const RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID = "research_external_context";
 
-function PromptCard({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  const [isHovered, setIsHovered] = useState(false);
+const panelStyle = {
+  backgroundColor: "#ffffff",
+  border: "1px solid #dbe4f0",
+  borderRadius: 18,
+  display: "grid",
+  gap: 12,
+  padding: 16,
+} as const;
 
+function mergeRuns(currentRuns: ResearchAnalysisRunRecord[], incomingRuns: ResearchAnalysisRunRecord[]) {
+  const byId = new Map<string, ResearchAnalysisRunRecord>();
+  [...currentRuns, ...incomingRuns].forEach((run) => byId.set(run.id, run));
+  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
+}
+
+function mergeSnapshots(
+  currentSnapshots: ResearchExternalResourceSnapshotRecord[],
+  incomingSnapshots: ResearchExternalResourceSnapshotRecord[],
+) {
+  const byId = new Map<string, ResearchExternalResourceSnapshotRecord>();
+  [...currentSnapshots, ...incomingSnapshots].forEach((snapshot) => byId.set(snapshot.id, snapshot));
+  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
+}
+
+function SnapshotCard({ snapshot, title }: { snapshot: ResearchExternalResourceSnapshotRecord; title: string }) {
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        backgroundColor: active ? "#0f172a" : isHovered ? "#eff6ff" : "#ffffff",
-        border: `1px solid ${active ? "#0f172a" : isHovered ? "#60a5fa" : "#cbd5e1"}`,
-        borderRadius: 16,
-        color: active ? "#f8fafc" : "#0f172a",
-        cursor: "pointer",
-        display: "grid",
-        fontWeight: 700,
-        justifyItems: "start",
-        minHeight: 60,
-        padding: 12,
-        textAlign: "left",
-        transition: "all 160ms ease",
-      }}
-      type="button"
-    >
-      <span style={{ lineHeight: 1.45 }}>{label}</span>
-    </button>
+    <div style={{ ...panelStyle, backgroundColor: "#faf5ff", border: "1px solid #ddd6fe", gap: 8, marginTop: 12 }}>
+      <strong style={{ color: "#581c87", fontSize: 14 }}>{title}</strong>
+      <div style={{ color: "#0f172a", fontWeight: 700 }}>{snapshot.title}</div>
+      <div style={{ color: "#475569", fontSize: 13 }}>
+        搜索词：{snapshot.search_query}
+        {snapshot.analysis_focus ? ` | 分析焦点：${snapshot.analysis_focus}` : ""}
+      </div>
+      <div style={{ color: "#475569", fontSize: 13 }}>资源数：{snapshot.resource_count}</div>
+      <div style={{ display: "grid", gap: 8 }}>
+        {snapshot.resources.map((resource) => (
+          <div
+            key={`${snapshot.id}-${resource.resource_id}`}
+            style={{ backgroundColor: "#ffffff", border: "1px solid #e9d5ff", borderRadius: 12, padding: 10 }}
+          >
+            <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{resource.title}</div>
+            <div style={{ color: "#6b21a8", fontSize: 12 }}>{resource.source_label}</div>
+            <div style={{ color: "#475569", fontSize: 13, lineHeight: 1.7 }}>{resource.snippet}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function StatusBadge({ status }: { status: ResearchAnalysisRunStatus }) {
-  const palette: Record<ResearchAnalysisRunStatus, { label: string; color: string; background: string }> = {
-    pending: { label: "排队中", color: "#92400e", background: "#fef3c7" },
-    running: { label: "运行中", color: "#1d4ed8", background: "#dbeafe" },
-    completed: { label: "已完成", color: "#166534", background: "#dcfce7" },
-    degraded: { label: "降级完成", color: "#7c2d12", background: "#ffedd5" },
-    failed: { label: "失败", color: "#b91c1c", background: "#fee2e2" },
-  };
-  const token = palette[status];
-  return (
-    <span
-      style={{
-        alignItems: "center",
-        backgroundColor: token.background,
-        borderRadius: 999,
-        color: token.color,
-        display: "inline-flex",
-        fontSize: 12,
-        fontWeight: 800,
-        minHeight: 28,
-        padding: "0 10px",
-      }}
-    >
-      {token.label}
-    </span>
-  );
-}
-
-function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
+function ToolStepList({ toolSteps }: { toolSteps: ChatToolStep[] }) {
   if (toolSteps.length === 0) {
     return null;
   }
 
   return (
-    <section
-      style={{
-        backgroundColor: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        borderRadius: 14,
-        display: "grid",
-        gap: 10,
-        marginTop: 12,
-        padding: 12,
-      }}
-    >
+    <div style={{ ...panelStyle, backgroundColor: "#f8fafc", gap: 8, marginTop: 12 }}>
       <strong style={{ color: "#0f172a", fontSize: 14 }}>本次分析步骤</strong>
-      <div style={{ display: "grid", gap: 8 }}>
-        {toolSteps.map((step, index) => (
-          <div
-            key={`${step.tool_name}-${index}`}
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #dbe4f0",
-              borderRadius: 12,
-              display: "grid",
-              gap: 4,
-              padding: 10,
-            }}
-          >
-            <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
-            {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
-          </div>
-        ))}
-      </div>
-    </section>
+      {toolSteps.map((step, index) => (
+        <div key={`${step.tool_name}-${index}`} style={{ backgroundColor: "#ffffff", border: "1px solid #dbe4f0", borderRadius: 12, padding: 10 }}>
+          <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
+          {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -172,22 +137,15 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
     <details style={{ marginTop: 12 }}>
       <summary>查看分析依据</summary>
       {sources.length === 0 ? (
-        <p style={{ color: "#64748b", marginBottom: 0 }}>这一轮没有返回可见的证据。</p>
+        <p style={{ color: "#64748b", marginBottom: 0 }}>这一轮没有返回可见的依据。</p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
           {sources.map((source) => (
             <div
               key={`${traceId ?? "run"}-${source.chunk_id}`}
-              style={{
-                backgroundColor: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: 14,
-                display: "grid",
-                gap: 6,
-                padding: 12,
-              }}
+              style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 12 }}
             >
-              <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
+              <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 8 }}>
                 <strong>{source.document_title}</strong>
                 <span
                   style={{
@@ -202,9 +160,7 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
                   {source.source_kind === "external_context" ? "外部信息" : "工作区资料"}
                 </span>
               </div>
-              <div style={{ color: "#475569", fontSize: 13 }}>
-                分片 {source.chunk_index} / 文档 {source.document_id}
-              </div>
+              <div style={{ color: "#475569", fontSize: 13 }}>分片 {source.chunk_index} / 文档 {source.document_id}</div>
               <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
             </div>
           ))}
@@ -212,201 +168,6 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
       )}
     </details>
   );
-}
-
-function ChatBubble({ assistantLabel, entry }: { assistantLabel: string; entry: ChatEntry }) {
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <div
-          style={{
-            backgroundColor: "#0f172a",
-            borderRadius: "20px 20px 8px 20px",
-            color: "#f8fafc",
-            maxWidth: "min(720px, 100%)",
-            padding: "16px 18px",
-          }}
-        >
-          <div style={{ color: "#cbd5e1", fontSize: 12, fontWeight: 700, marginBottom: 6 }}>你的问题</div>
-          <div style={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{entry.question}</div>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "flex-start" }}>
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid #dbe4f0",
-            borderRadius: "20px 20px 20px 8px",
-            boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
-            maxWidth: "min(860px, 100%)",
-            padding: "18px 20px",
-          }}
-        >
-          <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-            <span
-              style={{
-                backgroundColor: "#e0f2fe",
-                borderRadius: 999,
-                color: "#0c4a6e",
-                fontSize: 12,
-                fontWeight: 700,
-                padding: "4px 10px",
-              }}
-            >
-              {assistantLabel}
-            </span>
-            {entry.mode === "research_tool_assisted" ? (
-              <span
-                style={{
-                  backgroundColor: "#ecfccb",
-                  borderRadius: 999,
-                  color: "#3f6212",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: "4px 10px",
-                }}
-              >
-                工具辅助试点
-              </span>
-            ) : null}
-            {entry.mode === "research_external_context" ? (
-              <span
-                style={{
-                  backgroundColor: "#ede9fe",
-                  borderRadius: 999,
-                  color: "#5b21b6",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: "4px 10px",
-                }}
-              >
-                外部信息试点
-              </span>
-            ) : null}
-            <span style={{ color: "#64748b", fontSize: 12 }}>追踪 ID：{entry.traceId}</span>
-          </div>
-          <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
-          <ToolSteps toolSteps={entry.toolSteps} />
-          <SourceList sources={entry.sources} traceId={entry.traceId} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AnalysisRunCard({ run }: { run: ResearchAnalysisRunRecord }) {
-  const outcomeCopy: Record<ResearchAnalysisRunStatus, string> = {
-    pending: "这次分析已经进入队列，很快会开始。",
-    running: "系统正在读取资料、规划下一步，并合成结果。",
-    completed: "这次有边界的分析已经成功完成。",
-    degraded: "这次分析已诚实完成，但证据路径较弱，系统已经明确标出。",
-    failed: "后台分析在完成前失败了。",
-  };
-
-  return (
-    <section
-      style={{
-        backgroundColor: "#ffffff",
-        border: "1px solid #dbe4f0",
-        borderRadius: 20,
-        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
-        display: "grid",
-        gap: 14,
-        padding: 18,
-      }}
-    >
-      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
-        <div style={{ display: "grid", gap: 4 }}>
-          <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700, textTransform: "uppercase" }}>
-            后台分析运行
-          </span>
-          <strong style={{ color: "#0f172a", lineHeight: 1.6 }}>{run.question}</strong>
-        </div>
-        <StatusBadge status={run.status} />
-      </div>
-
-      <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{outcomeCopy[run.status]}</p>
-
-      <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
-        <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-          <span style={{ color: "#64748b", fontSize: 12 }}>分析焦点</span>
-          <strong style={{ color: "#0f172a" }}>{run.analysis_focus ?? "等待系统确定分析焦点"}</strong>
-        </div>
-        <div style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, display: "grid", gap: 4, padding: 12 }}>
-          <span style={{ color: "#64748b", fontSize: 12 }}>搜索词</span>
-          <strong style={{ color: "#0f172a" }}>{run.search_query ?? "暂时还没有"}</strong>
-        </div>
-      </div>
-
-      {run.resumed_from_run_id ? (
-        <div style={{ color: "#475569", fontSize: 13 }}>
-          延续自运行：<strong style={{ color: "#0f172a" }}>{run.resumed_from_run_id}</strong>
-        </div>
-      ) : null}
-
-      {run.run_memory ? (
-        <section
-          style={{
-            backgroundColor: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            borderRadius: 16,
-            display: "grid",
-            gap: 8,
-            padding: 14,
-          }}
-        >
-          <strong style={{ color: "#0f172a" }}>压缩后的运行记忆</strong>
-          <div style={{ color: "#334155", lineHeight: 1.7 }}>{run.run_memory.summary}</div>
-          <div style={{ color: "#475569", fontSize: 13 }}>
-            证据状态：<strong style={{ color: "#0f172a" }}>{run.run_memory.evidence_state}</strong>
-          </div>
-          <div style={{ color: "#475569", fontSize: 13 }}>
-            建议下一步：{run.run_memory.recommended_next_step}
-          </div>
-          {run.run_memory.source_titles.length > 0 ? (
-            <div style={{ color: "#475569", fontSize: 13 }}>
-              保留下来的资料标题：{run.run_memory.source_titles.join("、")}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {run.trace_id ? <div style={{ color: "#64748b", fontSize: 13 }}>追踪 ID：{run.trace_id}</div> : null}
-      {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>降级原因：{run.degraded_reason}</div> : null}
-      {run.error_message ? <div style={{ color: "#b91c1c", fontSize: 13 }}>错误：{run.error_message}</div> : null}
-
-      {run.answer ? (
-        <div
-          style={{
-            backgroundColor: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            borderRadius: 16,
-            color: "#1e293b",
-            lineHeight: 1.8,
-            padding: 14,
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {run.answer}
-        </div>
-      ) : null}
-
-      <ToolSteps toolSteps={run.tool_steps} />
-      <SourceList sources={run.sources} traceId={run.trace_id ?? null} />
-    </section>
-  );
-}
-
-function mergeRuns(
-  currentRuns: ResearchAnalysisRunRecord[],
-  incomingRuns: ResearchAnalysisRunRecord[],
-): ResearchAnalysisRunRecord[] {
-  const byId = new Map<string, ResearchAnalysisRunRecord>();
-  [...currentRuns, ...incomingRuns].forEach((run) => {
-    byId.set(run.id, run);
-  });
-  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
 }
 
 export default function ChatPanel({
@@ -427,6 +188,7 @@ export default function ChatPanel({
   const [question, setQuestion] = useState("");
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [analysisRuns, setAnalysisRuns] = useState<ResearchAnalysisRunRecord[]>([]);
+  const [recentSnapshots, setRecentSnapshots] = useState<ResearchExternalResourceSnapshotRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingRuns, setIsLoadingRuns] = useState(false);
@@ -440,11 +202,9 @@ export default function ChatPanel({
         : [{ value: "rag" as const, label: "标准分析", description: "直接基于当前资料完成一次有依据的分析。" }],
     [modes],
   );
-
   const [mode, setMode] = useState<"rag" | "research_tool_assisted" | "research_external_context">(
     availableModes[0]?.value ?? "rag",
   );
-
   const prompts = useMemo(
     () =>
       suggestedPrompts && suggestedPrompts.length > 0
@@ -456,16 +216,12 @@ export default function ChatPanel({
           ],
     [suggestedPrompts],
   );
-
   const modeMeta = useMemo(
     () => availableModes.find((candidate) => candidate.value === mode) ?? availableModes[0],
     [availableModes, mode],
   );
 
-  const activeRuns = useMemo(
-    () => analysisRuns.filter((run) => RUN_ACTIVE_STATUSES.includes(run.status)),
-    [analysisRuns],
-  );
+  const activeRuns = useMemo(() => analysisRuns.filter((run) => RUN_ACTIVE_STATUSES.includes(run.status)), [analysisRuns]);
   const latestRun = analysisRuns[0] ?? null;
   const lastTraceId = latestRun?.trace_id ?? entries.at(-1)?.traceId ?? null;
   const requiresExternalContextConnector = mode === "research_external_context";
@@ -491,20 +247,30 @@ export default function ChatPanel({
   useEffect(() => {
     if (!session || !supportsBackgroundRuns) {
       setAnalysisRuns([]);
+      setRecentSnapshots([]);
       return;
     }
 
     let cancelled = false;
-    const loadRuns = async () => {
+    const loadSurfaceData = async () => {
       setIsLoadingRuns(true);
       try {
-        const runs = await listWorkspaceResearchAnalysisRuns(session.accessToken, workspaceId, 8);
+        const [runs, snapshots] = await Promise.all([
+          listWorkspaceResearchAnalysisRuns(session.accessToken, workspaceId, 8),
+          listWorkspaceResearchExternalResourceSnapshots(session.accessToken, workspaceId, 8),
+        ]);
         if (!cancelled) {
           setAnalysisRuns(runs);
+          setRecentSnapshots(
+            mergeSnapshots(
+              snapshots,
+              runs.flatMap((run) => (run.external_resource_snapshot ? [run.external_resource_snapshot] : [])),
+            ),
+          );
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "无法加载后台分析运行记录。");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法加载研究运行和外部资源快照。");
         }
       } finally {
         if (!cancelled) {
@@ -513,7 +279,7 @@ export default function ChatPanel({
       }
     };
 
-    void loadRuns();
+    void loadSurfaceData();
     return () => {
       cancelled = true;
     };
@@ -530,6 +296,12 @@ export default function ChatPanel({
         const refreshedRuns = await Promise.all(activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)));
         if (!cancelled) {
           setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, refreshedRuns));
+          setRecentSnapshots((currentSnapshots) =>
+            mergeSnapshots(
+              currentSnapshots,
+              refreshedRuns.flatMap((run) => (run.external_resource_snapshot ? [run.external_resource_snapshot] : [])),
+            ),
+          );
         }
       } catch (error) {
         if (!cancelled) {
@@ -591,9 +363,7 @@ export default function ChatPanel({
         session.accessToken,
         workspaceId,
         RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
-        {
-          consent_note: "允许这个工作区使用一次有边界的 Research 外部信息试点。",
-        },
+        { consent_note: "允许这个工作区使用一次有边界的 Research 外部信息试点。" },
       );
       setConnectorStatus(status);
     } catch (error) {
@@ -605,7 +375,6 @@ export default function ChatPanel({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!session || !question.trim()) {
       return;
     }
@@ -622,11 +391,12 @@ export default function ChatPanel({
           mode,
         });
         setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, [run]));
+        if (run.external_resource_snapshot) {
+          const snapshot = run.external_resource_snapshot;
+          setRecentSnapshots((currentSnapshots) => mergeSnapshots(currentSnapshots, [snapshot]));
+        }
       } else {
-        const response = await sendWorkspaceChat(session.accessToken, workspaceId, {
-          question: trimmedQuestion,
-          mode,
-        });
+        const response = await sendWorkspaceChat(session.accessToken, workspaceId, { question: trimmedQuestion, mode });
         setEntries((currentEntries) => [
           ...currentEntries,
           {
@@ -636,8 +406,13 @@ export default function ChatPanel({
             mode: response.mode,
             toolSteps: response.tool_steps,
             sources: response.sources,
+            externalResourceSnapshot: response.external_resource_snapshot ?? null,
           },
         ]);
+        if (response.external_resource_snapshot) {
+          const snapshot = response.external_resource_snapshot;
+          setRecentSnapshots((currentSnapshots) => mergeSnapshots(currentSnapshots, [snapshot]));
+        }
       }
       setQuestion("");
     } catch (error) {
@@ -708,7 +483,24 @@ export default function ChatPanel({
         </div>
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
           {prompts.map((prompt) => (
-            <PromptCard active={question === prompt} key={prompt} label={prompt} onClick={() => setQuestion(prompt)} />
+            <button
+              key={prompt}
+              onClick={() => setQuestion(prompt)}
+              style={{
+                backgroundColor: question === prompt ? "#0f172a" : "#ffffff",
+                border: `1px solid ${question === prompt ? "#0f172a" : "#cbd5e1"}`,
+                borderRadius: 16,
+                color: question === prompt ? "#f8fafc" : "#0f172a",
+                cursor: "pointer",
+                fontWeight: 700,
+                minHeight: 60,
+                padding: 12,
+                textAlign: "left",
+              }}
+              type="button"
+            >
+              {prompt}
+            </button>
           ))}
         </div>
       </section>
@@ -728,7 +520,7 @@ export default function ChatPanel({
           <div style={{ color: "#475569", lineHeight: 1.7 }}>
             {connectorStatus?.consent_state === "granted"
               ? "这个工作区已经完成授权。下一轮分析可以把工作区资料和已批准的外部信息结合起来。"
-              : "这个工作区还没有授权连接器。你仍然可以运行试点，但在授权前系统会诚实降级。"}
+              : "这个工作区还没有授权连接器。在授权前，系统会诚实降级，只使用工作区资料。"}
           </div>
           <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
             <button
@@ -748,11 +540,7 @@ export default function ChatPanel({
               }}
               type="button"
             >
-              {connectorStatus?.consent_state === "granted"
-                ? "已授权"
-                : isGrantingConnectorConsent
-                  ? "授权中..."
-                  : "授权连接器"}
+              {connectorStatus?.consent_state === "granted" ? "已授权" : isGrantingConnectorConsent ? "授权中..." : "授权连接器"}
             </button>
             {connectorStatus?.consent_state === "granted" && connectorStatus.granted_at ? (
               <span style={{ color: "#166534", fontSize: 13 }}>
@@ -771,13 +559,7 @@ export default function ChatPanel({
             placeholder={placeholder}
             required
             rows={5}
-            style={{
-              borderRadius: 22,
-              border: "1px solid #cbd5e1",
-              minHeight: 138,
-              padding: "18px 20px",
-              resize: "vertical",
-            }}
+            style={{ borderRadius: 22, border: "1px solid #cbd5e1", minHeight: 138, padding: "18px 20px", resize: "vertical" }}
             value={question}
           />
         </label>
@@ -785,17 +567,7 @@ export default function ChatPanel({
         <div style={{ display: "flex", justifyContent: "flex-start" }}>
           <button
             disabled={isSubmitting}
-            style={{
-              backgroundColor: "#0f172a",
-              border: "none",
-              borderRadius: 999,
-              color: "#ffffff",
-              fontSize: 16,
-              fontWeight: 800,
-              minHeight: 48,
-              minWidth: 148,
-              padding: "0 22px",
-            }}
+            style={{ backgroundColor: "#0f172a", border: "none", borderRadius: 999, color: "#ffffff", fontSize: 16, fontWeight: 800, minHeight: 48, minWidth: 148, padding: "0 22px" }}
             type="submit"
           >
             {isSubmitting ? "启动中..." : primaryActionLabel}
@@ -803,17 +575,17 @@ export default function ChatPanel({
         </div>
       </form>
 
-      <section
-        style={{
-          backgroundColor: "#f8fafc",
-          border: "1px solid #e2e8f0",
-          borderRadius: 24,
-          display: "grid",
-          gap: 14,
-          minHeight: 320,
-          padding: 18,
-        }}
-      >
+      {recentSnapshots.length > 0 ? (
+        <div style={{ ...panelStyle, gap: 10 }}>
+          <strong style={{ color: "#0f172a", fontSize: 16 }}>最近外部资源快照</strong>
+          <span style={{ color: "#475569", fontSize: 13 }}>这些快照会保存最近真正使用过的外部信息，不再只存在于一次回答里。</span>
+          {recentSnapshots.map((snapshot) => (
+            <SnapshotCard key={snapshot.id} snapshot={snapshot} title="外部资源快照" />
+          ))}
+        </div>
+      ) : null}
+
+      <section style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 24, display: "grid", gap: 14, minHeight: 320, padding: 18 }}>
         <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
           <strong style={{ color: "#0f172a", fontSize: 18 }}>{outputTitle}</strong>
           <span style={{ color: "#64748b", fontSize: 13 }}>
@@ -822,53 +594,46 @@ export default function ChatPanel({
         </div>
 
         {entries.length === 0 && analysisRuns.length === 0 && !isSubmitting && !isLoadingRuns ? (
-          <div
-            style={{
-              alignItems: "center",
-              color: "#64748b",
-              display: "grid",
-              justifyItems: "start",
-              lineHeight: 1.8,
-              minHeight: 180,
-              padding: 8,
-            }}
-          >
+          <div style={{ color: "#64748b", lineHeight: 1.8, minHeight: 180, padding: 8 }}>
             先开始一轮分析。这里会显示后台运行状态、系统结论、追踪链接和有依据的资料来源。
           </div>
         ) : null}
 
-        {isSubmitting ? (
-          <section
-            style={{
-              backgroundColor: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: 18,
-              color: "#0f172a",
-              display: "grid",
-              gap: 6,
-              padding: 16,
-            }}
-          >
-            <strong>正在提交分析请求</strong>
-            <span style={{ color: "#475569" }}>服务端接受后，这次运行会立刻出现在这里。</span>
+        {analysisRuns.map((run) => (
+          <section key={run.id} style={{ ...panelStyle, gap: 10 }}>
+            <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <strong style={{ color: "#0f172a" }}>{run.question}</strong>
+              <span style={{ color: "#475569", fontSize: 13 }}>{run.status}</span>
+            </div>
+            <div style={{ color: "#475569", fontSize: 13 }}>
+              分析焦点：{run.analysis_focus ?? "等待系统确定"}
+              {run.search_query ? ` | 搜索词：${run.search_query}` : ""}
+            </div>
+            {run.answer ? <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{run.answer}</div> : null}
+            {run.run_memory ? <div style={{ color: "#475569", fontSize: 13 }}>压缩后的运行记忆：{run.run_memory.summary}</div> : null}
+            {run.degraded_reason ? <div style={{ color: "#9a3412", fontSize: 13 }}>降级原因：{run.degraded_reason}</div> : null}
+            <ToolStepList toolSteps={run.tool_steps} />
+            {run.external_resource_snapshot ? <SnapshotCard snapshot={run.external_resource_snapshot} title="本次运行使用的外部资源快照" /> : null}
+            <SourceList sources={run.sources} traceId={run.trace_id ?? null} />
           </section>
-        ) : null}
+        ))}
 
-        {analysisRuns.length > 0 ? (
-          <div style={{ display: "grid", gap: 16 }}>
-            {analysisRuns.map((run) => (
-              <AnalysisRunCard key={run.id} run={run} />
-            ))}
-          </div>
-        ) : null}
-
-        {entries.length > 0 ? (
-          <div style={{ display: "grid", gap: 20 }}>
-            {entries.map((entry) => (
-              <ChatBubble assistantLabel={assistantLabel} entry={entry} key={entry.traceId} />
-            ))}
-          </div>
-        ) : null}
+        {entries.map((entry) => (
+          <section key={entry.traceId} style={{ ...panelStyle, gap: 10 }}>
+            <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>你的问题</div>
+            <div style={{ color: "#0f172a", lineHeight: 1.7 }}>{entry.question}</div>
+            <div style={{ alignItems: "center", display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ backgroundColor: "#e0f2fe", borderRadius: 999, color: "#0c4a6e", fontSize: 12, fontWeight: 700, padding: "4px 10px" }}>{assistantLabel}</span>
+              {entry.mode === "research_tool_assisted" ? <span style={{ backgroundColor: "#ecfccb", borderRadius: 999, color: "#3f6212", fontSize: 12, fontWeight: 700, padding: "4px 10px" }}>工具辅助试点</span> : null}
+              {entry.mode === "research_external_context" ? <span style={{ backgroundColor: "#ede9fe", borderRadius: 999, color: "#5b21b6", fontSize: 12, fontWeight: 700, padding: "4px 10px" }}>外部信息试点</span> : null}
+              <span style={{ color: "#64748b", fontSize: 12 }}>追踪 ID：{entry.traceId}</span>
+            </div>
+            <div style={{ color: "#1e293b", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
+            <ToolStepList toolSteps={entry.toolSteps} />
+            {entry.externalResourceSnapshot ? <SnapshotCard snapshot={entry.externalResourceSnapshot} title="本次使用的外部资源快照" /> : null}
+            <SourceList sources={entry.sources} traceId={entry.traceId} />
+          </section>
+        ))}
       </section>
     </section>
   );

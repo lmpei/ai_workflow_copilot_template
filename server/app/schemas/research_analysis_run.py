@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.models.research_analysis_run import ResearchAnalysisRun
 from app.schemas.chat import ChatMode, ChatToolStep, SourceReference
+from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 
 ResearchAnalysisRunStatus = Literal["pending", "running", "completed", "degraded", "failed"]
 
@@ -36,6 +37,7 @@ class ResearchAnalysisRunResponse(BaseModel):
     trace_id: str | None = None
     sources: list[SourceReference]
     tool_steps: list[ChatToolStep]
+    external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None
     run_memory: ResearchAnalysisRunMemory | None = None
     analysis_focus: str | None = None
     search_query: str | None = None
@@ -47,7 +49,12 @@ class ResearchAnalysisRunResponse(BaseModel):
     updated_at: datetime
 
     @classmethod
-    def from_model(cls, run: ResearchAnalysisRun) -> "ResearchAnalysisRunResponse":
+    def from_model(
+        cls,
+        run: ResearchAnalysisRun,
+        *,
+        external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None,
+    ) -> "ResearchAnalysisRunResponse":
         return cls(
             id=run.id,
             workspace_id=run.workspace_id,
@@ -61,6 +68,7 @@ class ResearchAnalysisRunResponse(BaseModel):
             trace_id=run.trace_id,
             sources=[SourceReference.model_validate(item) for item in run.sources_json],
             tool_steps=[ChatToolStep.model_validate(item) for item in run.tool_steps_json],
+            external_resource_snapshot=external_resource_snapshot,
             run_memory=ResearchAnalysisRunMemory.model_validate(run.run_memory_json) if run.run_memory_json else None,
             analysis_focus=run.analysis_focus,
             search_query=run.search_query,

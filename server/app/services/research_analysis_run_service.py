@@ -10,9 +10,13 @@ from app.schemas.research_analysis_run import (
     ResearchAnalysisRunMemory,
     ResearchAnalysisRunResponse,
 )
+from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services.research_external_context_service import (
     ResearchExternalContextChatResult,
     run_research_external_context_chat,
+)
+from app.services.research_external_resource_snapshot_service import (
+    create_research_external_resource_snapshot,
 )
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
@@ -150,6 +154,27 @@ def _load_prior_memory_context(run) -> ResearchRunMemoryContext | None:
     )
 
 
+def _resolve_external_resource_snapshot(
+    run,
+) -> ResearchExternalResourceSnapshotResponse | None:
+    snapshot_id = getattr(run, "external_resource_snapshot_id", None)
+    if not snapshot_id:
+        return None
+    snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(snapshot_id)
+    if snapshot is None:
+        return None
+    return ResearchExternalResourceSnapshotResponse.from_model(snapshot)
+
+
+def _serialize_research_analysis_run_response(
+    run,
+) -> ResearchAnalysisRunResponse:
+    return ResearchAnalysisRunResponse.from_model(
+        run,
+        external_resource_snapshot=_resolve_external_resource_snapshot(run),
+    )
+
+
 async def enqueue_research_analysis_run_execution(run_id: str) -> str:
     redis = await create_pool(build_redis_settings())
     job = await redis.enqueue_job(
@@ -223,14 +248,14 @@ async def create_research_analysis_run(
     persisted = research_analysis_run_repository.get_research_analysis_run(run.id)
     if persisted is None:
         raise ResearchAnalysisRunAccessError("Research analysis run not found")
-    return ResearchAnalysisRunResponse.from_model(persisted)
+    return _serialize_research_analysis_run_response(persisted)
 
 
 def get_research_analysis_run(*, run_id: str, user_id: str) -> ResearchAnalysisRunResponse | None:
     run = research_analysis_run_repository.get_research_analysis_run_for_user(run_id, user_id)
     if run is None:
         return None
-    return ResearchAnalysisRunResponse.from_model(run)
+    return _serialize_research_analysis_run_response(run)
 
 
 def list_workspace_research_analysis_runs(
@@ -246,7 +271,7 @@ def list_workspace_research_analysis_runs(
         user_id,
         limit=normalized_limit,
     )
-    return [ResearchAnalysisRunResponse.from_model(run) for run in runs]
+    return [_serialize_research_analysis_run_response(run) for run in runs]
 
 
 def _record_run_trace(
@@ -268,6 +293,7 @@ def _record_run_trace(
     connector_consent_state: str | None = None,
     external_context_used: bool | None = None,
     external_match_count: int | None = None,
+    external_resource_snapshot_id: str | None = None,
     error_message: str | None = None,
 ) -> str:
     latency_ms = max(int((datetime.now(UTC) - started_at).total_seconds() * 1000), 0)
@@ -300,6 +326,7 @@ def _record_run_trace(
             "connector_consent_state": connector_consent_state,
             "external_context_used": external_context_used,
             "external_match_count": external_match_count,
+            "external_resource_snapshot_id": external_resource_snapshot_id,
         },
         extra_metadata_json={
             "research_analysis_run_id": run.id,
@@ -314,6 +341,7 @@ def _record_run_trace(
             "connector_consent_state": connector_consent_state,
             "external_context_used": external_context_used,
             "external_match_count": external_match_count,
+            "external_resource_snapshot_id": external_resource_snapshot_id,
         },
     )
 
@@ -355,6 +383,22 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
                 question=running_run.question,
                 prior_memory=prior_memory,
             )
+        external_resource_snapshot = None
+        if (
+            running_run.mode == "research_external_context"
+            and getattr(result, "external_context_used", False)
+            and getattr(result, "external_matches", None)
+        ):
+            external_resource_snapshot = create_research_external_resource_snapshot(
+                workspace_id=running_run.workspace_id,
+                conversation_id=running_run.conversation_id,
+                created_by=running_run.created_by,
+                connector_id=getattr(result, "connector_id", "research_external_context"),
+                search_query=result.search_query or running_run.question,
+                matches=list(getattr(result, "external_matches", [])),
+                analysis_focus=result.analysis_focus,
+                source_run_id=running_run.id,
+            )
         sources_json = [source.model_dump() for source in result.sources]
         tool_steps_json = [step.model_dump() for step in result.tool_steps]
         run_memory_json = _build_run_memory(
@@ -381,6 +425,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             connector_consent_state=getattr(result, "connector_consent_state", None),
             external_context_used=getattr(result, "external_context_used", None),
             external_match_count=getattr(result, "external_match_count", None),
+            external_resource_snapshot_id=external_resource_snapshot.id if external_resource_snapshot else None,
         )
         conversation_repository.create_message(
             conversation_id=running_run.conversation_id,
@@ -393,6 +438,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
                 "delivery": "background_run",
                 "resumed_from_run_id": running_run.resumed_from_run_id,
                 "run_memory": run_memory_json,
+                "external_resource_snapshot_id": external_resource_snapshot.id if external_resource_snapshot else None,
             },
         )
         conversation_repository.touch_conversation(running_run.conversation_id)
@@ -401,6 +447,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
         completed_run = research_analysis_run_repository.update_research_analysis_run(
             running_run.id,
             next_status=terminal_status,
+            external_resource_snapshot_id=external_resource_snapshot.id if external_resource_snapshot else None,
             prompt=result.prompt,
             answer=result.answer,
             trace_id=trace_id,
@@ -437,6 +484,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             connector_consent_state=None,
             external_context_used=False if running_run.mode == "research_external_context" else None,
             external_match_count=0 if running_run.mode == "research_external_context" else None,
+            external_resource_snapshot_id=None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(
@@ -467,6 +515,7 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             connector_consent_state=None,
             external_context_used=False if running_run.mode == "research_external_context" else None,
             external_match_count=0 if running_run.mode == "research_external_context" else None,
+            external_resource_snapshot_id=None,
             error_message=str(error),
         )
         failed_run = research_analysis_run_repository.update_research_analysis_run(

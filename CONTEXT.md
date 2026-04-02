@@ -64,6 +64,15 @@ That first Stage I wave is now complete: the operator-facing review layer can di
 connector use, external-match visibility, and degraded-path honesty for the Research external-context pilot instead of
 leaving that pilot as a success-only demo.
 
+The first task in the second Stage I wave is now complete as well: approved external-context matches on the bounded
+Research path no longer live only inside answer-time trace data. They can now be persisted as explicit external
+resource snapshots, linked back to the direct chat turn or background analysis run that used them, and surfaced on the
+main Research and observability views without collapsing them into ordinary workspace evidence.
+
+The next bounded Stage I step is now to stay inside that same Research-first connector path, but deepen it by making
+consent state changes and explicit resource selection more inspectable before replay or review expands around that more
+explicit context plane and before any broader MCP or multi-module rollout opens.
+
 
 ## Current Phase
 

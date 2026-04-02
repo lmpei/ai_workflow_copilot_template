@@ -60,6 +60,11 @@ class ResearchAnalysisRun(Base):
     question: Mapped[str] = mapped_column(Text())
     mode: Mapped[str] = mapped_column(String(50), default="research_tool_assisted")
     resumed_from_run_id: Mapped[str | None] = mapped_column(ForeignKey("research_analysis_runs.id"), index=True, nullable=True)
+    external_resource_snapshot_id: Mapped[str | None] = mapped_column(
+        ForeignKey("research_external_resource_snapshots.id"),
+        index=True,
+        nullable=True,
+    )
     prompt: Mapped[str | None] = mapped_column(Text(), nullable=True)
     answer: Mapped[str | None] = mapped_column(Text(), nullable=True)
     trace_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)

@@ -1,16 +1,18 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   isApiClientError,
   listWorkspaceResearchAnalysisRunReviews,
+  listWorkspaceResearchExternalResourceSnapshots,
   listWorkspaceTraces,
 } from "../../lib/api";
 import type {
   JsonObject,
   ResearchAnalysisReviewRecord,
   ResearchAnalysisReviewResponse,
+  ResearchExternalResourceSnapshotRecord,
   TraceRecord,
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
@@ -243,6 +245,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
   const { session, isReady } = useAuthSession();
   const [traces, setTraces] = useState<TraceRecord[]>([]);
   const [review, setReview] = useState<ResearchAnalysisReviewResponse | null>(null);
+  const [snapshots, setSnapshots] = useState<ResearchExternalResourceSnapshotRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -261,8 +264,15 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
         listWorkspaceTraces(session.accessToken, workspaceId, 20),
         listWorkspaceResearchAnalysisRunReviews(session.accessToken, workspaceId, 8),
       ]);
+      let snapshotItems: ResearchExternalResourceSnapshotRecord[] = [];
+      try {
+        snapshotItems = await listWorkspaceResearchExternalResourceSnapshots(session.accessToken, workspaceId, 8);
+      } catch {
+        snapshotItems = [];
+      }
       setTraces(traceItems);
       setReview(reviewResponse);
+      setSnapshots(snapshotItems);
     } catch (error) {
       setErrorMessage(isApiClientError(error) ? error.message : "无法加载最近的可观测数据。");
     } finally {
@@ -340,6 +350,47 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
             最近 {pilotTraces.length} 条试点追踪里，有 {degradedPilotCount} 条走了诚实降级路径。
             {externalPilotTraces.length > 0 ? ` 其中 ${externalPilotTraces.length} 条属于外部信息试点。` : ""}
           </p>
+        </section>
+      ) : null}
+
+      {snapshots.length > 0 ? (
+        <section
+          style={{
+            backgroundColor: "#faf5ff",
+            border: "1px solid #ddd6fe",
+            borderRadius: 14,
+            display: "grid",
+            gap: 10,
+            marginBottom: 14,
+            padding: 12,
+          }}
+        >
+          <strong style={{ color: "#581c87" }}>最近外部资源快照</strong>
+          <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
+            这里保留最近真正使用过的外部资源快照，便于核对外部信息是否进入了 Research 分析链路。
+          </p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {snapshots.map((snapshot) => (
+              <div
+                key={snapshot.id}
+                style={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e9d5ff",
+                  borderRadius: 12,
+                  display: "grid",
+                  gap: 6,
+                  padding: 10,
+                }}
+              >
+                <strong style={{ color: "#0f172a" }}>{snapshot.title}</strong>
+                <div style={{ color: "#475569", fontSize: 13 }}>
+                  搜索词：{snapshot.search_query}
+                  {snapshot.analysis_focus ? ` | 分析焦点：${snapshot.analysis_focus}` : ""}
+                </div>
+                <div style={{ color: "#475569", fontSize: 13 }}>资源数：{snapshot.resource_count}</div>
+              </div>
+            ))}
+          </div>
         </section>
       ) : null}
 

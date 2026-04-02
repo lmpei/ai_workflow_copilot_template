@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import desc, select
+from sqlalchemy import select
 
 from app.core.database import session_scope
 from app.models.research_analysis_run import (
@@ -11,6 +11,7 @@ from app.models.research_analysis_run import (
     can_transition_research_analysis_run_status,
     is_valid_research_analysis_run_status,
 )
+from app.models.research_external_resource_snapshot import ResearchExternalResourceSnapshot
 from app.models.workspace_member import WorkspaceMember
 
 _TERMINAL_MEMORY_STATUSES = ("completed", "degraded")
@@ -39,6 +40,7 @@ def create_research_analysis_run(
         question=question,
         mode=mode,
         resumed_from_run_id=resumed_from_run_id,
+        external_resource_snapshot_id=None,
         prompt=None,
         answer=None,
         trace_id=None,
@@ -92,7 +94,7 @@ def get_latest_resumable_research_analysis_run(
                 ResearchAnalysisRun.created_by == user_id,
                 ResearchAnalysisRun.status.in_(_TERMINAL_MEMORY_STATUSES),
             )
-            .order_by(desc(ResearchAnalysisRun.completed_at), desc(ResearchAnalysisRun.updated_at))
+            .order_by(ResearchAnalysisRun.completed_at.desc(), ResearchAnalysisRun.updated_at.desc())
             .limit(1)
         )
         return session.scalar(statement)
@@ -118,10 +120,74 @@ def list_workspace_research_analysis_runs(
         return list(session.scalars(statement))
 
 
+def create_research_external_resource_snapshot(
+    *,
+    workspace_id: str,
+    conversation_id: str | None,
+    created_by: str,
+    connector_id: str,
+    source_run_id: str | None,
+    title: str,
+    analysis_focus: str | None,
+    search_query: str,
+    resources_json: list[dict[str, object]],
+) -> ResearchExternalResourceSnapshot:
+    now = datetime.now(UTC)
+    snapshot = ResearchExternalResourceSnapshot(
+        id=str(uuid4()),
+        workspace_id=workspace_id,
+        conversation_id=conversation_id,
+        created_by=created_by,
+        connector_id=connector_id,
+        source_run_id=source_run_id,
+        title=title,
+        analysis_focus=analysis_focus,
+        search_query=search_query,
+        resource_count=len(resources_json),
+        resources_json=resources_json,
+        created_at=now,
+        updated_at=now,
+    )
+    with session_scope() as session:
+        session.add(snapshot)
+        session.flush()
+        session.refresh(snapshot)
+        return snapshot
+
+
+def get_research_external_resource_snapshot(snapshot_id: str) -> ResearchExternalResourceSnapshot | None:
+    with session_scope() as session:
+        return session.get(ResearchExternalResourceSnapshot, snapshot_id)
+
+
+def list_workspace_research_external_resource_snapshots(
+    *,
+    workspace_id: str,
+    user_id: str,
+    limit: int = 10,
+) -> list[ResearchExternalResourceSnapshot]:
+    with session_scope() as session:
+        statement = (
+            select(ResearchExternalResourceSnapshot)
+            .join(WorkspaceMember, WorkspaceMember.workspace_id == ResearchExternalResourceSnapshot.workspace_id)
+            .where(
+                ResearchExternalResourceSnapshot.workspace_id == workspace_id,
+                WorkspaceMember.user_id == user_id,
+            )
+            .order_by(
+                ResearchExternalResourceSnapshot.created_at.desc(),
+                ResearchExternalResourceSnapshot.updated_at.desc(),
+            )
+            .limit(limit)
+        )
+        return list(session.scalars(statement))
+
+
 def update_research_analysis_run(
     run_id: str,
     *,
     next_status: str,
+    external_resource_snapshot_id: str | None = None,
     prompt: str | None = None,
     answer: str | None = None,
     trace_id: str | None = None,
@@ -151,6 +217,8 @@ def update_research_analysis_run(
             run.started_at = now
         if next_status in {"completed", "degraded", "failed"}:
             run.completed_at = now
+        if external_resource_snapshot_id is not None:
+            run.external_resource_snapshot_id = external_resource_snapshot_id
         if prompt is not None:
             run.prompt = prompt
         if answer is not None:

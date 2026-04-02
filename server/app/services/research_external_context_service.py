@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+﻿from dataclasses import dataclass, field
 
 from app.connectors.research_external_context_connector import (
     ResearchExternalContextConnectorUnavailableError,
@@ -37,6 +37,7 @@ class ResearchExternalContextChatResult:
     connector_consent_state: str = "not_granted"
     external_context_used: bool = False
     external_match_count: int = 0
+    external_matches: list[ResearchExternalContextEntry] = field(default_factory=list)
 
 
 def _append_answer_note(answer: str, note: str) -> str:
@@ -214,13 +215,11 @@ def run_research_external_context_chat(
             connector_consent_state="not_granted",
             external_context_used=False,
             external_match_count=0,
+            external_matches=[],
         )
 
     try:
-        external_matches = search_research_external_context(
-            query=search_query,
-            limit=_MAX_EXTERNAL_MATCHES,
-        )
+        external_matches = search_research_external_context(query=search_query, limit=_MAX_EXTERNAL_MATCHES)
     except ResearchExternalContextConnectorUnavailableError:
         degraded_reason = "external_context_unavailable"
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
@@ -240,6 +239,7 @@ def run_research_external_context_chat(
             connector_consent_state="granted",
             external_context_used=False,
             external_match_count=0,
+            external_matches=[],
         )
 
     if not external_matches:
@@ -261,6 +261,7 @@ def run_research_external_context_chat(
             connector_consent_state="granted",
             external_context_used=False,
             external_match_count=0,
+            external_matches=[],
         )
 
     tool_steps.append(_summarize_external_context_step(matches=external_matches, search_query=search_query))
@@ -282,4 +283,5 @@ def run_research_external_context_chat(
         connector_consent_state="granted",
         external_context_used=True,
         external_match_count=len(external_matches),
+        external_matches=external_matches,
     )

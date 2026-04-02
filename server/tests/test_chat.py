@@ -15,6 +15,7 @@ from app.repositories.document_repository import (
     replace_document_chunks,
 )
 from app.services import retrieval_service
+from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.schemas.chat import ChatToolStep, SourceReference
 from app.services.research_external_context_service import ResearchExternalContextChatResult
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
@@ -454,6 +455,15 @@ def test_chat_supports_research_external_context_mode(client: TestClient, monkey
             connector_consent_state="granted",
             external_context_used=True,
             external_match_count=1,
+            external_matches=[
+                ResearchExternalContextEntry(
+                    context_id="market-cost-pressure",
+                    title="Analyst note: margin pressure and price discipline",
+                    source_label="External market note",
+                    keywords=("pricing", "pressure"),
+                    snippet="External analyst context.",
+                )
+            ],
         )
 
     monkeypatch.setattr(
@@ -473,6 +483,9 @@ def test_chat_supports_research_external_context_mode(client: TestClient, monkey
     assert data["tool_steps"][0]["tool_name"] == "research_external_context"
     assert data["sources"][0]["source_kind"] == "workspace_document"
     assert data["sources"][1]["source_kind"] == "external_context"
+    assert data["external_resource_snapshot"]["connector_id"] == "research_external_context"
+    assert data["external_resource_snapshot"]["resource_count"] == 1
+    assert data["external_resource_snapshot"]["resources"][0]["resource_id"] == "market-cost-pressure"
 
     with session_scope() as session:
         traces = list(session.scalars(select(Trace)))
@@ -481,3 +494,4 @@ def test_chat_supports_research_external_context_mode(client: TestClient, monkey
     assert traces[0].trace_type == "research_external_context"
     assert traces[0].metadata_json["connector_id"] == "research_external_context"
     assert traces[0].metadata_json["external_context_used"] is True
+    assert traces[0].metadata_json["external_resource_snapshot_id"] == data["external_resource_snapshot"]["id"]

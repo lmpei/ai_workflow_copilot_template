@@ -1526,3 +1526,46 @@ Append-only log. Add new entries at the bottom.
   enough for bounded human inspection.
 - Related Task: `tasks/archive/stage-i/stage-i-04-connector-trace-and-consent-visibility.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-099
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the second Stage I connector and context-plane wave
+- Context: the first Stage I wave already delivered one bounded connector contract, one explicit consent boundary, one
+  visible Research external-context pilot, and one operator-facing connector review baseline. The roadmap's remaining
+  Wave 2 learning gap is no longer basic connector visibility, but how approved external context should become a more
+  explicit reusable resource instead of staying only as hidden transient input to one answer.
+- Choice: keep Stage I active and define a second bounded wave around three steps:
+  - `tasks/stage-i-06-research-external-resource-snapshots.md`
+  - `tasks/stage-i-07-consent-lifecycle-and-resource-selection.md`
+  - `tasks/stage-i-08-resource-aware-replay-and-review-baseline.md`
+- Why: the next connector learning step should deepen the same Research-first pilot into a clearer context-plane shape
+  without broadening too early into generic MCP sprawl, multi-module rollout, or trend-driven multi-agent work.
+- Impact: Stage I now has a second explicit bounded wave and one new primary active task, while the project stays
+  aligned to the roadmap's connector and context-plane learning sequence.
+- Related Task: `tasks/archive/stage-i/stage-i-05-wave-two-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-100
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-06 Research external resource snapshots
+- Context: the first Stage I wave already exposed connector consent and external-context behavior, but approved
+  external matches still lived mostly as transient answer-time data inside a trace or one response. The second wave
+  needed a more explicit context-plane shape before consent lifecycle or replay could deepen further.
+- Choice: add one persisted `research_external_resource_snapshot` contract for approved Research connector matches, link
+  direct chat and background analysis runs to the snapshot they actually used, expose recent snapshots on the Research
+  and observability surfaces, archive `stage-i-06`, and move the active task to consent lifecycle plus resource
+  selection.
+- Why: approved external context should become an explicit reusable resource before the connector path grows broader or
+  more operationally complex.
+- Impact: the Research connector pilot now has one clearer resource-backed boundary, and the next Stage I work can
+  focus on explicit consent lifecycle and snapshot selection instead of on transient answer-time match data.
+- Related Task: `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
+- Supersedes:

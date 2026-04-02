@@ -25,13 +25,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- close the first bounded Stage I connector and context-plane wave after the Research-first external-context pilot now
-  has explicit connector-consent, connector-usage, and degraded-path visibility in operator-facing trace and review
-  surfaces, and prepare the next bounded Stage I wave definition without destabilizing the live product hosts
+- execute the second bounded Stage I connector and context-plane wave by turning the first Research external-context
+  pilot into a more explicit resource-backed context path with consent lifecycle, resource selection, and resource-aware
+  replay or review, while keeping the live product hosts stable
 
 ## Active Task
 
-- none yet; Stage I first wave is complete and awaiting the next bounded task-wave definition
+- `tasks/stage-i-07-consent-lifecycle-and-resource-selection.md`
 
 ## Verification Status
 
@@ -46,7 +46,11 @@ Current state only. Keep this file short, current, and action-oriented.
   the main Research surface has one explicit external-context pilot that can blend approved external context with
   internal workspace material while keeping the two evidence paths visibly distinct, and the operator-facing review
   layer now exposes connector consent state, connector use, external-match visibility, and degraded-path honesty for
-  that pilot.
+  that pilot. The second Stage I wave is now in progress: the repo has one persisted external-resource snapshot layer
+  for approved Research connector matches, direct chat and background analysis runs can now point to the snapshot they
+  actually used, and recent snapshots are visible on the main Research and observability surfaces. The current next
+  step is to deepen that same path into explicit consent lifecycle and resource selection before extending replay or
+  review again.
 - Last Verified At: 2026-04-02
 
 ## Current Blockers
@@ -64,15 +68,14 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- which single next Stage I expansion should follow the first connector wave without broadening prematurely into generic
-  connector sprawl or early multi-agent work
+- where explicit consent changes and snapshot selection should live on the Research surface before broader MCP or
+  context-plane work opens
 
 ## Ready Now
 
-1. review the completed Stage I first wave and decide the next bounded Stage I task stack
-2. keep the live `weave` and `api` hosts stable while the new connector-consent review baseline remains inspectable
-3. preserve the current distinction between internal workspace evidence and approved external context as future
-   connector work deepens
+1. implement `stage-i-07` to make connector consent state and revocation more explicit on the Research path
+2. let Research choose from recent external resource snapshots instead of only auto-blending them
+3. keep the live `weave` and `api` hosts stable while consent and resource handling deepen
 
 ## Parked / Later
 
@@ -82,7 +85,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-04-connector-trace-and-consent-visibility.md`
+- `tasks/archive/stage-i/stage-i-06-research-external-resource-snapshots.md`
 
 ## Recent Decisions
 
@@ -130,3 +133,9 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-02-098` complete `stage-i-04`, make connector consent state, connector use, and degraded outcomes
   readable in operator-facing trace and review surfaces, archive the task, and return Stage I to human selection of the
   next bounded wave
+- `DEC-2026-04-02-099` define the second Stage I wave as external resource snapshots, consent lifecycle plus resource
+  selection, and resource-aware replay or review follow-through instead of broadening early into generic MCP sprawl or
+  multi-agent work
+- `DEC-2026-04-02-100` complete `stage-i-06`, persist approved external-context matches as explicit Research external
+  resource snapshots, expose those snapshots on chat, runs, and observability surfaces, archive the task, and move
+  Stage I to consent lifecycle and resource selection follow-through
