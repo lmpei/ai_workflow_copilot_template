@@ -1429,3 +1429,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: Research background runs now have one explicit compaction boundary, later runs can resume from a compact prior summary instead of from unbounded prompt growth, and the replay/regression task can now evaluate a more durable visible contract.
 - Related Task: `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-02-093
+- Date: 2026-04-02
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-h-09 tool-aware replay and regression baseline
+- Context: `stage-h-08` made resumed Research background runs durable enough to carry one bounded compact memory, but operator review still relied too heavily on raw trace inspection and had no explicit review contract for terminal runs.
+- Choice: add one bounded review surface for recent terminal `research_analysis_run` records, map those runs to their persisted traces, apply a replay/regression baseline that checks trace linkage, prompt visibility, tool-step visibility, compact run memory, honest degraded handling, and resumed-memory visibility, archive `stage-h-09`, and return Stage H to human selection of the next bounded wave.
+- Why: the second Stage H wave should end with a stronger review discipline for the deeper Research path without pretending the repo already has a full eval optimization platform.
+- Impact: recent terminal Research analysis runs can now be reviewed through one explicit operator-facing baseline instead of only through raw trace JSON, and the next Stage H wave can start from a more durable replay/regression contract.
+- Related Task: `tasks/archive/stage-h/stage-h-09-tool-aware-replay-and-regression-baseline.md`
+- Supersedes:

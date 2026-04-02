@@ -802,6 +802,28 @@ export type ResearchAnalysisRunRecord = {
   updated_at: string;
 };
 
+export type ResearchAnalysisReviewRecord = {
+  run_id: string;
+  question: string;
+  status: ResearchAnalysisRunStatus;
+  trace_id?: string | null;
+  resumed_from_run_id?: string | null;
+  degraded_reason?: string | null;
+  run_memory_summary?: string | null;
+  passed: boolean;
+  issues: string[];
+  regression_baseline: JsonObject;
+  created_at: string;
+  completed_at?: string | null;
+};
+
+export type ResearchAnalysisReviewResponse = {
+  baseline_version: string;
+  reviewed_count: number;
+  passing_count: number;
+  failing_count: number;
+  items: ResearchAnalysisReviewRecord[];
+};
 export type WorkspaceMetrics = {
   workspace_id: string;
   total_requests: number;

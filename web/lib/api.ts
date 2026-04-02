@@ -16,6 +16,7 @@ import type {
   PublicDemoTemplateRecord,
   PublicDemoWorkspaceSeedRecord,
   RegisterRequestPayload,
+  ResearchAnalysisReviewResponse,
   ResearchAnalysisRunCreatePayload,
   ResearchAnalysisRunRecord,
   ResearchAssetComparisonRecord,
@@ -308,6 +309,18 @@ export async function getResearchAnalysisRun(
 ): Promise<ResearchAnalysisRunRecord> {
   return fetchBrowserApiJson<ResearchAnalysisRunRecord>(`/research-analysis-runs/${runId}`, {}, accessToken);
 }
+export async function listWorkspaceResearchAnalysisRunReviews(
+  accessToken: string,
+  workspaceId: string,
+  limit = 8,
+): Promise<ResearchAnalysisReviewResponse> {
+  return fetchBrowserApiJson<ResearchAnalysisReviewResponse>(
+    `/workspaces/${workspaceId}/research-analysis-runs/review?limit=${limit}`,
+    {},
+    accessToken,
+  );
+}
+
 export async function getWorkspaceMetrics(
   accessToken: string,
   workspaceId: string,

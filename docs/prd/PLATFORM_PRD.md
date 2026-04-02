@@ -171,6 +171,8 @@ The current implemented platform increment includes:
   backend has a regression-facing evaluation rule for visible tool steps plus honest no-source degradation
 - one explicit Research background analysis run path that can persist run state beyond a single chat turn while keeping
   answer delivery, tool-step visibility, and trace linkage on the same workspace surface
+- one operator-visible regression review path for recent terminal Research analysis runs, so resumed-run memory,
+  degraded-path honesty, and tool-step visibility can be checked without opening raw trace JSON first
 
 The repository does not yet implement:
 
@@ -194,10 +196,9 @@ and closed.
 The active formal planning unit is `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented
 in `docs/prd/STAGE_H_PLAN.md`.
 
-The first Stage H task wave is complete, and the second Stage H task wave is now underway. Its first step is complete:
-Research can launch one explicit background analysis run. The remaining second-wave work now deepens that bounded
-Research-first capability path through context compaction, run memory, and tool-aware replay/regression follow-through
-before the roadmap opens connector or multi-agent work.
+The first Stage H task wave is complete, and the second Stage H task wave is now complete as well. The bounded
+Research-first capability path now includes explicit background analysis runs, compact resumed-run memory, and one
+operator-visible replay/regression baseline before the roadmap opens connector or multi-agent work.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

@@ -9,7 +9,7 @@
 - Status: active
 - Opened At: 2026-04-01
 - First Task Wave: complete
-- Second Task Wave: active
+- Second Task Wave: complete
 
 ## Position In The Project
 
@@ -139,6 +139,7 @@ The first executable Stage H wave is:
 - `tasks/archive/stage-h/stage-h-04-tool-trace-and-eval-visibility.md`
 - `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md`
 - `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md`
+- `tasks/archive/stage-h/stage-h-09-tool-aware-replay-and-regression-baseline.md`
 
 The repository now has one shared backend model-interface layer beneath chat generation, embeddings, and eval judging.
 The repository also now has one bounded Research tool-assisted chat pilot on top of that layer: the main Research chat
@@ -151,23 +152,25 @@ The second wave has now deepened that path twice: Research workspaces can launch
 run, watch it move through queued, running, completed, degraded, or failed state, and receive the resulting answer,
 tool steps, and trace linkage back on the same workspace surface. That run path now also supports one bounded
 resumed-run memory contract so later passes in the same conversation can carry forward one compact prior summary
-without growing prompt state unboundedly.
+without growing prompt state unboundedly. The second wave now ends with one operator-visible regression review surface
+for recent terminal runs, where replay and regression checks cover trace linkage, prompt visibility, tool-step
+visibility, compact run memory, honest degraded handling, and resumed-memory visibility.
 
 ## Second Task Wave
 The second executable Stage H wave is now:
 
 1. `tasks/archive/stage-h/stage-h-07-research-background-analysis-runs.md` (complete)
 2. `tasks/archive/stage-h/stage-h-08-research-context-compaction-and-run-memory.md` (complete)
-3. `tasks/stage-h-09-tool-aware-replay-and-regression-baseline.md`
+3. `tasks/archive/stage-h/stage-h-09-tool-aware-replay-and-regression-baseline.md` (complete)
 
 ### Why This Wave Exists
 
 The first Stage H wave proved that one visible Research-first tool-assisted path can exist honestly on the main product
 surface. `stage-h-07` completed the first deepening step by turning that path into one explicit background-capable run
 with persisted run state, assistant answer delivery, and trace linkage. `stage-h-08` then added one bounded
-resumed-run memory contract on top of that path. The remaining bounded learning step should not broaden into another
-module or leap into connectors or multi-agent handoffs. It should deepen that one visible path so the repository
-learns:
+resumed-run memory contract on top of that path. `stage-h-09` completed the replay and regression follow-through with
+one operator-facing review surface for terminal runs. This second wave stayed bounded on that one visible path instead
+of broadening into another module or leaping into connectors or multi-agent handoffs. It taught the repository:
 - how replay and regression should validate a resumed bounded run instead of a one-shot tool-assisted answer
 - which visible trace or run-memory fields are durable enough to support honest operator review and replay
 - how the repository should measure regression once tool-assisted analysis has both background execution and compacted

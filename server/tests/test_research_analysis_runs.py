@@ -9,7 +9,7 @@ from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.research_analysis_run import ResearchAnalysisRun
 from app.models.trace import Trace
-from app.schemas.chat import SourceReference
+from app.schemas.chat import ChatToolStep, SourceReference
 from app.services import research_analysis_run_service
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
@@ -368,3 +368,77 @@ def test_run_research_analysis_run_execution_uses_prior_memory_when_resuming(
     data = get_response.json()
     assert data["resumed_from_run_id"] == first_run_id
     assert data["run_memory"]["summary"] == "The follow-up pass confirms pricing pressure."
+
+
+def test_list_workspace_research_analysis_run_review_returns_regression_summary(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    async def fake_enqueue(run_id: str) -> str:
+        return "job-1"
+
+    monkeypatch.setattr(research_analysis_run_service, "enqueue_research_analysis_run_execution", fake_enqueue)
+
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs",
+        json={
+            "question": "Analyze the strongest signal in the current material.",
+            "mode": "research_tool_assisted",
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    run_id = create_response.json()["id"]
+
+    def fake_run_tool_assisted_research_chat(
+        *,
+        workspace_id: str,
+        user_id: str,
+        question: str,
+        prior_memory: ResearchRunMemoryContext | None = None,
+    ) -> ToolAssistedResearchChatResult:
+        return ToolAssistedResearchChatResult(
+            answer="The strongest current signal is the pricing shift.",
+            prompt="analysis prompt",
+            sources=[
+                SourceReference(
+                    document_id="doc-1",
+                    chunk_id=str(uuid4()),
+                    document_title="market-notes.txt",
+                    chunk_index=0,
+                    snippet="The strongest current signal is the pricing shift.",
+                )
+            ],
+            tool_steps=[
+                ChatToolStep(
+                    tool_name="list_workspace_documents",
+                    summary="Checked the workspace material.",
+                )
+            ],
+            token_input=18,
+            token_output=12,
+            analysis_focus="Find the strongest market signal",
+            search_query="pricing shift market signal",
+            degraded_reason=None,
+        )
+
+    monkeypatch.setattr(research_analysis_run_service, "run_tool_assisted_research_chat", fake_run_tool_assisted_research_chat)
+    research_analysis_run_service.run_research_analysis_run_execution(run_id)
+
+    review_response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/research-analysis-runs/review",
+        headers=headers,
+    )
+    assert review_response.status_code == 200
+    payload = review_response.json()
+    assert payload["baseline_version"] == "stage_h_research_run_regression_v1"
+    assert payload["reviewed_count"] == 1
+    assert payload["passing_count"] == 1
+    assert payload["failing_count"] == 0
+    assert payload["items"][0]["run_id"] == run_id
+    assert payload["items"][0]["passed"] is True
+    assert payload["items"][0]["issues"] == []

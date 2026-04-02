@@ -6,6 +6,7 @@ from app.services import chat_evaluator_service
 from app.services.chat_evaluator_service import (
     ChatEvaluatorError,
     JudgeScoreResult,
+    RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION,
 )
 
 
@@ -219,4 +220,57 @@ def test_evaluate_research_tool_assisted_output_accepts_honest_degraded_path(
     assert checks["honest_degraded_path"]["passed"] is True
     assert checks["degraded_reason_visible"]["passed"] is True
     assert evaluation.passed is True
+
+
+def test_evaluate_research_analysis_run_regression_passes_for_visible_completed_run() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "completed",
+            "trace_id": "trace-1",
+            "answer": "The strongest signal is pricing pressure.",
+            "sources": [{"document_title": "market-notes.txt"}],
+            "tool_steps": [
+                {"tool_name": "list_workspace_documents", "summary": "Checked the workspace."},
+            ],
+            "run_memory": {
+                "summary": "Pricing pressure is the strongest signal so far.",
+                "recommended_next_step": "Generate a formal summary next.",
+            },
+            "resumed_from_run_id": None,
+        },
+        trace_response_json={},
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_tool_assisted_run",
+    )
+
+    assert review["baseline_version"] == RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION
+    assert review["passed"] is True
+    assert review["issues"] == []
+
+
+def test_evaluate_research_analysis_run_regression_detects_missing_resumed_memory_visibility() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "degraded",
+            "trace_id": "trace-2",
+            "answer": "There is not enough grounded material yet.",
+            "sources": [],
+            "tool_steps": [{"tool_name": "search_documents", "summary": "Looked for matches."}],
+            "run_memory": {
+                "summary": "No grounded material yet.",
+                "recommended_next_step": "Upload more evidence.",
+            },
+            "degraded_reason": "no_grounded_matches",
+            "resumed_from_run_id": "run-1",
+        },
+        trace_response_json={},
+        trace_metadata={
+            "prompt": "analysis prompt",
+            "degraded_reason": "no_grounded_matches",
+        },
+        trace_type="research_tool_assisted_run",
+    )
+
+    assert review["passed"] is False
+    assert "missing_resumed_memory_visibility" in review["issues"]
 

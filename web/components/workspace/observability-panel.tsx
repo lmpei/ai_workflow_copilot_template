@@ -2,8 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { isApiClientError, listWorkspaceTraces } from "../../lib/api";
-import type { JsonObject, TraceRecord } from "../../lib/types";
+import {
+  isApiClientError,
+  listWorkspaceResearchAnalysisRunReviews,
+  listWorkspaceTraces,
+} from "../../lib/api";
+import type {
+  JsonObject,
+  ResearchAnalysisReviewRecord,
+  ResearchAnalysisReviewResponse,
+  TraceRecord,
+} from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import SectionCard from "../ui/section-card";
@@ -74,15 +83,94 @@ function renderJson(payload: JsonObject): string {
   return JSON.stringify(payload, null, 2);
 }
 
+function formatReviewIssue(issue: string): string {
+  switch (issue) {
+    case "run_failed":
+      return "Run ended in failed state";
+    case "missing_trace_link":
+      return "Trace link missing";
+    case "invalid_trace_type":
+      return "Trace type is not research_tool_assisted_run";
+    case "missing_prompt":
+      return "Prompt missing from trace metadata";
+    case "missing_answer":
+      return "Answer missing for non-failed run";
+    case "missing_tool_steps":
+      return "Tool steps are not visible";
+    case "missing_run_memory":
+      return "Compacted run memory is missing";
+    case "missing_grounding_or_honest_degraded_reason":
+      return "Neither grounded evidence nor honest degraded reason is visible";
+    case "missing_resumed_memory_visibility":
+      return "Resumed-memory linkage is not visible";
+    default:
+      return issue;
+  }
+}
+
+function renderReviewCard(review: ResearchAnalysisReviewRecord) {
+  return (
+    <div
+      key={review.run_id}
+      style={{
+        backgroundColor: "#ffffff",
+        border: `1px solid ${review.passed ? "#bbf7d0" : "#fecaca"}`,
+        borderRadius: 10,
+        display: "grid",
+        gap: 6,
+        padding: 10,
+      }}
+    >
+      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
+        <strong style={{ color: "#0f172a" }}>{review.question}</strong>
+        <span style={{ color: review.passed ? "#166534" : "#b91c1c", fontSize: 13, fontWeight: 700 }}>
+          {review.passed ? "Pass" : "Needs review"}
+        </span>
+      </div>
+      <div style={{ color: "#475569", fontSize: 13 }}>
+        Status: {review.status}
+        {review.trace_id ? ` | Trace: ${review.trace_id}` : ""}
+      </div>
+      {review.resumed_from_run_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>Resumed from run: {review.resumed_from_run_id}</div>
+      ) : null}
+      {review.degraded_reason ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>Degraded reason: {review.degraded_reason}</div>
+      ) : null}
+      {review.run_memory_summary ? (
+        <div style={{ color: "#334155" }}>
+          <strong>Compacted memory:</strong> {review.run_memory_summary}
+        </div>
+      ) : null}
+      {review.issues.length > 0 ? (
+        <div style={{ display: "grid", gap: 4 }}>
+          <strong style={{ color: "#0f172a" }}>Regression issues</strong>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {review.issues.map((issue) => (
+              <li key={`${review.run_id}-${issue}`} style={{ color: "#475569" }}>
+                {formatReviewIssue(issue)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div style={{ color: "#166534" }}>All bounded regression checks passed for this run.</div>
+      )}
+    </div>
+  );
+}
+
 export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelProps) {
   const { session, isReady } = useAuthSession();
   const [traces, setTraces] = useState<TraceRecord[]>([]);
+  const [review, setReview] = useState<ResearchAnalysisReviewResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadTraces = useCallback(async () => {
+  const loadObservability = useCallback(async () => {
     if (!session) {
       setTraces([]);
+      setReview(null);
       return;
     }
 
@@ -90,17 +178,22 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
     setErrorMessage(null);
 
     try {
-      setTraces(await listWorkspaceTraces(session.accessToken, workspaceId, 20));
+      const [traceItems, reviewResponse] = await Promise.all([
+        listWorkspaceTraces(session.accessToken, workspaceId, 20),
+        listWorkspaceResearchAnalysisRunReviews(session.accessToken, workspaceId, 8),
+      ]);
+      setTraces(traceItems);
+      setReview(reviewResponse);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load recent traces.");
+      setErrorMessage(isApiClientError(error) ? error.message : "Unable to load recent observability data.");
     } finally {
       setIsLoading(false);
     }
   }, [session, workspaceId]);
 
   useEffect(() => {
-    void loadTraces();
-  }, [loadTraces]);
+    void loadObservability();
+  }, [loadObservability]);
 
   const pilotTraces = useMemo(() => traces.filter(isPilotTrace), [traces]);
   const degradedPilotCount = useMemo(
@@ -119,20 +212,42 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
   return (
     <SectionCard
       title="Recent traces"
-      description="Review the latest persisted chat, task, agent, tool, and evaluation traces for this workspace."
+      description="Review the latest persisted chat, task, and bounded Research run traces for this workspace."
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-        <p style={{ color: "#475569", margin: 0 }}>This panel shows up to the latest 20 traces from the current workspace.</p>
-        <button onClick={() => void loadTraces()} type="button">
-          {isLoading ? "Refreshing..." : "Refresh traces"}
+        <p style={{ color: "#475569", margin: 0 }}>This panel shows recent traces plus the bounded regression review for background Research runs.</p>
+        <button onClick={() => void loadObservability()} type="button">
+          {isLoading ? "Refreshing..." : "Refresh observability"}
         </button>
       </div>
 
-      {pilotTraces.length > 0 ? (
+      {review && review.reviewed_count > 0 ? (
         <section
           style={{
             backgroundColor: "#eff6ff",
             border: "1px solid #bfdbfe",
+            borderRadius: 14,
+            display: "grid",
+            gap: 8,
+            marginBottom: 14,
+            padding: 12,
+          }}
+        >
+          <strong style={{ color: "#0f172a" }}>Research run regression review</strong>
+          <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
+            Baseline {review.baseline_version} reviewed {review.reviewed_count} recent terminal runs. {review.passing_count} passed and {review.failing_count} need operator review.
+          </p>
+          <div style={{ display: "grid", gap: 8 }}>
+            {review.items.map(renderReviewCard)}
+          </div>
+        </section>
+      ) : null}
+
+      {pilotTraces.length > 0 ? (
+        <section
+          style={{
+            backgroundColor: "#f8fafc",
+            border: "1px solid #dbe4f0",
             borderRadius: 14,
             display: "grid",
             gap: 6,
@@ -142,8 +257,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
         >
           <strong style={{ color: "#0f172a" }}>Research tool-assisted pilot review</strong>
           <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
-            The latest {pilotTraces.length} pilot traces include {degradedPilotCount} honest degraded paths. You should be able to see the
-            analysis focus, search query, tool steps, and degradation reason without opening raw JSON first.
+            The latest {pilotTraces.length} pilot traces include {degradedPilotCount} honest degraded paths. You should be able to see the analysis focus, search query, tool steps, and degradation reason without opening raw JSON first.
           </p>
         </section>
       ) : null}

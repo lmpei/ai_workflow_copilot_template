@@ -5,8 +5,6 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 - Last Updated: 2026-04-02
 
-- Last Updated: 2026-04-01
-
 ## Main Modules
 
 - shared platform core
@@ -79,6 +77,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the next bounded Stage H deepening step: create, queue, list, resume, and complete explicit Research
     background analysis runs that reuse the tool-assisted pilot while keeping run status, compact run memory, answer
     delivery, and trace linkage honest on the same workspace surface
+- `server/app/services/research_analysis_review_service.py`
+  - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
+    their traces and applying the replay/regression baseline before any broader eval flywheel exists
 - `server/app/services/retrieval_service.py`
   - owns the branch between ordinary grounded chat and the new `research_tool_assisted` pilot mode, and now also
     records the extra trace metadata needed when that pilot is delivered through explicit background analysis runs

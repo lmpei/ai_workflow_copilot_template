@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.security import get_current_user
 from app.models.user import User
+from app.schemas.research_analysis_review import ResearchAnalysisReviewResponse
 from app.schemas.research_analysis_run import ResearchAnalysisRunCreate, ResearchAnalysisRunResponse
+from app.services.research_analysis_review_service import list_workspace_research_analysis_review
 from app.services.research_analysis_run_service import (
     ResearchAnalysisRunAccessError,
     ResearchAnalysisRunExecutionError,
@@ -51,6 +53,27 @@ async def list_runs(
 ) -> list[ResearchAnalysisRunResponse]:
     try:
         return list_workspace_research_analysis_runs(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+            limit=limit,
+        )
+    except ResearchAnalysisRunAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except ResearchAnalysisRunValidationError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get(
+    "/workspaces/{workspace_id}/research-analysis-runs/review",
+    response_model=ResearchAnalysisReviewResponse,
+)
+async def get_run_review(
+    workspace_id: str,
+    limit: int = Query(default=8, ge=1, le=20),
+    current_user: User = Depends(get_current_user),
+) -> ResearchAnalysisReviewResponse:
+    try:
+        return list_workspace_research_analysis_review(
             workspace_id=workspace_id,
             user_id=current_user.id,
             limit=limit,

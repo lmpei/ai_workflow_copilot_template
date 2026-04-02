@@ -48,7 +48,11 @@ resulting answer, tool-step summary, and trace linkage back into the same worksp
 one bounded resumed-run memory contract: later passes in the same conversation can reuse one compact prior summary, and
 that carried-forward state is visible in both the run surface and the trace-review surface.
 
-The next bounded Stage H work now focuses on replayable tool-aware review before any connector or multi-agent work
+That second Stage H wave is now complete as well: recent terminal Research analysis runs now surface one bounded
+operator-facing regression review alongside the existing trace view, so replay and resumed-run honesty can be reviewed
+without pretending the repo already has a full optimization flywheel.
+
+The next bounded Stage H work is not fixed yet and should be chosen explicitly before any connector or multi-agent work
 begins.
 
 
