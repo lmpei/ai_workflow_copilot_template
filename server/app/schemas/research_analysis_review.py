@@ -21,6 +21,11 @@ class ResearchAnalysisReviewRecord(BaseModel):
     external_resource_snapshot_id: str | None = None
     external_resource_snapshot_title: str | None = None
     resource_selection_mode: str | None = None
+    context_selection_mode: str | None = None
+    mcp_server_id: str | None = None
+    mcp_resource_id: str | None = None
+    mcp_resource_uri: str | None = None
+    mcp_resource_display_name: str | None = None
     passed: bool
     issues: list[str]
     regression_baseline: dict[str, object]

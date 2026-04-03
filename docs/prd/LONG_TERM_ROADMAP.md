@@ -183,7 +183,8 @@ Current Wave 2 baseline:
 
 - `Stage I` now materially satisfies the minimum exit signal through one connector-backed Research integration with
   explicit permission boundaries
-- explicit MCP host, client, and server roles remain a possible later bounded follow-through rather than delivered
+- one bounded local MCP server and one MCP-backed Research path now exist as a learning baseline
+- true out-of-process MCP host/client/server transport remains a later bounded follow-through rather than delivered
   baseline
 
 #### Wave 3: Agent Orchestration and Human Approval

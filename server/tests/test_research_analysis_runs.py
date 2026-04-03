@@ -438,7 +438,7 @@ def test_list_workspace_research_analysis_run_review_returns_regression_summary(
     )
     assert review_response.status_code == 200
     payload = review_response.json()
-    assert payload["baseline_version"] == "stage_i_resource_aware_review_v1"
+    assert payload["baseline_version"] == "stage_i_mcp_review_v1"
     assert payload["reviewed_count"] == 1
     assert payload["passing_count"] == 1
     assert payload["failing_count"] == 0
@@ -703,6 +703,7 @@ def test_run_research_analysis_run_execution_can_reuse_selected_external_resourc
             external_match_count=1,
             external_matches=[],
             selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            context_selection_mode="snapshot",
         )
 
     monkeypatch.setattr(
@@ -809,6 +810,7 @@ def test_research_analysis_run_review_exposes_resource_selection_visibility(
             external_match_count=1,
             external_matches=[],
             selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            context_selection_mode="snapshot",
         )
 
     monkeypatch.setattr(
@@ -828,6 +830,7 @@ def test_research_analysis_run_review_exposes_resource_selection_visibility(
     review_item = payload["items"][0]
     assert review_item["run_id"] == run_id
     assert review_item["resource_selection_mode"] == "explicit"
+    assert review_item["context_selection_mode"] == "snapshot"
     assert review_item["selected_external_resource_snapshot_id"] == snapshot.id
     assert review_item["selected_external_resource_snapshot_title"] == snapshot.title
     assert review_item["external_resource_snapshot_id"] == snapshot.id

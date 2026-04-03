@@ -1676,3 +1676,62 @@ Append-only log. Add new entries at the bottom.
   that MCP behavior readable in trace and operator review surfaces.
 - Related Task: `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-107
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-13 MCP trace and review visibility
+- Context: `stage-i-12` delivered one visible Research MCP-backed path, but MCP use, denial, and degraded outcomes
+  were still too implicit in traces and operator review. The MCP path existed, but operators still had to infer MCP
+  behavior from raw payloads instead of reading it directly.
+- Choice: extend the bounded Research run-review baseline, trace-facing metadata, and observability surface so MCP
+  server identity, MCP resource identity, MCP selection mode, denial, and degraded outcomes are readable on that same
+  visible path; archive `stage-i-13`; and return Stage I to bounded next-wave selection.
+- Why: the third Stage I wave should end with the same level of operator honesty expected from the earlier connector
+  and resource-backed work, instead of leaving MCP as a hidden transport detail.
+- Impact: the repository now has one complete local-MCP baseline: contract, visible product path, and operator-facing
+  trace/review visibility.
+- Related Task: `tasks/archive/stage-i/stage-i-13-mcp-trace-and-review-visibility.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-108
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human
+- Topic: keep Stage I open for a fourth true-MCP follow-through wave
+- Context: after `stage-i-13`, Stage I had already delivered a complete connector-backed and local-MCP baseline, but
+  the repository still had not implemented a true out-of-process MCP client/server transport path. Closing Stage I at
+  that point would have left real MCP behavior outside the bounded task stack again.
+- Choice: keep Stage I active for one fourth bounded wave focused on a true out-of-process MCP client path instead of
+  closing the stage or opening a new stage.
+- Why: the project explicitly wants MCP to appear as real implementation work rather than as a deferred roadmap note,
+  but still in a narrow Research-first way that avoids generic MCP sprawl.
+- Impact: Stage I continues as the active bounded stage, and the next task wave now targets real MCP transport instead
+  of only local MCP visibility.
+- Related Task: `tasks/archive/stage-i/stage-i-14-wave-four-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-109
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human
+- Topic: define the fourth Stage I MCP follow-through wave
+- Context: after keeping Stage I open for one further MCP-specific follow-through, the repo needed an explicit bounded
+  task stack so true out-of-process MCP work would enter execution instead of remaining only as a planning note.
+- Choice: define the fourth Stage I wave as:
+  - `tasks/stage-i-15-mcp-client-and-transport-foundation.md`
+  - `tasks/stage-i-16-research-remote-mcp-resource-pilot.md`
+  - `tasks/stage-i-17-remote-mcp-trace-and-review-visibility.md`
+- Why: the next MCP learning step should stay narrow and cumulative: first a real client plus transport boundary, then
+  one visible Research path on top of that transport, then one trace/review layer for that same path.
+- Impact: Stage I now has a fourth explicit bounded wave focused on true out-of-process MCP instead of broadening into
+  a generic connector platform or a new stage.
+- Related Task: `tasks/archive/stage-i/stage-i-14-wave-four-planning.md`
+- Supersedes:

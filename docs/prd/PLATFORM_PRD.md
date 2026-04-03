@@ -183,6 +183,9 @@ The current implemented platform increment includes:
 - one explicit external-resource snapshot layer for the bounded Research connector path, so approved external matches
   can be inspected and linked back to direct chat or background analysis runs instead of living only in transient trace
   data
+- one bounded local MCP server and one bounded MCP resource contract behind the existing Research consent boundary
+- one visible Research MCP-backed path on the existing external-context surface
+- one MCP-aware trace and operator-review baseline for that visible path
 
 The repository does not yet implement:
 
@@ -220,11 +223,12 @@ resource-aware visibility into selected snapshots, actual used snapshots, resour
 lifecycle consistency. Control-plane interpretation is now explicit: `Stage I` is the bounded execution unit for the
 current connector/context-plane baseline, while `docs/prd/LONG_TERM_ROADMAP.md` still describes the broader Wave 2
 concept family. The current repo baseline already satisfies the minimum Wave 2 exit signal through one connector-backed
-Research integration with explicit permission boundaries, but it does not claim exhaustive MCP host, client, or server
-coverage. The third Stage I wave is now partially complete as well: the repo has one bounded local MCP server, one MCP
-resource contract wired to the existing Research connector consent boundary, and now one visible Research MCP
-resource-context pilot on the existing Research surface. The current active task is to make MCP use and degraded
-behavior readable in trace and operator-review surfaces instead of leaving MCP as a hidden transport detail.
+Research integration with explicit permission boundaries, but it still does not claim full MCP host, client, or server
+coverage. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP resource
+contract wired to the existing Research connector consent boundary, one visible Research MCP resource-context pilot on
+the existing Research surface, and one MCP-aware trace and review layer around that path. The next active work is a
+fourth Stage I wave focused on true out-of-process MCP transport and client behavior instead of stopping at the
+in-process MCP baseline.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

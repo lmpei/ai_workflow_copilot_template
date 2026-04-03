@@ -6,14 +6,15 @@ from app.schemas.mcp import (
     LocalMcpResourceReadResult,
     McpResourceDefinition,
     McpServerDefinition,
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
+    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME,
+    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
 )
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services import research_external_context_service
-from app.services.mcp_service import (
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
-    McpValidationError,
-)
+from app.services.mcp_service import McpValidationError
 from app.services.research_external_context_service import run_research_external_context_chat
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 
@@ -65,7 +66,7 @@ def _build_mcp_read_result() -> LocalMcpResourceReadResult:
     return LocalMcpResourceReadResult(
         server=McpServerDefinition(
             id=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
-            display_name="Research 本地 MCP 服务",
+            display_name=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME,
             summary="Bounded MCP pilot",
             transport="local_inproc",
             module_types=["research"],
@@ -73,8 +74,8 @@ def _build_mcp_read_result() -> LocalMcpResourceReadResult:
         ),
         resource=McpResourceDefinition(
             id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-            uri="mcp://research-context/digest",
-            display_name="Research 外部上下文摘要",
+            uri=RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
+            display_name=RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
             summary="Bounded MCP digest",
             mime_type="text/markdown",
             module_types=["research"],
@@ -120,6 +121,10 @@ def test_external_context_chat_degrades_honestly_when_consent_is_missing(monkeyp
     assert "没有使用 MCP 资源" in result.answer
     assert result.tool_steps[-1].tool_name == "research_external_context"
     assert result.context_selection_mode == "mcp_resource"
+    assert result.mcp_server_id == RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID
+    assert result.mcp_resource_id == RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.mcp_resource_uri == RESEARCH_CONTEXT_DIGEST_RESOURCE_URI
+    assert result.mcp_resource_display_name == RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME
 
 
 def test_external_context_chat_combines_internal_and_mcp_sources(monkeypatch) -> None:
@@ -160,6 +165,8 @@ def test_external_context_chat_combines_internal_and_mcp_sources(monkeypatch) ->
     assert len(fake_interface.calls) == 1
     assert result.mcp_server_id == RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID
     assert result.mcp_resource_id == RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.mcp_resource_uri == RESEARCH_CONTEXT_DIGEST_RESOURCE_URI
+    assert result.mcp_resource_display_name == RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME
     assert result.context_selection_mode == "mcp_resource"
 
 
@@ -187,6 +194,10 @@ def test_external_context_chat_degrades_honestly_when_consent_is_revoked(monkeyp
     assert result.degraded_reason == "connector_consent_revoked"
     assert result.external_context_used is False
     assert result.connector_consent_state == "revoked"
+    assert result.mcp_server_id == RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID
+    assert result.mcp_resource_id == RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.mcp_resource_uri == RESEARCH_CONTEXT_DIGEST_RESOURCE_URI
+    assert result.mcp_resource_display_name == RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME
 
 
 def test_external_context_chat_degrades_when_mcp_resource_is_unavailable(monkeypatch) -> None:
@@ -216,6 +227,10 @@ def test_external_context_chat_degrades_when_mcp_resource_is_unavailable(monkeyp
     assert result.external_context_used is False
     assert result.tool_steps[-1].tool_name == "research_external_context"
     assert result.context_selection_mode == "mcp_resource"
+    assert result.mcp_server_id == RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID
+    assert result.mcp_resource_id == RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.mcp_resource_uri == RESEARCH_CONTEXT_DIGEST_RESOURCE_URI
+    assert result.mcp_resource_display_name == RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME
 
 
 def test_external_context_chat_can_reuse_selected_snapshot_without_mcp_read(monkeypatch) -> None:

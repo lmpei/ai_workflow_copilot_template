@@ -303,6 +303,11 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
             "external_context_used": True,
             "external_match_count": 1,
             "external_resource_snapshot_id": "snapshot-auto-1",
+            "context_selection_mode": "mcp_resource",
+            "mcp_server_id": "research_context_local",
+            "mcp_resource_id": "research.context.digest",
+            "mcp_resource_uri": "resource://research.context.digest",
+            "mcp_resource_display_name": "Research 外部上下文摘要",
         },
         trace_metadata={"prompt": "analysis prompt"},
         trace_type="research_external_context_run",
@@ -314,6 +319,8 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
     assert review["signals"]["external_context_used"] is True
     assert review["signals"]["external_match_count"] == 1
     assert review["signals"]["resource_selection_mode"] == "auto"
+    assert review["signals"]["context_selection_mode"] == "mcp_resource"
+    assert review["signals"]["mcp_resource_id"] == "research.context.digest"
 
 
 def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_selection() -> None:
@@ -344,6 +351,7 @@ def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_
             "external_match_count": 1,
             "selected_external_resource_snapshot_id": "snapshot-explicit-1",
             "external_resource_snapshot_id": "snapshot-explicit-1",
+            "context_selection_mode": "snapshot",
         },
         trace_metadata={"prompt": "analysis prompt"},
         trace_type="research_external_context_run",
@@ -354,6 +362,7 @@ def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_
     assert review["signals"]["resource_selection_mode"] == "explicit"
     assert review["signals"]["selected_external_resource_snapshot_id"] == "snapshot-explicit-1"
     assert review["signals"]["external_resource_snapshot_id"] == "snapshot-explicit-1"
+    assert review["signals"]["context_selection_mode"] == "snapshot"
 
 
 def test_evaluate_research_analysis_run_regression_detects_revoked_consent_visibility_gap() -> None:
@@ -378,6 +387,11 @@ def test_evaluate_research_analysis_run_regression_detects_revoked_consent_visib
             "external_context_used": False,
             "external_match_count": 0,
             "degraded_reason": "connector_consent_required",
+            "context_selection_mode": "mcp_resource",
+            "mcp_server_id": "research_context_local",
+            "mcp_resource_id": "research.context.digest",
+            "mcp_resource_uri": "resource://research.context.digest",
+            "mcp_resource_display_name": "Research 外部上下文摘要",
         },
         trace_metadata={"prompt": "analysis prompt"},
         trace_type="research_external_context_run",
@@ -385,3 +399,36 @@ def test_evaluate_research_analysis_run_regression_detects_revoked_consent_visib
 
     assert review["passed"] is False
     assert "inconsistent_connector_consent_lifecycle" in review["issues"]
+
+
+def test_evaluate_research_analysis_run_regression_detects_missing_mcp_visibility() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "degraded",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-4",
+            "answer": "这次只能回退到工作区资料。",
+            "sources": [],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "MCP 资源暂时不可用。"},
+            ],
+            "run_memory": {
+                "summary": "MCP 资源暂时不可用。",
+                "recommended_next_step": "稍后重试。",
+            },
+            "degraded_reason": "external_context_unavailable",
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "granted",
+            "external_context_used": False,
+            "external_match_count": 0,
+            "context_selection_mode": "mcp_resource",
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is False
+    assert "missing_mcp_server_visibility" in review["issues"]
+    assert "missing_mcp_resource_visibility" in review["issues"]

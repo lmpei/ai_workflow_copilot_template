@@ -849,6 +849,11 @@ export type ResearchAnalysisReviewRecord = {
   external_resource_snapshot_id?: string | null;
   external_resource_snapshot_title?: string | null;
   resource_selection_mode?: "explicit" | "auto" | "none" | null;
+  context_selection_mode?: "snapshot" | "mcp_resource" | "none" | null;
+  mcp_server_id?: string | null;
+  mcp_resource_id?: string | null;
+  mcp_resource_uri?: string | null;
+  mcp_resource_display_name?: string | null;
   passed: boolean;
   issues: string[];
   regression_baseline: JsonObject;

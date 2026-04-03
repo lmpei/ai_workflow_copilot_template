@@ -3,17 +3,19 @@ from typing import Literal
 
 from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.schemas.mcp import (
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+    RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
+    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+)
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 from app.services.connector_service import (
     RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
     ConnectorConsentRequiredError,
     require_workspace_connector_consent,
 )
-from app.services.mcp_service import (
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-    McpValidationError,
-    read_workspace_mcp_resource,
-)
+from app.services.mcp_service import McpValidationError, read_workspace_mcp_resource
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
 from app.services.research_external_resource_snapshot_service import (
     deserialize_research_external_resource_snapshot_matches,
@@ -122,7 +124,7 @@ def _summarize_external_context_degraded_step(*, reason: str) -> ChatToolStep:
         return ChatToolStep(
             tool_name="research_external_context",
             summary="选中的外部资源快照里没有可用内容。",
-            detail="请重新选择一个最近快照，或改为自动读取 MCP 资源。",
+            detail="请重新选择一个最近快照，或改成自动读取 MCP 资源。",
         )
     return ChatToolStep(
         tool_name="research_external_context",
@@ -210,9 +212,7 @@ def _synthesize_external_context_answer(
     return answer, prompt, response.usage.input_tokens, response.usage.output_tokens
 
 
-def _convert_mcp_items_to_matches(
-    mcp_items,
-) -> list[ResearchExternalContextEntry]:
+def _convert_mcp_items_to_matches(mcp_items) -> list[ResearchExternalContextEntry]:
     return [
         ResearchExternalContextEntry(
             context_id=item.resource_id,
@@ -281,6 +281,10 @@ def run_research_external_context_chat(
             selected_external_resource_snapshot_id=(
                 selected_external_resource_snapshot.id if selected_external_resource_snapshot else None
             ),
+            mcp_server_id=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+            mcp_resource_id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+            mcp_resource_uri=RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
+            mcp_resource_display_name=RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
             context_selection_mode=selection_mode,
         )
 
@@ -363,10 +367,10 @@ def run_research_external_context_chat(
             external_context_used=False,
             external_match_count=0,
             external_matches=[],
-            mcp_server_id=None,
+            mcp_server_id=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
             mcp_resource_id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-            mcp_resource_uri=None,
-            mcp_resource_display_name=None,
+            mcp_resource_uri=RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
+            mcp_resource_display_name=RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
             context_selection_mode="mcp_resource",
         )
 

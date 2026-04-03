@@ -75,9 +75,11 @@ The third task in the second Stage I wave is now also complete: recent terminal 
 resource-aware review baseline that makes selected snapshots, actual used snapshots, resource-selection mode, and
 consent-lifecycle consistency visible to operators instead of leaving those checks implicit in raw trace payloads.
 
-Stage I remains active. The third Stage I wave has now moved beyond MCP contract-only groundwork: the repo now has one
-real MCP-backed Research path that stays on the existing visible `research_external_context` surface, reuses the same
-consent and snapshot boundaries, and can degrade honestly when MCP-backed context is denied, unavailable, or empty.
+Stage I remains active. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP
+resource contract, one visible Research MCP-backed path on the existing `research_external_context` surface, and one
+MCP-aware trace and operator-review layer on that same path. The next bounded follow-through is not a new stage yet;
+it is a fourth Stage I wave focused on true out-of-process MCP transport so the repository stops relying only on a
+local in-process MCP foundation.
 
 ## Roadmap Alignment
 
@@ -91,8 +93,10 @@ consent and snapshot boundaries, and can degrade honestly when MCP-backed contex
   - one connector-backed Research integration with explicit consent, snapshots, and operator review is now delivered
   - one bounded local MCP server and MCP resource contract now sit behind that same Research-first permission model
   - one visible Research path can now actually read bounded MCP-backed context through that same permission model
+  - one MCP-aware trace and review baseline now makes MCP use, denial, degraded behavior, and resource identity
+    visible to operators
 - Still deferred:
-  - MCP trace and review visibility on that visible path
+  - true out-of-process MCP transport instead of only the current in-process server
   - most MCP breadth across hosts, resources, prompts, and tools
   - any broader multi-module rollout on top of MCP
 
@@ -107,8 +111,9 @@ consent and snapshot boundaries, and can degrade honestly when MCP-backed contex
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
 forking the architecture. The active bounded stage should preserve that shared-platform model while adding one explicit
 connector-backed Research path with clear consent, resource, and review boundaries, plus one actual visible
-MCP-backed follow-through on top of that baseline. Roadmap-wave completion is a separate judgment against the exit
-signals in `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
+MCP-backed follow-through on top of that baseline. The next learning gap is true out-of-process MCP transport, not
+local in-process MCP visibility. Roadmap-wave completion is a separate judgment against the exit signals in
+`docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
 
 ## Technology Stack
 

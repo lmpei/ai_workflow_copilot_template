@@ -25,12 +25,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- keep the live product hosts stable while opening one narrow third Stage I wave for MCP-specific follow-through on top
-  of the existing connector-backed baseline
+- keep the live product hosts stable while opening one narrow fourth Stage I wave for true out-of-process MCP
+  follow-through on top of the existing connector-backed and local-MCP baseline
 
 ## Active Task
 
-- `tasks/stage-i-13-mcp-trace-and-review-visibility.md`
+- `tasks/stage-i-15-mcp-client-and-transport-foundation.md`
 
 ## Current Roadmap Alignment
 
@@ -46,20 +46,22 @@ Current state only. Keep this file short, current, and action-oriented.
   - one bounded local MCP server foundation
   - one bounded MCP resource contract wired to the existing Research connector consent boundary
   - one real product-facing MCP-backed Research path on the existing `research_external_context` surface
+- one MCP-aware trace and operator-review layer on that same visible path
 - Still not covered:
-  - MCP trace and review visibility on that path
+  - true out-of-process MCP transport instead of the current local in-process server
+  - one real client-side MCP read path against a separate MCP server process
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. Stage H is complete and closed after the
-  bounded model-interface and tool-visible Research baseline. Stage I has now completed two bounded connector and
-  context-plane waves, plus the first two tasks in a third MCP-specific wave: connector contract plus consent, one
-  visible Research external-context pilot, connector-aware trace and review, explicit external-resource snapshots,
-  explicit consent lifecycle plus snapshot selection, one resource-aware review baseline, one bounded MCP contract plus
-  local server foundation wired to the same Research-first consent boundary, and now one real Research MCP-backed
-  product path that reuses the existing consent and snapshot boundaries. The control-plane distinction remains
-  explicit: `Stage I` is the active bounded execution unit, while `LONG_TERM_ROADMAP` Wave 2 remains the broader
-  concept family. The next bounded task is MCP trace and review visibility on that visible path.
+  bounded model-interface and tool-visible Research baseline. Stage I has now completed three bounded connector and
+  context-plane waves: connector contract plus consent, one visible Research external-context pilot, connector-aware
+  trace and review, explicit external-resource snapshots, explicit consent lifecycle plus snapshot selection, one
+  resource-aware review baseline, one bounded local MCP contract plus local server foundation, one visible Research
+  MCP-backed product path, and one MCP-aware trace and operator-review layer on that same path. The control-plane
+  distinction remains explicit: `Stage I` is the active bounded execution unit, while `LONG_TERM_ROADMAP` Wave 2
+  remains the broader concept family. The next bounded task is no longer local MCP visibility; it is a true
+  out-of-process MCP client and transport foundation.
 - Last Verified At: 2026-04-03
 
 ## Current Blockers
@@ -77,14 +79,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- whether the current bounded MCP path should end Stage I after `stage-i-13`, or stay open for one further narrowly
-  scoped Wave 2 follow-through
+- how far the next Stage I wave should go beyond one out-of-process MCP pilot before Wave 2 is considered fully
+  learned for this repository
 
 ## Ready Now
 
-1. execute `stage-i-13` to make MCP use, denial, and degraded outcomes readable in trace and operator review surfaces
+1. execute `stage-i-15` to replace the current in-process MCP shortcut with one true out-of-process MCP client and
+   transport baseline
 2. keep the live `weave` and `api` hosts stable while the Stage I MCP pilot deepens
-3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first MCP path is complete
+3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first out-of-process MCP
+   path is complete
 
 ## Parked / Later
 
@@ -94,7 +98,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
+- `tasks/archive/stage-i/stage-i-13-mcp-trace-and-review-visibility.md`
 
 ## Recent Decisions
 

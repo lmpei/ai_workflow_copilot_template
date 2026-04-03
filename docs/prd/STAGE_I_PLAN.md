@@ -10,7 +10,8 @@
 - Opened At: 2026-04-02
 - First Task Wave: complete
 - Second Task Wave: complete
-- Third Task Wave: active
+- Third Task Wave: complete
+- Fourth Task Wave: active
 
 ## Position In The Project
 
@@ -33,8 +34,9 @@ multi-agent orchestration.
   - one connector-backed Research integration with explicit consent, resource snapshots, and operator review
   - one bounded local MCP server and MCP resource contract behind that same Research-first permission model
   - one visible Research MCP-backed product path that reuses that same consent and snapshot model
+- one MCP-aware trace and operator-review layer on that same visible path
 - Still optional follow-through:
-  - MCP trace and review visibility on that visible path
+  - true out-of-process MCP transport instead of only the current local in-process server
   - most MCP breadth beyond the first bounded path
   - broader connector rollout outside the same Research-first surface
 
@@ -187,8 +189,8 @@ layer before any broader MCP or orchestration work opens.
   Research connector consent boundary
 - complete: `stage-i-12`, which connected the existing visible Research external-context surface to the bounded local
   MCP resource foundation while preserving explicit consent, snapshot reuse, and honest degraded behavior
-- active now: `stage-i-13`, which will make MCP use and degraded outcomes readable in trace and operator-review
-  surfaces on that same bounded Research path
+- complete: `stage-i-13`, which made MCP server/resource identity, denial, and degraded outcomes readable in trace and
+  operator-review surfaces on that same bounded Research path
 ## Second Task Wave
 
 The second executable Stage I wave is:
@@ -238,7 +240,7 @@ The third executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-11-mcp-contract-and-local-server-foundation.md`
 2. `tasks/archive/stage-i/stage-i-12-research-mcp-resource-context-pilot.md`
-3. `tasks/stage-i-13-mcp-trace-and-review-visibility.md`
+3. `tasks/archive/stage-i/stage-i-13-mcp-trace-and-review-visibility.md`
 
 ### Why This Wave Exists
 
@@ -257,3 +259,33 @@ next narrower Wave 2 question:
 - how MCP use should stay visible in trace and review instead of appearing as a hidden transport detail
 
 This wave should still avoid generic MCP sprawl, broad connector marketplaces, or multi-module rollout.
+
+### Current Third-Wave Outcome
+
+The third Stage I wave is now complete:
+
+- one bounded local MCP server and one bounded MCP resource contract exist behind the Research connector consent model
+- one visible Research surface can read that bounded MCP resource instead of only a connector-backed sample path
+- one operator-facing trace and review layer now exposes MCP server identity, MCP resource identity, denial, and
+  degraded behavior instead of leaving MCP as a hidden transport detail
+
+## Fourth Task Wave
+
+The fourth executable Stage I wave is:
+
+1. `tasks/stage-i-15-mcp-client-and-transport-foundation.md`
+2. `tasks/stage-i-16-research-remote-mcp-resource-pilot.md`
+3. `tasks/stage-i-17-remote-mcp-trace-and-review-visibility.md`
+
+### Why This Wave Exists
+
+The third Stage I wave proved one bounded MCP shape, but it still uses an in-process local server. The next Wave 2
+learning question is narrower and more concrete:
+
+- how this repo should act as a real MCP client instead of only importing a local server directly
+- how one bounded out-of-process MCP server should sit behind the same Research-first consent boundary
+- how transport failure, denial, and remote-resource visibility should stay inspectable on the product and operator
+  surfaces
+
+This wave should stay bounded to one Research-first path and one small remote MCP server instead of broadening into a
+generic connector platform or multi-agent orchestration.

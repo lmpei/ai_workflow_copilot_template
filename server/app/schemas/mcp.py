@@ -49,3 +49,10 @@ class LocalMcpResourceReadResult:
     text: str
     resource_count: int
     items: tuple[LocalMcpResourceItem, ...] = ()
+
+
+RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID = "research_context_local"
+RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME = "Research 本地 MCP 服务"
+RESEARCH_CONTEXT_DIGEST_RESOURCE_ID = "research.context.digest"
+RESEARCH_CONTEXT_DIGEST_RESOURCE_URI = "resource://research.context.digest"
+RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME = "Research 外部上下文摘要"

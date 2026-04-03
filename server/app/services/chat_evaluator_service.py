@@ -12,7 +12,7 @@ from app.services.model_interface_service import (
 )
 
 DEFAULT_PASS_THRESHOLD = 0.7
-RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_resource_aware_review_v1"
+RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_mcp_review_v1"
 
 
 class ChatEvaluatorError(Exception):
@@ -349,6 +349,31 @@ def evaluate_research_analysis_run_regression(
         response_json.get("external_resource_snapshot_id"),
         metadata_json.get("external_resource_snapshot_id"),
     )
+    context_selection_mode = _read_string(
+        run_json.get("context_selection_mode"),
+        response_json.get("context_selection_mode"),
+        metadata_json.get("context_selection_mode"),
+    )
+    mcp_server_id = _read_string(
+        run_json.get("mcp_server_id"),
+        response_json.get("mcp_server_id"),
+        metadata_json.get("mcp_server_id"),
+    )
+    mcp_resource_id = _read_string(
+        run_json.get("mcp_resource_id"),
+        response_json.get("mcp_resource_id"),
+        metadata_json.get("mcp_resource_id"),
+    )
+    mcp_resource_uri = _read_string(
+        run_json.get("mcp_resource_uri"),
+        response_json.get("mcp_resource_uri"),
+        metadata_json.get("mcp_resource_uri"),
+    )
+    mcp_resource_display_name = _read_string(
+        run_json.get("mcp_resource_display_name"),
+        response_json.get("mcp_resource_display_name"),
+        metadata_json.get("mcp_resource_display_name"),
+    )
     resource_selection_mode = (
         "explicit"
         if selected_external_resource_snapshot_id
@@ -362,6 +387,7 @@ def evaluate_research_analysis_run_regression(
         or trace_type == "research_external_context_run"
         or connector_id == "research_external_context"
     )
+    is_mcp_resource_path = is_external_context_run and context_selection_mode == "mcp_resource"
 
     checks = {
         "terminal_status_valid": status in {"completed", "degraded", "failed"},
@@ -408,6 +434,13 @@ def evaluate_research_analysis_run_regression(
             or (resource_selection_mode == "auto" and external_context_used is True and bool(external_resource_snapshot_id))
             or (resource_selection_mode == "none" and external_context_used is False and external_resource_snapshot_id is None)
             or (resource_selection_mode == "none" and external_context_used is True and bool(external_resource_snapshot_id))
+        ),
+        "mcp_server_visibility_when_applicable": (not is_mcp_resource_path) or bool(mcp_server_id),
+        "mcp_resource_visibility_when_applicable": (not is_mcp_resource_path)
+        or (
+            bool(mcp_resource_id)
+            and bool(mcp_resource_uri)
+            and bool(mcp_resource_display_name)
         ),
         "consent_lifecycle_consistent_when_applicable": (not is_external_context_run)
         or connector_consent_state == "granted"
@@ -464,6 +497,10 @@ def evaluate_research_analysis_run_regression(
         issues.append("inconsistent_external_context_visibility")
     if checks["resource_selection_consistent_when_applicable"] is False:
         issues.append("inconsistent_resource_selection_visibility")
+    if checks["mcp_server_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_server_visibility")
+    if checks["mcp_resource_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_resource_visibility")
     if checks["consent_lifecycle_consistent_when_applicable"] is False:
         issues.append("inconsistent_connector_consent_lifecycle")
 
@@ -490,6 +527,11 @@ def evaluate_research_analysis_run_regression(
             "selected_external_resource_snapshot_id": selected_external_resource_snapshot_id,
             "external_resource_snapshot_id": external_resource_snapshot_id,
             "resource_selection_mode": resource_selection_mode,
+            "context_selection_mode": context_selection_mode,
+            "mcp_server_id": mcp_server_id,
+            "mcp_resource_id": mcp_resource_id,
+            "mcp_resource_uri": mcp_resource_uri,
+            "mcp_resource_display_name": mcp_resource_display_name,
         },
     }
 

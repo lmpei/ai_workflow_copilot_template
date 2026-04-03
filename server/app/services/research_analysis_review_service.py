@@ -76,6 +76,14 @@ def list_workspace_research_analysis_review(
         )
         selected_snapshot_title = None
         external_snapshot_title = None
+        mcp_server_id = signals.get("mcp_server_id") if isinstance(signals.get("mcp_server_id"), str) else None
+        mcp_resource_id = signals.get("mcp_resource_id") if isinstance(signals.get("mcp_resource_id"), str) else None
+        mcp_resource_uri = signals.get("mcp_resource_uri") if isinstance(signals.get("mcp_resource_uri"), str) else None
+        mcp_resource_display_name = (
+            signals.get("mcp_resource_display_name")
+            if isinstance(signals.get("mcp_resource_display_name"), str)
+            else None
+        )
         if selected_snapshot_id:
             selected_snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(selected_snapshot_id)
             if selected_snapshot is not None:
@@ -120,6 +128,15 @@ def list_workspace_research_analysis_review(
                     if isinstance(signals.get("resource_selection_mode"), str)
                     else None
                 ),
+                context_selection_mode=(
+                    signals.get("context_selection_mode")
+                    if isinstance(signals.get("context_selection_mode"), str)
+                    else None
+                ),
+                mcp_server_id=mcp_server_id,
+                mcp_resource_id=mcp_resource_id,
+                mcp_resource_uri=mcp_resource_uri,
+                mcp_resource_display_name=mcp_resource_display_name,
                 passed=bool(baseline["passed"]),
                 issues=[str(item) for item in baseline["issues"]],
                 regression_baseline=baseline,
