@@ -60,100 +60,68 @@ function readToolSteps(trace: TraceRecord): ToolStepRecord[] {
   });
 }
 
+function getTraceString(trace: TraceRecord, key: string): string | null {
+  return readString(trace.response_json[key]) ?? readString(trace.metadata_json[key]);
+}
+
+function getTraceBoolean(trace: TraceRecord, key: string): boolean | null {
+  return readBoolean(trace.response_json[key]) ?? readBoolean(trace.metadata_json[key]);
+}
+
+function getTraceNumber(trace: TraceRecord, key: string): number | null {
+  return readNumber(trace.response_json[key]) ?? readNumber(trace.metadata_json[key]);
+}
+
 function getPilotDegradedReason(trace: TraceRecord): string | null {
-  return readString(trace.response_json["degraded_reason"]) ?? readString(trace.metadata_json["degraded_reason"]);
+  return getTraceString(trace, "degraded_reason");
 }
 
 function getConnectorId(trace: TraceRecord): string | null {
-  return readString(trace.response_json["connector_id"]) ?? readString(trace.metadata_json["connector_id"]);
+  return getTraceString(trace, "connector_id");
 }
 
 function getConnectorConsentState(trace: TraceRecord): string | null {
-  return (
-    readString(trace.response_json["connector_consent_state"]) ??
-    readString(trace.metadata_json["connector_consent_state"])
-  );
+  return getTraceString(trace, "connector_consent_state");
 }
 
 function getExternalContextUsed(trace: TraceRecord): boolean | null {
-  return readBoolean(trace.response_json["external_context_used"]) ?? readBoolean(trace.metadata_json["external_context_used"]);
+  return getTraceBoolean(trace, "external_context_used");
 }
 
 function getExternalMatchCount(trace: TraceRecord): number | null {
-  return readNumber(trace.response_json["external_match_count"]) ?? readNumber(trace.metadata_json["external_match_count"]);
+  return getTraceNumber(trace, "external_match_count");
 }
 
 function getContextSelectionMode(trace: TraceRecord): string | null {
-  return readString(trace.response_json["context_selection_mode"]) ?? readString(trace.metadata_json["context_selection_mode"]);
+  return getTraceString(trace, "context_selection_mode");
 }
 
 function getMcpServerId(trace: TraceRecord): string | null {
-  return readString(trace.response_json["mcp_server_id"]) ?? readString(trace.metadata_json["mcp_server_id"]);
+  return getTraceString(trace, "mcp_server_id");
 }
 
 function getMcpResourceId(trace: TraceRecord): string | null {
-  return readString(trace.response_json["mcp_resource_id"]) ?? readString(trace.metadata_json["mcp_resource_id"]);
+  return getTraceString(trace, "mcp_resource_id");
 }
 
 function getMcpResourceUri(trace: TraceRecord): string | null {
-  return readString(trace.response_json["mcp_resource_uri"]) ?? readString(trace.metadata_json["mcp_resource_uri"]);
+  return getTraceString(trace, "mcp_resource_uri");
 }
 
 function getMcpResourceDisplayName(trace: TraceRecord): string | null {
-  return readString(trace.response_json["mcp_resource_display_name"]) ?? readString(trace.metadata_json["mcp_resource_display_name"]);
+  return getTraceString(trace, "mcp_resource_display_name");
 }
 
-function getPilotOutcomeLabel(trace: TraceRecord): string {
-  if (trace.error_message) {
-    return "试点失败";
-  }
-
-  const degradedReason = getPilotDegradedReason(trace);
-  if (degradedReason === "no_documents") {
-    return "诚实降级：没有资料";
-  }
-  if (degradedReason === "no_grounded_matches") {
-    return "诚实降级：没有命中有依据的内容";
-  }
-  if (degradedReason === "connector_consent_required") {
-    return "诚实降级：工作区尚未授权外部信息";
-  }
-  if (degradedReason === "connector_consent_revoked") {
-    return "诚实降级：外部信息授权已撤销";
-  }
-  if (degradedReason === "external_context_unavailable") {
-    return "诚实降级：MCP 资源暂时不可用";
-  }
-  if (degradedReason === "external_context_no_useful_matches") {
-    return "诚实降级：MCP 资源没有命中有用内容";
-  }
-  if (degradedReason === "selected_external_resource_snapshot_empty") {
-    return "诚实降级：选中的资源快照为空";
-  }
-
-  if (getExternalContextUsed(trace) === true) {
-    return "已使用外部信息";
-  }
-
-  const sources = trace.response_json["sources"];
-  if (Array.isArray(sources) && sources.length > 0) {
-    return "已有有依据的结果";
-  }
-
-  return "试点已完成";
+function getMcpTransport(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_transport");
 }
 
-function isPilotTrace(trace: TraceRecord): boolean {
-  return (
-    trace.trace_type === "research_tool_assisted" ||
-    trace.trace_type === "research_tool_assisted_run" ||
-    trace.trace_type === "research_external_context" ||
-    trace.trace_type === "research_external_context_run"
-  );
+function getMcpReadStatus(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_read_status");
 }
 
-function isExternalContextTrace(trace: TraceRecord): boolean {
-  return trace.trace_type === "research_external_context" || trace.trace_type === "research_external_context_run";
+function getMcpTransportError(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_transport_error");
 }
 
 function formatConsentState(state: string | null | undefined): string {
@@ -189,6 +157,91 @@ function formatContextSelectionMode(
     return "MCP 资源";
   }
   return "未使用";
+}
+
+function formatMcpTransport(transport: string | null | undefined): string {
+  if (transport === "stdio_process") {
+    return "进程外 stdio";
+  }
+  if (transport === "local_inproc") {
+    return "进程内本地";
+  }
+  return "未记录";
+}
+
+function formatMcpReadStatus(status: string | null | undefined): string {
+  if (status === "consent_required") {
+    return "未授权，未尝试读取";
+  }
+  if (status === "consent_revoked") {
+    return "授权已撤销，未尝试读取";
+  }
+  if (status === "snapshot_reused") {
+    return "复用已选快照，未读取远程 MCP";
+  }
+  if (status === "used") {
+    return "已成功读取并使用远程 MCP";
+  }
+  if (status === "transport_unavailable") {
+    return "远程 MCP 暂不可用";
+  }
+  if (status === "no_useful_matches") {
+    return "已读取远程 MCP，但没有有效内容";
+  }
+  return "未记录";
+}
+
+function getPilotOutcomeLabel(trace: TraceRecord): string {
+  if (trace.error_message) {
+    return "试点失败";
+  }
+
+  const degradedReason = getPilotDegradedReason(trace);
+  if (degradedReason === "no_documents") {
+    return "诚实降级：没有资料";
+  }
+  if (degradedReason === "no_grounded_matches") {
+    return "诚实降级：没有命中有依据的内容";
+  }
+  if (degradedReason === "connector_consent_required") {
+    return "诚实降级：工作区尚未授权外部信息";
+  }
+  if (degradedReason === "connector_consent_revoked") {
+    return "诚实降级：外部信息授权已撤销";
+  }
+  if (degradedReason === "external_context_unavailable") {
+    return "诚实降级：远程 MCP 暂不可用";
+  }
+  if (degradedReason === "external_context_no_useful_matches") {
+    return "诚实降级：远程 MCP 没有命中有效内容";
+  }
+  if (degradedReason === "selected_external_resource_snapshot_empty") {
+    return "诚实降级：选中的资源快照为空";
+  }
+
+  if (getExternalContextUsed(trace) === true) {
+    return "已使用外部信息";
+  }
+
+  const sources = trace.response_json["sources"];
+  if (Array.isArray(sources) && sources.length > 0) {
+    return "已有有依据的结果";
+  }
+
+  return "试点已完成";
+}
+
+function isPilotTrace(trace: TraceRecord): boolean {
+  return (
+    trace.trace_type === "research_tool_assisted" ||
+    trace.trace_type === "research_tool_assisted_run" ||
+    trace.trace_type === "research_external_context" ||
+    trace.trace_type === "research_external_context_run"
+  );
+}
+
+function isExternalContextTrace(trace: TraceRecord): boolean {
+  return trace.trace_type === "research_external_context" || trace.trace_type === "research_external_context_run";
 }
 
 function renderJson(payload: JsonObject): string {
@@ -231,12 +284,20 @@ function formatReviewIssue(issue: string): string {
       return "外部信息使用状态和来源可见性不一致。";
     case "inconsistent_resource_selection_visibility":
       return "资源选择方式和实际快照使用不一致。";
-    case "inconsistent_connector_consent_lifecycle":
-      return "授权生命周期和运行结果不一致。";
     case "missing_mcp_server_visibility":
       return "MCP 服务标识不可见。";
     case "missing_mcp_resource_visibility":
       return "MCP 资源标识不可见。";
+    case "missing_mcp_transport_visibility":
+      return "MCP 传输方式不可见。";
+    case "missing_remote_mcp_read_status_visibility":
+      return "远程 MCP 读取状态不可见。";
+    case "missing_mcp_transport_error_visibility":
+      return "远程 MCP 传输错误不可见。";
+    case "inconsistent_remote_mcp_outcome_visibility":
+      return "远程 MCP 读取结果与最终运行状态不一致。";
+    case "inconsistent_connector_consent_lifecycle":
+      return "授权生命周期和运行结果不一致。";
     default:
       return issue;
   }
@@ -265,6 +326,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           {review.passed ? "通过" : "需复核"}
         </span>
       </div>
+
       <div style={{ color: "#475569", fontSize: 13 }}>
         状态：{review.status}
         {review.trace_id ? ` | Trace：${review.trace_id}` : ""}
@@ -272,6 +334,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
       <div style={{ color: "#475569", fontSize: 13 }}>
         模式：{review.mode === "research_external_context" ? "外部信息试点" : "工具辅助分析"}
       </div>
+
       {review.connector_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
           连接器：{review.connector_id} | 授权：{formatConsentState(review.connector_consent_state)} | 外部信息：
@@ -279,6 +342,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           {typeof review.external_match_count === "number" ? ` | 命中数：${review.external_match_count}` : ""}
         </div>
       ) : null}
+
       {review.connector_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
           快照选择：{formatResourceSelectionMode(review.resource_selection_mode)} | 上下文路径：
@@ -287,6 +351,17 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           {usedSnapshotLabel ? ` | 实际快照：${usedSnapshotLabel}` : ""}
         </div>
       ) : null}
+
+      {review.connector_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>
+          MCP 传输：{formatMcpTransport(review.mcp_transport)} | 读取状态：{formatMcpReadStatus(review.mcp_read_status)}
+        </div>
+      ) : null}
+
+      {review.mcp_transport_error ? (
+        <div style={{ color: "#b45309", fontSize: 13 }}>MCP 传输错误：{review.mcp_transport_error}</div>
+      ) : null}
+
       {review.context_selection_mode === "mcp_resource" ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
           MCP 服务：{review.mcp_server_id ?? "未记录"}
@@ -294,6 +369,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           {review.mcp_resource_uri ? ` | URI：${review.mcp_resource_uri}` : ""}
         </div>
       ) : null}
+
       {review.resumed_from_run_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>续跑来源：{review.resumed_from_run_id}</div>
       ) : null}
@@ -305,6 +381,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           <strong>运行记忆摘要：</strong> {review.run_memory_summary}
         </div>
       ) : null}
+
       {review.issues.length > 0 ? (
         <div style={{ display: "grid", gap: 4 }}>
           <strong style={{ color: "#0f172a" }}>复核问题</strong>
@@ -317,7 +394,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           </ul>
         </div>
       ) : (
-        <div style={{ color: "#166534" }}>这条运行满足当前回归基线。</div>
+        <div style={{ color: "#166534" }}>这条运行满足当前远程 MCP 回归基线。</div>
       )}
     </div>
   );
@@ -483,11 +560,11 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
 
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {traces.map((trace) => {
-          const analysisFocus = readString(trace.response_json["analysis_focus"]) ?? readString(trace.metadata_json["analysis_focus"]);
-          const searchQuery = readString(trace.response_json["search_query"]) ?? readString(trace.metadata_json["search_query"]);
+          const analysisFocus = getTraceString(trace, "analysis_focus");
+          const searchQuery = getTraceString(trace, "search_query");
           const toolSteps = readToolSteps(trace);
           const degradedReason = getPilotDegradedReason(trace);
-          const resumedFromRunId = readString(trace.response_json["resumed_from_run_id"]) ?? readString(trace.metadata_json["resumed_from_run_id"]);
+          const resumedFromRunId = getTraceString(trace, "resumed_from_run_id");
           const runMemory = (trace.response_json["run_memory"] ?? trace.metadata_json["run_memory"]) as JsonObject | undefined;
           const runMemorySummary = runMemory ? readString(runMemory["summary"]) : null;
           const runMemoryNextStep = runMemory ? readString(runMemory["recommended_next_step"]) : null;
@@ -500,6 +577,9 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
           const mcpResourceId = getMcpResourceId(trace);
           const mcpResourceUri = getMcpResourceUri(trace);
           const mcpResourceDisplayName = getMcpResourceDisplayName(trace);
+          const mcpTransport = getMcpTransport(trace);
+          const mcpReadStatus = getMcpReadStatus(trace);
+          const mcpTransportError = getMcpTransportError(trace);
 
           return (
             <li
@@ -517,7 +597,9 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
               </div>
               <div>Trace ID：{trace.id}</div>
               <div>延迟：{trace.latency_ms} 毫秒</div>
-              <div>Token 用量：输入 {trace.token_input} / 输出 {trace.token_output}</div>
+              <div>
+                Token 用量：输入 {trace.token_input} / 输出 {trace.token_output}
+              </div>
               <div>估算成本：{formatCost(trace.estimated_cost)}</div>
               {trace.task_id ? <div>任务 ID：{trace.task_id}</div> : null}
               {trace.agent_run_id ? <div>智能体运行 ID：{trace.agent_run_id}</div> : null}
@@ -546,6 +628,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
                     <strong style={{ color: "#0f172a" }}>试点可见性</strong>
                     <span style={{ color: "#475569", fontSize: 13 }}>{getPilotOutcomeLabel(trace)}</span>
                   </div>
+
                   {analysisFocus ? (
                     <div>
                       <strong>分析焦点：</strong> {analysisFocus}
@@ -576,6 +659,17 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
                   {isExternalContextTrace(trace) ? (
                     <div>
                       <strong>上下文路径：</strong> {formatContextSelectionMode(contextSelectionMode)}
+                    </div>
+                  ) : null}
+                  {connectorId ? (
+                    <div>
+                      <strong>MCP 传输：</strong> {formatMcpTransport(mcpTransport)} | <strong>读取状态：</strong>
+                      {formatMcpReadStatus(mcpReadStatus)}
+                    </div>
+                  ) : null}
+                  {mcpTransportError ? (
+                    <div>
+                      <strong>MCP 传输错误：</strong> {mcpTransportError}
                     </div>
                   ) : null}
                   {mcpServerId || mcpResourceId || mcpResourceDisplayName || mcpResourceUri ? (

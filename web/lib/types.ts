@@ -854,6 +854,16 @@ export type ResearchAnalysisReviewRecord = {
   mcp_resource_id?: string | null;
   mcp_resource_uri?: string | null;
   mcp_resource_display_name?: string | null;
+  mcp_transport?: "local_inproc" | "stdio_process" | null;
+  mcp_read_status?:
+    | "consent_required"
+    | "consent_revoked"
+    | "snapshot_reused"
+    | "used"
+    | "transport_unavailable"
+    | "no_useful_matches"
+    | null;
+  mcp_transport_error?: string | null;
   passed: boolean;
   issues: string[];
   regression_baseline: JsonObject;

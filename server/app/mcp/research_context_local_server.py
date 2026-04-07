@@ -2,15 +2,15 @@ from dataclasses import dataclass
 
 from app.connectors.research_external_context_connector import search_research_external_context
 from app.schemas.mcp import (
-    LocalMcpResourceItem,
-    LocalMcpResourceReadResult,
-    McpResourceDefinition,
-    McpServerDefinition,
     RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
     RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
     RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
     RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME,
     RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+    McpResourceDefinition,
+    McpResourceItem,
+    McpResourceReadResult,
+    McpServerDefinition,
 )
 from app.services.connector_service import RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID
 
@@ -30,11 +30,11 @@ class ResearchContextLocalMcpServer:
                 return resource
         raise ResearchContextLocalMcpServerError(f"Unsupported MCP resource: {resource_id}")
 
-    def read_resource(self, *, resource_id: str, query: str, limit: int = 3) -> LocalMcpResourceReadResult:
+    def read_resource(self, *, resource_id: str, query: str, limit: int = 3) -> McpResourceReadResult:
         resource = self.get_resource(resource_id)
         matches = search_research_external_context(query=query, limit=limit)
         items = tuple(
-            LocalMcpResourceItem(
+            McpResourceItem(
                 resource_id=entry.context_id,
                 title=entry.title,
                 source_label=entry.source_label,
@@ -52,8 +52,8 @@ class ResearchContextLocalMcpServer:
                 for entry in matches
             )
         else:
-            text = "没有找到与当前问题明显相关的外部上下文摘要。"
-        return LocalMcpResourceReadResult(
+            text = "没有找到与当前研究问题明显相关的外部上下文摘要。"
+        return McpResourceReadResult(
             server=self.server,
             resource=resource,
             text=text,

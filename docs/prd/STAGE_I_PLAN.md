@@ -11,7 +11,8 @@
 - First Task Wave: complete
 - Second Task Wave: complete
 - Third Task Wave: complete
-- Fourth Task Wave: active
+- Fourth Task Wave: complete
+- Fifth Task Wave: active
 
 ## Position In The Project
 
@@ -33,10 +34,14 @@ multi-agent orchestration.
 - Current Stage-I baseline:
   - one connector-backed Research integration with explicit consent, resource snapshots, and operator review
   - one bounded local MCP server and MCP resource contract behind that same Research-first permission model
-  - one visible Research MCP-backed product path that reuses that same consent and snapshot model
+- one visible Research MCP-backed product path that reuses that same consent and snapshot model
 - one MCP-aware trace and operator-review layer on that same visible path
+- one bounded out-of-process MCP client and transport foundation behind that same connector consent boundary
+- one remote-MCP-aware trace and operator-review layer on that same visible path
 - Still optional follow-through:
-  - true out-of-process MCP transport instead of only the current local in-process server
+  - one true external MCP endpoint outside this repository
+  - one bounded Research path that reads a true external MCP resource instead of the current repo-local subprocess server
+  - one explicit credential/auth boundary around that true external MCP endpoint
   - most MCP breadth beyond the first bounded path
   - broader connector rollout outside the same Research-first surface
 
@@ -191,6 +196,12 @@ layer before any broader MCP or orchestration work opens.
   MCP resource foundation while preserving explicit consent, snapshot reuse, and honest degraded behavior
 - complete: `stage-i-13`, which made MCP server/resource identity, denial, and degraded outcomes readable in trace and
   operator-review surfaces on that same bounded Research path
+- complete: `stage-i-15`, which added one true out-of-process MCP client and one transport-aware server contract behind
+  the same connector consent boundary without yet switching the visible Research surface off the earlier local shortcut
+- complete: `stage-i-16`, which moved the visible Research external-context surface onto the bounded out-of-process MCP
+  read path while preserving explicit consent, snapshot reuse, and honest degraded behavior
+- complete: `stage-i-17`, which made MCP transport, read status, denial, transport failure, and degraded outcomes
+  readable in trace and operator-review surfaces on that same visible Research path
 ## Second Task Wave
 
 The second executable Stage I wave is:
@@ -273,9 +284,9 @@ The third Stage I wave is now complete:
 
 The fourth executable Stage I wave is:
 
-1. `tasks/stage-i-15-mcp-client-and-transport-foundation.md`
-2. `tasks/stage-i-16-research-remote-mcp-resource-pilot.md`
-3. `tasks/stage-i-17-remote-mcp-trace-and-review-visibility.md`
+1. `tasks/archive/stage-i/stage-i-15-mcp-client-and-transport-foundation.md`
+2. `tasks/archive/stage-i/stage-i-16-research-remote-mcp-resource-pilot.md`
+3. `tasks/archive/stage-i/stage-i-17-remote-mcp-trace-and-review-visibility.md`
 
 ### Why This Wave Exists
 
@@ -289,3 +300,37 @@ learning question is narrower and more concrete:
 
 This wave should stay bounded to one Research-first path and one small remote MCP server instead of broadening into a
 generic connector platform or multi-agent orchestration.
+
+### Current Fourth-Wave Outcome
+
+The fourth Stage I wave is now complete:
+
+- one bounded out-of-process MCP client and one stdio transport contract now exist inside the repo
+- the connector status surface can now describe that new process-backed MCP server foundation
+- the visible Research product path now reads the bounded out-of-process MCP resource while preserving consent and
+  snapshot reuse
+- remote-MCP transport, read status, denial, transport failure, and degraded outcomes are now readable in trace and
+  operator-review surfaces on that same path
+
+## Fifth Task Wave
+
+The fifth executable Stage I wave is:
+
+1. `tasks/archive/stage-i/stage-i-18-wave-five-planning.md`
+2. `tasks/stage-i-19-connector-configured-remote-mcp-endpoint-foundation.md`
+3. `tasks/stage-i-20-research-true-external-mcp-resource-pilot.md`
+4. `tasks/stage-i-21-remote-mcp-auth-and-review-closeout.md`
+
+### Why This Wave Exists
+
+The fourth Stage I wave proved real MCP transport, but it still stops at a repo-local subprocess server. The next
+Wave 2 learning question is narrower and more realistic:
+
+- how this repo should describe and reach one true external MCP endpoint instead of only spawning its own MCP server
+- how the same visible Research path should read one true external MCP resource while preserving consent and snapshot
+  reuse
+- how remote credential/auth boundaries and operator review should stay explicit when the MCP server is no longer
+  inside this repository
+
+This wave should stay bounded to one Research-first path and one external endpoint instead of broadening into generic
+multi-server discovery, marketplace UX, or Wave 3 orchestration.

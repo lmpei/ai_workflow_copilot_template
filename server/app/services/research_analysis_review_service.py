@@ -84,6 +84,13 @@ def list_workspace_research_analysis_review(
             if isinstance(signals.get("mcp_resource_display_name"), str)
             else None
         )
+        mcp_transport = signals.get("mcp_transport") if isinstance(signals.get("mcp_transport"), str) else None
+        mcp_read_status = signals.get("mcp_read_status") if isinstance(signals.get("mcp_read_status"), str) else None
+        mcp_transport_error = (
+            signals.get("mcp_transport_error")
+            if isinstance(signals.get("mcp_transport_error"), str)
+            else None
+        )
         if selected_snapshot_id:
             selected_snapshot = research_analysis_run_repository.get_research_external_resource_snapshot(selected_snapshot_id)
             if selected_snapshot is not None:
@@ -137,6 +144,9 @@ def list_workspace_research_analysis_review(
                 mcp_resource_id=mcp_resource_id,
                 mcp_resource_uri=mcp_resource_uri,
                 mcp_resource_display_name=mcp_resource_display_name,
+                mcp_transport=mcp_transport,
+                mcp_read_status=mcp_read_status,
+                mcp_transport_error=mcp_transport_error,
                 passed=bool(baseline["passed"]),
                 issues=[str(item) for item in baseline["issues"]],
                 regression_baseline=baseline,

@@ -3,7 +3,7 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-03
+- Last Updated: 2026-04-07
 
 ## Main Modules
 
@@ -89,23 +89,32 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
   their traces and applying the replay/regression baseline before any broader eval flywheel exists; it now also
   surfaces connector consent state, external-context use, match-count visibility, selected versus actual resource
-  snapshot visibility, resource-selection mode, MCP server and resource identity, and degraded-path honesty for the
-  Stage I pilot
+  snapshot visibility, resource-selection mode, MCP server and resource identity, MCP transport and read-status
+  visibility, transport-failure detail, and degraded-path honesty for the Stage I pilot
 - `server/app/services/connector_service.py`
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, explicit grant or revoke
     lifecycle, and reusable permission-gate helpers for the first external-context pilot
 - `server/app/services/mcp_service.py`
-  - owns the bounded Stage I MCP foundation layer that binds the existing Research connector to one local MCP server
-    plus one MCP resource contract, and reuses the same workspace-level consent gate before any later MCP-backed
-    product path is allowed to read that resource
+  - owns the bounded Stage I MCP foundation layer that now keeps both the earlier local in-process MCP helper and one
+    new repo-local out-of-process MCP client plus transport contract behind the same Research connector consent
+    boundary, so the visible Research path can move onto real transport without reopening permission logic before a
+    later true external MCP endpoint exists
 - `server/app/mcp/research_context_local_server.py`
   - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
-    that now feeds one visible product path while still staying bounded to the Research-first pilot
+    that remains available as a bounded MCP baseline while the visible Research path moves onto the out-of-process
+    transport
+- `server/app/mcp/research_context_stdio_server.py`
+  - owns one bounded stdio MCP server process entrypoint for the same Research-first MCP resource, so the repo can
+    exercise a real out-of-process client or server transport without broadening into generic multi-server support
+- `server/app/mcp/stdio_process_client.py`
+  - owns the bounded subprocess-based MCP client exchange used to describe and read one MCP resource through a separate
+    server process before the visible product path switches to that transport and before the repo reaches a true
+    external MCP endpoint
 - `server/app/services/research_external_context_service.py`
   - owns the bounded Stage I Research pilot that checks workspace connector consent, can reuse an explicitly selected
-    external-resource snapshot or read one bounded MCP-backed resource through the same permission model, keeps
-    internal and external evidence visibly distinct, and degrades honestly when consent, MCP availability, or useful
-    external matches are missing
+    external-resource snapshot or read one bounded out-of-process MCP-backed resource through the same permission
+    model, keeps internal and external evidence visibly distinct, records MCP transport and read-status outcomes, and
+    degrades honestly when consent, MCP availability, transport, or useful external matches are missing
 - `server/app/services/research_external_resource_snapshot_service.py`
   - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
     snapshots and exposes recent snapshots back to the product surface
@@ -118,7 +127,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps, honest degraded no-source paths, Stage I resource-selection plus consent-lifecycle
-    consistency, and the new MCP server/resource visibility checks on the bounded MCP path
+    consistency, and the new MCP server/resource/transport/read-status visibility checks on the bounded MCP path
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor

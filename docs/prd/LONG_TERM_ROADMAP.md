@@ -184,8 +184,11 @@ Current Wave 2 baseline:
 - `Stage I` now materially satisfies the minimum exit signal through one connector-backed Research integration with
   explicit permission boundaries
 - one bounded local MCP server and one MCP-backed Research path now exist as a learning baseline
-- true out-of-process MCP host/client/server transport remains a later bounded follow-through rather than delivered
-  baseline
+- one true out-of-process MCP client and transport foundation now exists as a delivered bounded follow-through
+- the visible Research path now also reads that bounded out-of-process MCP transport
+- remote-MCP transport, read status, denial, and transport failure are now explicit on that same visible path
+- the remaining Stage I learning gap is one true external MCP endpoint outside this repository, plus one visible
+  Research path and one review baseline against that endpoint
 
 #### Wave 3: Agent Orchestration and Human Approval
 

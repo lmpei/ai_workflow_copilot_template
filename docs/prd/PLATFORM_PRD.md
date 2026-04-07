@@ -186,6 +186,10 @@ The current implemented platform increment includes:
 - one bounded local MCP server and one bounded MCP resource contract behind the existing Research consent boundary
 - one visible Research MCP-backed path on the existing external-context surface
 - one MCP-aware trace and operator-review baseline for that visible path
+- one true out-of-process MCP client and one transport-aware MCP server contract behind that same connector boundary
+- one visible Research path that now reads that bounded out-of-process MCP resource while preserving explicit consent
+  and snapshot reuse
+- one remote-MCP-aware trace and operator-review baseline for that same visible path
 
 The repository does not yet implement:
 
@@ -226,9 +230,14 @@ concept family. The current repo baseline already satisfies the minimum Wave 2 e
 Research integration with explicit permission boundaries, but it still does not claim full MCP host, client, or server
 coverage. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP resource
 contract wired to the existing Research connector consent boundary, one visible Research MCP resource-context pilot on
-the existing Research surface, and one MCP-aware trace and review layer around that path. The next active work is a
-fourth Stage I wave focused on true out-of-process MCP transport and client behavior instead of stopping at the
-in-process MCP baseline.
+the existing Research surface, and one MCP-aware trace and review layer around that path. The first task in the
+fourth Stage I wave is now also complete: the repo has one true out-of-process MCP client and one transport-aware MCP
+server contract behind that same connector boundary. The first two tasks in the fourth Stage I wave are now also
+complete: the visible Research path now reads that bounded out-of-process MCP resource while preserving explicit
+consent and snapshot reuse. The fourth Stage I wave is now fully complete: remote-MCP transport, read status, denial,
+transport failure, and degraded outcomes are now readable in operator review on that same visible path. The next
+active work is no longer repo-local MCP transport; it is to move the same bounded Research path onto one true external
+MCP endpoint with an explicit credential/auth boundary.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

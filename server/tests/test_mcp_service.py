@@ -79,3 +79,45 @@ def test_read_workspace_mcp_resource_returns_local_digest_after_consent(client: 
     assert result.resource_count >= 1
     assert "来源：" in result.text
     assert len(result.items) >= 1
+
+
+def test_describe_workspace_remote_mcp_server_returns_process_server_metadata(client: TestClient) -> None:
+    auth = _register_and_login(client, email="remote-owner@example.com", name="Remote Owner")
+    workspace_id = _create_workspace(client, auth["token"])
+
+    server, resources = mcp_service.describe_workspace_remote_mcp_server(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+    )
+
+    assert server.id == mcp_service.RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID
+    assert server.transport == "stdio_process"
+    assert len(resources) == 1
+    assert resources[0].id == mcp_service.RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+
+
+def test_read_workspace_remote_mcp_resource_returns_process_backed_digest_after_consent(client: TestClient) -> None:
+    auth = _register_and_login(client, email="remote-read@example.com", name="Remote Read")
+    workspace_id = _create_workspace(client, auth["token"])
+    connector_service.grant_workspace_connector_consent(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        payload=ConnectorConsentGrantRequest(consent_note="Approved"),
+    )
+
+    result = mcp_service.read_workspace_remote_mcp_resource(
+        workspace_id=workspace_id,
+        user_id=auth["user_id"],
+        connector_id=connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
+        resource_id=mcp_service.RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
+        query="pricing pressure",
+    )
+
+    assert result.server.id == mcp_service.RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID
+    assert result.server.transport == "stdio_process"
+    assert result.resource.id == mcp_service.RESEARCH_CONTEXT_DIGEST_RESOURCE_ID
+    assert result.resource_count >= 1
+    assert "来源：" in result.text
+    assert len(result.items) >= 1

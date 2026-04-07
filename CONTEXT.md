@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-03
+- Last Updated: 2026-04-07
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -77,9 +77,11 @@ consent-lifecycle consistency visible to operators instead of leaving those chec
 
 Stage I remains active. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP
 resource contract, one visible Research MCP-backed path on the existing `research_external_context` surface, and one
-MCP-aware trace and operator-review layer on that same path. The next bounded follow-through is not a new stage yet;
-it is a fourth Stage I wave focused on true out-of-process MCP transport so the repository stops relying only on a
-local in-process MCP foundation.
+MCP-aware trace and operator-review layer on that same path. The fourth Stage I wave is now also complete: the repo
+now has one true out-of-process MCP client and transport foundation behind the same consent boundary, the visible
+Research path now reads that bounded out-of-process MCP resource while still preserving snapshot reuse and honest
+degraded behavior, and remote-MCP transport, read status, and transport failure now stay readable in trace and operator
+review on that same visible path.
 
 ## Roadmap Alignment
 
@@ -92,11 +94,14 @@ local in-process MCP foundation.
 - Current Stage I baseline:
   - one connector-backed Research integration with explicit consent, snapshots, and operator review is now delivered
   - one bounded local MCP server and MCP resource contract now sit behind that same Research-first permission model
-  - one visible Research path can now actually read bounded MCP-backed context through that same permission model
-  - one MCP-aware trace and review baseline now makes MCP use, denial, degraded behavior, and resource identity
-    visible to operators
+  - one visible Research path can now actually read bounded out-of-process MCP-backed context through that same permission model
+  - one bounded out-of-process MCP client and transport foundation now exists behind that same connector boundary
+  - one MCP-aware trace and review baseline now makes MCP use, denial, degraded behavior, resource identity,
+    transport choice, read status, and transport failure visible to operators
 - Still deferred:
-  - true out-of-process MCP transport instead of only the current in-process server
+  - one true external MCP endpoint outside this repository
+  - one bounded Research path that reads a true external MCP resource instead of the current repo-local subprocess server
+  - one explicit credential/auth boundary around that true external MCP endpoint
   - most MCP breadth across hosts, resources, prompts, and tools
   - any broader multi-module rollout on top of MCP
 
@@ -111,9 +116,11 @@ local in-process MCP foundation.
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
 forking the architecture. The active bounded stage should preserve that shared-platform model while adding one explicit
 connector-backed Research path with clear consent, resource, and review boundaries, plus one actual visible
-MCP-backed follow-through on top of that baseline. The next learning gap is true out-of-process MCP transport, not
-local in-process MCP visibility. Roadmap-wave completion is a separate judgment against the exit signals in
-`docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
+MCP-backed follow-through on top of that baseline. The next learning gap is no longer whether the repo can host a true
+out-of-process MCP client and transport foundation or whether remote-MCP use stays readable after the product path
+switches; it is whether the same bounded Research path can talk to one true external MCP endpoint with an explicit
+credential/auth boundary and the same honest review standard. Roadmap-wave completion is a separate judgment against
+the exit signals in `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
 
 ## Technology Stack
 

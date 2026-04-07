@@ -315,6 +315,9 @@ def _record_run_trace(
     mcp_resource_id: str | None = None,
     mcp_resource_uri: str | None = None,
     mcp_resource_display_name: str | None = None,
+    mcp_transport: str | None = None,
+    mcp_read_status: str | None = None,
+    mcp_transport_error: str | None = None,
     context_selection_mode: str | None = None,
     error_message: str | None = None,
 ) -> str:
@@ -354,6 +357,9 @@ def _record_run_trace(
             "mcp_resource_id": mcp_resource_id,
             "mcp_resource_uri": mcp_resource_uri,
             "mcp_resource_display_name": mcp_resource_display_name,
+            "mcp_transport": mcp_transport,
+            "mcp_read_status": mcp_read_status,
+            "mcp_transport_error": mcp_transport_error,
             "context_selection_mode": context_selection_mode,
         },
         extra_metadata_json={
@@ -375,6 +381,9 @@ def _record_run_trace(
             "mcp_resource_id": mcp_resource_id,
             "mcp_resource_uri": mcp_resource_uri,
             "mcp_resource_display_name": mcp_resource_display_name,
+            "mcp_transport": mcp_transport,
+            "mcp_read_status": mcp_read_status,
+            "mcp_transport_error": mcp_transport_error,
             "context_selection_mode": context_selection_mode,
         },
     )
@@ -475,6 +484,9 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             mcp_resource_id=getattr(result, "mcp_resource_id", None),
             mcp_resource_uri=getattr(result, "mcp_resource_uri", None),
             mcp_resource_display_name=getattr(result, "mcp_resource_display_name", None),
+            mcp_transport=getattr(result, "mcp_transport", None),
+            mcp_read_status=getattr(result, "mcp_read_status", None),
+            mcp_transport_error=getattr(result, "mcp_transport_error", None),
             context_selection_mode=getattr(result, "context_selection_mode", None),
         )
         conversation_repository.create_message(
@@ -538,6 +550,9 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             external_match_count=0 if running_run.mode == "research_external_context" else None,
             selected_external_resource_snapshot_id=running_run.selected_external_resource_snapshot_id,
             external_resource_snapshot_id=None,
+            mcp_transport="stdio_process" if running_run.mode == "research_external_context" else None,
+            mcp_read_status=None,
+            mcp_transport_error=None,
             context_selection_mode=(
                 "snapshot" if running_run.selected_external_resource_snapshot_id else "mcp_resource"
             ) if running_run.mode == "research_external_context" else None,
@@ -573,6 +588,9 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             external_match_count=0 if running_run.mode == "research_external_context" else None,
             selected_external_resource_snapshot_id=running_run.selected_external_resource_snapshot_id,
             external_resource_snapshot_id=None,
+            mcp_transport="stdio_process" if running_run.mode == "research_external_context" else None,
+            mcp_read_status=None,
+            mcp_transport_error=None,
             context_selection_mode=(
                 "snapshot" if running_run.selected_external_resource_snapshot_id else "mcp_resource"
             ) if running_run.mode == "research_external_context" else None,

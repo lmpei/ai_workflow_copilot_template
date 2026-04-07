@@ -12,7 +12,7 @@ from app.services.model_interface_service import (
 )
 
 DEFAULT_PASS_THRESHOLD = 0.7
-RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_mcp_review_v1"
+RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_remote_mcp_review_v2"
 
 
 class ChatEvaluatorError(Exception):
@@ -374,6 +374,21 @@ def evaluate_research_analysis_run_regression(
         response_json.get("mcp_resource_display_name"),
         metadata_json.get("mcp_resource_display_name"),
     )
+    mcp_transport = _read_string(
+        run_json.get("mcp_transport"),
+        response_json.get("mcp_transport"),
+        metadata_json.get("mcp_transport"),
+    )
+    mcp_read_status = _read_string(
+        run_json.get("mcp_read_status"),
+        response_json.get("mcp_read_status"),
+        metadata_json.get("mcp_read_status"),
+    )
+    mcp_transport_error = _read_string(
+        run_json.get("mcp_transport_error"),
+        response_json.get("mcp_transport_error"),
+        metadata_json.get("mcp_transport_error"),
+    )
     resource_selection_mode = (
         "explicit"
         if selected_external_resource_snapshot_id
@@ -442,6 +457,57 @@ def evaluate_research_analysis_run_regression(
             and bool(mcp_resource_uri)
             and bool(mcp_resource_display_name)
         ),
+        "mcp_transport_visibility_when_applicable": (not is_external_context_run)
+        or mcp_transport in {"stdio_process", "local_inproc"},
+        "mcp_read_status_visibility_when_applicable": (not is_external_context_run)
+        or mcp_read_status
+        in {
+            "consent_required",
+            "consent_revoked",
+            "snapshot_reused",
+            "used",
+            "transport_unavailable",
+            "no_useful_matches",
+        },
+        "mcp_transport_error_visibility_when_applicable": (not is_mcp_resource_path)
+        or mcp_read_status != "transport_unavailable"
+        or bool(mcp_transport_error),
+        "remote_mcp_outcome_consistent_when_applicable": (not is_external_context_run)
+        or (
+            connector_consent_state == "not_granted"
+            and mcp_read_status == "consent_required"
+            and external_context_used is False
+            and external_match_count == 0
+        )
+        or (
+            connector_consent_state == "revoked"
+            and mcp_read_status == "consent_revoked"
+            and external_context_used is False
+            and external_match_count == 0
+        )
+        or (
+            context_selection_mode == "snapshot"
+            and mcp_read_status == "snapshot_reused"
+        )
+        or (
+            context_selection_mode == "mcp_resource"
+            and degraded_reason == "external_context_unavailable"
+            and mcp_read_status == "transport_unavailable"
+            and external_context_used is False
+        )
+        or (
+            context_selection_mode == "mcp_resource"
+            and degraded_reason == "external_context_no_useful_matches"
+            and mcp_read_status == "no_useful_matches"
+            and external_context_used is False
+        )
+        or (
+            context_selection_mode == "mcp_resource"
+            and external_context_used is True
+            and mcp_read_status == "used"
+            and isinstance(external_match_count, int)
+            and external_match_count > 0
+        ),
         "consent_lifecycle_consistent_when_applicable": (not is_external_context_run)
         or connector_consent_state == "granted"
         or (
@@ -501,6 +567,14 @@ def evaluate_research_analysis_run_regression(
         issues.append("missing_mcp_server_visibility")
     if checks["mcp_resource_visibility_when_applicable"] is False:
         issues.append("missing_mcp_resource_visibility")
+    if checks["mcp_transport_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_transport_visibility")
+    if checks["mcp_read_status_visibility_when_applicable"] is False:
+        issues.append("missing_remote_mcp_read_status_visibility")
+    if checks["mcp_transport_error_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_transport_error_visibility")
+    if checks["remote_mcp_outcome_consistent_when_applicable"] is False:
+        issues.append("inconsistent_remote_mcp_outcome_visibility")
     if checks["consent_lifecycle_consistent_when_applicable"] is False:
         issues.append("inconsistent_connector_consent_lifecycle")
 
@@ -532,6 +606,9 @@ def evaluate_research_analysis_run_regression(
             "mcp_resource_id": mcp_resource_id,
             "mcp_resource_uri": mcp_resource_uri,
             "mcp_resource_display_name": mcp_resource_display_name,
+            "mcp_transport": mcp_transport,
+            "mcp_read_status": mcp_read_status,
+            "mcp_transport_error": mcp_transport_error,
         },
     }
 

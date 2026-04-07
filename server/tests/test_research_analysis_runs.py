@@ -4,16 +4,19 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 from sqlalchemy import select
 
-from app.core.database import session_scope
 from app.connectors.research_external_context_connector import ResearchExternalContextEntry
+from app.core.database import session_scope
 from app.models.conversation import Conversation
 from app.models.message import Message
 from app.models.research_analysis_run import ResearchAnalysisRun
 from app.models.trace import Trace
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.services.chat_evaluator_service import RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION
 from app.services import research_analysis_run_service
 from app.services.research_external_context_service import ResearchExternalContextChatResult
-from app.services.research_external_resource_snapshot_service import create_research_external_resource_snapshot
+from app.services.research_external_resource_snapshot_service import (
+    create_research_external_resource_snapshot,
+)
 from app.services.research_tool_assisted_chat_service import (
     ResearchRunMemoryContext,
     ToolAssistedResearchChatResult,
@@ -438,7 +441,7 @@ def test_list_workspace_research_analysis_run_review_returns_regression_summary(
     )
     assert review_response.status_code == 200
     payload = review_response.json()
-    assert payload["baseline_version"] == "stage_i_mcp_review_v1"
+    assert payload["baseline_version"] == RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION
     assert payload["reviewed_count"] == 1
     assert payload["passing_count"] == 1
     assert payload["failing_count"] == 0
@@ -524,6 +527,13 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
                     snippet="External analyst context.",
                 )
             ],
+            mcp_server_id="research_context_stdio",
+            mcp_resource_id="research.context.digest",
+            mcp_resource_uri="resource://research.context.digest",
+            mcp_resource_display_name="Research 外部上下文摘要",
+            mcp_transport="stdio_process",
+            mcp_read_status="used",
+            context_selection_mode="mcp_resource",
         )
 
     monkeypatch.setattr(
@@ -566,6 +576,8 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
     assert traces[0].response_json["connector_id"] == "research_external_context"
     assert traces[0].response_json["external_context_used"] is True
     assert traces[0].response_json["external_resource_snapshot_id"] == payload["external_resource_snapshot"]["id"]
+    assert traces[0].response_json["mcp_transport"] == "stdio_process"
+    assert traces[0].response_json["mcp_read_status"] == "used"
 
 
 def test_create_research_analysis_run_can_select_existing_external_resource_snapshot(
@@ -703,6 +715,8 @@ def test_run_research_analysis_run_execution_can_reuse_selected_external_resourc
             external_match_count=1,
             external_matches=[],
             selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            mcp_transport="stdio_process",
+            mcp_read_status="snapshot_reused",
             context_selection_mode="snapshot",
         )
 
@@ -810,6 +824,8 @@ def test_research_analysis_run_review_exposes_resource_selection_visibility(
             external_match_count=1,
             external_matches=[],
             selected_external_resource_snapshot_id=selected_external_resource_snapshot.id,
+            mcp_transport="stdio_process",
+            mcp_read_status="snapshot_reused",
             context_selection_mode="snapshot",
         )
 
@@ -835,3 +851,5 @@ def test_research_analysis_run_review_exposes_resource_selection_visibility(
     assert review_item["selected_external_resource_snapshot_title"] == snapshot.title
     assert review_item["external_resource_snapshot_id"] == snapshot.id
     assert review_item["external_resource_snapshot_title"] == snapshot.title
+    assert review_item["mcp_transport"] == "stdio_process"
+    assert review_item["mcp_read_status"] == "snapshot_reused"

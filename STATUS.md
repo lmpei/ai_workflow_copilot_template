@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-03
+- Last Updated: 2026-04-07
 
 ## Project Mode
 
@@ -25,12 +25,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- keep the live product hosts stable while opening one narrow fourth Stage I wave for true out-of-process MCP
-  follow-through on top of the existing connector-backed and local-MCP baseline
+- keep the live product hosts stable while moving from the current repo-local out-of-process Research MCP baseline to
+  one true external MCP endpoint with explicit transport, auth, and review visibility
 
 ## Active Task
 
-- `tasks/stage-i-15-mcp-client-and-transport-foundation.md`
+- `tasks/stage-i-19-connector-configured-remote-mcp-endpoint-foundation.md`
 
 ## Current Roadmap Alignment
 
@@ -45,24 +45,31 @@ Current state only. Keep this file short, current, and action-oriented.
 - Newly delivered:
   - one bounded local MCP server foundation
   - one bounded MCP resource contract wired to the existing Research connector consent boundary
-  - one real product-facing MCP-backed Research path on the existing `research_external_context` surface
+- one real product-facing MCP-backed Research path on the existing `research_external_context` surface
 - one MCP-aware trace and operator-review layer on that same visible path
+- one true out-of-process MCP client and transport foundation behind the same connector consent boundary
+- one visible Research path that now actually reads the bounded out-of-process MCP resource instead of the earlier
+  local in-process shortcut
+- one remote-MCP-aware trace and operator-review layer on that same visible path
 - Still not covered:
-  - true out-of-process MCP transport instead of the current local in-process server
-  - one real client-side MCP read path against a separate MCP server process
+  - one true external MCP endpoint outside this repository
+  - one bounded Research path that reads a true external MCP resource instead of the current repo-local subprocess
+    server
+  - one explicit credential and auth boundary around that true external MCP endpoint
 
 ## Verification Status
 
 - Summary: Stage G is complete and closed after the multi-subdomain cutover. Stage H is complete and closed after the
-  bounded model-interface and tool-visible Research baseline. Stage I has now completed three bounded connector and
+  bounded model-interface and tool-visible Research baseline. Stage I has now completed four bounded connector and
   context-plane waves: connector contract plus consent, one visible Research external-context pilot, connector-aware
   trace and review, explicit external-resource snapshots, explicit consent lifecycle plus snapshot selection, one
   resource-aware review baseline, one bounded local MCP contract plus local server foundation, one visible Research
-  MCP-backed product path, and one MCP-aware trace and operator-review layer on that same path. The control-plane
-  distinction remains explicit: `Stage I` is the active bounded execution unit, while `LONG_TERM_ROADMAP` Wave 2
-  remains the broader concept family. The next bounded task is no longer local MCP visibility; it is a true
-  out-of-process MCP client and transport foundation.
-- Last Verified At: 2026-04-03
+  MCP-backed product path, one MCP-aware trace and operator-review layer on that same path, one true out-of-process
+  MCP client and transport foundation behind the same connector boundary, one visible Research path that now actually
+  reads the bounded out-of-process MCP resource, and one remote-MCP-aware trace and operator-review layer on that same
+  visible path. The current learning gap is no longer repo-local MCP transport; it is one true external MCP endpoint,
+  one visible Research path against that endpoint, and one explicit credential/auth plus review baseline around it.
+- Last Verified At: 2026-04-07
 
 ## Current Blockers
 
@@ -79,15 +86,16 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Information Gaps
 
-- how far the next Stage I wave should go beyond one out-of-process MCP pilot before Wave 2 is considered fully
+- how far the next Stage I wave should go beyond one true external MCP endpoint before Wave 2 is considered fully
   learned for this repository
 
 ## Ready Now
 
-1. execute `stage-i-15` to replace the current in-process MCP shortcut with one true out-of-process MCP client and
-   transport baseline
-2. keep the live `weave` and `api` hosts stable while the Stage I MCP pilot deepens
-3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first out-of-process MCP
+1. execute `stage-i-19` to add one connector-configured true external MCP endpoint foundation without broadening into
+   generic multi-server support
+2. keep the live `weave` and `api` hosts stable while the Stage I MCP pilot moves from repo-local transport to one
+   true external endpoint
+3. avoid opening broad MCP sprawl or multi-agent scope before the current bounded Research-first true external MCP
    path is complete
 
 ## Parked / Later
@@ -98,7 +106,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/stage-i/stage-i-13-mcp-trace-and-review-visibility.md`
+- `tasks/archive/stage-i/stage-i-17-remote-mcp-trace-and-review-visibility.md`
 
 ## Recent Decisions
 
@@ -164,3 +172,13 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-03-106` complete `stage-i-12`, connect the existing visible Research external-context surface to the
   bounded local MCP resource path, preserve explicit consent and snapshot reuse boundaries, archive the task, and move
   Stage I to MCP trace and review visibility
+- `DEC-2026-04-03-110` complete `stage-i-15`, add one true out-of-process MCP client and transport foundation behind
+  the existing Research connector consent boundary, archive the task, and move Stage I to the visible remote-MCP
+  Research pilot
+- `DEC-2026-04-04-111` complete `stage-i-16`, move the visible Research external-context path from the earlier local
+  MCP shortcut onto the bounded out-of-process MCP read path, preserve consent and snapshot reuse, archive the task,
+  and move Stage I to remote-MCP trace and review visibility
+- `DEC-2026-04-07-112` complete `stage-i-17`, make remote-MCP transport, read status, and transport failure readable
+  in trace and operator review on the visible Research path
+- `DEC-2026-04-07-113` keep Stage I open for one fifth bounded wave so the next work proves one true external MCP
+  endpoint instead of stopping at the current repo-local subprocess server baseline

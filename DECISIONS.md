@@ -1735,3 +1735,83 @@ Append-only log. Add new entries at the bottom.
   a generic connector platform or a new stage.
 - Related Task: `tasks/archive/stage-i/stage-i-14-wave-four-planning.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-03-110
+- Date: 2026-04-03
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-15 MCP client and transport foundation
+- Context: the third Stage I wave had already delivered one full local-MCP baseline, but the repository still did not
+  act as a true out-of-process MCP client against a separate server process. Closing or broadening Stage I at that
+  point would have left real MCP transport outside the bounded task stack again.
+- Choice: add one bounded stdio-process MCP server contract, one bounded subprocess MCP client path, keep the same
+  Research-first connector consent boundary, archive `stage-i-15`, and move the active task to the visible remote MCP
+  Research pilot.
+- Why: Stage I should prove real MCP transport in code before the visible Research product path switches over, but it
+  should still stay narrow and avoid generic multi-server or multi-module MCP sprawl.
+- Impact: the repo no longer relies only on direct in-process MCP imports for its MCP baseline; the next bounded task
+  can now switch the visible Research path from the local shortcut to the new out-of-process transport.
+- Related Task: `tasks/archive/stage-i/stage-i-15-mcp-client-and-transport-foundation.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-04-111
+- Date: 2026-04-04
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-16 Research remote MCP resource pilot
+- Context: `stage-i-15` delivered one true out-of-process MCP client and transport foundation, but the visible
+  Research path still depended on the earlier local in-process shortcut. Until that visible path switched over, the
+  repo still had not proven a real user-facing remote-MCP-backed product flow.
+- Choice: move the visible `research_external_context` Research path onto the bounded out-of-process MCP read path,
+  preserve the same workspace-level connector consent boundary, preserve explicit external-resource snapshot reuse as
+  an alternative path, archive `stage-i-16`, and move the active task to remote-MCP trace and review visibility.
+- Why: Stage I should prove one actual product-facing remote-MCP flow before judging whether the bounded Wave 2 MCP
+  follow-through is complete.
+- Impact: the repo now has one visible Research path that actually reads bounded out-of-process MCP-backed context
+  through the existing connector and snapshot model, and the remaining bounded task is to make remote-MCP use,
+  denial, transport failure, and degraded outcomes readable enough in trace and operator review.
+- Related Task: `tasks/archive/stage-i/stage-i-16-research-remote-mcp-resource-pilot.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-07-112
+- Date: 2026-04-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-17 remote MCP trace and review visibility
+- Context: `stage-i-16` moved the visible Research path onto the repo-local out-of-process MCP read path, but that
+  path still left remote-style transport, read-status, and transport-failure signals too implicit in the operator
+  surfaces.
+- Choice: complete `stage-i-17`, expose MCP transport, read status, transport failure, denial, and degraded outcomes
+  in trace plus operator review, archive the task, and close the fourth Stage I wave.
+- Why: the repo should not claim a remote-MCP-backed product path unless operators can tell what transport was used,
+  whether the read actually happened, and why the path degraded when it did.
+- Impact: the current repo-local out-of-process MCP baseline is now readable enough to distinguish consent failure,
+  snapshot reuse, transport failure, no-useful-match degradation, and successful MCP reads on the same visible
+  Research path.
+- Related Task: `tasks/archive/stage-i/stage-i-17-remote-mcp-trace-and-review-visibility.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-07-113
+- Date: 2026-04-07
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: keep Stage I open for one fifth bounded wave focused on true external MCP
+- Context: after `stage-i-17`, the repo has a real out-of-process MCP transport and one visible Research path on that
+  transport, but the server process and sample-backed resource still live inside this repository. Closing Stage I here
+  would leave true external MCP endpoints outside the actual task stack.
+- Choice: keep Stage I open for one fifth bounded wave, define one connector-configured true external MCP endpoint
+  foundation, one visible Research pilot against that endpoint, and one credential/auth plus review closeout task.
+- Why: the current baseline proves MCP transport and product wiring, but it still stops at a repo-local subprocess
+  server instead of one true external MCP endpoint.
+- Impact: Stage I remains the active bounded stage, and the next tasks should deepen the same Research-first path
+  toward true external MCP rather than opening Wave 3 orchestration early.
+- Related Task: `tasks/archive/stage-i/stage-i-18-wave-five-planning.md`
+- Supersedes:

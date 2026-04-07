@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 from sqlalchemy import select
 
+from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.core.database import session_scope
 from app.models.conversation import Conversation
 from app.models.message import Message
@@ -14,11 +15,12 @@ from app.repositories.document_repository import (
     create_document,
     replace_document_chunks,
 )
-from app.services import retrieval_service
-from app.connectors.research_external_context_connector import ResearchExternalContextEntry
 from app.schemas.chat import ChatToolStep, SourceReference
+from app.services import retrieval_service
 from app.services.research_external_context_service import ResearchExternalContextChatResult
-from app.services.research_external_resource_snapshot_service import create_research_external_resource_snapshot
+from app.services.research_external_resource_snapshot_service import (
+    create_research_external_resource_snapshot,
+)
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 from app.services.retrieval_service import (
     ChatProcessingError,

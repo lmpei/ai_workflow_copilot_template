@@ -26,6 +26,9 @@ class ResearchAnalysisReviewRecord(BaseModel):
     mcp_resource_id: str | None = None
     mcp_resource_uri: str | None = None
     mcp_resource_display_name: str | None = None
+    mcp_transport: str | None = None
+    mcp_read_status: str | None = None
+    mcp_transport_error: str | None = None
     passed: bool
     issues: list[str]
     regression_baseline: dict[str, object]
