@@ -3,14 +3,14 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-07
+- Last Updated: 2026-04-08
 
 ## Main Modules
 
 - shared platform core
   - auth, workspaces, documents, chat, tasks, evals, analytics, traces
 - scenario modules
-  - Research Assistant, Support Copilot, Job Assistant
+  - AI 前沿研究, Support Copilot, Job Assistant
 - supporting runtime services
   - PostgreSQL, Redis, Chroma, LangGraph, LLM providers
 
@@ -95,10 +95,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the bounded Stage I connector definition registry, workspace-level consent boundary, explicit grant or revoke
     lifecycle, and reusable permission-gate helpers for the first external-context pilot
 - `server/app/services/mcp_service.py`
-  - owns the bounded Stage I MCP foundation layer that now keeps both the earlier local in-process MCP helper and one
-    new repo-local out-of-process MCP client plus transport contract behind the same Research connector consent
-    boundary, so the visible Research path can move onto real transport without reopening permission logic before a
-    later true external MCP endpoint exists
+  - owns the bounded MCP client facade inside this repo: it preserves the older Stage I local and repo-local baselines
+    for comparison, but it now also describes, validates, and calls one independent MCP server outside this repository
+    for the visible `AI 前沿研究` path, including one resource, one tool, one prompt, and explicit endpoint auth state
 - `server/app/mcp/research_context_local_server.py`
   - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
     that remains available as a bounded MCP baseline while the visible Research path moves onto the out-of-process
@@ -111,10 +110,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
     server process before the visible product path switches to that transport and before the repo reaches a true
     external MCP endpoint
 - `server/app/services/research_external_context_service.py`
-  - owns the bounded Stage I Research pilot that checks workspace connector consent, can reuse an explicitly selected
-    external-resource snapshot or read one bounded out-of-process MCP-backed resource through the same permission
-    model, keeps internal and external evidence visibly distinct, records MCP transport and read-status outcomes, and
-    degrades honestly when consent, MCP availability, transport, or useful external matches are missing
+  - owns the visible `AI 前沿研究` MCP path: it checks connector consent, can reuse an explicitly selected external
+    resource snapshot, and otherwise reads one MCP resource, one MCP prompt, and one MCP tool result through the same
+    permission model while keeping evidence, transport, endpoint identity, auth state, and degraded behavior explicit
 - `server/app/services/research_external_resource_snapshot_service.py`
   - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
     snapshots and exposes recent snapshots back to the product surface
@@ -127,7 +125,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps, honest degraded no-source paths, Stage I resource-selection plus consent-lifecycle
-    consistency, and the new MCP server/resource/transport/read-status visibility checks on the bounded MCP path
+    consistency, and the new MCP server/resource/tool/prompt/transport/read-status visibility checks on the bounded
+    MCP path
 - `server/app/services/task_execution_extensions.py`
   - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
     and Job hiring-packet sync behavior live here instead of in the generic executor

@@ -11,11 +11,18 @@ visible without overloading the next bounded planning unit.
 
 - Status: active direction document
 - Created At: 2026-03-26
-- Current bounded stage: `docs/prd/STAGE_I_PLAN.md`
+- Current bounded stage: `docs/prd/STAGE_K_PLAN.md`
+- Most recent bounded stage: `docs/prd/STAGE_J_PLAN.md`
 - Current roadmap theme: `Theme 3: Staged AI Capability Expansion`
 - Current roadmap wave: `Wave 2: Connector and Context Plane`
 - Interpretation note: bounded stage closeout and roadmap-wave completion are related but not identical; the wave exit
   signal defines the minimum learning baseline, not exhaustive concept coverage
+
+Current bounded-stage note:
+
+- Stage K is a productization bridge stage
+- it uses the completed Wave 2 MCP baseline to make one concrete `AI 前沿研究` module coherent before the project opens
+  another broader capability wave
 
 ## Primary Intent
 
@@ -187,8 +194,19 @@ Current Wave 2 baseline:
 - one true out-of-process MCP client and transport foundation now exists as a delivered bounded follow-through
 - the visible Research path now also reads that bounded out-of-process MCP transport
 - remote-MCP transport, read status, denial, and transport failure are now explicit on that same visible path
-- the remaining Stage I learning gap is one true external MCP endpoint outside this repository, plus one visible
-  Research path and one review baseline against that endpoint
+- one connector-configured true external MCP endpoint contract and validation path now exist as the next bounded follow-through
+- the visible Research path now also reads one true external MCP resource instead of the earlier repo-local subprocess fallback
+- one explicit credential/auth boundary and one final review baseline now also exist around that same true external endpoint
+
+Current Wave 2 learning gap:
+
+- one independent MCP server outside this repository
+- one product-visible MCP tool path in addition to the current resource path
+- one explicit Stage J capability contract now exists so the next MCP work can implement a coherent resource, tool,
+  prompt, auth, and transport learning path instead of another chain of narrow follow-through tasks
+- one concrete Stage J domain now exists as well: `AI 前沿研究`, focused on current AI frontier change, industry
+  evolution, and open-source ecosystem tracking
+- one explicit learning baseline that covers resources, tools, prompts, auth, transport, and review together instead of across many narrow bounded follow-through tasks
 
 #### Wave 3: Agent Orchestration and Human Approval
 

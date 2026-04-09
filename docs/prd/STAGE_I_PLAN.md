@@ -6,13 +6,13 @@
 
 ## Status
 
-- Status: active
+- Status: complete and closed
 - Opened At: 2026-04-02
 - First Task Wave: complete
 - Second Task Wave: complete
 - Third Task Wave: complete
 - Fourth Task Wave: complete
-- Fifth Task Wave: active
+- Fifth Task Wave: complete
 
 ## Position In The Project
 
@@ -38,10 +38,9 @@ multi-agent orchestration.
 - one MCP-aware trace and operator-review layer on that same visible path
 - one bounded out-of-process MCP client and transport foundation behind that same connector consent boundary
 - one remote-MCP-aware trace and operator-review layer on that same visible path
+- one connector-configured true external MCP endpoint contract and validation path behind that same connector consent
+  boundary
 - Still optional follow-through:
-  - one true external MCP endpoint outside this repository
-  - one bounded Research path that reads a true external MCP resource instead of the current repo-local subprocess server
-  - one explicit credential/auth boundary around that true external MCP endpoint
   - most MCP breadth beyond the first bounded path
   - broader connector rollout outside the same Research-first surface
 
@@ -317,9 +316,9 @@ The fourth Stage I wave is now complete:
 The fifth executable Stage I wave is:
 
 1. `tasks/archive/stage-i/stage-i-18-wave-five-planning.md`
-2. `tasks/stage-i-19-connector-configured-remote-mcp-endpoint-foundation.md`
-3. `tasks/stage-i-20-research-true-external-mcp-resource-pilot.md`
-4. `tasks/stage-i-21-remote-mcp-auth-and-review-closeout.md`
+2. `tasks/archive/stage-i/stage-i-19-connector-configured-remote-mcp-endpoint-foundation.md`
+3. `tasks/archive/stage-i/stage-i-20-research-true-external-mcp-resource-pilot.md`
+4. `tasks/archive/stage-i/stage-i-21-remote-mcp-auth-and-review-closeout.md`
 
 ### Why This Wave Exists
 
@@ -334,3 +333,25 @@ Wave 2 learning question is narrower and more realistic:
 
 This wave should stay bounded to one Research-first path and one external endpoint instead of broadening into generic
 multi-server discovery, marketplace UX, or Wave 3 orchestration.
+
+### Current Fifth-Wave Progress
+
+- complete: `stage-i-19`, which added one connector-configured true external MCP endpoint contract, one endpoint
+  validation surface, and one bounded read path without yet switching the visible Research product flow
+- complete: `stage-i-20`, which moved the visible Research external-context path onto one true external MCP resource
+  while preserving consent, snapshot reuse, and honest degraded behavior when the external endpoint is unavailable
+- complete: `stage-i-21`, which made true external MCP endpoint identity, auth state, auth detail, and honest remote
+  degraded behavior explicit in trace and operator review so the bounded Stage I implementation goal can be judged for
+  closeout
+
+### Current Fifth-Wave Outcome
+
+The fifth Stage I wave is now complete:
+
+- one connector-configured true external MCP endpoint can be described, validated, and read behind the existing
+  connector consent boundary
+- the visible Research external-context path now uses that true external MCP resource while preserving snapshot reuse
+- true external MCP endpoint identity, auth state, auth detail, and honest remote degraded behavior are now readable in
+  trace and operator-review surfaces on that same bounded path
+- Stage I no longer has an implementation gap inside its current bounded scope; the next decision is whether to close
+  the stage or continue for optional broader Wave 2 learning

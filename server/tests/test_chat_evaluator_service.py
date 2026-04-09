@@ -4,9 +4,9 @@ import pytest
 
 from app.services import chat_evaluator_service
 from app.services.chat_evaluator_service import (
+    RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION,
     ChatEvaluatorError,
     JudgeScoreResult,
-    RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION,
 )
 
 
@@ -304,10 +304,15 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
             "external_match_count": 1,
             "external_resource_snapshot_id": "snapshot-auto-1",
             "context_selection_mode": "mcp_resource",
-            "mcp_server_id": "research_context_stdio",
-            "mcp_resource_id": "research.context.digest",
-            "mcp_resource_uri": "resource://research.context.digest",
-            "mcp_resource_display_name": "Research 外部上下文摘要",
+            "mcp_server_id": "ai_frontier_external",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "not_required",
+            "mcp_resource_id": "ai.frontier.digest",
+            "mcp_resource_uri": "ai-frontier://digest",
+            "mcp_resource_display_name": "AI 前沿摘要",
+            "mcp_tool_name": "ai.frontier.search",
+            "mcp_prompt_name": "ai.frontier.brief",
             "mcp_transport": "stdio_process",
             "mcp_read_status": "used",
         },
@@ -322,7 +327,9 @@ def test_evaluate_research_analysis_run_regression_passes_for_visible_external_c
     assert review["signals"]["external_match_count"] == 1
     assert review["signals"]["resource_selection_mode"] == "auto"
     assert review["signals"]["context_selection_mode"] == "mcp_resource"
-    assert review["signals"]["mcp_resource_id"] == "research.context.digest"
+    assert review["signals"]["mcp_resource_id"] == "ai.frontier.digest"
+    assert review["signals"]["mcp_tool_name"] == "ai.frontier.search"
+    assert review["signals"]["mcp_prompt_name"] == "ai.frontier.brief"
 
 
 def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_selection() -> None:
@@ -355,6 +362,9 @@ def test_evaluate_research_analysis_run_regression_passes_for_explicit_snapshot_
             "external_resource_snapshot_id": "snapshot-explicit-1",
             "context_selection_mode": "snapshot",
             "mcp_transport": "stdio_process",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "not_required",
             "mcp_read_status": "snapshot_reused",
         },
         trace_metadata={"prompt": "analysis prompt"},
@@ -392,10 +402,15 @@ def test_evaluate_research_analysis_run_regression_detects_revoked_consent_visib
             "external_match_count": 0,
             "degraded_reason": "connector_consent_required",
             "context_selection_mode": "mcp_resource",
-            "mcp_server_id": "research_context_stdio",
-            "mcp_resource_id": "research.context.digest",
-            "mcp_resource_uri": "resource://research.context.digest",
-            "mcp_resource_display_name": "Research 外部上下文摘要",
+            "mcp_server_id": "ai_frontier_external",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "not_required",
+            "mcp_resource_id": "ai.frontier.digest",
+            "mcp_resource_uri": "ai-frontier://digest",
+            "mcp_resource_display_name": "AI 前沿摘要",
+            "mcp_tool_name": "ai.frontier.search",
+            "mcp_prompt_name": "ai.frontier.brief",
             "mcp_transport": "stdio_process",
             "mcp_read_status": "consent_required",
         },
@@ -431,6 +446,8 @@ def test_evaluate_research_analysis_run_regression_detects_missing_mcp_visibilit
             "external_context_used": False,
             "external_match_count": 0,
             "context_selection_mode": "mcp_resource",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
         },
         trace_metadata={"prompt": "analysis prompt"},
         trace_type="research_external_context_run",
@@ -438,7 +455,10 @@ def test_evaluate_research_analysis_run_regression_detects_missing_mcp_visibilit
 
     assert review["passed"] is False
     assert "missing_mcp_server_visibility" in review["issues"]
+    assert "missing_mcp_auth_state_visibility" in review["issues"]
     assert "missing_mcp_resource_visibility" in review["issues"]
+    assert "missing_mcp_tool_visibility" in review["issues"]
+    assert "missing_mcp_prompt_visibility" in review["issues"]
     assert "missing_mcp_transport_visibility" in review["issues"]
     assert "missing_remote_mcp_read_status_visibility" in review["issues"]
 
@@ -466,10 +486,15 @@ def test_evaluate_research_analysis_run_regression_requires_transport_error_on_r
             "external_context_used": False,
             "external_match_count": 0,
             "context_selection_mode": "mcp_resource",
-            "mcp_server_id": "research_context_stdio",
-            "mcp_resource_id": "research.context.digest",
-            "mcp_resource_uri": "resource://research.context.digest",
-            "mcp_resource_display_name": "Research 外部上下文摘要",
+            "mcp_server_id": "ai_frontier_external",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "not_required",
+            "mcp_resource_id": "ai.frontier.digest",
+            "mcp_resource_uri": "ai-frontier://digest",
+            "mcp_resource_display_name": "AI 前沿摘要",
+            "mcp_tool_name": "ai.frontier.search",
+            "mcp_prompt_name": "ai.frontier.brief",
             "mcp_transport": "stdio_process",
             "mcp_read_status": "transport_unavailable",
         },
@@ -479,3 +504,93 @@ def test_evaluate_research_analysis_run_regression_requires_transport_error_on_r
 
     assert review["passed"] is False
     assert "missing_mcp_transport_error_visibility" in review["issues"]
+
+
+def test_evaluate_research_analysis_run_regression_passes_for_auth_required_visibility() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "degraded",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-auth-required",
+            "answer": "这次只能回退到工作区资料。",
+            "sources": [],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "远程 MCP 需要认证。"},
+            ],
+            "run_memory": {
+                "summary": "当前端点要求认证。",
+                "recommended_next_step": "补齐外部认证配置。",
+            },
+            "degraded_reason": "external_context_auth_required",
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "granted",
+            "external_context_used": False,
+            "external_match_count": 0,
+            "context_selection_mode": "mcp_resource",
+            "mcp_server_id": "ai_frontier_external",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "missing",
+            "mcp_endpoint_auth_detail": "MCP authentication is required.",
+            "mcp_resource_id": "ai.frontier.digest",
+            "mcp_resource_uri": "ai-frontier://digest",
+            "mcp_resource_display_name": "AI 前沿摘要",
+            "mcp_tool_name": "ai.frontier.search",
+            "mcp_prompt_name": "ai.frontier.brief",
+            "mcp_transport": "stdio_process",
+            "mcp_read_status": "auth_required",
+            "mcp_transport_error": "MCP authentication is required.",
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is True
+    assert review["issues"] == []
+
+
+def test_evaluate_research_analysis_run_regression_passes_for_auth_denied_visibility() -> None:
+    review = chat_evaluator_service.evaluate_research_analysis_run_regression(
+        run_json={
+            "status": "degraded",
+            "mode": "research_external_context",
+            "trace_id": "trace-external-auth-denied",
+            "answer": "这次只能回退到工作区资料。",
+            "sources": [],
+            "tool_steps": [
+                {"tool_name": "research_external_context", "summary": "远程 MCP 拒绝了凭据。"},
+            ],
+            "run_memory": {
+                "summary": "当前凭据被远程端点拒绝。",
+                "recommended_next_step": "检查外部凭据配置。",
+            },
+            "degraded_reason": "external_context_auth_denied",
+        },
+        trace_response_json={
+            "connector_id": "research_external_context",
+            "connector_consent_state": "granted",
+            "external_context_used": False,
+            "external_match_count": 0,
+            "context_selection_mode": "mcp_resource",
+            "mcp_server_id": "ai_frontier_external",
+            "mcp_endpoint_source": "external_configured",
+            "mcp_endpoint_display_name": "AI 前沿 MCP 服务",
+            "mcp_endpoint_auth_state": "denied",
+            "mcp_endpoint_auth_detail": "MCP authentication was denied.",
+            "mcp_resource_id": "ai.frontier.digest",
+            "mcp_resource_uri": "ai-frontier://digest",
+            "mcp_resource_display_name": "AI 前沿摘要",
+            "mcp_tool_name": "ai.frontier.search",
+            "mcp_prompt_name": "ai.frontier.brief",
+            "mcp_transport": "stdio_process",
+            "mcp_read_status": "auth_denied",
+            "mcp_transport_error": "MCP authentication was denied.",
+        },
+        trace_metadata={"prompt": "analysis prompt"},
+        trace_type="research_external_context_run",
+    )
+
+    assert review["passed"] is True
+    assert review["issues"] == []

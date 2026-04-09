@@ -100,6 +100,22 @@ function getMcpServerId(trace: TraceRecord): string | null {
   return getTraceString(trace, "mcp_server_id");
 }
 
+function getMcpEndpointSource(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_endpoint_source");
+}
+
+function getMcpEndpointDisplayName(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_endpoint_display_name");
+}
+
+function getMcpEndpointAuthState(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_endpoint_auth_state");
+}
+
+function getMcpEndpointAuthDetail(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_endpoint_auth_detail");
+}
+
 function getMcpResourceId(trace: TraceRecord): string | null {
   return getTraceString(trace, "mcp_resource_id");
 }
@@ -124,111 +140,12 @@ function getMcpTransportError(trace: TraceRecord): string | null {
   return getTraceString(trace, "mcp_transport_error");
 }
 
-function formatConsentState(state: string | null | undefined): string {
-  if (state === "granted") {
-    return "已授权";
-  }
-  if (state === "revoked") {
-    return "已撤销";
-  }
-  if (state === "not_granted") {
-    return "未授权";
-  }
-  return "未记录";
+function getMcpToolName(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_tool_name");
 }
 
-function formatResourceSelectionMode(mode: ResearchAnalysisReviewRecord["resource_selection_mode"]): string {
-  if (mode === "explicit") {
-    return "显式选择";
-  }
-  if (mode === "auto") {
-    return "自动生成";
-  }
-  return "未使用快照";
-}
-
-function formatContextSelectionMode(
-  mode: ResearchAnalysisReviewRecord["context_selection_mode"] | string | null | undefined,
-): string {
-  if (mode === "snapshot") {
-    return "资源快照";
-  }
-  if (mode === "mcp_resource") {
-    return "MCP 资源";
-  }
-  return "未使用";
-}
-
-function formatMcpTransport(transport: string | null | undefined): string {
-  if (transport === "stdio_process") {
-    return "进程外 stdio";
-  }
-  if (transport === "local_inproc") {
-    return "进程内本地";
-  }
-  return "未记录";
-}
-
-function formatMcpReadStatus(status: string | null | undefined): string {
-  if (status === "consent_required") {
-    return "未授权，未尝试读取";
-  }
-  if (status === "consent_revoked") {
-    return "授权已撤销，未尝试读取";
-  }
-  if (status === "snapshot_reused") {
-    return "复用已选快照，未读取远程 MCP";
-  }
-  if (status === "used") {
-    return "已成功读取并使用远程 MCP";
-  }
-  if (status === "transport_unavailable") {
-    return "远程 MCP 暂不可用";
-  }
-  if (status === "no_useful_matches") {
-    return "已读取远程 MCP，但没有有效内容";
-  }
-  return "未记录";
-}
-
-function getPilotOutcomeLabel(trace: TraceRecord): string {
-  if (trace.error_message) {
-    return "试点失败";
-  }
-
-  const degradedReason = getPilotDegradedReason(trace);
-  if (degradedReason === "no_documents") {
-    return "诚实降级：没有资料";
-  }
-  if (degradedReason === "no_grounded_matches") {
-    return "诚实降级：没有命中有依据的内容";
-  }
-  if (degradedReason === "connector_consent_required") {
-    return "诚实降级：工作区尚未授权外部信息";
-  }
-  if (degradedReason === "connector_consent_revoked") {
-    return "诚实降级：外部信息授权已撤销";
-  }
-  if (degradedReason === "external_context_unavailable") {
-    return "诚实降级：远程 MCP 暂不可用";
-  }
-  if (degradedReason === "external_context_no_useful_matches") {
-    return "诚实降级：远程 MCP 没有命中有效内容";
-  }
-  if (degradedReason === "selected_external_resource_snapshot_empty") {
-    return "诚实降级：选中的资源快照为空";
-  }
-
-  if (getExternalContextUsed(trace) === true) {
-    return "已使用外部信息";
-  }
-
-  const sources = trace.response_json["sources"];
-  if (Array.isArray(sources) && sources.length > 0) {
-    return "已有有依据的结果";
-  }
-
-  return "试点已完成";
+function getMcpPromptName(trace: TraceRecord): string | null {
+  return getTraceString(trace, "mcp_prompt_name");
 }
 
 function isPilotTrace(trace: TraceRecord): boolean {
@@ -248,6 +165,79 @@ function renderJson(payload: JsonObject): string {
   return JSON.stringify(payload, null, 2);
 }
 
+function formatConsentState(state: string | null | undefined): string {
+  if (state === "granted") return "已授权";
+  if (state === "revoked") return "已撤销";
+  if (state === "not_granted") return "未授权";
+  return "未记录";
+}
+
+function formatResourceSelectionMode(mode: ResearchAnalysisReviewRecord["resource_selection_mode"]): string {
+  if (mode === "explicit") return "显式选择";
+  if (mode === "auto") return "自动生成";
+  return "未使用快照";
+}
+
+function formatContextSelectionMode(
+  mode: ResearchAnalysisReviewRecord["context_selection_mode"] | string | null | undefined,
+): string {
+  if (mode === "snapshot") return "资源快照";
+  if (mode === "mcp_resource") return "MCP 资源";
+  return "未使用";
+}
+
+function formatMcpTransport(transport: string | null | undefined): string {
+  if (transport === "stdio_process") return "子进程 stdio";
+  if (transport === "local_inproc") return "进程内本地";
+  return "未记录";
+}
+
+function formatMcpReadStatus(status: string | null | undefined): string {
+  if (status === "consent_required") return "未授权，未尝试读取";
+  if (status === "consent_revoked") return "授权已撤销，未尝试读取";
+  if (status === "auth_required") return "端点要求认证，但当前没有可用凭据";
+  if (status === "auth_denied") return "远程端点拒绝当前凭据";
+  if (status === "snapshot_reused") return "复用已选快照，未读取远程 MCP";
+  if (status === "used") return "已成功读取并使用远程 MCP";
+  if (status === "transport_unavailable") return "远程 MCP 暂时不可用";
+  if (status === "no_useful_matches") return "已读取远程 MCP，但没有有效内容";
+  return "未记录";
+}
+
+function formatMcpEndpointSource(source: string | null | undefined): string {
+  if (source === "external_configured") return "外部配置端点";
+  if (source === "repo_local") return "仓库内基线端点";
+  return "未记录";
+}
+
+function formatMcpEndpointAuthState(state: string | null | undefined): string {
+  if (state === "configured") return "已配置";
+  if (state === "missing") return "缺少认证";
+  if (state === "denied") return "认证被拒";
+  if (state === "not_required") return "不需要认证";
+  return "未记录";
+}
+
+function getPilotOutcomeLabel(trace: TraceRecord): string {
+  if (trace.error_message) return "试点失败";
+
+  const degradedReason = getPilotDegradedReason(trace);
+  if (degradedReason === "no_documents") return "诚实降级：没有资料";
+  if (degradedReason === "no_grounded_matches") return "诚实降级：没有命中有依据的内容";
+  if (degradedReason === "connector_consent_required") return "诚实降级：工作区尚未授权外部信息";
+  if (degradedReason === "connector_consent_revoked") return "诚实降级：外部信息授权已撤销";
+  if (degradedReason === "external_context_unavailable") return "诚实降级：远程 MCP 暂时不可用";
+  if (degradedReason === "external_context_no_useful_matches") return "诚实降级：远程 MCP 没有有效内容";
+  if (degradedReason === "selected_external_resource_snapshot_empty") return "诚实降级：选中的资源快照为空";
+
+  if (getExternalContextUsed(trace) === true) return "已使用外部信息";
+
+  const sources = trace.response_json["sources"];
+  if (Array.isArray(sources) && sources.length > 0) return "已有有依据的结果";
+
+  return "试点已完成";
+}
+
 function formatReviewIssue(issue: string): string {
   switch (issue) {
     case "run_failed":
@@ -255,7 +245,7 @@ function formatReviewIssue(issue: string): string {
     case "missing_trace_link":
       return "缺少 trace 关联。";
     case "invalid_trace_type":
-      return "trace 类型不是预期的 Research 运行类型。";
+      return "trace 类型不是预期的 AI 前沿研究运行类型。";
     case "missing_prompt":
       return "trace 里没有保留 prompt。";
     case "missing_answer":
@@ -286,8 +276,18 @@ function formatReviewIssue(issue: string): string {
       return "资源选择方式和实际快照使用不一致。";
     case "missing_mcp_server_visibility":
       return "MCP 服务标识不可见。";
+    case "missing_mcp_endpoint_visibility":
+      return "MCP 端点信息不可见。";
+    case "missing_mcp_auth_state_visibility":
+      return "MCP 认证状态不可见。";
+    case "missing_mcp_auth_detail_visibility":
+      return "MCP 认证细节不可见。";
     case "missing_mcp_resource_visibility":
       return "MCP 资源标识不可见。";
+    case "missing_mcp_tool_visibility":
+      return "MCP 工具标识不可见。";
+    case "missing_mcp_prompt_visibility":
+      return "MCP 提示标识不可见。";
     case "missing_mcp_transport_visibility":
       return "MCP 传输方式不可见。";
     case "missing_remote_mcp_read_status_visibility":
@@ -305,8 +305,9 @@ function formatReviewIssue(issue: string): string {
 
 function renderReviewCard(review: ResearchAnalysisReviewRecord) {
   const selectedSnapshotLabel =
-    review.selected_external_resource_snapshot_title ?? review.selected_external_resource_snapshot_id;
-  const usedSnapshotLabel = review.external_resource_snapshot_title ?? review.external_resource_snapshot_id;
+    review.selected_external_resource_snapshot_title ?? review.selected_external_resource_snapshot_id ?? "未记录";
+  const usedSnapshotLabel =
+    review.external_resource_snapshot_title ?? review.external_resource_snapshot_id ?? "未记录";
 
   return (
     <div
@@ -314,62 +315,82 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
       style={{
         backgroundColor: "#ffffff",
         border: `1px solid ${review.passed ? "#bbf7d0" : "#fecaca"}`,
-        borderRadius: 10,
+        borderRadius: 12,
         display: "grid",
-        gap: 6,
-        padding: 10,
+        gap: 8,
+        padding: 12,
       }}
     >
-      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
+      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
         <strong style={{ color: "#0f172a" }}>{review.question}</strong>
-        <span style={{ color: review.passed ? "#166534" : "#b91c1c", fontSize: 13, fontWeight: 700 }}>
+        <span
+          style={{
+            backgroundColor: review.passed ? "#dcfce7" : "#fee2e2",
+            borderRadius: 999,
+            color: review.passed ? "#166534" : "#b91c1c",
+            fontSize: 12,
+            padding: "2px 8px",
+          }}
+        >
           {review.passed ? "通过" : "需复核"}
         </span>
       </div>
-
       <div style={{ color: "#475569", fontSize: 13 }}>
-        状态：{review.status}
-        {review.trace_id ? ` | Trace：${review.trace_id}` : ""}
+        状态：{review.status} | 模式：{review.mode} | 结束时间：
+        {review.completed_at ? new Date(review.completed_at).toLocaleString() : "未结束"}
       </div>
-      <div style={{ color: "#475569", fontSize: 13 }}>
-        模式：{review.mode === "research_external_context" ? "外部信息试点" : "工具辅助分析"}
-      </div>
-
+      {review.trace_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>Trace：{review.trace_id}</div>
+      ) : null}
       {review.connector_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
-          连接器：{review.connector_id} | 授权：{formatConsentState(review.connector_consent_state)} | 外部信息：
+          连接器：{review.connector_id} | 授权：{formatConsentState(review.connector_consent_state)}
+        </div>
+      ) : null}
+      {review.connector_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>
+          外部信息：
           {review.external_context_used === true ? "已使用" : review.external_context_used === false ? "未使用" : "未记录"}
           {typeof review.external_match_count === "number" ? ` | 命中数：${review.external_match_count}` : ""}
         </div>
       ) : null}
-
-      {review.connector_id ? (
+      <div style={{ color: "#475569", fontSize: 13 }}>
+        上下文路径：{formatContextSelectionMode(review.context_selection_mode)} | 快照选择：
+        {formatResourceSelectionMode(review.resource_selection_mode)}
+      </div>
+      {review.context_selection_mode === "snapshot" ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
-          快照选择：{formatResourceSelectionMode(review.resource_selection_mode)} | 上下文路径：
-          {formatContextSelectionMode(review.context_selection_mode)}
-          {selectedSnapshotLabel ? ` | 显式快照：${selectedSnapshotLabel}` : ""}
-          {usedSnapshotLabel ? ` | 实际快照：${usedSnapshotLabel}` : ""}
+          已选快照：{selectedSnapshotLabel} | 实际使用快照：{usedSnapshotLabel}
         </div>
       ) : null}
-
       {review.connector_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
-          MCP 传输：{formatMcpTransport(review.mcp_transport)} | 读取状态：{formatMcpReadStatus(review.mcp_read_status)}
+          端点来源：{formatMcpEndpointSource(review.mcp_endpoint_source)} | 认证状态：
+          {formatMcpEndpointAuthState(review.mcp_endpoint_auth_state)}
+          {review.mcp_endpoint_display_name ? ` | 端点：${review.mcp_endpoint_display_name}` : ""}
         </div>
       ) : null}
-
+      {review.mcp_endpoint_auth_detail ? (
+        <div style={{ color: "#b45309", fontSize: 13 }}>认证细节：{review.mcp_endpoint_auth_detail}</div>
+      ) : null}
       {review.mcp_transport_error ? (
         <div style={{ color: "#b45309", fontSize: 13 }}>MCP 传输错误：{review.mcp_transport_error}</div>
       ) : null}
-
       {review.context_selection_mode === "mcp_resource" ? (
         <div style={{ color: "#475569", fontSize: 13 }}>
           MCP 服务：{review.mcp_server_id ?? "未记录"}
           {review.mcp_resource_display_name ? ` | MCP 资源：${review.mcp_resource_display_name}` : ""}
+          {review.mcp_tool_name ? ` | MCP 工具：${review.mcp_tool_name}` : ""}
+          {review.mcp_prompt_name ? ` | MCP 提示：${review.mcp_prompt_name}` : ""}
           {review.mcp_resource_uri ? ` | URI：${review.mcp_resource_uri}` : ""}
         </div>
       ) : null}
-
+      {review.connector_id ? (
+        <div style={{ color: "#475569", fontSize: 13 }}>
+          MCP 传输：{formatMcpTransport(review.mcp_transport)} | 读取状态：
+          {formatMcpReadStatus(review.mcp_read_status)}
+        </div>
+      ) : null}
       {review.resumed_from_run_id ? (
         <div style={{ color: "#475569", fontSize: 13 }}>续跑来源：{review.resumed_from_run_id}</div>
       ) : null}
@@ -381,7 +402,6 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           <strong>运行记忆摘要：</strong> {review.run_memory_summary}
         </div>
       ) : null}
-
       {review.issues.length > 0 ? (
         <div style={{ display: "grid", gap: 4 }}>
           <strong style={{ color: "#0f172a" }}>复核问题</strong>
@@ -394,7 +414,7 @@ function renderReviewCard(review: ResearchAnalysisReviewRecord) {
           </ul>
         </div>
       ) : (
-        <div style={{ color: "#166534" }}>这条运行满足当前远程 MCP 回归基线。</div>
+        <div style={{ color: "#166534" }}>这条运行满足当前 MCP 学习闭环基线。</div>
       )}
     </div>
   );
@@ -466,7 +486,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
     >
       <div style={{ display: "flex", gap: 12, justifyContent: "space-between", marginBottom: 12 }}>
         <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
-          这里会展示最近的 trace、Research 运行复核，以及最近保存的外部资源快照。
+          这里会展示最近的 trace、AI 前沿研究运行复核，以及最近保存的外部资源快照。
         </p>
         <button onClick={() => void loadObservability()} type="button">
           {isLoading ? "刷新中..." : "刷新可观测面"}
@@ -485,7 +505,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
             padding: 12,
           }}
         >
-          <strong style={{ color: "#0f172a" }}>Research 运行回归复核</strong>
+          <strong style={{ color: "#0f172a" }}>AI 前沿研究运行复核</strong>
           <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
             基线版本 {review.baseline_version} 已复核最近 {review.reviewed_count} 个结束态运行，其中 {review.passing_count} 个通过，
             {review.failing_count} 个需要人工复核。
@@ -506,7 +526,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
             padding: 12,
           }}
         >
-          <strong style={{ color: "#0f172a" }}>Research 试点追踪概览</strong>
+          <strong style={{ color: "#0f172a" }}>研究试点追踪概览</strong>
           <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
             最近 {pilotTraces.length} 条试点追踪里，有 {degradedPilotCount} 条走了诚实降级路径。
             {externalPilotTraces.length > 0 ? ` 其中 ${externalPilotTraces.length} 条属于外部信息试点。` : ""}
@@ -528,7 +548,7 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
         >
           <strong style={{ color: "#581c87" }}>最近外部资源快照</strong>
           <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>
-            这些快照表示最近真正进入分析链路的外部资源结果，便于核对当前 Research 试点到底用了哪些外部上下文。
+            这些快照表示最近真正进入分析链路的外部资源结果，便于核对当前 AI 前沿研究路径到底用了哪些外部上下文。
           </p>
           <div style={{ display: "grid", gap: 10 }}>
             {snapshots.map((snapshot) => (
@@ -565,7 +585,9 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
           const toolSteps = readToolSteps(trace);
           const degradedReason = getPilotDegradedReason(trace);
           const resumedFromRunId = getTraceString(trace, "resumed_from_run_id");
-          const runMemory = (trace.response_json["run_memory"] ?? trace.metadata_json["run_memory"]) as JsonObject | undefined;
+          const runMemory = (trace.response_json["run_memory"] ?? trace.metadata_json["run_memory"]) as
+            | JsonObject
+            | undefined;
           const runMemorySummary = runMemory ? readString(runMemory["summary"]) : null;
           const runMemoryNextStep = runMemory ? readString(runMemory["recommended_next_step"]) : null;
           const connectorId = getConnectorId(trace);
@@ -574,9 +596,15 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
           const externalMatchCount = getExternalMatchCount(trace);
           const contextSelectionMode = getContextSelectionMode(trace);
           const mcpServerId = getMcpServerId(trace);
+          const mcpEndpointSource = getMcpEndpointSource(trace);
+          const mcpEndpointDisplayName = getMcpEndpointDisplayName(trace);
+          const mcpEndpointAuthState = getMcpEndpointAuthState(trace);
+          const mcpEndpointAuthDetail = getMcpEndpointAuthDetail(trace);
           const mcpResourceId = getMcpResourceId(trace);
           const mcpResourceUri = getMcpResourceUri(trace);
           const mcpResourceDisplayName = getMcpResourceDisplayName(trace);
+          const mcpToolName = getMcpToolName(trace);
+          const mcpPromptName = getMcpPromptName(trace);
           const mcpTransport = getMcpTransport(trace);
           const mcpReadStatus = getMcpReadStatus(trace);
           const mcpTransportError = getMcpTransportError(trace);
@@ -667,6 +695,18 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
                       {formatMcpReadStatus(mcpReadStatus)}
                     </div>
                   ) : null}
+                  {connectorId ? (
+                    <div>
+                      <strong>端点来源：</strong> {formatMcpEndpointSource(mcpEndpointSource)} | <strong>认证状态：</strong>
+                      {formatMcpEndpointAuthState(mcpEndpointAuthState)}
+                      {mcpEndpointDisplayName ? ` | 端点：${mcpEndpointDisplayName}` : ""}
+                    </div>
+                  ) : null}
+                  {mcpEndpointAuthDetail ? (
+                    <div>
+                      <strong>认证细节：</strong> {mcpEndpointAuthDetail}
+                    </div>
+                  ) : null}
                   {mcpTransportError ? (
                     <div>
                       <strong>MCP 传输错误：</strong> {mcpTransportError}
@@ -679,6 +719,13 @@ export default function ObservabilityPanel({ workspaceId }: ObservabilityPanelPr
                       {mcpResourceDisplayName ? <div>资源：{mcpResourceDisplayName}</div> : null}
                       {mcpResourceId ? <div>资源 ID：{mcpResourceId}</div> : null}
                       {mcpResourceUri ? <div>URI：{mcpResourceUri}</div> : null}
+                    </div>
+                  ) : null}
+                  {mcpToolName || mcpPromptName ? (
+                    <div style={{ display: "grid", gap: 4 }}>
+                      <strong>MCP 工具与提示</strong>
+                      {mcpToolName ? <div>工具：{mcpToolName}</div> : null}
+                      {mcpPromptName ? <div>提示：{mcpPromptName}</div> : null}
                     </div>
                   ) : null}
                   {degradedReason ? (

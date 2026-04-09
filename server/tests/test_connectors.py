@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.schemas.connector import ConnectorConsentGrantRequest, ConnectorConsentRevokeRequest
+from app.schemas.mcp import AI_FRONTIER_DIGEST_RESOURCE_ID, AI_FRONTIER_STDIO_MCP_SERVER_ID
 from app.services import connector_service
 
 
@@ -194,8 +195,35 @@ def test_get_workspace_connector_mcp_status_returns_process_foundation(client: T
     payload = response.json()
     assert payload["connector_status"]["connector"]["id"] == connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID
     assert payload["connector_status"]["consent_state"] == "not_granted"
-    assert payload["server"]["id"] == "research_context_stdio"
+    assert payload["endpoint"]["source"] == "repo_local"
+    assert payload["endpoint"]["launch_kind"] == "python_module"
+    assert payload["auth_state"] == "not_required"
+    assert payload["server"]["id"] == AI_FRONTIER_STDIO_MCP_SERVER_ID
     assert payload["server"]["transport"] == "stdio_process"
     assert len(payload["resources"]) == 1
-    assert payload["resources"][0]["id"] == "research.context.digest"
+    assert payload["resources"][0]["id"] == AI_FRONTIER_DIGEST_RESOURCE_ID
     assert payload["resources"][0]["connector_id"] == connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID
+    assert payload["tools"] == []
+    assert payload["prompts"] == []
+
+
+def test_validate_workspace_connector_mcp_status_returns_ready_health(client: TestClient) -> None:
+    auth = _register_and_login(client, email="mcp-validate@example.com", name="MCP Validate")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    response = client.get(
+        f"/api/v1/workspaces/{workspace_id}/connectors/{connector_service.RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID}/mcp/validate",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["endpoint"]["source"] == "repo_local"
+    assert payload["auth_state"] in {"not_required", "missing"}
+    assert payload["health_status"] == "not_configured"
+    assert "True external MCP endpoint is not configured" in payload["health_detail"]
+    assert payload["server"] is None
+    assert len(payload["resources"]) == 1
+    assert payload["resources"][0]["id"] == AI_FRONTIER_DIGEST_RESOURCE_ID
+    assert payload["tools"] == []
+    assert payload["prompts"] == []

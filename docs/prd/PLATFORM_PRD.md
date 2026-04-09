@@ -35,11 +35,11 @@ These are reusable scenario modules on one shared platform core, not three separ
 - Core capabilities: knowledge-base Q&A, ticket classification, reply drafting, escalation guidance
 - Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
 
-### Research Assistant
+### AI Frontier Research
 
-- Work object: workspace-scoped document sets, evidence, and open research questions
-- Primary output: evidence-backed synthesis and workspace reports
-- Core capabilities: grounded retrieval, multi-document summarization, viewpoint comparison, report generation
+- Work object: high-trust current AI source material, derived themes, events, projects, and durable research records
+- Primary output: frontier summaries, trend judgments, project cards, and research records
+- Core capabilities: latest-source intake, AI frontier synthesis, project and event extraction, link-backed project cards
 - Not responsible for: ticket triage, reply drafting, candidate-to-role matching
 
 ## Platform Capabilities
@@ -121,13 +121,13 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`, is now complete and closed.
 `Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`, is now complete and closed.
 `Stage H`, documented in `docs/prd/STAGE_H_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage I`, documented in `docs/prd/STAGE_I_PLAN.md`.
+The active formal planning unit is now `Stage K`, documented in `docs/prd/STAGE_K_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage H`,
-and is now executing `Stage I`.
+The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage J`,
+and is now executing `Stage K`.
 
 The current implemented platform increment includes:
 
@@ -142,7 +142,7 @@ The current implemented platform increment includes:
 - a LangGraph-powered `workspace_research_agent` and static tool registry
 - a chat evaluator framework that combines rule checks with an independently configured LLM judge path
 - workspace module contracts for research, support, and job
-- a Research Assistant MVP that produces structured scenario results through the shared task / agent / tool runtime
+- one `AI 前沿研究` baseline that now runs through the shared task / agent / tool runtime and the completed MCP learning path
 - structured Support Copilot and Job Assistant workflows on the same shared platform primitives
 - scenario-specific eval baselines and quality summaries for research, support, and job
 - cross-module workspace navigation and entry surfaces
@@ -190,6 +190,9 @@ The current implemented platform increment includes:
 - one visible Research path that now reads that bounded out-of-process MCP resource while preserving explicit consent
   and snapshot reuse
 - one remote-MCP-aware trace and operator-review baseline for that same visible path
+- one connector-configured true external MCP endpoint contract and one validation surface behind that same connector
+- one visible Research path that now reads one true external MCP resource while preserving consent and snapshot reuse
+  boundary
 
 The repository does not yet implement:
 
@@ -212,8 +215,14 @@ closed.
 and closed.
 `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented in `docs/prd/STAGE_H_PLAN.md`, is
 complete and closed.
-The active formal planning unit is `Stage I: Connector and Context Plane Pilot`, documented in
-`docs/prd/STAGE_I_PLAN.md`.
+The active formal planning unit is `Stage K: AI Frontier Research Productization`, documented in
+`docs/prd/STAGE_K_PLAN.md`.
+
+Stage K now starts from a different question than Stage J. Stage J asked how the project could learn MCP coherently
+through one independent server and one full product-side path. Stage K asks how that completed MCP baseline should
+actually serve one concrete module. The answer is `AI 前沿研究`: a workflow that starts from current high-trust AI
+source material, derives themes, events, and projects from that inflow, and produces summaries, judgments, project
+cards, and durable research records instead of behaving like generic broad Research chat.
 
 Stage H is now complete. The bounded Research-first capability path now includes explicit background analysis runs,
 compact resumed-run memory, and one operator-visible replay/regression baseline before the roadmap opens connector or
@@ -235,9 +244,16 @@ fourth Stage I wave is now also complete: the repo has one true out-of-process M
 server contract behind that same connector boundary. The first two tasks in the fourth Stage I wave are now also
 complete: the visible Research path now reads that bounded out-of-process MCP resource while preserving explicit
 consent and snapshot reuse. The fourth Stage I wave is now fully complete: remote-MCP transport, read status, denial,
-transport failure, and degraded outcomes are now readable in operator review on that same visible path. The next
-active work is no longer repo-local MCP transport; it is to move the same bounded Research path onto one true external
-MCP endpoint with an explicit credential/auth boundary.
+transport failure, and degraded outcomes are now readable in operator review on that same visible path. The first task
+in the fifth Stage I wave is now complete as well: the repo can now describe, validate, and read one connector-
+configured true external MCP endpoint, the visible Research flow now uses that same true external MCP resource instead
+of the earlier repo-local fallback, and endpoint identity, credential/auth state, auth detail, and honest remote
+degraded behavior are now visible in trace and operator review. Stage I is now closed. Stage J opens next, still
+inside Wave 2, because the project wants one complete MCP learning path built around one independent MCP server and one
+fuller product-side MCP integration rather than more narrow follow-through on the old Stage I baseline. That Stage J
+contract is now fixed as one independent server plus one resource, one tool, one prompt, one stdio transport, and one
+bearer-style token auth model so the next work can stay coherent. That next work now serves `AI 前沿研究`, not the
+older generic Research concept.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with
 `tasks/archive/stage-a/stage-a-02-research-contracts-and-structured-results.md` and

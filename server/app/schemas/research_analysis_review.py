@@ -26,7 +26,13 @@ class ResearchAnalysisReviewRecord(BaseModel):
     mcp_resource_id: str | None = None
     mcp_resource_uri: str | None = None
     mcp_resource_display_name: str | None = None
+    mcp_tool_name: str | None = None
+    mcp_prompt_name: str | None = None
     mcp_transport: str | None = None
+    mcp_endpoint_source: str | None = None
+    mcp_endpoint_display_name: str | None = None
+    mcp_endpoint_auth_state: str | None = None
+    mcp_endpoint_auth_detail: str | None = None
     mcp_read_status: str | None = None
     mcp_transport_error: str | None = None
     passed: bool

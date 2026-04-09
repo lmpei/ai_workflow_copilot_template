@@ -851,13 +851,21 @@ export type ResearchAnalysisReviewRecord = {
   resource_selection_mode?: "explicit" | "auto" | "none" | null;
   context_selection_mode?: "snapshot" | "mcp_resource" | "none" | null;
   mcp_server_id?: string | null;
+  mcp_endpoint_source?: "repo_local" | "external_configured" | null;
+  mcp_endpoint_display_name?: string | null;
+  mcp_endpoint_auth_state?: "not_required" | "configured" | "missing" | "denied" | null;
+  mcp_endpoint_auth_detail?: string | null;
   mcp_resource_id?: string | null;
   mcp_resource_uri?: string | null;
   mcp_resource_display_name?: string | null;
+  mcp_tool_name?: string | null;
+  mcp_prompt_name?: string | null;
   mcp_transport?: "local_inproc" | "stdio_process" | null;
   mcp_read_status?:
     | "consent_required"
     | "consent_revoked"
+    | "auth_required"
+    | "auth_denied"
     | "snapshot_reused"
     | "used"
     | "transport_unavailable"

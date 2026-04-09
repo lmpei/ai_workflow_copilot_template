@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 from functools import lru_cache
 from typing import Annotated
 
@@ -47,6 +48,19 @@ class Settings(BaseSettings):
     public_demo_max_documents_per_workspace: int = 12
     public_demo_max_tasks_per_workspace: int = 30
     public_demo_max_upload_bytes: int = 5 * 1024 * 1024
+    research_external_mcp_enabled: bool = False
+    research_external_mcp_command: Annotated[list[str], NoDecode] = []
+    research_external_mcp_working_directory: str = ""
+    research_external_mcp_auth_required: bool = False
+    research_external_mcp_auth_token: str = ""
+    research_external_mcp_expected_auth_token: str = ""
+    research_external_mcp_resource_id: str = "ai.frontier.digest"
+    research_external_mcp_resource_uri: str = "ai-frontier://digest"
+    research_external_mcp_server_id: str = "ai_frontier_external"
+    research_external_mcp_server_display_name: str = "AI 前沿研究外部 MCP 服务"
+    research_external_mcp_server_summary: str = "通过一个仓库外的 MCP 端点读取 AI 前沿研究所需的高可信外部上下文。"
+    research_external_mcp_resource_display_name: str = "AI 前沿摘要"
+    research_external_mcp_resource_summary: str = "来自独立 MCP 服务端的 AI 前沿摘要资源。"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
 
@@ -70,6 +84,27 @@ class Settings(BaseSettings):
                     return [str(item).strip() for item in parsed if str(item).strip()]
 
         return [item.strip() for item in normalized.split(",") if item.strip()]
+
+    @field_validator("research_external_mcp_command", mode="before")
+    @classmethod
+    def parse_research_external_mcp_command(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+
+        normalized = value.strip()
+        if normalized == "":
+            return []
+
+        if normalized.startswith("["):
+            try:
+                parsed = json.loads(normalized)
+            except json.JSONDecodeError:
+                pass
+            else:
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+
+        return [item.strip() for item in shlex.split(normalized) if item.strip()]
 
     @field_validator("auth_secret_key")
     @classmethod

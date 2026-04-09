@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 from app.connectors.research_external_context_connector import search_research_external_context
 from app.schemas.mcp import (
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
-    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME,
-    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+    AI_FRONTIER_DIGEST_RESOURCE_DISPLAY_NAME,
+    AI_FRONTIER_DIGEST_RESOURCE_ID,
+    AI_FRONTIER_DIGEST_RESOURCE_URI,
+    AI_FRONTIER_LOCAL_MCP_SERVER_DISPLAY_NAME,
+    AI_FRONTIER_LOCAL_MCP_SERVER_ID,
     McpResourceDefinition,
     McpResourceItem,
     McpResourceReadResult,
@@ -52,7 +52,7 @@ class ResearchContextLocalMcpServer:
                 for entry in matches
             )
         else:
-            text = "没有找到与当前研究问题明显相关的外部上下文摘要。"
+            text = "没有找到与当前 AI 前沿研究问题明显相关的补充上下文。"
         return McpResourceReadResult(
             server=self.server,
             resource=resource,
@@ -64,19 +64,19 @@ class ResearchContextLocalMcpServer:
 
 def build_research_context_local_mcp_server() -> ResearchContextLocalMcpServer:
     server = McpServerDefinition(
-        id=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
-        display_name=RESEARCH_CONTEXT_LOCAL_MCP_SERVER_DISPLAY_NAME,
-        summary="提供一个有边界的 Research 外部上下文资源，用来验证 MCP 资源接入、授权边界和可观测性。",
+        id=AI_FRONTIER_LOCAL_MCP_SERVER_ID,
+        display_name=AI_FRONTIER_LOCAL_MCP_SERVER_DISPLAY_NAME,
+        summary="提供一条受限的本地 MCP 摘要资源，用来对照独立 AI 前沿 MCP 服务端的主路径。",
         transport="local_inproc",
         module_types=["research"],
-        resource_ids=[RESEARCH_CONTEXT_DIGEST_RESOURCE_ID],
+        resource_ids=[AI_FRONTIER_DIGEST_RESOURCE_ID],
     )
     resources = (
         McpResourceDefinition(
-            id=RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-            uri=RESEARCH_CONTEXT_DIGEST_RESOURCE_URI,
-            display_name=RESEARCH_CONTEXT_DIGEST_RESOURCE_DISPLAY_NAME,
-            summary="根据当前研究问题返回一份有边界的外部上下文摘要，作为 MCP 资源试点输入。",
+            id=AI_FRONTIER_DIGEST_RESOURCE_ID,
+            uri=AI_FRONTIER_DIGEST_RESOURCE_URI,
+            display_name=AI_FRONTIER_DIGEST_RESOURCE_DISPLAY_NAME,
+            summary="根据当前问题返回一份有边界的 AI 前沿摘要。",
             mime_type="text/markdown",
             module_types=["research"],
             connector_id=RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,

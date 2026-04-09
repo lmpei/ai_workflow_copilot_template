@@ -1815,3 +1815,233 @@ Append-only log. Add new entries at the bottom.
   toward true external MCP rather than opening Wave 3 orchestration early.
 - Related Task: `tasks/archive/stage-i/stage-i-18-wave-five-planning.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-07-114
+- Date: 2026-04-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-19 connector-configured remote MCP endpoint foundation
+- Context: after `stage-i-17`, the repo could read one repo-local out-of-process MCP path with clear review signals,
+  but it still had no contract for one true external MCP endpoint outside this repository.
+- Choice: complete `stage-i-19`, add one connector-configured external MCP endpoint contract, one validation surface,
+  and one bounded read path, archive the task, and move Stage I to the visible true-external MCP Research pilot.
+- Why: the repo should prove it can describe and reach a true external MCP endpoint before the visible product path is
+  switched over.
+- Impact: Stage I no longer stops at repo-local subprocess transport; the next bounded task can now move the visible
+  Research path onto a configured true external MCP endpoint while preserving consent and snapshot reuse.
+- Related Task: `tasks/archive/stage-i/stage-i-19-connector-configured-remote-mcp-endpoint-foundation.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-07-115
+- Date: 2026-04-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-20 true external MCP Research pilot
+- Context: after `stage-i-19`, the repo could describe, validate, and read one connector-configured true external MCP
+  endpoint, but the visible Research path could still fall back to the earlier repo-local subprocess baseline.
+- Choice: complete `stage-i-20`, move the visible `research_external_context` path onto one true external MCP resource,
+  preserve consent, snapshot reuse, and honest degraded behavior, archive the task, and move Stage I to auth/review
+  closeout on that same endpoint.
+- Why: the repo should prove one real product-facing true external MCP path instead of stopping at endpoint
+  configuration or repo-local fallback behavior.
+- Impact: Stage I now has one visible Research path against a true external MCP endpoint; the remaining gap is one
+  explicit credential/auth and review closeout around that same path.
+- Related Task: `tasks/archive/stage-i/stage-i-20-research-true-external-mcp-resource-pilot.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-116
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-i-21 remote MCP auth and review closeout
+- Context: `stage-i-20` moved the visible Research path onto one true external MCP endpoint, but operators still could
+  not clearly see endpoint identity, endpoint auth state, endpoint auth detail, or whether remote degraded outcomes
+  came from auth, transport, or no-useful-match conditions.
+- Choice: complete `stage-i-21`, make true external MCP endpoint identity plus auth-state signals explicit in trace and
+  operator review, archive the task, and return Stage I to a human closeout decision instead of automatically opening a
+  new implementation task.
+- Why: the repo should not claim one bounded true external MCP baseline unless the same visible Research path also keeps
+  auth and degraded behavior readable enough for honest operator review.
+- Impact: Stage I no longer has a bounded implementation gap inside its current scope; the next decision is whether to
+  close the stage or keep exploring broader optional Wave 2 MCP breadth.
+- Related Task: `tasks/archive/stage-i/stage-i-21-remote-mcp-auth-and-review-closeout.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-117
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human
+- Topic: close Stage I and open Stage J for complete MCP learning
+- Context: Stage I already delivered one bounded true external MCP baseline with explicit auth and review visibility,
+  but the owner wants MCP to be learned as one fuller coherent system rather than by adding more narrow follow-through
+  tasks to the old pilot.
+- Choice: close Stage I as complete, open Stage J, and re-scope MCP work around one independent MCP server plus one
+  fuller product-side MCP integration that covers resources, tools, prompts, auth, transport, and review more
+  coherently.
+- Why: the next learning goal is no longer another bounded Stage I MCP increment; it is a more complete MCP mental
+  model and implementation path.
+- Impact: Stage J becomes the active bounded stage while the broader roadmap wave remains Wave 2.
+- Related Task: `tasks/archive/stage-j/stage-j-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-118
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Documentation
+- Topic: complete stage-j-02 MCP capability map and independent server contract
+- Context: Stage J opened because the owner wanted MCP to be learned as one complete system rather than through more
+  narrow follow-through on the old Stage I baseline, but the repo still lacked one fixed capability map for what the
+  next MCP system should actually include.
+- Choice: complete `stage-j-02`, define one explicit MCP capability map, fix the boundary between this product repo and
+  the future independent MCP server, and lock the first Stage J capability set to one resource (`research.context.digest`),
+  one tool (`research.context.search`), one prompt (`research.context.brief`), one stdio transport, and one
+  bearer-style token auth contract; archive the task; and move the active task to the independent MCP server bootstrap.
+- Why: the project should stop redefining MCP scope on each task and should instead implement one coherent learning
+  target from a fixed contract.
+- Impact: Stage J now has one durable target for later implementation work, and future tasks can focus on building the
+  independent server and product integration instead of renegotiating the MCP model.
+- Related Task: `tasks/archive/stage-j/stage-j-02-mcp-capability-map-and-independent-server-contract.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-119
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human
+- Topic: replace the older generic Research definition with AI Frontier Research
+- Context: the older generic Research module was too broad to provide one coherent MCP learning target or one clear
+  user-facing domain. The owner clarified that the real goal is to stay aligned with current AI change, especially
+  around frontier developments, industry evolution, and open-source ecosystem movement.
+- Choice: replace the older generic Research product definition with `AI 前沿研究`, define it as a workflow that starts
+  from high-trust current sources, derives themes, events, and projects from that inflow, and produces summaries,
+  judgments, project cards, and durable research records with source links separated from the main prose.
+- Why: the product needs one concrete domain so Stage J MCP work can teach a coherent system instead of serving another
+  vague anything-research surface.
+- Impact: future MCP work, product framing, and workflow design should treat `AI 前沿研究` as the reference module
+  instead of the older generic Research concept, while Support and Job remain unchanged.
+- Related Task: `tasks/archive/stage-j/stage-j-06-ai-frontier-research-redefinition.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-120
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-j-03 independent MCP server bootstrap
+- Context: Stage J fixed one MCP capability map and one repo boundary, but the product still lacked an actual
+  independent MCP server outside this repository. Until that server existed, MCP understanding would remain partly
+  theoretical.
+- Choice: complete `stage-j-03`, create the independent MCP server at `D:\ai-try\weave-mcp-server`, expose one
+  resource (`ai.frontier.digest`), one tool (`ai.frontier.search`), one prompt (`ai.frontier.brief`), keep one
+  bearer-token auth contract, and validate the server through one smoke path.
+- Why: the project needs one server that is truly outside this repository so MCP can be learned end to end instead of
+  through repo-local stand-ins only.
+- Impact: Stage J now has a real independent MCP server boundary and a running external server that the product repo
+  can call.
+- Related Task: `tasks/archive/stage-j/stage-j-03-independent-mcp-server-repo-bootstrap.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-121
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-j-04 product resource, tool, and prompt integration
+- Context: after `stage-j-03`, the project had one independent MCP server, but the visible product path still needed to
+  show the difference between MCP resource, MCP tool, and MCP prompt behavior inside `AI 前沿研究`.
+- Choice: complete `stage-j-04`, update the visible `AI 前沿研究` MCP path so it uses one MCP resource for digest
+  context, one MCP prompt for reusable research framing, and one MCP tool for project or event search, while
+  preserving consent, snapshot reuse, explicit degraded behavior, and product-host stability.
+- Why: MCP should be understood through a running product path, not only through docs or server-side theory.
+- Impact: the current repo can now act as an MCP client against the independent server in a way that makes resource,
+  tool, and prompt semantics visible on the same user-facing workflow.
+- Related Task: `tasks/archive/stage-j/stage-j-04-product-resource-tool-prompt-integration.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-122
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-j-05 auth, observability, and learning closeout
+- Context: `stage-j-04` made resource, tool, and prompt behavior visible on the same `AI 前沿研究` path, but the
+  Stage J learning target was still incomplete until MCP tool identity, prompt identity, auth outcome, transport
+  outcome, and degraded behavior stayed readable enough for operators and future review.
+- Choice: complete `stage-j-05`, extend run traces and regression review to include MCP tool and prompt identity,
+  improve the operator-facing review surface, archive the task, and write a short Stage J learning summary in `AI 前沿研究`
+  terms.
+- Why: the project should finish Stage J with one coherent, reviewable MCP learning path rather than with a partially
+  visible implementation that still hides important protocol behavior.
+- Impact: the visible MCP path is now inspectable across resource, tool, prompt, auth, transport, and degraded
+  outcomes, and the repo now has one durable closeout summary for what Stage J actually taught.
+- Related Task: `tasks/archive/stage-j/stage-j-05-auth-observability-and-learning-closeout.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-08-123
+- Date: 2026-04-08
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: close Stage J as complete
+- Context: all Stage J tasks are now finished: the MCP capability map is fixed, the independent server exists outside
+  this repo, the visible `AI 前沿研究` path uses MCP resource, tool, and prompt distinctly, and auth plus review signals
+  are now visible enough for learning and operator inspection.
+- Choice: close Stage J as complete instead of opening another default MCP task inside the same stage.
+- Why: the bounded Stage J goal was a coherent MCP learning path, and that goal is now met. Any further work should
+  start from a fresh stage decision instead of extending Stage J by inertia.
+- Impact: Stage J is now closed, `STATUS.md` no longer points to an active implementation task, and the next step is a
+  human decision about the next bounded stage.
+- Related Task: `tasks/archive/stage-j/stage-j-05-auth-observability-and-learning-closeout.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-124
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human
+- Topic: open Stage K after Stage J closeout
+- Context: Stage J completed one coherent MCP learning path, but the visible product surface still carried too much of
+  the older generic Research shape. The next work should not reopen MCP as the main story; it should turn that MCP
+  baseline into one concrete module workflow.
+- Choice: open `Stage K: AI Frontier Research Productization`.
+- Why: the next bounded goal is product coherence around `AI 前沿研究`, not more protocol learning for its own sake.
+- Impact: the active planning unit moves to `docs/prd/STAGE_K_PLAN.md`, and later implementation should prioritize
+  module definition, object model, source intake, output shape, and surface reframe over more generic MCP breadth.
+- Related Task: `tasks/archive/stage-k/stage-k-01-task-stack-planning.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-125
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Planning
+- Topic: define the first Stage K task wave
+- Context: after opening Stage K, the repo needed one bounded execution wave that could turn the completed MCP baseline
+  into a coherent `AI 前沿研究` module without reopening broad capability work.
+- Choice: define the first Stage K wave as:
+  - `tasks/stage-k-02-ai-frontier-object-model-and-language-shift.md`
+  - `tasks/stage-k-03-latest-source-intake-and-research-record-foundation.md`
+  - `tasks/stage-k-04-frontier-summary-judgment-and-project-card-outputs.md`
+  - `tasks/stage-k-05-ai-frontier-workbench-surface-reframe.md`
+- Why: the completed MCP baseline now needs one concrete product shape: narrower language, a real object model, a
+  latest-source workflow, structured frontier outputs, and a clearer workbench surface.
+- Impact: Stage K now has one explicit bounded execution wave, and `stage-k-02` becomes the active task.
+- Related Task: `tasks/archive/stage-k/stage-k-01-task-stack-planning.md`
+- Supersedes:

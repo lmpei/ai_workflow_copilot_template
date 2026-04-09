@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-07
+- Last Updated: 2026-04-09
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -16,8 +16,8 @@ same primitives.
 Support owns one persistent case workbench layer and one direct case-action loop: a user can continue a case from the
 case itself while still going through the shared task runtime. Job owns one persistent hiring-packet workbench layer and
 one direct hiring-packet action loop: a user can continue shortlist or candidate-review work from the packet itself
-while still going through the shared task runtime. Research remains the reference workflow when the product needs one
-clear primary path.
+while still going through the shared task runtime. The older generic Research definition is now replaced at the product
+definition layer by `AI 前沿研究`, which becomes the reference workflow when the product needs one clear primary path.
 
 Stage F is complete and closed after the experience reset that produced one denser product home, one
 research-workflow-oriented main workspace, and one clearer distinction between primary work and summoned supporting
@@ -52,9 +52,11 @@ That second Stage H wave is now complete as well: recent terminal Research analy
 operator-facing regression review alongside the existing trace view, so replay and resumed-run honesty can be reviewed
 without pretending the repo already has a full optimization flywheel.
 
-The current bounded stage is Stage I. It moves the repo from internal-only tool use toward one connector and
-context-plane pilot, keeps Research as the reference workflow, and adds explicit consent and degraded behavior before
-any broader connector surface or multi-agent work begins.
+Stage I is now complete and closed. It moved the repo from internal-only tool use toward one connector and
+context-plane pilot, kept Research as the reference workflow, and added explicit consent and degraded behavior before
+broader connector work opened. The next bounded stage is Stage J, which keeps the same Wave 2 roadmap family but
+changes the learning style: instead of more narrow MCP follow-through inside this repo, it should build one more
+complete MCP understanding path around one independent MCP server plus one fuller product-side integration.
 
 The first Stage I foundation is now in place as well: the backend has one bounded external-context connector contract and one workspace-level connector consent boundary for Research workspaces.
 
@@ -75,13 +77,40 @@ The third task in the second Stage I wave is now also complete: recent terminal 
 resource-aware review baseline that makes selected snapshots, actual used snapshots, resource-selection mode, and
 consent-lifecycle consistency visible to operators instead of leaving those checks implicit in raw trace payloads.
 
-Stage I remains active. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP
+Stage I is complete and closed. The third Stage I wave is now complete: the repo has one bounded local MCP server, one MCP
 resource contract, one visible Research MCP-backed path on the existing `research_external_context` surface, and one
 MCP-aware trace and operator-review layer on that same path. The fourth Stage I wave is now also complete: the repo
 now has one true out-of-process MCP client and transport foundation behind the same consent boundary, the visible
 Research path now reads that bounded out-of-process MCP resource while still preserving snapshot reuse and honest
 degraded behavior, and remote-MCP transport, read status, and transport failure now stay readable in trace and operator
-review on that same visible path.
+review on that same visible path. The first two tasks in the fifth Stage I wave are now complete as well: the repo can
+describe, validate, and read one connector-configured true external MCP endpoint, and the visible Research path now
+uses that true external MCP resource instead of falling back to the earlier repo-local subprocess baseline. The
+explicit credential/auth and review closeout around that same true external MCP endpoint is now also complete. The
+bounded Stage I implementation gap is now closed. Stage J opens next because the project wants one complete MCP
+learning path instead of more bounded follow-through on the same pilot baseline.
+
+The first Stage J task is now complete as well: the project has one explicit MCP capability map, one explicit
+boundary between the product repo and the future independent MCP server, and one fixed first capability set made of one
+resource, one tool, one prompt, one stdio transport, and one bearer-token auth contract. Later Stage J work should
+now implement that full shape instead of redefining MCP scope on every task.
+
+The next two Stage J tasks are now also complete: one independent MCP server now exists outside this repository at
+`D:\ai-try\weave-mcp-server`, and the visible `AI 前沿研究` path in this repository now uses MCP resource, tool, and
+prompt behavior distinctly instead of treating MCP as resource-only context.
+
+The final Stage J task is now complete as well: MCP tool identity, prompt identity, auth outcome, transport outcome,
+and degraded behavior are now reviewable enough on the same `AI 前沿研究` path that the project can treat Stage J as a
+closed learning stage instead of an open MCP catch-all.
+
+Stage K is now active. It does not reopen MCP as another protocol-learning stage. Instead, it uses the completed
+Stage J MCP baseline to turn the old generic Research surface into one concrete `AI 前沿研究` workbench with a narrower
+object model, latest-source intake, structured outputs, and a clearer product surface.
+
+The module focus is now also narrowed: the product no longer treats Research as a generic anything-research surface.
+`AI 前沿研究` now means a workflow that starts from current high-trust AI source material, derives themes, events, and
+projects from that inflow, and produces summaries, judgments, project cards, and durable research records with sources
+kept separate from the main prose.
 
 ## Roadmap Alignment
 
@@ -91,36 +120,39 @@ review on that same visible path.
   - `Wave 2: Connector and Context Plane`
 - Interpretation rule:
   - bounded stages are execution units; roadmap waves are broader concept families with minimum exit signals
-- Current Stage I baseline:
+- Current Stage K baseline:
   - one connector-backed Research integration with explicit consent, snapshots, and operator review is now delivered
   - one bounded local MCP server and MCP resource contract now sit behind that same Research-first permission model
   - one visible Research path can now actually read bounded out-of-process MCP-backed context through that same permission model
   - one bounded out-of-process MCP client and transport foundation now exists behind that same connector boundary
   - one MCP-aware trace and review baseline now makes MCP use, denial, degraded behavior, resource identity,
     transport choice, read status, and transport failure visible to operators
+  - one connector-configured true external MCP endpoint contract and validation path now exist behind that same
+    connector boundary
+  - one visible Research path now reads one true external MCP resource while preserving consent and snapshot reuse
+  - one explicit Stage J capability contract now fixes the first independent MCP server shape and the first resource,
+    tool, prompt, transport, and auth model
+  - the reference workflow is now explicitly `AI 前沿研究` rather than the older generic Research definition
 - Still deferred:
-  - one true external MCP endpoint outside this repository
-  - one bounded Research path that reads a true external MCP resource instead of the current repo-local subprocess server
-  - one explicit credential/auth boundary around that true external MCP endpoint
-  - most MCP breadth across hosts, resources, prompts, and tools
   - any broader multi-module rollout on top of MCP
+  - later roadmap-wave work after `AI 前沿研究` productization is coherent
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
 - Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, Stage F
-  complete, Stage G complete, Stage H complete, and Stage I active
+  complete, Stage G complete, Stage H complete, Stage I complete, Stage J complete, and Stage K active
 
 ## Success Criteria
 
 The platform is useful when the same core APIs and runtime can support research, support, and job workflows without
 forking the architecture. The active bounded stage should preserve that shared-platform model while adding one explicit
 connector-backed Research path with clear consent, resource, and review boundaries, plus one actual visible
-MCP-backed follow-through on top of that baseline. The next learning gap is no longer whether the repo can host a true
-out-of-process MCP client and transport foundation or whether remote-MCP use stays readable after the product path
-switches; it is whether the same bounded Research path can talk to one true external MCP endpoint with an explicit
-credential/auth boundary and the same honest review standard. Roadmap-wave completion is a separate judgment against
-the exit signals in `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
+true-external-MCP follow-through on top of that baseline. Stage I already met that bounded goal. Stage J now exists to
+learn MCP more completely by building one independent MCP server and one fuller product-side integration path for `AI 前沿研究`
+instead of extending the older bounded pilot indefinitely. Roadmap-wave completion is a separate judgment against the exit
+signals in
+`docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
 
 ## Technology Stack
 
@@ -157,11 +189,15 @@ the exit signals in `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive conc
 - `docs/prd/STAGE_H_PLAN.md`
   - closed Stage H planning document for the first bounded model-interface modernization wave
 - `docs/prd/STAGE_I_PLAN.md`
-  - active Stage I planning document for the bounded connector and context-plane pilot wave
+  - closed Stage I planning document for the bounded connector and context-plane pilot wave
+- `docs/prd/STAGE_J_PLAN.md`
+  - closed Stage J planning document for the complete MCP understanding stage
+- `docs/prd/STAGE_K_PLAN.md`
+  - active Stage K planning document for AI Frontier Research productization
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage I work uses `stage-i-*`
+  - active Stage K work uses `stage-k-*`
 - root control-plane docs
   - `AGENTS.md`, `CONTEXT.md`, `STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`
 
@@ -194,8 +230,14 @@ the exit signals in `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive conc
   - the bounded product-only stack where the first model-interface modernization wave shipped without collapsing the
     stable public-demo boundary
 - `stage-i-connector-wave`
-  - the same product-only stack, but now treated as the bounded environment where one connector and context-plane pilot
-    can ship with explicit consent and degraded-path visibility
+  - the same product-only stack, but treated as the bounded environment where one connector and context-plane pilot
+    shipped with explicit consent and degraded-path visibility
+- `stage-j-complete-mcp-wave`
+  - the same product-only stack, but treated as the bounded environment where one fuller MCP understanding path was
+    learned through one independent MCP server plus one clearer product integration
+- `stage-k-ai-frontier-productization-wave`
+  - the same product-only stack, but now treated as the bounded environment where the completed MCP baseline is turned
+    into one concrete `AI 前沿研究` module workflow
 
 ## Verification
 

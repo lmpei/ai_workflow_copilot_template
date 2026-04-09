@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from typing import Any
 
@@ -7,16 +8,16 @@ from app.mcp.research_context_local_server import (
     build_research_context_local_mcp_server,
 )
 from app.schemas.mcp import (
-    RESEARCH_CONTEXT_STDIO_MCP_SERVER_DISPLAY_NAME,
-    RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID,
+    AI_FRONTIER_STDIO_MCP_SERVER_DISPLAY_NAME,
+    AI_FRONTIER_STDIO_MCP_SERVER_ID,
     McpServerDefinition,
 )
 
 _SERVER = build_research_context_local_mcp_server()
 _STDIO_SERVER = McpServerDefinition(
-    id=RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID,
-    display_name=RESEARCH_CONTEXT_STDIO_MCP_SERVER_DISPLAY_NAME,
-    summary="通过一个独立的本地子进程暴露同一份有边界的 Research MCP 资源，用来验证真实进程外读取路径。",
+    id=AI_FRONTIER_STDIO_MCP_SERVER_ID,
+    display_name=AI_FRONTIER_STDIO_MCP_SERVER_DISPLAY_NAME,
+    summary="通过一个独立的本地子进程暴露受限 AI 前沿 MCP 资源，便于对照真实外部 MCP 主路径。",
     transport="stdio_process",
     module_types=["research"],
     resource_ids=[resource.id for resource in _SERVER.resources],
@@ -46,9 +47,19 @@ def _handle_request(payload: dict[str, Any]) -> dict[str, Any]:
     request_id = payload.get("id")
     method = payload.get("method")
     params = payload.get("params") if isinstance(payload.get("params"), dict) else {}
+    auth_payload = params.get("auth") if isinstance(params.get("auth"), dict) else {}
+    auth_token = auth_payload.get("token") if isinstance(auth_payload.get("token"), str) else None
 
     if payload.get("jsonrpc") != "2.0":
         return _error_response(request_id, -32600, "Only JSON-RPC 2.0 requests are supported.")
+
+    auth_required = os.getenv("RESEARCH_CONTEXT_STDIO_AUTH_REQUIRED", "").strip().lower() == "true"
+    expected_token = os.getenv("RESEARCH_CONTEXT_STDIO_EXPECTED_TOKEN", "").strip()
+    if auth_required:
+        if not auth_token:
+            return _error_response(request_id, -32010, "MCP authentication is required.")
+        if expected_token and auth_token != expected_token:
+            return _error_response(request_id, -32011, "MCP authentication was denied.")
 
     if method == "initialize":
         return _success_response(

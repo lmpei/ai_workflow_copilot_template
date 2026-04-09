@@ -1,11 +1,20 @@
-﻿from app.repositories import research_analysis_run_repository, trace_repository, workspace_repository
-from app.schemas.research_analysis_review import ResearchAnalysisReviewRecord, ResearchAnalysisReviewResponse
+﻿from app.repositories import (
+    research_analysis_run_repository,
+    trace_repository,
+    workspace_repository,
+)
+from app.schemas.research_analysis_review import (
+    ResearchAnalysisReviewRecord,
+    ResearchAnalysisReviewResponse,
+)
 from app.services.chat_evaluator_service import (
     RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION,
     evaluate_research_analysis_run_regression,
 )
-from app.services.research_analysis_run_service import ResearchAnalysisRunAccessError, ResearchAnalysisRunValidationError
-
+from app.services.research_analysis_run_service import (
+    ResearchAnalysisRunAccessError,
+    ResearchAnalysisRunValidationError,
+)
 
 _TERMINAL_REVIEW_STATUSES = {"completed", "degraded", "failed"}
 
@@ -77,6 +86,24 @@ def list_workspace_research_analysis_review(
         selected_snapshot_title = None
         external_snapshot_title = None
         mcp_server_id = signals.get("mcp_server_id") if isinstance(signals.get("mcp_server_id"), str) else None
+        mcp_endpoint_source = (
+            signals.get("mcp_endpoint_source") if isinstance(signals.get("mcp_endpoint_source"), str) else None
+        )
+        mcp_endpoint_display_name = (
+            signals.get("mcp_endpoint_display_name")
+            if isinstance(signals.get("mcp_endpoint_display_name"), str)
+            else None
+        )
+        mcp_endpoint_auth_state = (
+            signals.get("mcp_endpoint_auth_state")
+            if isinstance(signals.get("mcp_endpoint_auth_state"), str)
+            else None
+        )
+        mcp_endpoint_auth_detail = (
+            signals.get("mcp_endpoint_auth_detail")
+            if isinstance(signals.get("mcp_endpoint_auth_detail"), str)
+            else None
+        )
         mcp_resource_id = signals.get("mcp_resource_id") if isinstance(signals.get("mcp_resource_id"), str) else None
         mcp_resource_uri = signals.get("mcp_resource_uri") if isinstance(signals.get("mcp_resource_uri"), str) else None
         mcp_resource_display_name = (
@@ -84,6 +111,8 @@ def list_workspace_research_analysis_review(
             if isinstance(signals.get("mcp_resource_display_name"), str)
             else None
         )
+        mcp_tool_name = signals.get("mcp_tool_name") if isinstance(signals.get("mcp_tool_name"), str) else None
+        mcp_prompt_name = signals.get("mcp_prompt_name") if isinstance(signals.get("mcp_prompt_name"), str) else None
         mcp_transport = signals.get("mcp_transport") if isinstance(signals.get("mcp_transport"), str) else None
         mcp_read_status = signals.get("mcp_read_status") if isinstance(signals.get("mcp_read_status"), str) else None
         mcp_transport_error = (
@@ -141,9 +170,15 @@ def list_workspace_research_analysis_review(
                     else None
                 ),
                 mcp_server_id=mcp_server_id,
+                mcp_endpoint_source=mcp_endpoint_source,
+                mcp_endpoint_display_name=mcp_endpoint_display_name,
+                mcp_endpoint_auth_state=mcp_endpoint_auth_state,
+                mcp_endpoint_auth_detail=mcp_endpoint_auth_detail,
                 mcp_resource_id=mcp_resource_id,
                 mcp_resource_uri=mcp_resource_uri,
                 mcp_resource_display_name=mcp_resource_display_name,
+                mcp_tool_name=mcp_tool_name,
+                mcp_prompt_name=mcp_prompt_name,
                 mcp_transport=mcp_transport,
                 mcp_read_status=mcp_read_status,
                 mcp_transport_error=mcp_transport_error,

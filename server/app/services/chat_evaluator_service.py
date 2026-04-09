@@ -12,7 +12,7 @@ from app.services.model_interface_service import (
 )
 
 DEFAULT_PASS_THRESHOLD = 0.7
-RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_i_remote_mcp_review_v2"
+RESEARCH_ANALYSIS_RUN_REGRESSION_BASELINE_VERSION = "stage_j_mcp_learning_closeout_v1"
 
 
 class ChatEvaluatorError(Exception):
@@ -374,10 +374,40 @@ def evaluate_research_analysis_run_regression(
         response_json.get("mcp_resource_display_name"),
         metadata_json.get("mcp_resource_display_name"),
     )
+    mcp_tool_name = _read_string(
+        run_json.get("mcp_tool_name"),
+        response_json.get("mcp_tool_name"),
+        metadata_json.get("mcp_tool_name"),
+    )
+    mcp_prompt_name = _read_string(
+        run_json.get("mcp_prompt_name"),
+        response_json.get("mcp_prompt_name"),
+        metadata_json.get("mcp_prompt_name"),
+    )
     mcp_transport = _read_string(
         run_json.get("mcp_transport"),
         response_json.get("mcp_transport"),
         metadata_json.get("mcp_transport"),
+    )
+    mcp_endpoint_source = _read_string(
+        run_json.get("mcp_endpoint_source"),
+        response_json.get("mcp_endpoint_source"),
+        metadata_json.get("mcp_endpoint_source"),
+    )
+    mcp_endpoint_display_name = _read_string(
+        run_json.get("mcp_endpoint_display_name"),
+        response_json.get("mcp_endpoint_display_name"),
+        metadata_json.get("mcp_endpoint_display_name"),
+    )
+    mcp_endpoint_auth_state = _read_string(
+        run_json.get("mcp_endpoint_auth_state"),
+        response_json.get("mcp_endpoint_auth_state"),
+        metadata_json.get("mcp_endpoint_auth_state"),
+    )
+    mcp_endpoint_auth_detail = _read_string(
+        run_json.get("mcp_endpoint_auth_detail"),
+        response_json.get("mcp_endpoint_auth_detail"),
+        metadata_json.get("mcp_endpoint_auth_detail"),
     )
     mcp_read_status = _read_string(
         run_json.get("mcp_read_status"),
@@ -451,12 +481,24 @@ def evaluate_research_analysis_run_regression(
             or (resource_selection_mode == "none" and external_context_used is True and bool(external_resource_snapshot_id))
         ),
         "mcp_server_visibility_when_applicable": (not is_mcp_resource_path) or bool(mcp_server_id),
+        "mcp_endpoint_visibility_when_applicable": (not is_external_context_run)
+        or (
+            bool(mcp_endpoint_source)
+            and bool(mcp_endpoint_display_name)
+        ),
+        "mcp_auth_state_visibility_when_applicable": (not is_external_context_run)
+        or mcp_endpoint_auth_state in {"not_required", "configured", "missing", "denied"},
+        "mcp_auth_detail_visibility_when_applicable": (not is_external_context_run)
+        or mcp_endpoint_auth_state not in {"missing", "denied"}
+        or bool(mcp_endpoint_auth_detail),
         "mcp_resource_visibility_when_applicable": (not is_mcp_resource_path)
         or (
             bool(mcp_resource_id)
             and bool(mcp_resource_uri)
             and bool(mcp_resource_display_name)
         ),
+        "mcp_tool_visibility_when_applicable": (not is_mcp_resource_path) or bool(mcp_tool_name),
+        "mcp_prompt_visibility_when_applicable": (not is_mcp_resource_path) or bool(mcp_prompt_name),
         "mcp_transport_visibility_when_applicable": (not is_external_context_run)
         or mcp_transport in {"stdio_process", "local_inproc"},
         "mcp_read_status_visibility_when_applicable": (not is_external_context_run)
@@ -464,6 +506,8 @@ def evaluate_research_analysis_run_regression(
         in {
             "consent_required",
             "consent_revoked",
+            "auth_required",
+            "auth_denied",
             "snapshot_reused",
             "used",
             "transport_unavailable",
@@ -484,6 +528,20 @@ def evaluate_research_analysis_run_regression(
             and mcp_read_status == "consent_revoked"
             and external_context_used is False
             and external_match_count == 0
+        )
+        or (
+            context_selection_mode == "mcp_resource"
+            and degraded_reason == "external_context_auth_required"
+            and mcp_read_status == "auth_required"
+            and mcp_endpoint_auth_state == "missing"
+            and external_context_used is False
+        )
+        or (
+            context_selection_mode == "mcp_resource"
+            and degraded_reason == "external_context_auth_denied"
+            and mcp_read_status == "auth_denied"
+            and mcp_endpoint_auth_state == "denied"
+            and external_context_used is False
         )
         or (
             context_selection_mode == "snapshot"
@@ -565,8 +623,18 @@ def evaluate_research_analysis_run_regression(
         issues.append("inconsistent_resource_selection_visibility")
     if checks["mcp_server_visibility_when_applicable"] is False:
         issues.append("missing_mcp_server_visibility")
+    if checks["mcp_endpoint_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_endpoint_visibility")
+    if checks["mcp_auth_state_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_auth_state_visibility")
+    if checks["mcp_auth_detail_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_auth_detail_visibility")
     if checks["mcp_resource_visibility_when_applicable"] is False:
         issues.append("missing_mcp_resource_visibility")
+    if checks["mcp_tool_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_tool_visibility")
+    if checks["mcp_prompt_visibility_when_applicable"] is False:
+        issues.append("missing_mcp_prompt_visibility")
     if checks["mcp_transport_visibility_when_applicable"] is False:
         issues.append("missing_mcp_transport_visibility")
     if checks["mcp_read_status_visibility_when_applicable"] is False:
@@ -603,9 +671,15 @@ def evaluate_research_analysis_run_regression(
             "resource_selection_mode": resource_selection_mode,
             "context_selection_mode": context_selection_mode,
             "mcp_server_id": mcp_server_id,
+            "mcp_endpoint_source": mcp_endpoint_source,
+            "mcp_endpoint_display_name": mcp_endpoint_display_name,
+            "mcp_endpoint_auth_state": mcp_endpoint_auth_state,
+            "mcp_endpoint_auth_detail": mcp_endpoint_auth_detail,
             "mcp_resource_id": mcp_resource_id,
             "mcp_resource_uri": mcp_resource_uri,
             "mcp_resource_display_name": mcp_resource_display_name,
+            "mcp_tool_name": mcp_tool_name,
+            "mcp_prompt_name": mcp_prompt_name,
             "mcp_transport": mcp_transport,
             "mcp_read_status": mcp_read_status,
             "mcp_transport_error": mcp_transport_error,

@@ -1,15 +1,14 @@
-"""Bounded MCP foundations for Stage I."""
+"""Bounded MCP foundations for the current product baseline."""
 
 from app.mcp.research_context_local_server import (
-    RESEARCH_CONTEXT_DIGEST_RESOURCE_ID,
-    RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID,
+    AI_FRONTIER_LOCAL_MCP_SERVER_ID,
     ResearchContextLocalMcpServer,
 )
-from app.schemas.mcp import RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID
+from app.schemas.mcp import AI_FRONTIER_DIGEST_RESOURCE_ID, AI_FRONTIER_STDIO_MCP_SERVER_ID
 
 __all__ = [
-    "RESEARCH_CONTEXT_DIGEST_RESOURCE_ID",
-    "RESEARCH_CONTEXT_LOCAL_MCP_SERVER_ID",
-    "RESEARCH_CONTEXT_STDIO_MCP_SERVER_ID",
+    "AI_FRONTIER_DIGEST_RESOURCE_ID",
+    "AI_FRONTIER_LOCAL_MCP_SERVER_ID",
+    "AI_FRONTIER_STDIO_MCP_SERVER_ID",
     "ResearchContextLocalMcpServer",
 ]

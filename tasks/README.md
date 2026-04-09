@@ -41,6 +41,10 @@ current state of the project.
 - Archive completed Stage I tasks under `tasks/archive/stage-i/`.
 - Stage I may contain multiple bounded waves; do not treat a completed bounded wave as automatic justification to open
   a new stage while the current roadmap concept still has explicitly planned follow-through.
+- Use `stage-j-*` naming for Stage J work.
+- Archive completed Stage J tasks under `tasks/archive/stage-j/`.
+- Use `stage-k-*` naming for Stage K work.
+- Archive completed Stage K tasks under `tasks/archive/stage-k/`.
 - If the planning model changes again in a later stage, record that choice in `DECISIONS.md` before changing naming.
 
 ## Relationship to Other Docs

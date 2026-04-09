@@ -533,6 +533,8 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
             mcp_resource_display_name="Research 外部上下文摘要",
             mcp_transport="stdio_process",
             mcp_read_status="used",
+            mcp_tool_name="ai.frontier.search",
+            mcp_prompt_name="ai.frontier.brief",
             context_selection_mode="mcp_resource",
         )
 
@@ -578,6 +580,8 @@ def test_run_research_analysis_run_execution_supports_external_context_mode(
     assert traces[0].response_json["external_resource_snapshot_id"] == payload["external_resource_snapshot"]["id"]
     assert traces[0].response_json["mcp_transport"] == "stdio_process"
     assert traces[0].response_json["mcp_read_status"] == "used"
+    assert traces[0].response_json["mcp_tool_name"] == "ai.frontier.search"
+    assert traces[0].response_json["mcp_prompt_name"] == "ai.frontier.brief"
 
 
 def test_create_research_analysis_run_can_select_existing_external_resource_snapshot(
