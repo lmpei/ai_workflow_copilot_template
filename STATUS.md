@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-09
+- Last Updated: 2026-04-17
 
 ## Project Mode
 
@@ -23,15 +23,15 @@ Current state only. Keep this file short, current, and action-oriented.
 - Stage H complete and closed
 - Stage I complete and closed
 - Stage J complete and closed
-- Stage K active
+- Stage K complete and closed
 
 ## Current Objective
 
-- productize `AI 前沿研究` on top of the completed Stage J MCP baseline without reopening MCP as the main story
+- keep refining the post-Stage-K `AI 热点追踪` surface now that the local Docker dev loop is set up for more stable polling-based hot reload
 
 ## Active Task
 
-- `tasks/stage-k-02-ai-frontier-object-model-and-language-shift.md`
+- none currently fixed; wait for the next bounded task before opening a new active spec
 
 ## Current Roadmap Alignment
 
@@ -41,17 +41,22 @@ Current state only. Keep this file short, current, and action-oriented.
   - `Wave 2: Connector and Context Plane`
 - Interpretation rule:
   - the bounded stage is the execution unit; the roadmap wave remains the broader concept family
-- Current Wave 2 baseline:
-  - one connector-backed `AI 前沿研究` integration with explicit consent, snapshots, review, MCP transport, and one
-    independent MCP server path is now in place
-- Current bounded gap:
-  - the product surface still carries too much of the older generic Research shape and now needs one concrete
-    `AI 前沿研究` object model, workflow, and output contract
+- Current baseline:
+  - `AI 热点追踪` now has one structured content pipeline, one lightweight all-workspaces entry, one permanent owner-only workspace delete path, one split report plus `追问` layout, one repaired saved-record path that persists empty follow-up collections correctly, and one homepage-mounted auth overlay entry surface
 
 ## Verification Status
 
-- Summary: Stage G is complete and closed after the multi-subdomain cutover. Stage H is complete and closed after the bounded model-interface and tool-visible Research baseline. Stage I is complete and closed after five bounded connector and context-plane waves delivered one consent-aware connector baseline, one snapshot-backed external-context baseline, one local MCP baseline, one out-of-process MCP transport baseline, and one true external MCP endpoint baseline with explicit auth and review visibility. Stage J is complete and closed after one independent MCP server plus one visible `AI 前沿研究` integration made resource, tool, prompt, auth, transport, and review behavior learnable through one coherent path. Stage K is now open to turn that technical baseline into one concrete module workflow.
-- Last Verified At: 2026-04-09
+- Summary:
+  - local Docker development now enables polling-based file watching for the backend and frontend, so routine code edits should not require repeated rebuilds
+  - `AI 热点追踪` saved-record load no longer requests an invalid limit
+  - `/workspaces` is now a real lightweight page instead of a redirect
+  - owners can now permanently delete a workspace and its associated data after confirmation
+  - the AI hot tracker report path now retries one invalid structured draft before returning an explicit generation failure
+  - saving a hot-tracker report now writes `source_set.follow_ups` as a real list at the source path
+  - historical saved records have an Alembic backfill that normalizes missing `follow_ups` values to `[]`
+  - protected product pages now land on one homepage-mounted auth overlay instead of showing a retained auth-required card or a separate login/register UI
+
+- Last Verified At: 2026-04-17
 
 ## Current Blockers
 
@@ -59,18 +64,22 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. complete the Stage K language shift so the repo no longer falls back to broad generic Research wording
-2. keep the live `weave` and `api` hosts stable while the independent MCP server remains outside this repo at `D:\ai-try\weave-mcp-server`
-3. preserve one visible `AI 前沿研究` path that uses MCP resource, tool, and prompt distinctly while the product surface is being reframed
+1. keep tightening `AI 热点追踪` report readability, typography, and visual hierarchy
+2. keep refining the split surface so the right `追问` module feels like a first-class companion rather than a helper rail
+3. decide whether workspace deletion should also be exposed from additional module surfaces beyond `/workspaces`
 
 ## Last Completed Task
 
-- `tasks/archive/stage-k/stage-k-01-task-stack-planning.md`
+- `tasks/archive/ai-hot-tracker-report-scroll-and-panel-polish.md`
 
 ## Recent Decisions
 
-- `DEC-2026-04-08-121` complete `stage-j-04`, move the visible `AI 前沿研究` MCP path from resource-only reading to combined resource, tool, and prompt usage while preserving consent, degraded behavior, and product-host stability
-- `DEC-2026-04-08-122` complete `stage-j-05`, make MCP tool and prompt identity visible in run traces, review, and operator-facing surfaces, and write one Stage J learning closeout summary in `AI 前沿研究` terms
-- `DEC-2026-04-08-123` close Stage J as complete; the next step is a human decision about the next bounded stage rather than another default MCP follow-through task
-- `DEC-2026-04-09-124` open Stage K so the completed Stage J MCP baseline can be turned into one concrete `AI 前沿研究` module instead of remaining mostly a technical learning path
-- `DEC-2026-04-09-125` define the first Stage K wave around object-model shift, latest-source intake, output restructuring, and workbench reframe for `AI 前沿研究`
+- `DEC-2026-04-09-130` close Stage K as complete; the next step is a human decision about the next bounded stage rather than another default Stage K follow-through task
+- `DEC-2026-04-15-131` simplify the post-Stage-K AI frontier workbench by removing the right rail, hiding analysis-mode switches, deleting separate formal-output actions, and keeping the default user path focused on source intake, one current result, and recent records
+- `DEC-2026-04-15-132` rename the visible module from `AI 前沿研究` to `AI 热点追踪`, adopt `AI Signal Tracker` as the English subtitle, and redesign the home plus workbench surfaces around that narrower product identity
+- `DEC-2026-04-16-133` start one bounded `AI 热点追踪` content-pipeline rebuild around trusted external source intake, one structured middle layer, and one structured report-generation path
+- `DEC-2026-04-17-134` make workspace deletion permanent, owner-only, and explicit
+- `DEC-2026-04-17-135` fix saved-record follow-up shape at the write path and normalize historical data
+- `DEC-2026-04-17-136` remove the retained auth-required surface from protected product paths and restore the prior path after login
+- `DEC-2026-04-17-137` collapse frontend auth into one account-entry surface that auto-registers unknown accounts and signs in existing accounts
+- `DEC-2026-04-17-138` move the frontend auth entry onto the homepage as a blocking overlay instead of treating `/login` as the primary product-facing surface

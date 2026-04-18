@@ -22,8 +22,8 @@ function notifyAuthChange(): void {
 
 export function getAuthRoutes(): AuthRoutes {
   return {
-    login: "/login",
-    register: "/register",
+    login: "/?auth=1",
+    register: "/?auth=1",
   };
 }
 

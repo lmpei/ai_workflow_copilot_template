@@ -37,6 +37,15 @@ def _build_conversation_title(question: str) -> str:
     return title[:255]
 
 
+def _collect_source_titles(sources: list) -> list[str]:
+    titles: list[str] = []
+    for source in sources:
+        title = getattr(source, "document_title", None)
+        if isinstance(title, str) and title and title not in titles:
+            titles.append(title)
+    return titles
+
+
 def process_chat_request(
     *,
     workspace_id: str,
@@ -253,6 +262,8 @@ def process_chat_request(
             mode=payload.mode,
             tool_steps=tool_steps,
             external_resource_snapshot=external_resource_snapshot,
+            frontier_output=(generated_external_context.frontier_output if payload.mode == "research_external_context" else None),
+            research_record=None,
         )
     except ChatProcessingError as error:
         conversation_repository.touch_conversation(conversation.id)

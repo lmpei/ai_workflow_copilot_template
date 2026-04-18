@@ -21,6 +21,7 @@ from app.services.research_external_context_service import ResearchExternalConte
 from app.services.research_external_resource_snapshot_service import (
     create_research_external_resource_snapshot,
 )
+from app.schemas.ai_frontier_research import AiHotTrackerReportResponse
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 from app.services.retrieval_service import (
     ChatProcessingError,
@@ -600,3 +601,76 @@ def test_chat_supports_selecting_existing_external_resource_snapshot(client: Tes
     payload = response.json()
     assert payload["external_resource_snapshot"]["id"] == snapshot_id
     assert captured_snapshot_ids == [snapshot_id]
+
+
+def test_generate_ai_hot_tracker_report_endpoint(client: TestClient, monkeypatch: MonkeyPatch) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    monkeypatch.setattr(
+        "app.api.routes.research_analysis_runs.generate_ai_hot_tracker_report",
+        lambda **kwargs: AiHotTrackerReportResponse.model_validate(
+            {
+                "title": "本轮 AI 热点",
+                "question": "生成一份热点报告",
+                "output": {
+                    "frontier_summary": "本轮出现了几个值得关注的变化。",
+                    "trend_judgment": "框架和 agent 生态都在加速。",
+                    "themes": [{"label": "Agent", "summary": "Agent 继续升温。"}],
+                    "events": [],
+                    "project_cards": [],
+                    "reference_sources": [],
+                },
+                "source_catalog": [],
+                "source_items": [],
+                "source_failures": [],
+                "source_set": {"mode": "ai_hot_tracker_structured_report"},
+                "generated_at": "2026-04-16T08:00:00Z",
+                "degraded_reason": None,
+            }
+        ),
+    )
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/report",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["title"] == "本轮 AI 热点"
+    assert payload["output"]["frontier_summary"] == "本轮出现了几个值得关注的变化。"
+    assert payload["source_set"]["mode"] == "ai_hot_tracker_structured_report"
+
+
+def test_save_ai_frontier_record_succeeds_without_follow_ups(
+    client: TestClient,
+) -> None:
+    auth = _register_and_login(client, email="tracker@example.com", name="Tracker")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+
+    response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/ai-frontier-records",
+        headers=headers,
+        json={
+            "title": "本轮热点记录",
+            "question": "生成本轮热点报告",
+            "output": {
+                "frontier_summary": "本轮有几条值得继续跟进的 AI 变化。",
+                "trend_judgment": "模型能力和基础设施发布继续升温。",
+                "themes": [{"label": "模型发布", "summary": "近期模型与能力更新比较密集。"}],
+                "events": [],
+                "project_cards": [],
+                "reference_sources": [],
+            },
+            "source_set": {"mode": "ai_hot_tracker_structured_report"},
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["title"] == "本轮热点记录"
+    assert payload["follow_ups"] == []
+    assert payload["source_set"]["mode"] == "ai_hot_tracker_structured_report"
+    assert payload["source_set"]["follow_ups"] == []

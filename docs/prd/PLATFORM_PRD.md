@@ -35,7 +35,7 @@ These are reusable scenario modules on one shared platform core, not three separ
 - Core capabilities: knowledge-base Q&A, ticket classification, reply drafting, escalation guidance
 - Not responsible for: broad research synthesis, multi-document comparison across a large corpus, hiring evaluation
 
-### AI Frontier Research
+### AI Hot Tracker
 
 - Work object: high-trust current AI source material, derived themes, events, projects, and durable research records
 - Primary output: frontier summaries, trend judgments, project cards, and research records
@@ -121,13 +121,13 @@ The first formal planning unit under that model was `Stage A`, documented in `do
 `Stage F`, documented in `docs/prd/STAGE_F_PLAN.md`, is now complete and closed.
 `Stage G`, documented in `docs/prd/STAGE_G_PLAN.md`, is now complete and closed.
 `Stage H`, documented in `docs/prd/STAGE_H_PLAN.md`, is now complete and closed.
-The active formal planning unit is now `Stage K`, documented in `docs/prd/STAGE_K_PLAN.md`.
+The most recent formal planning unit is `Stage K`, documented in `docs/prd/STAGE_K_PLAN.md`.
 The longer post-Stage-C direction is tracked separately in `docs/prd/LONG_TERM_ROADMAP.md`.
 
 ## Current Status
 
-The repository currently has the `Phase 5` baseline implemented, has completed and closed `Stage A` through `Stage J`,
-and is now executing `Stage K`.
+The repository currently has the `Phase 5` baseline implemented and has completed and closed `Stage A` through
+`Stage K`.
 
 The current implemented platform increment includes:
 
@@ -142,7 +142,7 @@ The current implemented platform increment includes:
 - a LangGraph-powered `workspace_research_agent` and static tool registry
 - a chat evaluator framework that combines rule checks with an independently configured LLM judge path
 - workspace module contracts for research, support, and job
-- one `AI 前沿研究` baseline that now runs through the shared task / agent / tool runtime and the completed MCP learning path
+- one `AI 热点追踪` baseline that now runs through the shared task / agent / tool runtime and the completed MCP learning path
 - structured Support Copilot and Job Assistant workflows on the same shared platform primitives
 - scenario-specific eval baselines and quality summaries for research, support, and job
 - cross-module workspace navigation and entry surfaces
@@ -193,6 +193,13 @@ The current implemented platform increment includes:
 - one connector-configured true external MCP endpoint contract and one validation surface behind that same connector
 - one visible Research path that now reads one true external MCP resource while preserving consent and snapshot reuse
   boundary
+- one durable `ai_frontier_research_record` layer for `AI 热点追踪`
+- one structured frontier-output system covering frontier summary, trend judgment, theme, event, project-card, and
+  reference-source outputs
+- one visible `AI 热点追踪` workbench surface that now presents durable records and structured outputs instead of the
+  older broad Research framing
+- one bounded trusted-source intake path for `AI 热点追踪` that now normalizes external source items before report
+  generation instead of depending on one answer-first chat blob
 
 The repository does not yet implement:
 
@@ -215,12 +222,11 @@ closed.
 and closed.
 `Stage H: Model Interface Modernization and Tool-Visible Research Pilot`, documented in `docs/prd/STAGE_H_PLAN.md`, is
 complete and closed.
-The active formal planning unit is `Stage K: AI Frontier Research Productization`, documented in
-`docs/prd/STAGE_K_PLAN.md`.
+`Stage K: AI Frontier Research Productization`, documented in `docs/prd/STAGE_K_PLAN.md`, is complete and closed.
 
-Stage K now starts from a different question than Stage J. Stage J asked how the project could learn MCP coherently
-through one independent server and one full product-side path. Stage K asks how that completed MCP baseline should
-actually serve one concrete module. The answer is `AI 前沿研究`: a workflow that starts from current high-trust AI
+Stage K started from a different question than Stage J. Stage J asked how the project could learn MCP coherently
+through one independent server and one full product-side path. Stage K asked how that completed MCP baseline should
+actually serve one concrete module. The answer is `AI 热点追踪`: a workflow that starts from current high-trust AI
 source material, derives themes, events, and projects from that inflow, and produces summaries, judgments, project
 cards, and durable research records instead of behaving like generic broad Research chat.
 
@@ -252,7 +258,7 @@ degraded behavior are now visible in trace and operator review. Stage I is now c
 inside Wave 2, because the project wants one complete MCP learning path built around one independent MCP server and one
 fuller product-side MCP integration rather than more narrow follow-through on the old Stage I baseline. That Stage J
 contract is now fixed as one independent server plus one resource, one tool, one prompt, one stdio transport, and one
-bearer-style token auth model so the next work can stay coherent. That next work now serves `AI 前沿研究`, not the
+bearer-style token auth model so the next work can stay coherent. That next work now serves `AI 热点追踪`, not the
 older generic Research concept.
 
 The first execution wave under that model is now archived under `tasks/archive/stage-a/`, with

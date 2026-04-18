@@ -1,3 +1,7 @@
+from pathlib import Path
+from uuid import uuid4
+
+from app.repositories import document_repository
 from app.core.config import get_settings
 from fastapi.testclient import TestClient
 
@@ -48,7 +52,7 @@ def test_workspace_crud_requires_auth_and_persists_owner(client: TestClient) -> 
     assert created["name"] == "Research Demo"
     assert created["module_type"] == "research"
     assert "type" not in created
-    assert created["module_config_json"]["result_type"] == "research_report"
+    assert created["module_config_json"]["result_type"] == "ai_frontier_research_record"
     assert created["owner_id"] == auth["user_id"]
 
     get_response = client.get(f"/api/v1/workspaces/{workspace_id}", headers=headers)
@@ -122,6 +126,68 @@ def test_workspace_access_returns_not_found_for_non_members(client: TestClient) 
         headers=other_headers,
     )
     assert other_patch_response.status_code == 404
+
+
+def test_workspace_owner_can_delete_workspace_and_uploaded_files(client: TestClient) -> None:
+    auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    create_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Disposable Workspace", "module_type": "research"},
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    workspace_id = create_response.json()["id"]
+
+    document_id = str(uuid4())
+    relative_path = Path("uploads") / workspace_id / document_id / "note.txt"
+    full_path = Path("storage") / relative_path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    full_path.write_text("temporary note", encoding="utf-8")
+
+    document_repository.create_document(
+        document_id=document_id,
+        workspace_id=workspace_id,
+        title="note.txt",
+        file_path=relative_path.as_posix(),
+        mime_type="text/plain",
+        created_by=auth["user_id"],
+    )
+
+    delete_response = client.delete(f"/api/v1/workspaces/{workspace_id}", headers=headers)
+    assert delete_response.status_code == 204
+    assert delete_response.content == b""
+
+    list_response = client.get("/api/v1/workspaces", headers=headers)
+    assert list_response.status_code == 200
+    assert list_response.json() == []
+
+    get_response = client.get(f"/api/v1/workspaces/{workspace_id}", headers=headers)
+    assert get_response.status_code == 404
+    assert not full_path.exists()
+
+
+def test_workspace_delete_returns_not_found_for_non_owners(client: TestClient) -> None:
+    owner_auth = _register_and_login(client, email="owner@example.com", name="Owner")
+    other_auth = _register_and_login(client, email="other@example.com", name="Other")
+
+    owner_headers = {"Authorization": f"Bearer {owner_auth['token']}"}
+    other_headers = {"Authorization": f"Bearer {other_auth['token']}"}
+
+    create_response = client.post(
+        "/api/v1/workspaces",
+        json={"name": "Research Demo", "module_type": "research"},
+        headers=owner_headers,
+    )
+    assert create_response.status_code == 201
+    workspace_id = create_response.json()["id"]
+
+    delete_response = client.delete(f"/api/v1/workspaces/{workspace_id}", headers=other_headers)
+    assert delete_response.status_code == 404
+
+    get_response = client.get(f"/api/v1/workspaces/{workspace_id}", headers=owner_headers)
+    assert get_response.status_code == 200
 
 
 def test_workspace_module_contract_can_be_switched_with_shared_defaults(client: TestClient) -> None:

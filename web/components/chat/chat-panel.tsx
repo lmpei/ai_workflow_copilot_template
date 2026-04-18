@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   createWorkspaceResearchAnalysisRun,
   getResearchAnalysisRun,
   getWorkspaceConnectorStatus,
-  grantWorkspaceConnectorConsent,
   isApiClientError,
+  listWorkspaceAiFrontierResearchRecords,
   listWorkspaceResearchAnalysisRuns,
   listWorkspaceResearchExternalResourceSnapshots,
-  revokeWorkspaceConnectorConsent,
   sendWorkspaceChat,
 } from "../../lib/api";
 import type {
+  AiFrontierResearchOutputRecord,
+  AiFrontierResearchRecord,
   ChatSource,
   ChatToolStep,
   ResearchAnalysisRunRecord,
@@ -24,7 +25,22 @@ import type {
 } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
+import AiFrontierOutputCard from "../research/ai-frontier-output-card";
 import SectionCard from "../ui/section-card";
+
+type Mode = "rag" | "research_tool_assisted" | "research_external_context";
+
+type ChatEntry = {
+  question: string;
+  answer: string;
+  traceId: string;
+  mode: Mode;
+  toolSteps: ChatToolStep[];
+  sources: ChatSource[];
+  externalResourceSnapshot?: ResearchExternalResourceSnapshotRecord | null;
+  frontierOutput?: AiFrontierResearchOutputRecord | null;
+  researchRecord?: AiFrontierResearchRecord | null;
+};
 
 type ChatPanelProps = {
   workspaceId: string;
@@ -36,12 +52,14 @@ type ChatPanelProps = {
   suggestedPrompts?: string[];
   primaryActionLabel?: string;
   outputTitle?: string;
-  modes?: Array<{
-    value: "rag" | "research_tool_assisted" | "research_external_context";
-    label: string;
-    description: string;
-  }>;
+  modes?: Array<{ value: Mode; label: string; description: string }>;
+  defaultMode?: Mode;
   supportsBackgroundRuns?: boolean;
+  showModePicker?: boolean;
+  showConnectorControls?: boolean;
+  showSnapshotPicker?: boolean;
+  showToolSteps?: boolean;
+  showRecentRecords?: boolean;
   onStatusChange?: (status: {
     entryCount: number;
     isSubmitting: boolean;
@@ -53,247 +71,62 @@ type ChatPanelProps = {
   }) => void;
 };
 
-type ChatEntry = {
-  question: string;
-  answer: string;
-  traceId: string;
-  mode: "rag" | "research_tool_assisted" | "research_external_context";
-  toolSteps: ChatToolStep[];
-  sources: ChatSource[];
-  externalResourceSnapshot?: ResearchExternalResourceSnapshotRecord | null;
-};
+const RUN_ACTIVE: ResearchAnalysisRunStatus[] = ["pending", "running"];
+const CONNECTOR_ID = "research_external_context";
 
-const RUN_ACTIVE_STATUSES: ResearchAnalysisRunStatus[] = ["pending", "running"];
-const RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID = "research_external_context";
-
-const cardStyle: CSSProperties = {
+const panelStyle: CSSProperties = {
   backgroundColor: "#ffffff",
   border: "1px solid #dbe4f0",
-  borderRadius: 18,
+  borderRadius: 24,
   display: "grid",
-  gap: 12,
-  padding: 16,
+  gap: 18,
+  padding: 20,
 };
 
-function mergeRuns(currentRuns: ResearchAnalysisRunRecord[], incomingRuns: ResearchAnalysisRunRecord[]) {
-  const byId = new Map<string, ResearchAnalysisRunRecord>();
-  [...currentRuns, ...incomingRuns].forEach((run) => byId.set(run.id, run));
-  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
-}
+const mergeById = <T extends { id: string; created_at: string }>(current: T[], incoming: T[]) => {
+  const byId = new Map<string, T>();
+  [...current, ...incoming].forEach((item) => byId.set(item.id, item));
+  return [...byId.values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
+};
 
-function mergeSnapshots(
-  currentSnapshots: ResearchExternalResourceSnapshotRecord[],
-  incomingSnapshots: ResearchExternalResourceSnapshotRecord[],
-) {
-  const byId = new Map<string, ResearchExternalResourceSnapshotRecord>();
-  [...currentSnapshots, ...incomingSnapshots].forEach((snapshot) => byId.set(snapshot.id, snapshot));
-  return [...byId.values()].sort((left, right) => right.created_at.localeCompare(left.created_at));
-}
+const mergeRuns = (current: ResearchAnalysisRunRecord[], incoming: ResearchAnalysisRunRecord[]) => mergeById(current, incoming);
+const mergeSnapshots = (current: ResearchExternalResourceSnapshotRecord[], incoming: ResearchExternalResourceSnapshotRecord[]) =>
+  mergeById(current, incoming);
+const mergeRecords = (current: AiFrontierResearchRecord[], incoming: AiFrontierResearchRecord[]) => mergeById(current, incoming);
 
 function formatDateTime(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  return value ? new Date(value).toLocaleString() : "";
 }
 
-function getRunStatusLabel(status: ResearchAnalysisRunStatus) {
-  switch (status) {
-    case "pending":
-      return "排队中";
-    case "running":
-      return "分析中";
-    case "completed":
-      return "已完成";
-    case "degraded":
-      return "诚实降级";
-    case "failed":
-      return "失败";
-    default:
-      return status;
-  }
-}
-
-function getModeLabel(mode: "rag" | "research_tool_assisted" | "research_external_context") {
-  switch (mode) {
-    case "rag":
-      return "标准分析";
-    case "research_tool_assisted":
-      return "工具辅助";
-    case "research_external_context":
-      return "MCP 资源试点";
-    default:
-      return mode;
-  }
-}
-
-function normalizeModeMeta(candidate: {
-  value: "rag" | "research_tool_assisted" | "research_external_context";
-  label: string;
-  description: string;
-}) {
-  if (candidate.value !== "research_external_context") {
-    return candidate;
-  }
-
-  return {
-    ...candidate,
-    label: "MCP 资源试点",
-    description: "在授权后读取一个有边界的 MCP 资源摘要，并继续清楚地区分工作区资料和外部上下文。",
-  };
-}
-function getConnectorStatusCopy(status: WorkspaceConnectorStatusRecord | null) {
-  if (!status || status.consent_state === "not_granted") {
-    return {
-      tone: "#fff7ed",
-      border: "#fed7aa",
-      accent: "#9a3412",
-      title: "尚未授权 MCP 资源试点",
-      body: "当前工作区还没有授权使用 MCP 资源。授权后，研究分析可以在工作区资料之外读取有边界的外部上下文。",
-    };
-  }
-
-  if (status.consent_state === "revoked") {
-    return {
-      tone: "#fef2f2",
-      border: "#fecaca",
-      accent: "#991b1b",
-      title: "授权已撤销",
-      body: "当前工作区已撤销 MCP 资源授权。你仍然可以查看已有快照，但新的 MCP 资源读取会诚实降级。",
-    };
-  }
-
-  return {
-    tone: "#ecfdf5",
-    border: "#bbf7d0",
-    accent: "#166534",
-    title: "已授权 MCP 资源试点",
-    body: "当前工作区可以在研究分析里读取 MCP 资源摘要，并且会明确区分工作区资料和外部上下文来源。",
-  };
-}
-
-function SnapshotCard({
-  snapshot,
-  title,
-  isSelected = false,
-  actionLabel,
-  onAction,
-}: {
-  snapshot: ResearchExternalResourceSnapshotRecord;
-  title: string;
-  isSelected?: boolean;
-  actionLabel?: string;
-  onAction?: (() => void) | null;
-}) {
-  return (
-    <div
-      style={{
-        ...cardStyle,
-        backgroundColor: isSelected ? "#f3e8ff" : "#faf5ff",
-        border: `1px solid ${isSelected ? "#7c3aed" : "#ddd6fe"}`,
-        gap: 8,
-      }}
-    >
-      <div style={{ alignItems: "center", display: "flex", gap: 12, justifyContent: "space-between" }}>
-        <strong style={{ color: "#581c87", fontSize: 14 }}>{title}</strong>
-        {actionLabel && onAction ? (
-          <button
-            onClick={onAction}
-            style={{
-              backgroundColor: isSelected ? "#6b21a8" : "#ffffff",
-              border: `1px solid ${isSelected ? "#6b21a8" : "#c4b5fd"}`,
-              borderRadius: 999,
-              color: isSelected ? "#ffffff" : "#6b21a8",
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 700,
-              minHeight: 32,
-              padding: "0 12px",
-            }}
-            type="button"
-          >
-            {actionLabel}
-          </button>
-        ) : null}
-      </div>
-      <div style={{ color: "#0f172a", fontWeight: 700 }}>{snapshot.title}</div>
-      <div style={{ color: "#475569", fontSize: 13 }}>
-        搜索词：{snapshot.search_query}
-        {snapshot.analysis_focus ? ` | 分析焦点：${snapshot.analysis_focus}` : ""}
-      </div>
-      <div style={{ color: "#475569", fontSize: 13 }}>资源数：{snapshot.resource_count}</div>
-      <div style={{ display: "grid", gap: 8 }}>
-        {snapshot.resources.map((resource) => (
-          <div
-            key={`${snapshot.id}-${resource.resource_id}`}
-            style={{ backgroundColor: "#ffffff", border: "1px solid #e9d5ff", borderRadius: 12, padding: 10 }}
-          >
-            <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{resource.title}</div>
-            <div style={{ color: "#6b21a8", fontSize: 12 }}>{resource.source_label}</div>
-            <div style={{ color: "#475569", fontSize: 13, lineHeight: 1.7 }}>{resource.snippet}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-function ToolStepList({ toolSteps }: { toolSteps: ChatToolStep[] }) {
-  if (toolSteps.length === 0) {
+function SourceList({ sources }: { sources: ChatSource[] }) {
+  if (!sources.length) {
     return null;
   }
 
   return (
-    <div style={{ ...cardStyle, backgroundColor: "#f8fafc", gap: 8, marginTop: 12 }}>
-      <strong style={{ color: "#0f172a", fontSize: 14 }}>分析步骤</strong>
-      {toolSteps.map((step, index) => (
-        <div
-          key={`${step.tool_name}-${index}`}
-          style={{ backgroundColor: "#ffffff", border: "1px solid #dbe4f0", borderRadius: 12, padding: 10 }}
-        >
-          <div style={{ color: "#0f172a", fontSize: 13, fontWeight: 700 }}>{step.summary}</div>
-          {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: string | null }) {
-  if (sources.length === 0) {
-    return <div style={{ color: "#64748b", fontSize: 13, marginTop: 12 }}>这次输出没有返回可见来源。</div>;
-  }
-
-  return (
-    <details style={{ marginTop: 12 }}>
+    <details>
       <summary style={{ cursor: "pointer", fontWeight: 700 }}>查看来源</summary>
       <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
         {sources.map((source) => (
           <div
-            key={`${traceId ?? "run"}-${source.chunk_id}`}
-            style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: 12 }}
+            key={`${source.document_id}-${source.chunk_id}`}
+            style={{
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 16,
+              display: "grid",
+              gap: 6,
+              padding: 12,
+            }}
           >
-            <div style={{ alignItems: "center", display: "flex", gap: 8, justifyContent: "space-between" }}>
-              <strong>{source.document_title}</strong>
-              <span
-                style={{
-                  backgroundColor: source.source_kind === "external_context" ? "#ede9fe" : "#e0f2fe",
-                  borderRadius: 999,
-                  color: source.source_kind === "external_context" ? "#5b21b6" : "#0c4a6e",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: "4px 10px",
-                }}
-              >
-                {source.source_kind === "external_context" ? "外部信息" : "工作区资料"}
+            <div style={{ alignItems: "baseline", display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <strong style={{ color: "#0f172a" }}>{source.document_title}</strong>
+              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>
+                {source.source_kind === "external_context" ? "外部来源" : "工作区资料"}
               </span>
             </div>
-            <div style={{ color: "#475569", fontSize: 13 }}>
-              片段 {source.chunk_index} / 文档 ID：{source.document_id}
+            <div style={{ color: "#64748b", fontSize: 13 }}>
+              片段 {source.chunk_index} · 文档 ID：{source.document_id}
             </div>
             <div style={{ color: "#334155", lineHeight: 1.7 }}>{source.snippet}</div>
           </div>
@@ -303,104 +136,101 @@ function SourceList({ sources, traceId }: { sources: ChatSource[]; traceId: stri
   );
 }
 
-function ResponseCard({ entry }: { entry: ChatEntry }) {
+function ToolSteps({ toolSteps }: { toolSteps: ChatToolStep[] }) {
+  if (!toolSteps.length) {
+    return null;
+  }
+
   return (
-    <section style={cardStyle}>
-      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <span
-          style={{
-            backgroundColor: "#e2e8f0",
-            borderRadius: 999,
-            color: "#0f172a",
-            fontSize: 12,
-            fontWeight: 700,
-            padding: "4px 10px",
-          }}
-        >
-          {getModeLabel(entry.mode)}
-        </span>
-        <span style={{ color: "#64748b", fontSize: 13 }}>追踪：{entry.traceId}</span>
+    <details>
+      <summary style={{ cursor: "pointer", fontWeight: 700 }}>查看过程步骤</summary>
+      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+        {toolSteps.map((step, index) => (
+          <div
+            key={`${step.tool_name}-${index}`}
+            style={{
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 16,
+              display: "grid",
+              gap: 4,
+              padding: 12,
+            }}
+          >
+            <strong style={{ color: "#0f172a" }}>{step.summary}</strong>
+            {step.detail ? <div style={{ color: "#475569", fontSize: 13 }}>{step.detail}</div> : null}
+          </div>
+        ))}
       </div>
-      <div style={{ display: "grid", gap: 8 }}>
-        <div>
-          <strong style={{ color: "#0f172a" }}>你的问题</strong>
-          <div style={{ color: "#334155", lineHeight: 1.7 }}>{entry.question}</div>
-        </div>
-        <div>
-          <strong style={{ color: "#0f172a" }}>分析结论</strong>
-          <div style={{ color: "#334155", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{entry.answer}</div>
-        </div>
-      </div>
-      {entry.externalResourceSnapshot ? (
-        <SnapshotCard snapshot={entry.externalResourceSnapshot} title="本次使用的外部资源快照" />
-      ) : null}
-      <ToolStepList toolSteps={entry.toolSteps} />
-      <SourceList sources={entry.sources} traceId={entry.traceId} />
-    </section>
+    </details>
   );
 }
 
-function RunCard({ run }: { run: ResearchAnalysisRunRecord }) {
+function ResultCard({
+  question,
+  answer,
+  output,
+  sources,
+  toolSteps,
+  showToolSteps,
+  footer,
+}: {
+  question: string;
+  answer?: string | null;
+  output?: AiFrontierResearchOutputRecord | null;
+  sources: ChatSource[];
+  toolSteps: ChatToolStep[];
+  showToolSteps: boolean;
+  footer?: string;
+}) {
   return (
-    <section style={cardStyle}>
-      <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
+    <section style={panelStyle}>
+      <div style={{ display: "grid", gap: 6 }}>
         <span
           style={{
-            backgroundColor: RUN_ACTIVE_STATUSES.includes(run.status) ? "#e0f2fe" : "#e2e8f0",
-            borderRadius: 999,
-            color: "#0f172a",
+            color: "#64748b",
             fontSize: 12,
-            fontWeight: 700,
-            padding: "4px 10px",
+            fontWeight: 800,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
           }}
         >
-          {getRunStatusLabel(run.status)}
+          Current Result
         </span>
-        <span style={{ color: "#64748b", fontSize: 13 }}>{getModeLabel(run.mode)}</span>
-        {run.trace_id ? <span style={{ color: "#64748b", fontSize: 13 }}>追踪：{run.trace_id}</span> : null}
+        <strong style={{ color: "#0f172a", fontSize: 20 }}>本次追踪结果</strong>
+        <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>{question}</p>
       </div>
-      <div style={{ display: "grid", gap: 8 }}>
-        <div>
-          <strong style={{ color: "#0f172a" }}>研究问题</strong>
-          <div style={{ color: "#334155", lineHeight: 1.7 }}>{run.question}</div>
-        </div>
-        {run.answer ? (
-          <div>
-            <strong style={{ color: "#0f172a" }}>分析结论</strong>
-            <div style={{ color: "#334155", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{run.answer}</div>
-          </div>
-        ) : (
-          <div style={{ color: "#475569", lineHeight: 1.7 }}>这条后台分析还没有产出最终回答。</div>
-        )}
-        {run.degraded_reason ? (
-          <div style={{ color: "#9a3412", fontSize: 13 }}>降级原因：{run.degraded_reason}</div>
-        ) : null}
+
+      <div style={{ color: "#334155", lineHeight: 1.85, whiteSpace: "pre-wrap" }}>
+        {answer || "当前还没有生成最终结果。"}
       </div>
-      {run.external_resource_snapshot ? (
-        <SnapshotCard snapshot={run.external_resource_snapshot} title="本次运行使用的外部资源快照" />
-      ) : null}
-      <ToolStepList toolSteps={run.tool_steps} />
-      <SourceList sources={run.sources} traceId={run.trace_id ?? null} />
-      <div style={{ color: "#64748b", fontSize: 12 }}>
-        创建于 {formatDateTime(run.created_at)}
-        {run.completed_at ? ` · 完成于 ${formatDateTime(run.completed_at)}` : ""}
-      </div>
+
+      <AiFrontierOutputCard output={output} title="热点追踪输出" />
+      {showToolSteps ? <ToolSteps toolSteps={toolSteps} /> : null}
+      <SourceList sources={sources} />
+      {footer ? <div style={{ color: "#64748b", fontSize: 12 }}>{footer}</div> : null}
     </section>
   );
 }
 
 export default function ChatPanel({
   workspaceId,
-  assistantLabel = "Research Assistant",
-  workflowLabel = "Research 工作流",
-  introTitle = "从一个研究问题开始",
-  introBody = "可以直接输入问题，也可以先点一个快捷提示词，然后开始分析。",
-  placeholder = "例如：总结当前资料里最重要的发现，并告诉我还缺哪些关键证据。",
+  assistantLabel = "AI 热点追踪",
+  workflowLabel = "AI 热点追踪",
+  introTitle = "开始一次热点追踪",
+  introBody = "围绕最新高可信来源提炼 AI 行业变化、关键事件和值得跟进的项目与框架。",
+  placeholder = "例如：总结最近值得持续关注的 Agent、MCP 和开源框架变化，并指出哪些项目值得继续跟进。",
   suggestedPrompts,
-  primaryActionLabel = "开始分析",
-  outputTitle = "分析过程与结果",
+  primaryActionLabel = "开始追踪",
+  outputTitle = "本次追踪结果",
   modes,
+  defaultMode = "rag",
   supportsBackgroundRuns = false,
+  showModePicker = true,
+  showConnectorControls = true,
+  showSnapshotPicker = true,
+  showToolSteps = true,
+  showRecentRecords = true,
   onStatusChange,
 }: ChatPanelProps) {
   const { session, isReady } = useAuthSession();
@@ -408,159 +238,160 @@ export default function ChatPanel({
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [analysisRuns, setAnalysisRuns] = useState<ResearchAnalysisRunRecord[]>([]);
   const [recentSnapshots, setRecentSnapshots] = useState<ResearchExternalResourceSnapshotRecord[]>([]);
+  const [recentRecords, setRecentRecords] = useState<AiFrontierResearchRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingRuns, setIsLoadingRuns] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [connectorStatus, setConnectorStatus] = useState<WorkspaceConnectorStatusRecord | null>(null);
-  const [isGrantingConnectorConsent, setIsGrantingConnectorConsent] = useState(false);
-  const [isRevokingConnectorConsent, setIsRevokingConnectorConsent] = useState(false);
-  const [selectedExternalResourceSnapshotId, setSelectedExternalResourceSnapshotId] = useState<string | null>(null);
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(null);
 
   const availableModes = useMemo(
     () =>
-      modes && modes.length > 0
-        ? modes.map(normalizeModeMeta)
+      modes?.length
+        ? modes
         : [
             {
               value: "rag" as const,
               label: "标准分析",
-              description: "直接基于当前工作区资料生成有依据的回答。",
+              description: "直接基于当前资料形成一次有依据的结果。",
             },
           ],
     [modes],
   );
-  const [mode, setMode] = useState<"rag" | "research_tool_assisted" | "research_external_context">(
-    availableModes[0]?.value ?? "rag",
-  );
 
+  const [mode, setMode] = useState<Mode>(defaultMode);
   const prompts = useMemo(
     () =>
-      suggestedPrompts && suggestedPrompts.length > 0
+      suggestedPrompts?.length
         ? suggestedPrompts
         : [
-            "总结当前资料里最重要的发现。",
-            "指出现阶段还缺哪些关键证据。",
-            "告诉我哪些结论还需要继续验证。",
+            "总结最近最值得关注的 AI 热点变化。",
+            "指出当前最值得持续跟进的主题、事件和项目。",
+            "告诉我哪些判断还需要更多原始来源来验证。",
           ],
     [suggestedPrompts],
   );
 
-  const modeMeta = useMemo(
-    () => availableModes.find((candidate) => candidate.value === mode) ?? availableModes[0],
-    [availableModes, mode],
-  );
-  const activeRuns = useMemo(() => analysisRuns.filter((run) => RUN_ACTIVE_STATUSES.includes(run.status)), [analysisRuns]);
+  const activeRuns = useMemo(() => analysisRuns.filter((run) => RUN_ACTIVE.includes(run.status)), [analysisRuns]);
   const latestRun = analysisRuns[0] ?? null;
-  const lastTraceId = latestRun?.trace_id ?? entries.at(-1)?.traceId ?? null;
-  const requiresExternalContextConnector = mode === "research_external_context";
-  const selectedExternalResourceSnapshot = useMemo(
-    () => recentSnapshots.find((snapshot) => snapshot.id === selectedExternalResourceSnapshotId) ?? null,
-    [recentSnapshots, selectedExternalResourceSnapshotId],
-  );
-  const connectorCopy = getConnectorStatusCopy(connectorStatus);
+  const latestEntry = entries.at(-1) ?? null;
+  const latestRecord = recentRecords[0] ?? latestEntry?.researchRecord ?? latestRun?.research_record ?? null;
+  const latestResult = latestEntry
+    ? {
+        question: latestEntry.question,
+        answer: latestEntry.answer,
+        output: latestEntry.frontierOutput,
+        sources: latestEntry.sources,
+        toolSteps: latestEntry.toolSteps,
+        footer: latestRecord ? `已沉淀为记录：${latestRecord.title}` : undefined,
+      }
+    : latestRun
+      ? {
+          question: latestRun.question,
+          answer: latestRun.answer,
+          output: latestRun.frontier_output,
+          sources: latestRun.sources,
+          toolSteps: latestRun.tool_steps,
+          footer: latestRun.completed_at ? `完成于 ${formatDateTime(latestRun.completed_at)}` : undefined,
+        }
+      : null;
 
   useEffect(() => {
-    if (!availableModes.some((candidate) => candidate.value === mode)) {
-      setMode(availableModes[0]?.value ?? "rag");
-    }
-  }, [availableModes, mode]);
-
-  useEffect(() => {
-    if (!requiresExternalContextConnector) {
-      setSelectedExternalResourceSnapshotId(null);
-      return;
-    }
-
-    if (
-      selectedExternalResourceSnapshotId &&
-      !recentSnapshots.some((snapshot) => snapshot.id === selectedExternalResourceSnapshotId)
-    ) {
-      setSelectedExternalResourceSnapshotId(null);
-    }
-  }, [recentSnapshots, requiresExternalContextConnector, selectedExternalResourceSnapshotId]);
+    setMode(defaultMode);
+  }, [defaultMode]);
 
   useEffect(() => {
     onStatusChange?.({
       entryCount: entries.length + analysisRuns.length,
       isSubmitting: isSubmitting || activeRuns.length > 0,
       currentDraft: question,
-      lastTraceId,
+      lastTraceId: latestRun?.trace_id ?? latestEntry?.traceId ?? null,
       latestAnalysisRunId: latestRun?.id ?? null,
       latestAnalysisRunStatus: latestRun?.status ?? null,
       latestAnalysisRunQuestion: latestRun?.question ?? null,
     });
-  }, [activeRuns.length, analysisRuns.length, entries.length, isSubmitting, lastTraceId, latestRun, onStatusChange, question]);
+  }, [activeRuns.length, analysisRuns.length, entries.length, isSubmitting, latestEntry, latestRun, onStatusChange, question]);
 
   useEffect(() => {
-    if (!session || !supportsBackgroundRuns) {
+    if (!session) {
       setAnalysisRuns([]);
       setRecentSnapshots([]);
+      setRecentRecords([]);
       return;
     }
 
     let cancelled = false;
-
-    const loadSurfaceData = async () => {
-      setIsLoadingRuns(true);
+    const loadData = async () => {
+      setIsLoading(true);
       try {
-        const [runs, snapshots] = await Promise.all([
-          listWorkspaceResearchAnalysisRuns(session.accessToken, workspaceId, 8),
-          listWorkspaceResearchExternalResourceSnapshots(session.accessToken, workspaceId, 8),
-        ]);
+        const requests: Array<Promise<unknown>> = [];
+        if (supportsBackgroundRuns) {
+          requests.push(listWorkspaceResearchAnalysisRuns(session.accessToken, workspaceId, 8));
+        } else {
+          requests.push(Promise.resolve([]));
+        }
+        if (showSnapshotPicker) {
+          requests.push(listWorkspaceResearchExternalResourceSnapshots(session.accessToken, workspaceId, 8));
+        } else {
+          requests.push(Promise.resolve([]));
+        }
+        if (showRecentRecords) {
+          requests.push(listWorkspaceAiFrontierResearchRecords(session.accessToken, workspaceId, 8));
+        } else {
+          requests.push(Promise.resolve([]));
+        }
+
+        const [runs, snapshots, records] = await Promise.all(requests);
         if (!cancelled) {
-          setAnalysisRuns(runs);
-          setRecentSnapshots(
-            mergeSnapshots(
-              snapshots,
-              runs.flatMap((run) => (run.external_resource_snapshot ? [run.external_resource_snapshot] : [])),
-            ),
-          );
+          setAnalysisRuns(runs as ResearchAnalysisRunRecord[]);
+          setRecentSnapshots(snapshots as ResearchExternalResourceSnapshotRecord[]);
+          setRecentRecords(records as AiFrontierResearchRecord[]);
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "无法加载最近的分析运行和外部资源快照。");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法加载追踪数据。");
         }
       } finally {
         if (!cancelled) {
-          setIsLoadingRuns(false);
+          setIsLoading(false);
         }
       }
     };
 
-    void loadSurfaceData();
+    void loadData();
     return () => {
       cancelled = true;
     };
-  }, [session, supportsBackgroundRuns, workspaceId]);
+  }, [session, showRecentRecords, showSnapshotPicker, supportsBackgroundRuns, workspaceId]);
 
   useEffect(() => {
-    if (!session || activeRuns.length === 0) {
+    if (!session || !activeRuns.length) {
       return;
     }
 
     let cancelled = false;
-    const refreshActiveRuns = async () => {
+    const refresh = async () => {
       try {
-        const refreshedRuns = await Promise.all(activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)));
+        const refreshed = await Promise.all(activeRuns.map((run) => getResearchAnalysisRun(session.accessToken, run.id)));
         if (!cancelled) {
-          setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, refreshedRuns));
-          setRecentSnapshots((currentSnapshots) =>
-            mergeSnapshots(
-              currentSnapshots,
-              refreshedRuns.flatMap((run) => (run.external_resource_snapshot ? [run.external_resource_snapshot] : [])),
+          setAnalysisRuns((current) => mergeRuns(current, refreshed));
+          setRecentRecords((current) =>
+            mergeRecords(
+              current,
+              refreshed.flatMap((run) => (run.research_record ? [run.research_record] : [])),
             ),
           );
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "刷新后台分析状态时失败。");
+          setErrorMessage(isApiClientError(error) ? error.message : "刷新后台运行状态失败。");
         }
       }
     };
 
-    void refreshActiveRuns();
+    void refresh();
     const timer = window.setInterval(() => {
-      void refreshActiveRuns();
+      void refresh();
     }, 2500);
 
     return () => {
@@ -570,80 +401,32 @@ export default function ChatPanel({
   }, [activeRuns, session]);
 
   useEffect(() => {
-    if (!session || !requiresExternalContextConnector) {
+    if (!session || !showConnectorControls || mode !== "research_external_context") {
       setConnectorStatus(null);
       return;
     }
 
     let cancelled = false;
-    const loadConnectorStatus = async () => {
+    const loadStatus = async () => {
       try {
-        const status = await getWorkspaceConnectorStatus(
-          session.accessToken,
-          workspaceId,
-          RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
-        );
+        const status = await getWorkspaceConnectorStatus(session.accessToken, workspaceId, CONNECTOR_ID);
         if (!cancelled) {
           setConnectorStatus(status);
         }
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(isApiClientError(error) ? error.message : "无法读取 MCP 资源试点的授权状态。");
+          setErrorMessage(isApiClientError(error) ? error.message : "无法读取外部来源状态。");
         }
       }
     };
 
-    void loadConnectorStatus();
+    void loadStatus();
     return () => {
       cancelled = true;
     };
-  }, [requiresExternalContextConnector, session, workspaceId]);
+  }, [mode, session, showConnectorControls, workspaceId]);
 
-  const handleGrantConnectorConsent = async () => {
-    if (!session) {
-      return;
-    }
-
-    setIsGrantingConnectorConsent(true);
-    setErrorMessage(null);
-    try {
-      const status = await grantWorkspaceConnectorConsent(
-        session.accessToken,
-        workspaceId,
-        RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
-        { consent_note: "允许当前 Research 工作区使用外部信息试点。" },
-      );
-      setConnectorStatus(status);
-    } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "授权外部信息试点时失败。");
-    } finally {
-      setIsGrantingConnectorConsent(false);
-    }
-  };
-
-  const handleRevokeConnectorConsent = async () => {
-    if (!session) {
-      return;
-    }
-
-    setIsRevokingConnectorConsent(true);
-    setErrorMessage(null);
-    try {
-      const status = await revokeWorkspaceConnectorConsent(
-        session.accessToken,
-        workspaceId,
-        RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
-        { consent_note: "撤销当前 Research 工作区对外部信息试点的授权。" },
-      );
-      setConnectorStatus(status);
-    } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "撤销外部信息试点授权时失败。");
-    } finally {
-      setIsRevokingConnectorConsent(false);
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session || !question.trim()) {
       return;
@@ -659,23 +442,21 @@ export default function ChatPanel({
           question: trimmedQuestion,
           conversation_id: latestRun?.conversation_id,
           mode,
-          external_resource_snapshot_id:
-            mode === "research_external_context" ? selectedExternalResourceSnapshotId ?? undefined : undefined,
+          external_resource_snapshot_id: mode === "research_external_context" ? selectedSnapshotId ?? undefined : undefined,
         });
-        setAnalysisRuns((currentRuns) => mergeRuns(currentRuns, [run]));
-        if (run.external_resource_snapshot) {
-          const snapshot = run.external_resource_snapshot;
-          setRecentSnapshots((currentSnapshots) => mergeSnapshots(currentSnapshots, [snapshot]));
+        setAnalysisRuns((current) => mergeRuns(current, [run]));
+        const researchRecord = run.research_record;
+        if (researchRecord) {
+          setRecentRecords((current) => mergeRecords(current, [researchRecord]));
         }
       } else {
         const response = await sendWorkspaceChat(session.accessToken, workspaceId, {
           question: trimmedQuestion,
           mode,
-          external_resource_snapshot_id:
-            mode === "research_external_context" ? selectedExternalResourceSnapshotId ?? undefined : undefined,
+          external_resource_snapshot_id: mode === "research_external_context" ? selectedSnapshotId ?? undefined : undefined,
         });
-        setEntries((currentEntries) => [
-          ...currentEntries,
+        setEntries((current) => [
+          ...current,
           {
             question: trimmedQuestion,
             answer: response.answer,
@@ -684,96 +465,82 @@ export default function ChatPanel({
             toolSteps: response.tool_steps,
             sources: response.sources,
             externalResourceSnapshot: response.external_resource_snapshot ?? null,
+            frontierOutput: response.frontier_output ?? null,
+            researchRecord: response.research_record ?? null,
           },
         ]);
-        if (response.external_resource_snapshot) {
-          const snapshot = response.external_resource_snapshot;
-          setRecentSnapshots((currentSnapshots) => mergeSnapshots(currentSnapshots, [snapshot]));
+        const researchRecord = response.research_record;
+        if (researchRecord) {
+          setRecentRecords((current) => mergeRecords(current, [researchRecord]));
         }
       }
       setQuestion("");
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "提交分析请求时失败。");
+      setErrorMessage(isApiClientError(error) ? error.message : "提交追踪请求时失败。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!isReady) {
-    return <SectionCard title="Research 工作流">正在加载工作流...</SectionCard>;
+    return <SectionCard title="AI 热点追踪">正在加载工作流...</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="请先登录，再进入 Research 工作流。" />;
+    return <AuthRequired description="请先登录，再进入 AI 热点追踪工作流。" />;
   }
 
   return (
-    <section
-      style={{
-        background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,1) 100%)",
-        border: "1px solid #dbe4f0",
-        borderRadius: 28,
-        boxShadow: "0 28px 56px rgba(15, 23, 42, 0.08)",
-        display: "grid",
-        gap: 16,
-        minHeight: 680,
-        padding: 20,
-      }}
-    >
-      <section style={{ display: "grid", gap: 10 }}>
-        <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ color: "#0f172a99", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em" }}>{workflowLabel}</span>
-          <span style={{ color: "#64748b", fontSize: 13 }}>{assistantLabel}</span>
-          {isLoadingRuns ? <span style={{ color: "#64748b", fontSize: 13 }}>正在刷新后台分析状态...</span> : null}
+    <section style={panelStyle}>
+      <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
+          <div style={{ display: "grid", gap: 4 }}>
+            <span
+              style={{
+                color: "#64748b",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {workflowLabel}
+            </span>
+            <strong style={{ color: "#0f172a", fontSize: 24 }}>{introTitle}</strong>
+          </div>
+          {activeRuns.length > 0 ? <span style={{ color: "#0f766e", fontSize: 13 }}>后台分析进行中</span> : null}
         </div>
-        {availableModes.length > 1 ? (
+
+        <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>{introBody}</p>
+
+        {showModePicker && availableModes.length > 1 ? (
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {availableModes.map((candidate) => {
-                const active = candidate.value === mode;
-                return (
-                  <button
-                    key={candidate.value}
-                    onClick={() => setMode(candidate.value)}
-                    style={{
-                      backgroundColor: active ? "#0f172a" : "#ffffff",
-                      border: `1px solid ${active ? "#0f172a" : "#cbd5e1"}`,
-                      borderRadius: 999,
-                      color: active ? "#f8fafc" : "#0f172a",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      minHeight: 40,
-                      padding: "0 14px",
-                    }}
-                    type="button"
-                  >
-                    {candidate.label}
-                  </button>
-                );
-              })}
+              {availableModes.map((item) => (
+                <button key={item.value} onClick={() => setMode(item.value)} type="button">
+                  {item.label}
+                </button>
+              ))}
             </div>
-            <div style={{ color: "#475569", fontSize: 14, lineHeight: 1.7 }}>{modeMeta?.description}</div>
+            <div style={{ color: "#475569", fontSize: 14, lineHeight: 1.7 }}>
+              {availableModes.find((item) => item.value === mode)?.description}
+            </div>
           </div>
         ) : null}
-        <div style={{ display: "grid", gap: 4 }}>
-          <strong style={{ color: "#0f172a", fontSize: 20 }}>{introTitle}</strong>
-          <p style={{ color: "#475569", lineHeight: 1.7, margin: 0 }}>{introBody}</p>
-        </div>
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
           {prompts.map((prompt) => (
             <button
               key={prompt}
               onClick={() => setQuestion(prompt)}
               style={{
-                backgroundColor: question === prompt ? "#0f172a" : "#ffffff",
-                border: `1px solid ${question === prompt ? "#0f172a" : "#cbd5e1"}`,
-                borderRadius: 16,
-                color: question === prompt ? "#f8fafc" : "#0f172a",
-                cursor: "pointer",
+                backgroundColor: "#f8fafc",
+                border: "1px solid #dbe4f0",
+                borderRadius: 999,
+                color: "#0f172a",
+                fontSize: 13,
                 fontWeight: 700,
-                minHeight: 60,
-                padding: 12,
-                textAlign: "left",
+                padding: "8px 12px",
               }}
               type="button"
             >
@@ -781,135 +548,93 @@ export default function ChatPanel({
             </button>
           ))}
         </div>
-      </section>
+      </div>
 
-      {requiresExternalContextConnector ? (
+      {showConnectorControls && connectorStatus && mode === "research_external_context" ? (
         <section
           style={{
-            backgroundColor: connectorCopy.tone,
-            border: `1px solid ${connectorCopy.border}`,
+            backgroundColor: connectorStatus.consent_state === "granted" ? "#ecfdf5" : "#fff7ed",
+            border: `1px solid ${connectorStatus.consent_state === "granted" ? "#bbf7d0" : "#fed7aa"}`,
             borderRadius: 18,
+            color: "#475569",
             display: "grid",
-            gap: 10,
+            gap: 6,
             padding: 16,
           }}
         >
-          <strong style={{ color: connectorCopy.accent }}>{connectorCopy.title}</strong>
-          <div style={{ color: "#475569", lineHeight: 1.7 }}>{connectorCopy.body}</div>
-          <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
-            <button
-              disabled={connectorStatus?.consent_state === "granted" || isGrantingConnectorConsent}
-              onClick={() => {
-                void handleGrantConnectorConsent();
-              }}
-              style={{
-                backgroundColor: connectorStatus?.consent_state === "granted" ? "#dcfce7" : "#0f172a",
-                border: "none",
-                borderRadius: 999,
-                color: connectorStatus?.consent_state === "granted" ? "#166534" : "#ffffff",
-                fontSize: 13,
-                fontWeight: 800,
-                minHeight: 40,
-                padding: "0 14px",
-              }}
-              type="button"
-            >
-              {connectorStatus?.consent_state === "granted"
-                ? "已授权"
-                : isGrantingConnectorConsent
-                  ? "授权中..."
-                  : connectorStatus?.consent_state === "revoked"
-                    ? "重新授权"
-                    : "授权 MCP 资源试点"}
-            </button>
-            <button
-              disabled={connectorStatus?.consent_state !== "granted" || isRevokingConnectorConsent}
-              onClick={() => {
-                void handleRevokeConnectorConsent();
-              }}
-              style={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #cbd5e1",
-                borderRadius: 999,
-                color: "#0f172a",
-                fontSize: 13,
-                fontWeight: 700,
-                minHeight: 40,
-                padding: "0 14px",
-              }}
-              type="button"
-            >
-              {isRevokingConnectorConsent ? "撤销中..." : "撤销授权"}
-            </button>
-            {connectorStatus?.consent_state === "granted" && connectorStatus.granted_at ? (
-              <span style={{ color: "#166534", fontSize: 13 }}>授权时间：{formatDateTime(connectorStatus.granted_at)}</span>
-            ) : null}
-            {connectorStatus?.consent_state === "revoked" && connectorStatus.revoked_at ? (
-              <span style={{ color: "#b91c1c", fontSize: 13 }}>撤销时间：{formatDateTime(connectorStatus.revoked_at)}</span>
-            ) : null}
+          <strong style={{ color: "#0f172a" }}>
+            {connectorStatus.consent_state === "granted" ? "外部来源已可用" : "外部来源尚未可用"}
+          </strong>
+          <div>
+            {connectorStatus.consent_state === "granted"
+              ? "当前工作区可以结合外部最新来源。"
+              : "当前工作区还没有外部来源权限，本次会先基于现有资料形成结果。"}
           </div>
         </section>
       ) : null}
 
-      {requiresExternalContextConnector && recentSnapshots.length > 0 ? (
-        <section style={{ ...cardStyle, gap: 10 }}>
-          <div style={{ alignItems: "center", display: "flex", gap: 12, justifyContent: "space-between" }}>
-            <strong style={{ color: "#0f172a", fontSize: 16 }}>最近外部资源快照</strong>
-            <button
-              onClick={() => setSelectedExternalResourceSnapshotId(null)}
-              style={{
-                backgroundColor: selectedExternalResourceSnapshotId ? "#ffffff" : "#0f172a",
-                border: `1px solid ${selectedExternalResourceSnapshotId ? "#cbd5e1" : "#0f172a"}`,
-                borderRadius: 999,
-                color: selectedExternalResourceSnapshotId ? "#0f172a" : "#ffffff",
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 700,
-                minHeight: 32,
-                padding: "0 12px",
-              }}
-              type="button"
-            >
-              {selectedExternalResourceSnapshotId ? "改为自动选择" : "当前为自动选择"}
+      {showSnapshotPicker && mode === "research_external_context" && recentSnapshots.length > 0 ? (
+        <section
+          style={{
+            backgroundColor: "#f8fafc",
+            border: "1px solid #dbe4f0",
+            borderRadius: 18,
+            display: "grid",
+            gap: 12,
+            padding: 16,
+          }}
+        >
+          <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between", gap: 10 }}>
+            <strong style={{ color: "#0f172a" }}>最近外部快照</strong>
+            <button onClick={() => setSelectedSnapshotId(null)} type="button">
+              {selectedSnapshotId ? "改为自动选择" : "当前为自动选择"}
             </button>
           </div>
-          <span style={{ color: "#475569", fontSize: 13 }}>
-            这些快照来自最近真实使用过的 MCP 资源结果。你可以明确选择其中一个快照继续分析，也可以保持自动选择。
-          </span>
-          {selectedExternalResourceSnapshot ? (
-            <div style={{ color: "#6b21a8", fontSize: 13, fontWeight: 700 }}>
-              当前已选快照：{selectedExternalResourceSnapshot.title}
-            </div>
-          ) : null}
-          <div style={{ display: "grid", gap: 12 }}>
-            {recentSnapshots.map((snapshot, index) => (
-              <SnapshotCard
+          <div style={{ display: "grid", gap: 10 }}>
+            {recentSnapshots.map((snapshot) => (
+              <button
                 key={snapshot.id}
-                snapshot={snapshot}
-                title={`快照 ${index + 1}`}
-                isSelected={snapshot.id === selectedExternalResourceSnapshotId}
-                actionLabel={snapshot.id === selectedExternalResourceSnapshotId ? "已选中" : "使用这个快照"}
-                onAction={() => setSelectedExternalResourceSnapshotId(snapshot.id)}
-              />
+                onClick={() => setSelectedSnapshotId(snapshot.id)}
+                style={{
+                  backgroundColor: snapshot.id === selectedSnapshotId ? "#ecfeff" : "#ffffff",
+                  border: `1px solid ${snapshot.id === selectedSnapshotId ? "#0891b2" : "#dbe4f0"}`,
+                  borderRadius: 16,
+                  display: "grid",
+                  gap: 6,
+                  padding: 12,
+                  textAlign: "left",
+                }}
+                type="button"
+              >
+                <strong style={{ color: "#0f172a" }}>{snapshot.title}</strong>
+                <span style={{ color: "#475569", fontSize: 13 }}>搜索词：{snapshot.search_query}</span>
+              </button>
             ))}
           </div>
         </section>
       ) : null}
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+      <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
         <label style={{ display: "grid", gap: 8 }}>
-          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>输入当前问题</span>
+          <span style={{ color: "#0f172a", fontSize: 14, fontWeight: 800 }}>{assistantLabel}问题</span>
           <textarea
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={placeholder}
             required
             rows={5}
-            style={{ borderRadius: 22, border: "1px solid #cbd5e1", minHeight: 138, padding: "18px 20px", resize: "vertical" }}
+            style={{
+              backgroundColor: "#f8fafc",
+              border: "1px solid #cbd5e1",
+              borderRadius: 20,
+              minHeight: 140,
+              padding: "16px 18px",
+              resize: "vertical",
+            }}
             value={question}
           />
         </label>
         {errorMessage ? <p style={{ color: "#b91c1c", margin: 0 }}>{errorMessage}</p> : null}
-        <div style={{ display: "flex", justifyContent: "flex-start" }}>
+        <div>
           <button
             disabled={isSubmitting}
             style={{
@@ -917,39 +642,91 @@ export default function ChatPanel({
               border: "none",
               borderRadius: 999,
               color: "#ffffff",
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: 800,
-              minHeight: 48,
-              minWidth: 148,
-              padding: "0 22px",
+              minHeight: 44,
+              padding: "0 18px",
             }}
             type="submit"
           >
-            {isSubmitting ? "提交中..." : primaryActionLabel}
+            {isSubmitting ? "追踪中..." : primaryActionLabel}
           </button>
         </div>
       </form>
 
       <section style={{ display: "grid", gap: 14 }}>
-        <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
-          <strong style={{ color: "#0f172a", fontSize: 18 }}>{outputTitle}</strong>
-          {activeRuns.length > 0 ? <span style={{ color: "#0f766e", fontSize: 13 }}>当前有 {activeRuns.length} 条后台分析正在运行</span> : null}
+        <div style={{ alignItems: "baseline", display: "flex", justifyContent: "space-between", gap: 10 }}>
+          <strong style={{ color: "#0f172a", fontSize: 20 }}>{outputTitle}</strong>
+          {isLoading ? <span style={{ color: "#64748b", fontSize: 13 }}>正在刷新数据...</span> : null}
         </div>
-
-        {entries.length === 0 && analysisRuns.length === 0 ? (
-          <div style={{ ...cardStyle, color: "#475569", lineHeight: 1.8 }}>
-            先输入一个研究问题并开始分析。标准分析会直接回答，工具辅助和 MCP 资源试点会创建可回看的后台分析运行。
+        {!latestResult ? (
+          <div
+            style={{
+              backgroundColor: "#f8fafc",
+              border: "1px solid #dbe4f0",
+              borderRadius: 20,
+              color: "#475569",
+              lineHeight: 1.8,
+              padding: 18,
+            }}
+          >
+            先输入一个当前值得跟进的问题。这里会显示本次热点摘要、趋势判断、项目与框架观察，以及参考来源。
           </div>
-        ) : null}
-
-        {entries.map((entry, index) => (
-          <ResponseCard key={`${entry.traceId}-${index}`} entry={entry} />
-        ))}
-
-        {analysisRuns.map((run) => (
-          <RunCard key={run.id} run={run} />
-        ))}
+        ) : (
+          <ResultCard
+            answer={latestResult.answer}
+            footer={latestResult.footer}
+            output={latestResult.output}
+            question={latestResult.question}
+            showToolSteps={showToolSteps}
+            sources={latestResult.sources}
+            toolSteps={latestResult.toolSteps}
+          />
+        )}
       </section>
+
+      {showRecentRecords ? (
+        <section style={{ display: "grid", gap: 12 }}>
+          <div style={{ alignItems: "baseline", display: "flex", justifyContent: "space-between", gap: 10 }}>
+            <strong style={{ color: "#0f172a", fontSize: 18 }}>最近记录</strong>
+            {recentRecords.length ? <span style={{ color: "#64748b", fontSize: 13 }}>共 {recentRecords.length} 条</span> : null}
+          </div>
+          {recentRecords.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #dbe4f0",
+                borderRadius: 20,
+                color: "#475569",
+                lineHeight: 1.8,
+                padding: 18,
+              }}
+            >
+              当前还没有沉淀出的追踪记录。
+            </div>
+          ) : (
+            recentRecords.map((record) => (
+              <section
+                key={record.id}
+                style={{
+                  backgroundColor: "#f8fafc",
+                  border: "1px solid #dbe4f0",
+                  borderRadius: 20,
+                  display: "grid",
+                  gap: 10,
+                  padding: 16,
+                }}
+              >
+                <div style={{ display: "grid", gap: 4 }}>
+                  <strong style={{ color: "#0f172a" }}>{record.title}</strong>
+                  <div style={{ color: "#475569", lineHeight: 1.7 }}>{record.question}</div>
+                  <div style={{ color: "#64748b", fontSize: 12 }}>{formatDateTime(record.created_at)}</div>
+                </div>
+              </section>
+            ))
+          )}
+        </section>
+      ) : null}
     </section>
   );
 }

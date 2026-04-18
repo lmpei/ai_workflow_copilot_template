@@ -6,13 +6,14 @@
 
 ## Status
 
-- Status: active
+- Status: complete and closed
 - Opened At: 2026-04-09
-- First Task Wave: active
+- Closed At: 2026-04-09
+- First Task Wave: complete
 
 ## Position In The Project
 
-Stage K begins after the closeout of Stage J.
+Stage K began after the closeout of Stage J.
 
 Stage J delivered one coherent MCP learning path:
 
@@ -20,11 +21,11 @@ Stage J delivered one coherent MCP learning path:
 - one visible product path using MCP resource, tool, and prompt
 - one auth, transport, trace, and review baseline
 
-Stage K does not reopen MCP as a generic protocol-learning stage.
+Stage K did not reopen MCP as a generic protocol-learning stage.
 
-Instead, it uses the completed Stage J baseline to turn the older generic Research surface into one concrete module:
+Instead, it used the completed Stage J baseline to turn the older generic Research surface into one concrete module:
 
-- `AI 前沿研究`
+- `AI 热点追踪`
 
 ## Roadmap Alignment
 
@@ -33,15 +34,12 @@ Instead, it uses the completed Stage J baseline to turn the older generic Resear
 - Roadmap wave:
   - `Wave 2: Connector and Context Plane`
 - Stage-K interpretation:
-  - this is a productization bridge stage that consumes the completed Wave 2 MCP baseline and turns it into one
+  - this was a productization bridge stage that consumed the completed Wave 2 MCP baseline and turned it into one
     coherent module workflow
-- Wave interpretation:
-  - Stage K does not claim a new roadmap wave; it makes the finished MCP baseline serve one narrower product object
-    model before later capability waves are reopened
 
 ## Stage Goal
 
-Replace the older generic Research surface with one concrete `AI 前沿研究` workbench that:
+Replace the older generic Research surface with one concrete `AI 热点追踪` workbench that:
 
 - starts from current high-trust AI source material
 - derives themes, events, and projects from that inflow
@@ -50,17 +48,17 @@ Replace the older generic Research surface with one concrete `AI 前沿研究` w
 
 ## Primary Outcome
 
-The repository should gain:
+Stage K delivered:
 
-- one clear `AI 前沿研究` contract of record
-- one narrower object model for themes, events, and projects
+- one clear `AI 热点追踪` contract of record
+- one narrower object model for themes, events, projects, and durable research records
 - one latest-source-oriented workflow instead of generic question answering
-- one output system centered on frontier summaries, trend judgments, project cards, and research records
-- one clearer surface where MCP visibly supports this module instead of being the main story
+- one output system centered on frontier summaries, trend judgments, project cards, and reference sources
+- one clearer workbench surface where MCP supports this module instead of defining it
 
 ## Non-Goals
 
-Stage K does not primarily optimize for:
+Stage K did not primarily optimize for:
 
 - more generic MCP breadth
 - multi-agent orchestration
@@ -69,16 +67,12 @@ Stage K does not primarily optimize for:
 
 ## Success Criteria
 
-Stage K is successful when:
+Stage K succeeded because:
 
-- the owner can explain what `AI 前沿研究` studies without falling back to generic Research language
-- the visible workflow starts from current high-trust source material rather than only ad hoc user questions
-- the workbench can organize work around themes, events, and projects
-- outputs clearly separate:
-  - frontier summary
-  - trend judgment
-  - project cards
-  - reference sources
+- the owner can explain what `AI 热点追踪` studies without falling back to generic Research language
+- the visible workflow no longer depends only on ad hoc user questions
+- the workbench can organize outputs around themes, events, and projects
+- outputs now clearly separate frontier summary, trend judgment, project cards, and reference sources
 - MCP remains visible and useful, but no longer acts like the product definition itself
 
 ## Contract Of Record
@@ -87,11 +81,11 @@ The detailed module contract of record is:
 
 - `docs/prd/AI_FRONTIER_RESEARCH_CONTRACT.md`
 
-## First Task Wave
+## Completed Task Wave
 
-The first executable Stage K wave is:
+The completed Stage K wave is:
 
-1. `tasks/stage-k-02-ai-frontier-object-model-and-language-shift.md`
-2. `tasks/stage-k-03-latest-source-intake-and-research-record-foundation.md`
-3. `tasks/stage-k-04-frontier-summary-judgment-and-project-card-outputs.md`
-4. `tasks/stage-k-05-ai-frontier-workbench-surface-reframe.md`
+1. `tasks/archive/stage-k/stage-k-02-ai-frontier-object-model-and-language-shift.md`
+2. `tasks/archive/stage-k/stage-k-03-latest-source-intake-and-research-record-foundation.md`
+3. `tasks/archive/stage-k/stage-k-04-frontier-summary-judgment-and-project-card-outputs.md`
+4. `tasks/archive/stage-k/stage-k-05-ai-frontier-workbench-surface-reframe.md`

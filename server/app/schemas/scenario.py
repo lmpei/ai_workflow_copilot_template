@@ -30,8 +30,8 @@ ScenarioTaskType = Literal[
 _SCENARIO_REGISTRY: dict[str, dict[str, object]] = {
     MODULE_TYPE_RESEARCH: {
         "module_type": MODULE_TYPE_RESEARCH,
-        "title": "Research Assistant",
-        "short_label": "Research",
+        "title": "AI 前沿研究",
+        "short_label": "AI Frontier",
         "description": "基于 grounded 检索完成比较、总结与报告生成。",
         "work_object": "工作区范围内的文档集合、证据和开放研究问题。",
         "primary_output": "有证据支撑的综合结论与工作区报告。",
@@ -49,10 +49,10 @@ _SCENARIO_REGISTRY: dict[str, dict[str, object]] = {
         "eval_input_label": "研究问题或研究目标",
         "eval_prompt_field": "question",
         "default_eval_task_type": "research_summary",
-        "quality_baseline": "grounded_research",
+        "quality_baseline": "ai_frontier_research",
         "pass_threshold": 0.7,
-        "result_type": "research_report",
-        "features": ["documents", "grounded_chat", "tasks", "evals"],
+        "result_type": "ai_frontier_research_record",
+        "features": ["documents", "grounded_chat", "tasks", "evals", "mcp"],
         "tasks": {
             "research_summary": {
                 "task_type": "research_summary",

@@ -1,10 +1,12 @@
 import { clearStoredSession } from "./auth";
 import type {
+  AiHotTrackerReportRecord,
   ChatRequestPayload,
   ChatResponsePayload,
   ConnectorConsentGrantPayload,
   ConnectorConsentRevokePayload,
   DocumentRecord,
+  EnterAuthRequestPayload,
   EvalDatasetCreatePayload,
   EvalDatasetRecord,
   EvalResultRecord,
@@ -17,7 +19,11 @@ import type {
   PublicDemoSettingsRecord,
   PublicDemoTemplateRecord,
   PublicDemoWorkspaceSeedRecord,
+  AiHotTrackerFollowUpResponse,
   RegisterRequestPayload,
+  AiFrontierResearchRecord,
+  AiFrontierResearchRecordWritePayload,
+  AiHotTrackerFollowUpPayload,
   ResearchAnalysisReviewResponse,
   ResearchAnalysisRunCreatePayload,
   ResearchAnalysisRunRecord,
@@ -85,7 +91,16 @@ export async function fetchApiJson<T>(
     if (!response.ok) {
       return { status: "error", code: response.status };
     }
-    return (await response.json()) as T;
+    if (response.status === 204 || response.status === 205) {
+      return undefined as T;
+    }
+
+    const payloadText = await response.text();
+    if (!payloadText.trim()) {
+      return undefined as T;
+    }
+
+    return JSON.parse(payloadText) as T;
   } catch {
     return { status: "unreachable" };
   }
@@ -156,11 +171,27 @@ async function fetchBrowserApiJson<T>(
     throw new ApiClientError(response.status, await parseErrorDetail(response));
   }
 
-  return (await response.json()) as T;
+  if (response.status === 204 || response.status === 205) {
+    return undefined as T;
+  }
+
+  const payloadText = await response.text();
+  if (!payloadText.trim()) {
+    return undefined as T;
+  }
+
+  return JSON.parse(payloadText) as T;
 }
 
 export async function registerUser(payload: RegisterRequestPayload): Promise<User> {
   return fetchBrowserApiJson<User>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function enterAuth(payload: EnterAuthRequestPayload): Promise<LoginResponsePayload> {
+  return fetchBrowserApiJson<LoginResponsePayload>("/auth/enter", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -218,6 +249,16 @@ export async function createWorkspace(
 
 export async function getWorkspace(accessToken: string, workspaceId: string): Promise<Workspace> {
   return fetchBrowserApiJson<Workspace>(`/workspaces/${workspaceId}`, {}, accessToken);
+}
+
+export async function deleteWorkspace(accessToken: string, workspaceId: string): Promise<void> {
+  await fetchBrowserApiJson<void>(
+    `/workspaces/${workspaceId}`,
+    {
+      method: "DELETE",
+    },
+    accessToken,
+  );
 }
 
 export async function listWorkspaceDocuments(
@@ -322,6 +363,96 @@ export async function listWorkspaceResearchExternalResourceSnapshots(
   return fetchBrowserApiJson<ResearchExternalResourceSnapshotRecord[]>(
     `/workspaces/${workspaceId}/research-external-resource-snapshots?limit=${limit}`,
     {},
+    accessToken,
+  );
+}
+
+export async function listWorkspaceAiFrontierResearchRecords(
+  accessToken: string,
+  workspaceId: string,
+  limit = 8,
+): Promise<AiFrontierResearchRecord[]> {
+  return fetchBrowserApiJson<AiFrontierResearchRecord[]>(
+    `/workspaces/${workspaceId}/ai-frontier-records?limit=${limit}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getAiFrontierResearchRecord(
+  accessToken: string,
+  recordId: string,
+): Promise<AiFrontierResearchRecord> {
+  return fetchBrowserApiJson<AiFrontierResearchRecord>(`/ai-frontier-records/${recordId}`, {}, accessToken);
+}
+
+export async function saveAiFrontierResearchRecord(
+  accessToken: string,
+  workspaceId: string,
+  payload: AiFrontierResearchRecordWritePayload,
+): Promise<AiFrontierResearchRecord> {
+  return fetchBrowserApiJson<AiFrontierResearchRecord>(
+    `/workspaces/${workspaceId}/ai-frontier-records`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function updateAiFrontierResearchRecord(
+  accessToken: string,
+  recordId: string,
+  payload: AiFrontierResearchRecordWritePayload,
+): Promise<AiFrontierResearchRecord> {
+  return fetchBrowserApiJson<AiFrontierResearchRecord>(
+    `/ai-frontier-records/${recordId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function deleteAiFrontierResearchRecord(
+  accessToken: string,
+  recordId: string,
+): Promise<void> {
+  await fetchBrowserApiJson<void>(
+    `/ai-frontier-records/${recordId}`,
+    {
+      method: "DELETE",
+    },
+    accessToken,
+  );
+}
+
+export async function askAiHotTrackerFollowUp(
+  accessToken: string,
+  workspaceId: string,
+  payload: AiHotTrackerFollowUpPayload,
+): Promise<AiHotTrackerFollowUpResponse> {
+  return fetchBrowserApiJson<AiHotTrackerFollowUpResponse>(
+    `/workspaces/${workspaceId}/ai-hot-tracker/follow-up`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function generateAiHotTrackerReport(
+  accessToken: string,
+  workspaceId: string,
+): Promise<AiHotTrackerReportRecord> {
+  return fetchBrowserApiJson<AiHotTrackerReportRecord>(
+    `/workspaces/${workspaceId}/ai-hot-tracker/report`,
+    {
+      method: "POST",
+    },
     accessToken,
   );
 }

@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-09
+- Last Updated: 2026-04-16
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -17,7 +17,7 @@ Support owns one persistent case workbench layer and one direct case-action loop
 case itself while still going through the shared task runtime. Job owns one persistent hiring-packet workbench layer and
 one direct hiring-packet action loop: a user can continue shortlist or candidate-review work from the packet itself
 while still going through the shared task runtime. The older generic Research definition is now replaced at the product
-definition layer by `AI 前沿研究`, which becomes the reference workflow when the product needs one clear primary path.
+definition layer by `AI 热点追踪`, which becomes the reference workflow when the product needs one clear primary path.
 
 Stage F is complete and closed after the experience reset that produced one denser product home, one
 research-workflow-oriented main workspace, and one clearer distinction between primary work and summoned supporting
@@ -96,21 +96,34 @@ resource, one tool, one prompt, one stdio transport, and one bearer-token auth c
 now implement that full shape instead of redefining MCP scope on every task.
 
 The next two Stage J tasks are now also complete: one independent MCP server now exists outside this repository at
-`D:\ai-try\weave-mcp-server`, and the visible `AI 前沿研究` path in this repository now uses MCP resource, tool, and
+`D:\ai-try\weave-mcp-server`, and the visible `AI 热点追踪` path in this repository now uses MCP resource, tool, and
 prompt behavior distinctly instead of treating MCP as resource-only context.
 
 The final Stage J task is now complete as well: MCP tool identity, prompt identity, auth outcome, transport outcome,
-and degraded behavior are now reviewable enough on the same `AI 前沿研究` path that the project can treat Stage J as a
+and degraded behavior are now reviewable enough on the same `AI 热点追踪` path that the project can treat Stage J as a
 closed learning stage instead of an open MCP catch-all.
 
-Stage K is now active. It does not reopen MCP as another protocol-learning stage. Instead, it uses the completed
-Stage J MCP baseline to turn the old generic Research surface into one concrete `AI 前沿研究` workbench with a narrower
-object model, latest-source intake, structured outputs, and a clearer product surface.
+Stage K is now complete and closed. It did not reopen MCP as another protocol-learning stage. Instead, it used the
+completed Stage J MCP baseline to turn the old generic Research surface into one concrete `AI 热点追踪` workbench with
+one narrower object model, one durable research-record layer, one structured frontier-output system, and one clearer
+product surface.
 
 The module focus is now also narrowed: the product no longer treats Research as a generic anything-research surface.
-`AI 前沿研究` now means a workflow that starts from current high-trust AI source material, derives themes, events, and
+`AI 热点追踪` now means a workflow that starts from current high-trust AI source material, derives themes, events, and
 projects from that inflow, and produces summaries, judgments, project cards, and durable research records with sources
 kept separate from the main prose.
+
+The default `AI 热点追踪` workbench is now lighter as well: the user-facing path is centered on source intake, one
+current research result, and recent research records, while trace, readiness, and other technical process detail are
+no longer exposed as equal first-stop surfaces inside that module.
+
+The frontend auth experience is now also narrower: protected product paths no longer keep a separate login page as the
+primary product-facing auth surface. Instead, the product home acts as the visible auth host and mounts one blocking
+auth overlay when entry is required.
+
+The next bounded follow-through on top of that product surface is now explicit as well: `AI 热点追踪` is being rebuilt
+around one fixed trusted external source set, one normalized source-item middle layer, and one structured report path
+instead of depending on one answer-first generic chat response.
 
 ## Roadmap Alignment
 
@@ -132,16 +145,18 @@ kept separate from the main prose.
   - one visible Research path now reads one true external MCP resource while preserving consent and snapshot reuse
   - one explicit Stage J capability contract now fixes the first independent MCP server shape and the first resource,
     tool, prompt, transport, and auth model
-  - the reference workflow is now explicitly `AI 前沿研究` rather than the older generic Research definition
+  - the reference workflow is now explicitly `AI 热点追踪` rather than the older generic Research definition
+  - durable `ai_frontier_research_record` persistence plus frontier summary, trend judgment, project-card, and
+    reference-source outputs now exist on that same module path
 - Still deferred:
   - any broader multi-module rollout on top of MCP
-  - later roadmap-wave work after `AI 前沿研究` productization is coherent
+  - later roadmap-wave work after `AI 热点追踪` productization is coherent
 
 ## Current Phase
 
 - Phase baseline: Phase 5 implemented
 - Current stage: Stage A complete, Stage B complete, Stage C complete, Stage D complete, Stage E complete, Stage F
-  complete, Stage G complete, Stage H complete, Stage I complete, Stage J complete, and Stage K active
+  complete, Stage G complete, Stage H complete, Stage I complete, Stage J complete, and Stage K complete
 
 ## Success Criteria
 
@@ -149,7 +164,7 @@ The platform is useful when the same core APIs and runtime can support research,
 forking the architecture. The active bounded stage should preserve that shared-platform model while adding one explicit
 connector-backed Research path with clear consent, resource, and review boundaries, plus one actual visible
 true-external-MCP follow-through on top of that baseline. Stage I already met that bounded goal. Stage J now exists to
-learn MCP more completely by building one independent MCP server and one fuller product-side integration path for `AI 前沿研究`
+learn MCP more completely by building one independent MCP server and one fuller product-side integration path for `AI 热点追踪`
 instead of extending the older bounded pilot indefinitely. Roadmap-wave completion is a separate judgment against the exit
 signals in
 `docs/prd/LONG_TERM_ROADMAP.md`, not against exhaustive concept coverage.
@@ -193,11 +208,11 @@ signals in
 - `docs/prd/STAGE_J_PLAN.md`
   - closed Stage J planning document for the complete MCP understanding stage
 - `docs/prd/STAGE_K_PLAN.md`
-  - active Stage K planning document for AI Frontier Research productization
+  - closed Stage K planning document for AI Frontier Research productization
 - `tasks/`
   - active and archived task specs
 - Stage task naming
-  - active Stage K work uses `stage-k-*`
+  - Stage K work uses `stage-k-*`
 - root control-plane docs
   - `AGENTS.md`, `CONTEXT.md`, `STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`
 
@@ -237,7 +252,7 @@ signals in
     learned through one independent MCP server plus one clearer product integration
 - `stage-k-ai-frontier-productization-wave`
   - the same product-only stack, but now treated as the bounded environment where the completed MCP baseline is turned
-    into one concrete `AI 前沿研究` module workflow
+    into one concrete `AI 热点追踪` module workflow
 
 ## Verification
 

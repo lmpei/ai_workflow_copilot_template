@@ -4,6 +4,10 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.research_analysis_run import ResearchAnalysisRun
+from app.schemas.ai_frontier_research import (
+    AiFrontierResearchOutput,
+    AiFrontierResearchRecordResponse,
+)
 from app.schemas.chat import ChatMode, ChatToolStep, SourceReference
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
 
@@ -39,6 +43,8 @@ class ResearchAnalysisRunResponse(BaseModel):
     sources: list[SourceReference]
     tool_steps: list[ChatToolStep]
     external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None
+    frontier_output: AiFrontierResearchOutput | None = None
+    research_record: AiFrontierResearchRecordResponse | None = None
     run_memory: ResearchAnalysisRunMemory | None = None
     analysis_focus: str | None = None
     search_query: str | None = None
@@ -55,6 +61,8 @@ class ResearchAnalysisRunResponse(BaseModel):
         run: ResearchAnalysisRun,
         *,
         external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None,
+        frontier_output: AiFrontierResearchOutput | None = None,
+        research_record: AiFrontierResearchRecordResponse | None = None,
     ) -> "ResearchAnalysisRunResponse":
         return cls(
             id=run.id,
@@ -70,6 +78,8 @@ class ResearchAnalysisRunResponse(BaseModel):
             sources=[SourceReference.model_validate(item) for item in run.sources_json],
             tool_steps=[ChatToolStep.model_validate(item) for item in run.tool_steps_json],
             external_resource_snapshot=external_resource_snapshot,
+            frontier_output=frontier_output,
+            research_record=research_record,
             run_memory=ResearchAnalysisRunMemory.model_validate(run.run_memory_json) if run.run_memory_json else None,
             analysis_focus=run.analysis_focus,
             search_query=run.search_query,

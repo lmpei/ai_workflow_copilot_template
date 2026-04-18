@@ -5,6 +5,85 @@ from pydantic import ValidationError
 from app.core.config import Settings, get_settings
 
 
+def test_enter_registers_new_account_and_returns_session(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "super-secret",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["token_type"] == "bearer"
+    assert payload["user"]["email"] == "owner-account"
+    assert payload["user"]["name"] == "owner-account"
+
+
+def test_enter_logs_in_existing_account(client: TestClient) -> None:
+    first_response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "super-secret",
+        },
+    )
+    assert first_response.status_code == 200
+
+    second_response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "super-secret",
+        },
+    )
+
+    assert second_response.status_code == 200
+    assert second_response.json()["user"]["email"] == "owner-account"
+
+
+def test_enter_rejects_wrong_password_for_existing_account(client: TestClient) -> None:
+    client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "super-secret",
+        },
+    )
+
+    response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "wrong-password",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "账号或密码不正确"
+
+
+def test_enter_rejects_new_account_when_public_demo_registration_is_disabled(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "public_demo_mode", True)
+    monkeypatch.setattr(settings, "public_demo_registration_enabled", False)
+
+    response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "outside-user",
+            "password": "super-secret",
+        },
+    )
+
+    assert response.status_code == 403
+    assert "当前已关闭 public demo 自助注册" in response.json()["detail"]
+
+
 def test_register_login_and_me(client: TestClient) -> None:
     register_response = client.post(
         "/api/v1/auth/register",
@@ -50,7 +129,7 @@ def test_register_rejects_duplicate_email(client: TestClient) -> None:
 
     duplicate_response = client.post("/api/v1/auth/register", json=payload)
     assert duplicate_response.status_code == 409
-    assert duplicate_response.json()["detail"] == "该邮箱已被注册"
+    assert duplicate_response.json()["detail"] == "该账号已被注册"
 
 
 def test_login_rejects_wrong_password(client: TestClient) -> None:
@@ -72,7 +151,7 @@ def test_login_rejects_wrong_password(client: TestClient) -> None:
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "邮箱或密码不正确"
+    assert response.json()["detail"] == "账号或密码不正确"
 
 
 def test_me_rejects_invalid_or_missing_token(client: TestClient) -> None:

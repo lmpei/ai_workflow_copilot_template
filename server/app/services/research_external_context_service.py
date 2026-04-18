@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from app.connectors.research_external_context_connector import ResearchExternalContextEntry
+from app.schemas.ai_frontier_research import AiFrontierResearchOutput
 from app.schemas.chat import ChatToolStep, SourceReference
 from app.schemas.mcp import (
     AI_FRONTIER_BRIEF_PROMPT_NAME,
@@ -19,6 +20,7 @@ from app.services.connector_service import (
     ConnectorConsentRequiredError,
     require_workspace_connector_consent,
 )
+from app.services.ai_frontier_research_output_service import build_ai_frontier_research_output
 from app.services.mcp_service import (
     McpExternalEndpointNotConfiguredError,
     McpRemoteAuthDeniedError,
@@ -76,6 +78,27 @@ class ResearchExternalContextChatResult:
     mcp_endpoint_auth_state: McpEndpointAuthState | None = None
     mcp_endpoint_auth_detail: str | None = None
     context_selection_mode: Literal["none", "snapshot", "mcp_resource"] = "none"
+    frontier_output: AiFrontierResearchOutput | None = None
+    tool_structured_content: dict[str, Any] | None = None
+
+
+def _finalize_research_external_context_result(
+    **kwargs: Any,
+) -> ResearchExternalContextChatResult:
+    external_matches = kwargs.get("external_matches") or []
+    tool_structured_content = kwargs.pop("tool_structured_content", None)
+    return ResearchExternalContextChatResult(
+        frontier_output=build_ai_frontier_research_output(
+            answer=kwargs["answer"],
+            analysis_focus=kwargs.get("analysis_focus"),
+            search_query=kwargs.get("search_query"),
+            degraded_reason=kwargs.get("degraded_reason"),
+            external_matches=external_matches,
+            tool_structured_content=tool_structured_content,
+        ),
+        tool_structured_content=tool_structured_content,
+        **kwargs,
+    )
 
 
 def _append_answer_note(answer: str, note: str) -> str:
@@ -402,7 +425,7 @@ def run_research_external_context_chat(
             if degraded_reason == "connector_consent_revoked"
             else "这次没有使用外部 MCP 资源，因为当前工作区还没有完成授权。"
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(internal_result.answer, answer_note),
             prompt=internal_result.prompt,
             sources=internal_result.sources,
@@ -439,7 +462,7 @@ def run_research_external_context_chat(
         if not external_matches:
             degraded_reason = "selected_external_resource_snapshot_empty"
             tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
-            return ResearchExternalContextChatResult(
+            return _finalize_research_external_context_result(
                 answer=_append_answer_note(
                     internal_result.answer,
                     "这次选中的外部资源快照里没有可用内容，所以答案只反映当前工作区资料。",
@@ -476,7 +499,7 @@ def run_research_external_context_chat(
             brief_prompt="本次直接复用了外部资源快照，没有重新获取 MCP 提示。",
             external_matches=external_matches,
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=answer,
             prompt=prompt,
             sources=[*internal_result.sources, *_serialize_external_sources(external_matches)],
@@ -500,6 +523,7 @@ def run_research_external_context_chat(
             mcp_endpoint_auth_state=endpoint_auth_state,
             mcp_endpoint_auth_detail=endpoint_auth_detail,
             context_selection_mode="snapshot",
+            tool_structured_content=None,
         )
 
     try:
@@ -534,7 +558,7 @@ def run_research_external_context_chat(
                 auth_state=endpoint_auth_state,
             )
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(
                 internal_result.answer,
                 "这次没有使用外部 MCP 上下文，因为当前还没有配置可用的独立 MCP 服务端。",
@@ -565,6 +589,7 @@ def run_research_external_context_chat(
             mcp_endpoint_auth_state=endpoint_auth_state,
             mcp_endpoint_auth_detail=endpoint_auth_detail,
             context_selection_mode="mcp_resource",
+            tool_structured_content=None,
         )
     except McpRemoteAuthRequiredError as error:
         degraded_reason = "external_context_auth_required"
@@ -575,7 +600,7 @@ def run_research_external_context_chat(
                 auth_state="missing",
             )
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(
                 internal_result.answer,
                 "这次没有使用远程 MCP 上下文，因为当前端点要求认证，但服务端还没有配置可用凭据。",
@@ -616,7 +641,7 @@ def run_research_external_context_chat(
                 auth_state="denied",
             )
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(
                 internal_result.answer,
                 "这次没有使用远程 MCP 上下文，因为当前凭据被目标端点拒绝。",
@@ -657,7 +682,7 @@ def run_research_external_context_chat(
                 auth_state=endpoint_auth_state,
             )
         )
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(
                 internal_result.answer,
                 "这次远程 MCP 资源暂时不可用，所以答案只反映当前工作区资料。",
@@ -710,7 +735,7 @@ def run_research_external_context_chat(
     if not digest_text and not external_matches:
         degraded_reason = "external_context_no_useful_matches"
         tool_steps.append(_summarize_external_context_degraded_step(reason=degraded_reason))
-        return ResearchExternalContextChatResult(
+        return _finalize_research_external_context_result(
             answer=_append_answer_note(
                 internal_result.answer,
                 "这次远程 MCP 资源没有提供足够有用的补充内容，所以答案只反映当前工作区资料。",
@@ -753,7 +778,7 @@ def run_research_external_context_chat(
     if digest_source is not None:
         external_sources = [digest_source, *external_sources]
 
-    return ResearchExternalContextChatResult(
+    return _finalize_research_external_context_result(
         answer=answer,
         prompt=prompt,
         sources=[*internal_result.sources, *external_sources],
@@ -780,4 +805,5 @@ def run_research_external_context_chat(
         mcp_endpoint_auth_state=endpoint_auth_state,
         mcp_endpoint_auth_detail=endpoint_auth_detail,
         context_selection_mode="mcp_resource",
+        tool_structured_content=mcp_tool.structured_content,
     )

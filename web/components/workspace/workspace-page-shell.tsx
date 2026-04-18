@@ -20,7 +20,7 @@ type WorkspacePageShellProps = {
 };
 
 const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
-  research: "Research Assistant",
+  research: "AI 热点追踪",
   support: "Support Copilot",
   job: "Job Assistant",
 };
@@ -86,9 +86,12 @@ export default function WorkspacePageShell({ workspaceId, page, title, descripti
 
       <section
         style={{
-          background: "linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)",
-          border: "1px solid #dbeafe",
-          borderRadius: 18,
+          background:
+            workspace?.module_type === "research"
+              ? "radial-gradient(circle at top right, rgba(8,145,178,0.18), transparent 24%), linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)"
+              : "linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)",
+          border: "1px solid #dbe4f0",
+          borderRadius: 24,
           display: "grid",
           gap: 12,
           padding: 24,
@@ -117,6 +120,19 @@ export default function WorkspacePageShell({ workspaceId, page, title, descripti
           {isLoading ? <span style={{ color: "#475569", fontSize: 14 }}>正在同步工作区信息...</span> : null}
         </div>
         <div style={{ display: "grid", gap: 6 }}>
+          {workspace?.module_type === "research" ? (
+            <span
+              style={{
+                color: "#64748b",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              AI Signal Tracker
+            </span>
+          ) : null}
           <h1 style={{ margin: 0 }}>{title}</h1>
           <p style={{ color: "#334155", margin: 0 }}>{description}</p>
         </div>

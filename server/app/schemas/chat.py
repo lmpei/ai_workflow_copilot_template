@@ -2,6 +2,10 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.schemas.ai_frontier_research import (
+    AiFrontierResearchOutput,
+    AiFrontierResearchRecordResponse,
+)
 from app.schemas.research_external_resource_snapshot import (
     ResearchExternalResourceSnapshotResponse,
 )
@@ -39,3 +43,5 @@ class ChatResponse(BaseModel):
     mode: ChatMode = "rag"
     tool_steps: list[ChatToolStep] = []
     external_resource_snapshot: ResearchExternalResourceSnapshotResponse | None = None
+    frontier_output: AiFrontierResearchOutput | None = None
+    research_record: AiFrontierResearchRecordResponse | None = None

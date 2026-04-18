@@ -2045,3 +2045,217 @@ Append-only log. Add new entries at the bottom.
 - Impact: Stage K now has one explicit bounded execution wave, and `stage-k-02` becomes the active task.
 - Related Task: `tasks/archive/stage-k/stage-k-01-task-stack-planning.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-126
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-k-02 AI frontier object-model and language shift
+- Context: Stage J delivered a coherent MCP baseline, but the visible product surface still depended on broad generic
+  Research wording and did not yet expose one durable `AI 前沿研究` result contract.
+- Choice: complete `stage-k-02`, replace the older generic Research wording with one explicit `AI 前沿研究` object
+  model and response contract, archive the task, and continue Stage K execution.
+- Why: productization needed a stable module definition before source intake, output restructuring, and surface work
+  could stay coherent.
+- Impact: `AI 前沿研究` is now the explicit reference workflow and later Stage K work can build on one narrower domain
+  contract instead of the older generic Research language.
+- Related Task: `tasks/archive/stage-k/stage-k-02-ai-frontier-object-model-and-language-shift.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-127
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-k-03 latest-source intake and research-record foundation
+- Context: after `stage-k-02`, the module definition was narrower, but the product still lacked one durable record for
+  `AI 前沿研究` work and one explicit persistence path for frontier outputs beyond raw traces or transient chat turns.
+- Choice: complete `stage-k-03`, add persisted `ai_frontier_research_record` state plus listing and retrieval APIs,
+  archive the task, and continue Stage K execution.
+- Why: `AI 前沿研究` should create durable research records instead of behaving like one more chat-only surface.
+- Impact: frontier outputs can now outlive one answer or run and can be reviewed through first-class product records.
+- Related Task: `tasks/archive/stage-k/stage-k-03-latest-source-intake-and-research-record-foundation.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-128
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-k-04 frontier summary, judgment, and project-card outputs
+- Context: durable records alone were not enough; Stage K still needed one explicit output system that separated
+  summaries, judgments, projects, and sources instead of collapsing everything into one generic answer blob.
+- Choice: complete `stage-k-04`, make frontier summary, trend judgment, theme, event, project-card, and
+  reference-source outputs first-class, archive the task, and continue Stage K execution.
+- Why: the module should expose one coherent output grammar that matches the new `AI 前沿研究` contract.
+- Impact: both direct chat and background runs can now surface structured frontier outputs and persist them into
+  durable research records.
+- Related Task: `tasks/archive/stage-k/stage-k-04-frontier-summary-judgment-and-project-card-outputs.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-129
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: complete stage-k-05 AI frontier workbench surface reframe
+- Context: after `stage-k-04`, the repo had the right records and outputs, but the visible workbench still needed to
+  stop behaving like a generic Research shell and start presenting `AI 前沿研究` as its own concrete module surface.
+- Choice: complete `stage-k-05`, reframe the visible workbench around `AI 前沿研究` outputs and records, archive the
+  task, and return Stage K to closeout.
+- Why: Stage K should finish by changing what the user actually sees, not only by changing backend contracts.
+- Impact: the visible workbench now presents durable AI frontier outputs and records instead of older broad Research
+  framing.
+- Related Task: `tasks/archive/stage-k/stage-k-05-ai-frontier-workbench-surface-reframe.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-15-131
+- Date: 2026-04-15
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: simplify the post-Stage-K AI Frontier Research workbench
+- Context: Stage K delivered the right records and outputs, but the visible `AI 前沿研究` workbench still exposed too much technical process, including a right rail, explicit analysis-mode switching, a separate trace or readiness entry, and a separate formal-output action surface that duplicated the main result path.
+- Choice: keep the default `AI 前沿研究` workbench to one lighter single-column path built around source intake, one current research result, and recent research records; remove the right rail from that module; stop exposing trace or readiness and separate formal-output actions in the main path; and hide analysis-mode switching from ordinary users.
+- Why: the user-facing workbench should show the research object and result, not the internal system shape or repeated output layers.
+- Impact: the research module now reads more like one lightweight workbench than one technical shell, while operator-facing trace and review capability remains available outside the default user path.
+- Related Task: `tasks/archive/stage-k/ai-frontier-workbench-simplification.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-15-132
+- Date: 2026-04-15
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: rename the visible module from AI Frontier Research to AI Hot Tracker
+- Context: after the lighter post-Stage-K workbench cleanup, the visible module still carried the older `AI 前沿研究` framing, and the product home still looked like a generic internal shell rather than a focused product entry surface.
+- Choice: rename the visible module product name from `AI 前沿研究` to `AI 热点追踪`, use `AI Signal Tracker` as the English subtitle, remove leftover `Research` wording from the main entry surfaces, and redesign the product home plus the module workbench around that narrower identity.
+- Why: the product needs a sharper, more external-facing identity so the module reads like one real product surface instead of one leftover generic Research shell.
+- Impact: current user-facing entry surfaces, workbench labels, and control-plane docs should now treat `AI 热点追踪` as the visible product name while backend module types remain unchanged.
+- Related Task: `tasks/ai-hot-tracker-rename-and-surface-reframe.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-09-130
+- Date: 2026-04-09
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: close Stage K as complete
+- Context: the Stage K wave is now fully complete: the repo has one explicit `AI 前沿研究` contract, one durable
+  research-record layer, one structured frontier-output system, and one reframed workbench surface on top of the
+  completed Stage J MCP baseline.
+- Choice: close Stage K as complete instead of opening another default Stage K follow-through task.
+- Why: the bounded Stage K goal was to productize `AI 前沿研究`, and that goal is now met.
+- Impact: `STATUS.md` no longer points to an active Stage K task, and the next step is a human decision about the next
+  bounded stage.
+- Related Task: `tasks/archive/stage-k/stage-k-05-ai-frontier-workbench-surface-reframe.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-16-133
+- Date: 2026-04-16
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: rebuild AI hot tracker around one real content pipeline
+- Context: the visible `AI 热点追踪` surface had already been narrowed and reframed, but its primary content path still
+  depended on one answer-first MCP/chat flow plus shallow output post-processing. That made reports feel like internal
+  field dumps instead of current, structured tracking briefs.
+- Choice: start one bounded rebuild of `AI 热点追踪` around three explicit layers: trusted external source intake, one
+  structured normalized source-item middle layer, and one structured report-generation path that the frontend consumes
+  directly.
+- Why: the product should first solve whether it can stably fetch current external information and turn that into a real
+  report before it adds more UI polish, more prompts, or multi-agent orchestration.
+- Impact: the active task moves away from surface-only reframe work and toward one dedicated content-pipeline rebuild;
+  future saved records should align with the new structured source and report contracts instead of the older answer blob.
+- Related Task: `tasks/ai-hot-tracker-content-pipeline-rebuild.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-17-134
+- Date: 2026-04-17
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: make workspace deletion permanent, owner-only, and explicit
+- Context: once `/workspaces` became a real lightweight page again, the product still had no bounded way to remove stale
+  workspaces. The user explicitly confirmed that deleting a workspace should permanently remove the workspace and its
+  associated data after a second confirmation instead of introducing a soft-delete or archive layer.
+- Choice: add one owner-only `DELETE /workspaces/{workspace_id}` path plus one lightweight frontend delete affordance
+  with confirmation, and treat uploaded workspace files as part of the delete scope in addition to database records.
+- Why: the product needs one honest lifecycle path for old workspaces; otherwise stale containers accumulate forever and
+  users cannot actually manage the workspaces they create.
+- Impact: `/workspaces` is now both the lightweight history surface and the system-level deletion surface, while
+  module-level record deletion remains separate from full workspace deletion.
+- Related Task: `tasks/archive/workspace-system-delete.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-17-135
+- Date: 2026-04-17
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: fix saved-record follow-up shape at the write path and normalize historical data
+- Context: `AI 热点追踪` saved records had drifted into two shapes: new code sometimes persisted `source_set.follow_ups`
+  as missing or `None`, while older records already stored that historical inconsistency. A response-time fallback could
+  hide the issue, but that kept the underlying contract wrong and made future debugging harder.
+- Choice: make the write path always persist `source_set.follow_ups` as a real list, add one bounded Alembic backfill
+  that normalizes older records to `[]`, and keep the read contract strict so malformed persisted data is not silently
+  accepted as normal.
+- Why: this is a source-of-truth field for saved hot-tracker records; it should be corrected at the storage contract,
+  not perpetually repaired at response time.
+- Impact: newly saved records now write the correct shape at the source path, historical records can be migrated into
+  that same shape, and future failures point to real contract regressions instead of being hidden by lenient readers.
+- Related Task: `tasks/archive/ai-hot-tracker-follow-up-backfill.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-17-136
+- Date: 2026-04-17
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: remove retained auth-required surface from protected product paths
+- Context: the old `需要先登录` card was still appearing on protected workspace and module pages, and it now reads like a leftover internal surface rather than a necessary product state.
+- Choice: keep protected-page auth handling, but replace the retained card with a direct redirect to `/login`, and preserve user flow by returning to the originally requested page after successful login.
+- Why: the product should not expose a stale auth-required card when the clearer behavior is to send users straight into the login flow and then back to where they intended to go.
+- Impact: protected pages no longer render the old auth gate, and login now restores the prior path instead of always sending users back to `/`.
+- Related Task: `tasks/archive/auth-required-surface-removal.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-17-137
+- Date: 2026-04-17
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: collapse frontend auth into one account-entry surface
+- Context: the product no longer needs separate login and register pages with repeated form chrome and explanatory copy. The desired interaction is one short entry path: a user types account plus password, existing accounts sign in, and unknown accounts are created automatically and then signed in.
+- Choice: keep the legacy backend `/auth/login` and `/auth/register` APIs for compatibility, add one new `/auth/enter` API for the unified path, reduce the frontend to one `/login` surface with only `账号` and `密码`, and redirect `/register` into that same page instead of preserving a second auth UI.
+- Why: the auth entry should be shorter, calmer, and easier to understand. Users should not have to decide up front whether they are "logging in" or "registering" when the system can do the right thing from one submission.
+- Impact: protected product paths now route users into one shared auth surface, unknown accounts can be created from that same entry flow when registration is allowed, and the older split auth UI is no longer part of the visible product path.
+- Related Task: `tasks/archive/unified-auth-entry.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-17-138
+- Date: 2026-04-17
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: move auth entry onto the homepage as a blocking overlay
+- Context: the unified account-entry flow removed the split login/register UI, but the product was still presenting auth as a separate page. That kept the home surface and the entry surface visually disconnected and preserved an unnecessary second front-end mode.
+- Choice: keep the unified `/auth/enter` backend flow, but treat the homepage as the auth host by mounting one blocking auth overlay over the product home, redirecting protected paths into that overlay with a preserved `next`, and reducing `/login` plus `/register` to compatibility redirects into the same overlay entry.
+- Why: the product should feel like one coherent experience. Authentication is a gate over the product, not a second product.
+- Impact: unauthenticated users now enter through one homepage-mounted overlay while the background home remains visible but non-interactive, and protected-path redirects no longer land on a standalone login page.
+- Related Task: `tasks/archive/home-auth-overlay-entry.md`
+- Supersedes:

@@ -8,6 +8,8 @@ from app.services.public_demo_service import PublicDemoLimitError
 
 router = APIRouter()
 
+WORKSPACE_NOT_FOUND_DETAIL = "未找到工作区"
+
 
 @router.get("/workspaces", response_model=list[WorkspaceResponse])
 async def list_workspaces(
@@ -34,7 +36,7 @@ async def get_workspace(
 ) -> WorkspaceResponse:
     workspace = workspace_service.get_workspace(workspace_id=workspace_id, user_id=current_user.id)
     if workspace is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到工作区")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WORKSPACE_NOT_FOUND_DETAIL)
     return workspace
 
 
@@ -50,5 +52,18 @@ async def update_workspace(
         payload=payload,
     )
     if workspace is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到工作区")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WORKSPACE_NOT_FOUND_DETAIL)
     return workspace
+
+
+@router.delete("/workspaces/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_workspace(
+    workspace_id: str,
+    current_user: User = Depends(get_current_user),
+) -> None:
+    deleted = workspace_service.delete_workspace(
+        workspace_id=workspace_id,
+        user_id=current_user.id,
+    )
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WORKSPACE_NOT_FOUND_DETAIL)

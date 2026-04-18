@@ -110,7 +110,7 @@ def test_eval_api_creates_lists_datasets_and_creates_runs(client: TestClient) ->
     assert eval_run["summary_json"] == {
         "module_type": "research",
         "scenario_task_type": "research_summary",
-        "quality_baseline": "grounded_research",
+        "quality_baseline": "ai_frontier_research",
         "pass_threshold": 0.7,
         "total_cases": 2,
         "completed_cases": 0,

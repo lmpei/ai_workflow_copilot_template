@@ -3,14 +3,14 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-08
+- Last Updated: 2026-04-16
 
 ## Main Modules
 
 - shared platform core
   - auth, workspaces, documents, chat, tasks, evals, analytics, traces
 - scenario modules
-  - AI 前沿研究, Support Copilot, Job Assistant
+  - AI 热点追踪, Support Copilot, Job Assistant
 - supporting runtime services
   - PostgreSQL, Redis, Chroma, LangGraph, LLM providers
 
@@ -37,6 +37,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
   `workspace_connector_consent` records before any external-context connector call path is enabled.
 - PostgreSQL now also persists explicit bounded Research external-context matches as
   `research_external_resource_snapshot` records so approved connector-backed context can outlive one answer or trace.
+- PostgreSQL now also persists durable `ai_frontier_research_record` state so `AI 热点追踪` outputs can outlive one
+  answer or one background run.
 - Redis is the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
 - Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
@@ -46,18 +48,22 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 - Next.js frontend in `web/`
 - `web/app/page.tsx`
-  - owns the canonical product home for the dedicated frontend host
+  - owns the canonical product home for the dedicated frontend host and now also hosts the auth overlay entry state
 - `web/next.config.js`
   - preserves compatibility by redirecting the older `/app` project-home route into `/`
 - `web/app/workspaces/page.tsx`
   - preserves compatibility by redirecting the older workspace-center route into `/`
 - `web/app/workspaces/[workspaceId]/analytics/page.tsx`
   - preserves compatibility by redirecting the older analytics page route into the workbench analytics surface
+- `web/components/workspace/workspace-center-panel.tsx`
+  - owns the canonical home composition, module-entry surface, and homepage-mounted auth overlay gate
 - `web/components/workspace/workspace-workbench-panel.tsx`
-  - owns the primary workspace user path; the main conversation is the center of the workbench, documents behave like
-    lightweight context/upload controls, module actions behave like the next step inside the same shell, and analytics,
-    execution detail, or deeper document inspection belong to summoned supporting surfaces instead of equal peer
-    destinations
+  - still owns the non-hot-tracker primary workspace user path; technical process detail stays outside the default
+    user path
+- `web/components/research/ai-hot-tracker-workspace.tsx`
+  - owns the dedicated `AI 热点追踪` product surface, including one explicit report-generation action, one current
+    report state, one lightweight saved-record drawer, and one bounded follow-up panel that stays tied to the current
+    report instead of reopening the older generic chat shell
 - FastAPI API in `server/app/api/routes/`
 - `server/app/api/routes/connectors.py`
   - owns the bounded Stage I consent-check, consent-lifecycle, and connector-to-MCP binding API surface for the
@@ -97,7 +103,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `server/app/services/mcp_service.py`
   - owns the bounded MCP client facade inside this repo: it preserves the older Stage I local and repo-local baselines
     for comparison, but it now also describes, validates, and calls one independent MCP server outside this repository
-    for the visible `AI 前沿研究` path, including one resource, one tool, one prompt, and explicit endpoint auth state
+    for the visible `AI 热点追踪` path, including one resource, one tool, one prompt, and explicit endpoint auth state
 - `server/app/mcp/research_context_local_server.py`
   - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
     that remains available as a bounded MCP baseline while the visible Research path moves onto the out-of-process
@@ -110,9 +116,21 @@ Stable system boundaries only. This is the short architecture summary. The long-
     server process before the visible product path switches to that transport and before the repo reaches a true
     external MCP endpoint
 - `server/app/services/research_external_context_service.py`
-  - owns the visible `AI 前沿研究` MCP path: it checks connector consent, can reuse an explicitly selected external
+  - owns the visible `AI 热点追踪` MCP path: it checks connector consent, can reuse an explicitly selected external
     resource snapshot, and otherwise reads one MCP resource, one MCP prompt, and one MCP tool result through the same
     permission model while keeping evidence, transport, endpoint identity, auth state, and degraded behavior explicit
+- `server/app/services/ai_frontier_research_record_service.py`
+  - owns durable `AI 热点追踪` record creation plus source-set assembly on top of direct chat and background-run outputs
+- `server/app/services/ai_frontier_research_output_service.py`
+  - owns the structured `AI 热点追踪` output grammar: frontier summary, trend judgment, themes, events, project cards,
+    and reference sources
+- `server/app/services/ai_hot_tracker_source_service.py`
+  - owns the bounded trusted-source intake layer for `AI 热点追踪`: one fixed source catalog, one normalized source-item
+    schema, feed parsing, deduplication, ordering, and partial-failure capture before any report text is generated
+- `server/app/services/ai_hot_tracker_report_service.py`
+  - owns the structured report-generation path for `AI 热点追踪`: it reads the trusted-source intake result, converts
+    it into one reusable normalized middle layer, and asks the shared model interface for one schema-bound report draft
+    instead of post-processing one generic answer blob
 - `server/app/services/research_external_resource_snapshot_service.py`
   - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
     snapshots and exposes recent snapshots back to the product surface
@@ -122,6 +140,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - owns the branch between ordinary grounded chat, the internal `research_tool_assisted` pilot, and the new
     `research_external_context` pilot mode, and now also records the extra trace metadata needed when those pilots
     are delivered through direct chat or explicit background analysis runs
+- `server/app/api/routes/research_analysis_runs.py`
+  - now also owns one dedicated `POST /workspaces/{workspace_id}/ai-hot-tracker/report` API, so the visible hot-tracker
+    surface can request one structured report directly instead of routing through the older generic chat-answer path
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps, honest degraded no-source paths, Stage I resource-selection plus consent-lifecycle

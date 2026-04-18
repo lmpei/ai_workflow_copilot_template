@@ -9,7 +9,7 @@ def test_resolve_workspace_module_contract_defaults_to_research() -> None:
         "research_summary",
         "workspace_report",
     ]
-    assert module_config_json["result_type"] == "research_report"
+    assert module_config_json["result_type"] == "ai_frontier_research_record"
 
 
 def test_resolve_workspace_module_contract_merges_requested_config() -> None:

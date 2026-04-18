@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import WorkspaceHistoryPage from "../../components/workspace/workspace-history-page";
 
 export default function WorkspacesPage() {
-  redirect("/");
+  return <WorkspaceHistoryPage />;
 }

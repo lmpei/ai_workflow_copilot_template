@@ -1,23 +1,32 @@
-﻿"use client";
+"use client";
 
-import Link from "next/link";
-
-import SectionCard from "../ui/section-card";
+import { useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type AuthRequiredProps = {
   title?: string;
   description?: string;
 };
 
-export default function AuthRequired({
-  title = "需要先登录",
-  description = "这个页面需要已登录的账号会话。",
-}: AuthRequiredProps) {
-  return (
-    <SectionCard title={title} description={description}>
-      <p>
-        请先 <Link href="/login">登录</Link>，如果还没有账号，可以先去 <Link href="/register">注册</Link>。
-      </p>
-    </SectionCard>
+function resolveLoginHref(pathname: string | null, queryString: string) {
+  const nextPath = pathname ? `${pathname}${queryString ? `?${queryString}` : ""}` : "/";
+  const safeNextPath = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
+  return `/?auth=1&next=${encodeURIComponent(safeNextPath)}`;
+}
+
+export default function AuthRequired(_props: AuthRequiredProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const loginHref = useMemo(
+    () => resolveLoginHref(pathname, searchParams.toString()),
+    [pathname, searchParams],
   );
+
+  useEffect(() => {
+    router.replace(loginHref);
+  }, [loginHref, router]);
+
+  return null;
 }

@@ -2,10 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.security import get_current_user
 from app.models.user import User
-from app.schemas.auth import LoginRequest, LoginResponse, RegisterRequest, UserResponse
+from app.schemas.auth import (
+    AuthEntryRequest,
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    UserResponse,
+)
 from app.services.auth_service import (
     AuthConflictError,
     AuthCredentialsError,
+    enter_user,
     get_current_user_response,
     login_user,
     register_user,
@@ -13,6 +20,16 @@ from app.services.auth_service import (
 from app.services.public_demo_service import PublicDemoAccessError
 
 router = APIRouter()
+
+
+@router.post("/auth/enter", response_model=LoginResponse)
+async def enter(payload: AuthEntryRequest) -> LoginResponse:
+    try:
+        return enter_user(payload)
+    except PublicDemoAccessError as error:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error)) from error
+    except AuthCredentialsError as error:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(error)) from error
 
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

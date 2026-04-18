@@ -19,6 +19,11 @@ from app.services.research_external_context_service import (
     ResearchExternalContextChatResult,
     run_research_external_context_chat,
 )
+from app.services.ai_frontier_research_record_service import (
+    build_ai_frontier_source_set,
+    create_ai_frontier_research_record,
+    get_ai_frontier_research_record_for_run,
+)
 from app.services.research_external_resource_snapshot_service import (
     create_research_external_resource_snapshot,
     get_workspace_research_external_resource_snapshot,
@@ -160,6 +165,15 @@ def _load_prior_memory_context(run) -> ResearchRunMemoryContext | None:
     )
 
 
+def _collect_source_titles(sources_json: list[dict[str, object]]) -> list[str]:
+    titles: list[str] = []
+    for source in sources_json:
+        title = source.get("document_title")
+        if isinstance(title, str) and title and title not in titles:
+            titles.append(title)
+    return titles
+
+
 def _resolve_external_resource_snapshot(
     run,
 ) -> ResearchExternalResourceSnapshotResponse | None:
@@ -175,9 +189,12 @@ def _resolve_external_resource_snapshot(
 def _serialize_research_analysis_run_response(
     run,
 ) -> ResearchAnalysisRunResponse:
+    research_record = get_ai_frontier_research_record_for_run(run.id)
     return ResearchAnalysisRunResponse.from_model(
         run,
         external_resource_snapshot=_resolve_external_resource_snapshot(run),
+        frontier_output=research_record.output if research_record else None,
+        research_record=research_record,
     )
 
 
@@ -529,6 +546,36 @@ def run_research_analysis_run_execution(run_id: str) -> dict[str, object]:
             },
         )
         conversation_repository.touch_conversation(running_run.conversation_id)
+
+        if running_run.mode == "research_external_context" and result.frontier_output is not None:
+            create_ai_frontier_research_record(
+                workspace_id=running_run.workspace_id,
+                user_id=running_run.created_by,
+                conversation_id=running_run.conversation_id,
+                source_run_id=running_run.id,
+                source_trace_id=trace_id,
+                question=running_run.question,
+                output=result.frontier_output,
+                source_set=build_ai_frontier_source_set(
+                    mode=running_run.mode,
+                    analysis_focus=result.analysis_focus,
+                    search_query=result.search_query,
+                    connector_id=getattr(result, "connector_id", None),
+                    connector_consent_state=getattr(result, "connector_consent_state", None),
+                    external_context_used=getattr(result, "external_context_used", None),
+                    external_match_count=getattr(result, "external_match_count", None),
+                    selected_external_resource_snapshot_id=getattr(result, "selected_external_resource_snapshot_id", None),
+                    external_resource_snapshot_id=external_resource_snapshot.id if external_resource_snapshot else None,
+                    mcp_server_id=getattr(result, "mcp_server_id", None),
+                    mcp_resource_id=getattr(result, "mcp_resource_id", None),
+                    mcp_tool_name=getattr(result, "mcp_tool_name", None),
+                    mcp_prompt_name=getattr(result, "mcp_prompt_name", None),
+                    mcp_transport=getattr(result, "mcp_transport", None),
+                    mcp_read_status=getattr(result, "mcp_read_status", None),
+                    context_selection_mode=getattr(result, "context_selection_mode", None),
+                    source_titles=_collect_source_titles(sources_json),
+                ),
+            )
 
         terminal_status = "degraded" if result.degraded_reason else "completed"
         completed_run = research_analysis_run_repository.update_research_analysis_run(

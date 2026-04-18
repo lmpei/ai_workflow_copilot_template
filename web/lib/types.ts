@@ -684,6 +684,11 @@ export type User = {
   role: string;
 };
 
+export type EnterAuthRequestPayload = {
+  account: string;
+  password: string;
+};
+
 export type LoginRequestPayload = {
   email: string;
   password: string;
@@ -742,6 +747,132 @@ export type ChatRequestPayload = {
   external_resource_snapshot_id?: string;
 };
 
+export type AiFrontierThemeRecord = {
+  label: string;
+  summary: string;
+};
+
+export type AiFrontierEventRecord = {
+  title: string;
+  summary: string;
+  significance: string;
+};
+
+export type AiFrontierProjectCardRecord = {
+  title: string;
+  source_label: string;
+  summary: string;
+  why_it_matters: string;
+  official_url?: string | null;
+  repo_url?: string | null;
+  docs_url?: string | null;
+  tags: string[];
+};
+
+export type AiFrontierReferenceSourceRecord = {
+  label: string;
+  url: string;
+  source_kind: "official" | "repository" | "docs" | "paper" | "other";
+};
+
+export type AiFrontierResearchOutputRecord = {
+  frontier_summary: string;
+  trend_judgment: string;
+  themes: AiFrontierThemeRecord[];
+  events: AiFrontierEventRecord[];
+  project_cards: AiFrontierProjectCardRecord[];
+  reference_sources: AiFrontierReferenceSourceRecord[];
+};
+
+export type AiHotTrackerSourceDefinitionRecord = {
+  id: string;
+  label: string;
+  category: string;
+  source_kind: "rss_feed" | "atom_feed";
+  feed_url: string;
+  site_url?: string | null;
+  tags: string[];
+};
+
+export type AiHotTrackerSourceItemRecord = {
+  id: string;
+  source_id: string;
+  source_label: string;
+  source_kind: "rss_feed" | "atom_feed";
+  category: string;
+  title: string;
+  url: string;
+  summary: string;
+  published_at?: string | null;
+  tags: string[];
+};
+
+export type AiHotTrackerSourceFailureRecord = {
+  source_id: string;
+  source_label: string;
+  message: string;
+};
+
+export type AiHotTrackerReportRecord = {
+  title: string;
+  question: string;
+  output: AiFrontierResearchOutputRecord;
+  source_catalog: AiHotTrackerSourceDefinitionRecord[];
+  source_items: AiHotTrackerSourceItemRecord[];
+  source_failures: AiHotTrackerSourceFailureRecord[];
+  source_set: JsonObject;
+  generated_at: string;
+  degraded_reason?: string | null;
+};
+
+export type AiFrontierFollowUpEntryRecord = {
+  question: string;
+  answer: string;
+  created_at?: string | null;
+};
+
+export type AiFrontierResearchRecordWritePayload = {
+  title?: string;
+  question: string;
+  answer_text?: string | null;
+  output: AiFrontierResearchOutputRecord;
+  follow_ups: AiFrontierFollowUpEntryRecord[];
+  source_set?: JsonObject;
+  conversation_id?: string;
+  source_trace_id?: string;
+};
+
+export type AiHotTrackerFollowUpPayload = {
+  report_question: string;
+  report_answer?: string | null;
+  report_output: AiFrontierResearchOutputRecord;
+  follow_up_question: string;
+  prior_follow_ups: AiFrontierFollowUpEntryRecord[];
+  source_set?: JsonObject;
+};
+
+export type AiHotTrackerFollowUpResponse = {
+  answer: string;
+  follow_up: AiFrontierFollowUpEntryRecord;
+};
+
+export type AiFrontierResearchRecord = {
+  id: string;
+  workspace_id: string;
+  conversation_id?: string | null;
+  source_run_id?: string | null;
+  source_trace_id?: string | null;
+  created_by: string;
+  title: string;
+  question: string;
+  answer_text?: string | null;
+  output: AiFrontierResearchOutputRecord;
+  follow_ups: AiFrontierFollowUpEntryRecord[];
+  source_set: JsonObject;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ChatSource = {
   document_id: string;
   chunk_id: string;
@@ -787,6 +918,8 @@ export type ChatResponsePayload = {
   mode: 'rag' | 'research_tool_assisted' | 'research_external_context';
   tool_steps: ChatToolStep[];
   external_resource_snapshot?: ResearchExternalResourceSnapshotRecord | null;
+  frontier_output?: AiFrontierResearchOutputRecord | null;
+  research_record?: AiFrontierResearchRecord | null;
 };
 
 export type ResearchAnalysisRunStatus = "pending" | "running" | "completed" | "degraded" | "failed";
@@ -820,6 +953,8 @@ export type ResearchAnalysisRunRecord = {
   sources: ChatSource[];
   tool_steps: ChatToolStep[];
   external_resource_snapshot?: ResearchExternalResourceSnapshotRecord | null;
+  frontier_output?: AiFrontierResearchOutputRecord | null;
+  research_record?: AiFrontierResearchRecord | null;
   run_memory?: ResearchAnalysisRunMemoryRecord | null;
   analysis_focus?: string | null;
   search_query?: string | null;
