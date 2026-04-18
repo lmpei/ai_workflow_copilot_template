@@ -23,6 +23,7 @@ jobs:
       contents: read
     steps:
       - name: Deploy weave to production host
+        id: deploy
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: 101.32.216.83
@@ -32,3 +33,41 @@ jobs:
           command_timeout: 30m
           script: |
             /home/ubuntu/deploy-weave.sh
+
+      - name: Summarize successful deploy
+        if: success()
+        run: |
+          {
+            echo "## Weave deploy succeeded"
+            echo
+            echo "- host: \`101.32.216.83\`"
+            echo "- repo: \`/home/ubuntu/ai_workflow_copilot_template\`"
+            echo "- entrypoint: \`/home/ubuntu/deploy-weave.sh\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain retry and rollback
+        if: failure()
+        run: |
+          echo "::error title=Deploy Weave failed::Automatic deploy failed. Retry on the server with /home/ubuntu/deploy-weave.sh or roll back with bash /home/ubuntu/ai_workflow_copilot_template/scripts/rollback-weave.sh <known-good-ref>."
+          {
+            echo "## Weave deploy failed"
+            echo
+            echo "### Retry"
+            echo '```bash'
+            echo 'ssh ubuntu@101.32.216.83'
+            echo '/home/ubuntu/deploy-weave.sh'
+            echo '```'
+            echo
+            echo "### Roll back to a known-good ref"
+            echo '```bash'
+            echo 'ssh ubuntu@101.32.216.83'
+            echo 'cd /home/ubuntu/ai_workflow_copilot_template'
+            echo 'bash scripts/rollback-weave.sh <known-good-ref>'
+            echo '```'
+            echo
+            echo "### Verify"
+            echo '```bash'
+            echo 'curl -I https://weave.lmpai.online'
+            echo 'curl https://api.lmpai.online/api/v1/health'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

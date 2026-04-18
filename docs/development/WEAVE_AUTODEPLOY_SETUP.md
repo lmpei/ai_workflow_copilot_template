@@ -16,6 +16,8 @@ Current target:
 
 - server deploy script:
   - `scripts/deploy-weave.sh`
+- server rollback script:
+  - `scripts/rollback-weave.sh`
 - GitHub Actions workflow:
   - `.github/workflows/deploy-weave.yml`
 
@@ -24,6 +26,7 @@ The workflow is designed to:
 1. wait for `CI` to succeed on `main`
 2. SSH into the production host
 3. run `/home/ubuntu/deploy-weave.sh`
+4. write a clear retry and rollback summary if deploy fails
 
 ## One-Time Server Setup
 
@@ -65,6 +68,38 @@ After setup, the normal flow becomes:
 2. `CI` runs
 3. `Deploy Weave` runs automatically after successful `CI`
 4. the server pulls, rebuilds, migrates, and verifies local health
+
+If deploy fails, the workflow run summary now includes one copyable retry path and one copyable rollback path.
+
+## Retry And Rollback
+
+Retry on the current `main` state:
+
+```bash
+ssh ubuntu@101.32.216.83
+/home/ubuntu/deploy-weave.sh
+```
+
+Roll back to one known-good git ref:
+
+```bash
+ssh ubuntu@101.32.216.83
+cd /home/ubuntu/ai_workflow_copilot_template
+bash scripts/rollback-weave.sh <known-good-ref>
+```
+
+Example:
+
+```bash
+bash scripts/rollback-weave.sh 0489e23
+```
+
+After retry or rollback, verify:
+
+```bash
+curl -I https://weave.lmpai.online
+curl https://api.lmpai.online/api/v1/health
+```
 
 ## Manual Backstop
 

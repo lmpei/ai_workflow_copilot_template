@@ -2278,3 +2278,20 @@ Append-only log. Add new entries at the bottom.
   configured.
 - Related Task: `tasks/archive/weave-deploy-automation.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-18-140
+- Date: 2026-04-18
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: give weave deploy failures one explicit retry and rollback path
+- Context: weave production deploys are now automated, but a successful trigger alone is not enough. When deploys fail,
+  the team still needs one bounded way to understand what to do next without rediscovering server commands or guessing
+  how to roll back to a known-good revision.
+- Choice: add one repo-owned rollback script, update the auto-deploy workflow to write explicit retry and rollback
+  instructions into the workflow summary on failure, and document the retry/rollback path in the deploy setup doc.
+- Why: production deploy automation is only trustworthy when failure handling is explicit and repeatable.
+- Impact: a failed weave deploy now leaves behind one copyable operational path instead of one opaque red workflow run.
+- Related Task: `tasks/weave-deploy-failure-and-rollback.md`
+- Supersedes:
