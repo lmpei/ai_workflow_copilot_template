@@ -2259,3 +2259,22 @@ Append-only log. Add new entries at the bottom.
 - Impact: unauthenticated users now enter through one homepage-mounted overlay while the background home remains visible but non-interactive, and protected-path redirects no longer land on a standalone login page.
 - Related Task: `tasks/archive/home-auth-overlay-entry.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-18-139
+- Date: 2026-04-18
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: automate weave production deploys through one repo-owned deploy script, one fixed server wrapper, and one GitHub Actions SSH workflow
+- Context: the product stack on `weave.lmpai.online` and `api.lmpai.online` now runs from
+  `/home/ubuntu/ai_workflow_copilot_template` on the shared host, but production updates still depend on manually
+  SSHing in, pulling code, rebuilding the compose stack, and running migrations.
+- Choice: add one repo-owned deploy script, add one GitHub Actions workflow that runs after successful `CI` on `main`,
+  and standardize the server-side entrypoint as `/home/ubuntu/deploy-weave.sh`.
+- Why: the team should not keep repeating the same manual production steps when the target host, repo path, and deploy
+  command shape are already fixed.
+- Impact: future deploys can reduce to push -> CI -> auto-deploy once the repository secret `WEAVE_DEPLOY_SSH_KEY` is
+  configured.
+- Related Task: `tasks/archive/weave-deploy-automation.md`
+- Supersedes:
