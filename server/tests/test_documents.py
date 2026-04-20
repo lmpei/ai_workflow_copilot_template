@@ -4,7 +4,6 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
-from app.core.config import get_settings
 
 from app.repositories.document_repository import list_document_chunks, list_document_embeddings
 from app.services import document_service
@@ -314,57 +313,3 @@ def test_document_upload_failure_marks_failed_and_returns_error(
 
     document_id = documents[0]["id"]
     assert len(list_document_embeddings(document_id)) == 0
-
-
-
-def test_public_demo_rejects_oversized_upload(
-    client: TestClient,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    settings = get_settings()
-    monkeypatch.setattr(settings, "public_demo_mode", True)
-    monkeypatch.setattr(settings, "public_demo_max_upload_bytes", 8)
-
-    auth = _register_and_login(client, email="demo-upload-owner@example.com", name="Demo Upload Owner")
-    headers = {"Authorization": f"Bearer {auth['token']}"}
-    workspace_id = _create_workspace(client, auth["token"])
-
-    response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/documents/upload",
-        headers=headers,
-        files={"file": ("oversized.txt", b"123456789", "text/plain")},
-    )
-
-    assert response.status_code == 413
-    assert "单个文件不能超过 8 字节" in response.json()["detail"]
-
-
-def test_public_demo_limits_documents_per_workspace(
-    client: TestClient,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    settings = get_settings()
-    monkeypatch.setattr(settings, "public_demo_mode", True)
-    monkeypatch.setattr(settings, "public_demo_max_documents_per_workspace", 1)
-
-    auth = _register_and_login(client, email="demo-doc-owner@example.com", name="Demo Doc Owner")
-    headers = {"Authorization": f"Bearer {auth['token']}"}
-    workspace_id = _create_workspace(client, auth["token"])
-    provider = FakeEmbeddingProvider()
-    vector_store = FakeVectorStore()
-    _patch_ingest_dependencies(monkeypatch, provider=provider, vector_store=vector_store)
-
-    first_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/documents/upload",
-        headers=headers,
-        files={"file": ("first.txt", b"first body", "text/plain")},
-    )
-    assert first_response.status_code == 201
-
-    second_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/documents/upload",
-        headers=headers,
-        files={"file": ("second.txt", b"second body", "text/plain")},
-    )
-    assert second_response.status_code == 409
-    assert "每个工作区最多可上传 1 个文档" in second_response.json()["detail"]

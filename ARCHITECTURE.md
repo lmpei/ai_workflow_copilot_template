@@ -3,7 +3,7 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-16
+- Last Updated: 2026-04-20
 
 ## Main Modules
 
@@ -56,7 +56,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - `web/app/workspaces/[workspaceId]/analytics/page.tsx`
   - preserves compatibility by redirecting the older analytics page route into the workbench analytics surface
 - `web/components/workspace/workspace-center-panel.tsx`
-  - owns the canonical home composition, module-entry surface, and homepage-mounted auth overlay gate
+  - owns the canonical home composition, direct module-entry surface, and homepage-mounted auth overlay gate; homepage entry no longer bootstraps a public-demo workspace before navigation
 - `web/components/workspace/workspace-workbench-panel.tsx`
   - still owns the non-hot-tracker primary workspace user path; technical process detail stays outside the default
     user path
@@ -142,7 +142,9 @@ Stable system boundaries only. This is the short architecture summary. The long-
     are delivered through direct chat or explicit background analysis runs
 - `server/app/api/routes/research_analysis_runs.py`
   - now also owns one dedicated `POST /workspaces/{workspace_id}/ai-hot-tracker/report` API, so the visible hot-tracker
-    surface can request one structured report directly instead of routing through the older generic chat-answer path
+  surface can request one structured report directly instead of routing through the older generic chat-answer path
+- `server/app/api/routes/workspaces.py`
+  - owns the canonical workspace creation path for all environments; normal runtime entry no longer depends on demo-specific provisioning or seeded-workspace bootstrap behavior
 - `server/app/services/chat_evaluator_service.py`
   - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
     visible tool steps, honest degraded no-source paths, Stage I resource-selection plus consent-lifecycle
@@ -191,6 +193,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - a flat or panel-balanced workspace UI that treats documents, task execution, or analytics as equal first-stop surfaces
 - a deployment model where this repository still pretends to own the root marketing site instead of the dedicated
   product host
+- a runtime entry model that still depends on public-demo bootstrap state before users can enter a real module surface
 
 ## Change Guardrails
 

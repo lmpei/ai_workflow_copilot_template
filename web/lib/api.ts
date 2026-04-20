@@ -16,9 +16,6 @@ import type {
   JobHiringPacketSummaryRecord,
   LoginRequestPayload,
   LoginResponsePayload,
-  PublicDemoSettingsRecord,
-  PublicDemoTemplateRecord,
-  PublicDemoWorkspaceSeedRecord,
   AiHotTrackerFollowUpResponse,
   RegisterRequestPayload,
   AiFrontierResearchRecord,
@@ -112,16 +109,6 @@ export async function getHealth(): Promise<HealthResponse> {
 export async function getScenarioModules(): Promise<ScenarioModuleRecord[] | ApiErrorResponse | ApiUnreachableResponse> {
   return fetchApiJson<ScenarioModuleRecord[]>("/scenario-modules");
 }
-export async function getPublicDemoSettings(): Promise<
-  PublicDemoSettingsRecord | ApiErrorResponse | ApiUnreachableResponse
-> {
-  return fetchApiJson<PublicDemoSettingsRecord>("/public-demo");
-}
-export async function getPublicDemoTemplates(): Promise<
-  PublicDemoTemplateRecord[] | ApiErrorResponse | ApiUnreachableResponse
-> {
-  return fetchApiJson<PublicDemoTemplateRecord[]>("/public-demo/templates");
-}
 
 async function parseErrorDetail(response: Response): Promise<string> {
   try {
@@ -202,27 +189,6 @@ export async function loginUser(payload: LoginRequestPayload): Promise<LoginResp
     method: "POST",
     body: JSON.stringify(payload),
   });
-}
-
-export async function readPublicDemoSettings(): Promise<PublicDemoSettingsRecord> {
-  return fetchBrowserApiJson<PublicDemoSettingsRecord>("/public-demo");
-}
-
-export async function listPublicDemoTemplates(): Promise<PublicDemoTemplateRecord[]> {
-  return fetchBrowserApiJson<PublicDemoTemplateRecord[]>("/public-demo/templates");
-}
-
-export async function createPublicDemoWorkspaceFromTemplate(
-  accessToken: string,
-  templateId: string,
-): Promise<PublicDemoWorkspaceSeedRecord> {
-  return fetchBrowserApiJson<PublicDemoWorkspaceSeedRecord>(
-    `/public-demo/templates/${templateId}/workspaces`,
-    {
-      method: "POST",
-    },
-    accessToken,
-  );
 }
 
 export async function listScenarioModules(): Promise<ScenarioModuleRecord[]> {

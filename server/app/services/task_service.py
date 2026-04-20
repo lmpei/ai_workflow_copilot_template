@@ -22,7 +22,6 @@ from app.services.job_assistant_service import (
     normalize_job_task_input,
     validate_job_task_contract,
 )
-from app.services.public_demo_service import ensure_task_creation_allowed
 from app.services.research_assistant_service import (
     ResearchAssistantContractError,
     normalize_research_task_input,
@@ -225,7 +224,6 @@ async def create_task(
     payload: TaskCreate,
 ) -> TaskResponse:
     workspace = _get_workspace_or_raise(workspace_id=workspace_id, user_id=user_id)
-    ensure_task_creation_allowed(workspace_id=workspace_id, user_id=user_id)
     task_module_type = _resolve_task_module_type(payload.task_type)
 
     try:

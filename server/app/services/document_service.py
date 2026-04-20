@@ -26,7 +26,6 @@ from app.services.indexing_service import (
     get_vector_store,
     index_document_embeddings,
 )
-from app.services.public_demo_service import ensure_document_upload_allowed
 
 UPLOAD_ROOT = Path("storage") / "uploads"
 
@@ -124,11 +123,6 @@ async def upload_document(
     content = await file.read()
     if not content:
         raise DocumentUploadError("上传文件不能为空")
-    ensure_document_upload_allowed(
-        workspace_id=workspace_id,
-        user_id=user_id,
-        file_size_bytes=len(content),
-    )
 
     document_id = str(uuid4())
     relative_path = Path("uploads") / workspace_id / document_id / filename
@@ -177,11 +171,6 @@ def create_text_document(
 
     filename = _sanitize_filename(title if title.lower().endswith(".txt") else f"{title}.txt")
     encoded_content = normalized_text.encode("utf-8")
-    ensure_document_upload_allowed(
-        workspace_id=workspace_id,
-        user_id=user_id,
-        file_size_bytes=len(encoded_content),
-    )
 
     document_id = str(uuid4())
     relative_path = Path("uploads") / workspace_id / document_id / filename

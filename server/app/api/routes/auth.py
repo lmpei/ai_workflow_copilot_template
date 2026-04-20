@@ -17,7 +17,6 @@ from app.services.auth_service import (
     login_user,
     register_user,
 )
-from app.services.public_demo_service import PublicDemoAccessError
 
 router = APIRouter()
 
@@ -26,8 +25,6 @@ router = APIRouter()
 async def enter(payload: AuthEntryRequest) -> LoginResponse:
     try:
         return enter_user(payload)
-    except PublicDemoAccessError as error:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error)) from error
     except AuthCredentialsError as error:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(error)) from error
 
@@ -36,8 +33,6 @@ async def enter(payload: AuthEntryRequest) -> LoginResponse:
 async def register(payload: RegisterRequest) -> UserResponse:
     try:
         return register_user(payload)
-    except PublicDemoAccessError as error:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error)) from error
     except AuthConflictError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
 

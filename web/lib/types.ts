@@ -15,47 +15,6 @@ export type TaskType = (typeof scenarioTaskTypes)[number];
 export type JsonObject = Record<string, unknown>;
 export type TaskStatus = "pending" | "running" | "completed" | "failed";
 
-export type PublicDemoSettingsRecord = {
-  public_demo_mode: boolean;
-  registration_enabled: boolean;
-  max_workspaces_per_user: number;
-  max_documents_per_workspace: number;
-  max_tasks_per_workspace: number;
-  max_upload_bytes: number;
-};
-
-export type PublicDemoSeedDocumentRecord = {
-  title: string;
-  summary: string;
-};
-
-export type PublicDemoShowcaseStepRecord = {
-  title: string;
-  description: string;
-  route_suffix: string;
-  cta_label: string;
-  sample_prompt?: string | null;
-  sample_task_type?: TaskType | null;
-  sample_task_input: JsonObject;
-};
-
-export type PublicDemoTemplateRecord = {
-  template_id: string;
-  module_type: ModuleType;
-  title: string;
-  summary: string;
-  workspace_name: string;
-  workspace_description: string;
-  seeded_documents: PublicDemoSeedDocumentRecord[];
-  showcase_steps: PublicDemoShowcaseStepRecord[];
-};
-
-export type PublicDemoWorkspaceSeedRecord = {
-  workspace: Workspace;
-  documents: DocumentRecord[];
-  template: PublicDemoTemplateRecord;
-};
-
 export type RecoveryHistoryEntryRecord = {
   event: string;
   at: string;

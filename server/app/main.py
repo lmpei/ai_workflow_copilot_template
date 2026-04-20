@@ -11,7 +11,6 @@ from app.api.routes import (
     health,
     job_hiring_packets,
     metrics,
-    public_demo,
     research_analysis_runs,
     research_assets,
     scenarios,
@@ -36,7 +35,6 @@ app.add_middleware(
 )
 
 app.include_router(health.router, prefix=settings.api_prefix, tags=["health"])
-app.include_router(public_demo.router, prefix=settings.api_prefix, tags=["public-demo"])
 app.include_router(auth.router, prefix=settings.api_prefix, tags=["auth"])
 app.include_router(scenarios.router, prefix=settings.api_prefix, tags=["scenarios"])
 app.include_router(workspaces.router, prefix=settings.api_prefix, tags=["workspaces"])

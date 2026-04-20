@@ -12,7 +12,6 @@ import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import JobAssistantActionPanel from "../job/job-assistant-action-panel";
 import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
-import PublicDemoWorkbenchContinuityNote from "../public-demo/public-demo-workbench-continuity-note";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
 import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
 import SupportCopilotPanel from "../support/support-copilot-panel";
@@ -82,11 +81,10 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   if (workspace?.module_type === "support") {
-    return (
-      <>
-        <PublicDemoWorkbenchContinuityNote moduleType="support" />
-        <SupportCaseWorkbenchSection
-          workspaceId={workspaceId}
+      return (
+        <>
+          <SupportCaseWorkbenchSection
+            workspaceId={workspaceId}
           accessToken={session.accessToken}
           onOpenTask={(taskId) => {
             if (typeof window !== "undefined") {
@@ -105,11 +103,10 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   if (workspace?.module_type === "job") {
-    return (
-      <>
-        <PublicDemoWorkbenchContinuityNote moduleType="job" />
-        <JobHiringWorkbenchSection
-          workspaceId={workspaceId}
+      return (
+        <>
+          <JobHiringWorkbenchSection
+            workspaceId={workspaceId}
           accessToken={session.accessToken}
           onOpenTask={(taskId) => {
             if (typeof window !== "undefined") {

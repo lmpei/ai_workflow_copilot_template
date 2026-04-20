@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings
 
 
 def test_enter_registers_new_account_and_returns_session(client: TestClient) -> None:
@@ -62,26 +62,6 @@ def test_enter_rejects_wrong_password_for_existing_account(client: TestClient) -
 
     assert response.status_code == 401
     assert response.json()["detail"] == "账号或密码不正确"
-
-
-def test_enter_rejects_new_account_when_public_demo_registration_is_disabled(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    settings = get_settings()
-    monkeypatch.setattr(settings, "public_demo_mode", True)
-    monkeypatch.setattr(settings, "public_demo_registration_enabled", False)
-
-    response = client.post(
-        "/api/v1/auth/enter",
-        json={
-            "account": "outside-user",
-            "password": "super-secret",
-        },
-    )
-
-    assert response.status_code == 403
-    assert "当前已关闭 public demo 自助注册" in response.json()["detail"]
 
 
 def test_register_login_and_me(client: TestClient) -> None:
@@ -163,52 +143,6 @@ def test_me_rejects_invalid_or_missing_token(client: TestClient) -> None:
         headers={"Authorization": "Bearer invalid-token"},
     )
     assert invalid_token_response.status_code == 401
-
-
-def test_public_demo_registration_can_be_disabled(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    settings = get_settings()
-    monkeypatch.setattr(settings, "public_demo_mode", True)
-    monkeypatch.setattr(settings, "public_demo_registration_enabled", False)
-
-    response = client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": "outside-user@example.com",
-            "password": "super-secret",
-            "name": "Outside User",
-        },
-    )
-
-    assert response.status_code == 403
-    assert "当前已关闭 public demo 自助注册" in response.json()["detail"]
-
-
-def test_public_demo_settings_endpoint_exposes_limits(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    settings = get_settings()
-    monkeypatch.setattr(settings, "public_demo_mode", True)
-    monkeypatch.setattr(settings, "public_demo_registration_enabled", False)
-    monkeypatch.setattr(settings, "public_demo_max_workspaces_per_user", 2)
-    monkeypatch.setattr(settings, "public_demo_max_documents_per_workspace", 7)
-    monkeypatch.setattr(settings, "public_demo_max_tasks_per_workspace", 11)
-    monkeypatch.setattr(settings, "public_demo_max_upload_bytes", 3 * 1024 * 1024)
-
-    response = client.get("/api/v1/public-demo")
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "public_demo_mode": True,
-        "registration_enabled": False,
-        "max_workspaces_per_user": 2,
-        "max_documents_per_workspace": 7,
-        "max_tasks_per_workspace": 11,
-        "max_upload_bytes": 3145728,
-    }
 
 
 @pytest.mark.parametrize("secret", ["phase1-dev-secret", "replace_me", "   "])

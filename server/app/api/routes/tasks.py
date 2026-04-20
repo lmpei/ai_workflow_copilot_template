@@ -4,7 +4,6 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.task import TaskControlRequest, TaskCreate, TaskResponse
 from app.services import task_service
-from app.services.public_demo_service import PublicDemoLimitError
 from app.services.task_service import (
     TaskAccessError,
     TaskControlError,
@@ -33,8 +32,6 @@ async def create_task(
         )
     except TaskAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
-    except PublicDemoLimitError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
     except TaskValidationError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
     except TaskQueueError as error:

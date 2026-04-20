@@ -6,25 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import AuthEntryOverlay from "../auth/auth-entry-overlay";
 import { useAuthSession } from "../auth/use-auth-session";
-import PublicDemoNotice from "../public-demo/public-demo-notice";
-import {
-  createPublicDemoWorkspaceFromTemplate,
-  createWorkspace,
-  isApiClientError,
-  listPublicDemoTemplates,
-  listWorkspaces,
-  readPublicDemoSettings,
-} from "../../lib/api";
+import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
 import { clearStoredSession } from "../../lib/auth";
-import type {
-  ModuleType,
-  PublicDemoSettingsRecord,
-  PublicDemoTemplateRecord,
-  Workspace,
-} from "../../lib/types";
+import type { ModuleType, Workspace } from "../../lib/types";
 
 const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
-  research: "AI 热点追踪",
+  research: "AI热点追踪",
   support: "Support Copilot",
   job: "Job Assistant",
 };
@@ -142,6 +129,7 @@ function ModuleEntry({
         display: "grid",
         gap: 20,
         minHeight: 238,
+        opacity: disabled ? 0.52 : 1,
         padding: "32px 42px 28px 0",
         position: "relative",
         textAlign: "left",
@@ -219,9 +207,6 @@ export default function WorkspaceCenterPanel() {
   const searchParams = useSearchParams();
   const { session, isReady } = useAuthSession();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [publicDemoSettings, setPublicDemoSettings] =
-    useState<PublicDemoSettingsRecord | null>(null);
-  const [demoTemplates, setDemoTemplates] = useState<PublicDemoTemplateRecord[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [launchingKey, setLaunchingKey] = useState<string | null>(null);
@@ -231,24 +216,6 @@ export default function WorkspaceCenterPanel() {
     () => resolveSafeNextPath(searchParams.get("next")),
     [searchParams],
   );
-
-  useEffect(() => {
-    const loadPublicDemoContext = async () => {
-      try {
-        const [settings, templates] = await Promise.all([
-          readPublicDemoSettings(),
-          listPublicDemoTemplates(),
-        ]);
-        setPublicDemoSettings(settings);
-        setDemoTemplates(templates);
-      } catch {
-        setPublicDemoSettings(null);
-        setDemoTemplates([]);
-      }
-    };
-
-    void loadPublicDemoContext();
-  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -291,13 +258,6 @@ export default function WorkspaceCenterPanel() {
     [workspaces],
   );
 
-  const workspaceLimitReached =
-    publicDemoSettings?.public_demo_mode === true &&
-    orderedWorkspaces.length >= publicDemoSettings.max_workspaces_per_user;
-
-  const researchTemplate =
-    demoTemplates.find((template) => template.module_type === "research") ?? null;
-
   const openAuthOverlay = (targetPath = "/") => {
     router.push(buildAuthOverlayHref(targetPath), { scroll: false });
   };
@@ -307,24 +267,11 @@ export default function WorkspaceCenterPanel() {
       openAuthOverlay(pathname ?? "/");
       return;
     }
-    if (workspaceLimitReached) {
-      return;
-    }
 
     setLaunchingKey(moduleType);
     setErrorMessage(null);
 
     try {
-      if (moduleType === "research" && researchTemplate) {
-        const seededWorkspace = await createPublicDemoWorkspaceFromTemplate(
-          session.accessToken,
-          researchTemplate.template_id,
-        );
-        setWorkspaces((current) => [seededWorkspace.workspace, ...current]);
-        router.push(`/workspaces/${seededWorkspace.workspace.id}`);
-        return;
-      }
-
       const workspace = await createWorkspace(session.accessToken, {
         name: buildDefaultWorkspaceName(moduleType),
         module_type: moduleType,
@@ -567,7 +514,7 @@ export default function WorkspaceCenterPanel() {
                 }}
               />
               <ModuleEntry
-                disabled={workspaceLimitReached || launchingKey !== null}
+                disabled={launchingKey !== null}
                 isBusy={launchingKey === "research"}
                 label={MODULE_PRODUCT_NAMES.research}
                 note={MODULE_NOTES.research}
@@ -575,7 +522,7 @@ export default function WorkspaceCenterPanel() {
                 teaser={MODULE_BLURBS.research}
               />
               <ModuleEntry
-                disabled={workspaceLimitReached || launchingKey !== null}
+                disabled={launchingKey !== null}
                 isBusy={launchingKey === "support"}
                 label={MODULE_PRODUCT_NAMES.support}
                 note={MODULE_NOTES.support}
@@ -583,7 +530,7 @@ export default function WorkspaceCenterPanel() {
                 teaser={MODULE_BLURBS.support}
               />
               <ModuleEntry
-                disabled={workspaceLimitReached || launchingKey !== null}
+                disabled={launchingKey !== null}
                 isBusy={launchingKey === "job"}
                 label={MODULE_PRODUCT_NAMES.job}
                 note={MODULE_NOTES.job}
@@ -637,27 +584,6 @@ export default function WorkspaceCenterPanel() {
           >
             {errorMessage}
           </section>
-        ) : null}
-
-        {publicDemoSettings?.public_demo_mode ? (
-          <details
-            style={{
-              color: "#64748b",
-              fontFamily:
-                '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
-            }}
-          >
-            <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-              查看 Demo 限制
-            </summary>
-            <div style={{ marginTop: 12 }}>
-              <PublicDemoNotice
-                description="这些限制仍然有效。"
-                settings={publicDemoSettings}
-                variant="compact"
-              />
-            </div>
-          </details>
         ) : null}
       </div>
 

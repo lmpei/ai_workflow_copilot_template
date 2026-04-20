@@ -2295,3 +2295,17 @@ Append-only log. Add new entries at the bottom.
 - Impact: a failed weave deploy now leaves behind one copyable operational path instead of one opaque red workflow run.
 - Related Task: `tasks/weave-deploy-failure-and-rollback.md`
 - Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-20-141
+- Date: 2026-04-20
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: retire the legacy public-demo runtime entry path and converge all environments onto one canonical workspace flow
+- Context: the homepage module entry still depended on a public-demo bootstrap path that provisioned seeded workspaces at runtime before navigation. That created environment-specific behavior, misleading initialization errors, and a real mismatch between local development and deployed execution.
+- Choice: remove public-demo runtime bootstrap from the homepage and normal workspace lifecycle, remove demo-specific runtime limits from the canonical create-workspace, create-task, auth, and document-upload paths, and route both local plus deployed environments through the same standard workspace creation APIs.
+- Why: the product is no longer a demo showcase. Module entry should be honest, direct, and environment-consistent instead of relying on a hidden seeded-workspace bootstrap path.
+- Impact: homepage module entry now creates real workspaces directly, deployed behavior matches local behavior, and legacy public-demo bootstrap code is removed from the runtime surface.
+- Related Task: `tasks/archive/remove-public-demo-runtime-entry.md`
+- Supersedes:

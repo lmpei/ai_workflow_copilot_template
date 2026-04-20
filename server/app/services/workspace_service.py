@@ -5,7 +5,6 @@ from app.repositories import workspace_repository
 from app.schemas.workspace import WorkspaceCreate, WorkspaceResponse, WorkspaceUpdate
 from app.services.document_parsing_service import DocumentProcessingError, resolve_document_path
 from app.services.indexing_service import DocumentIndexingError, get_vector_store
-from app.services.public_demo_service import ensure_workspace_creation_allowed
 from app.services.scenario_contract_service import resolve_workspace_module_contract
 
 
@@ -22,7 +21,6 @@ def get_workspace(workspace_id: str, user_id: str) -> WorkspaceResponse | None:
 
 
 def create_workspace(payload: WorkspaceCreate, owner_id: str) -> WorkspaceResponse:
-    ensure_workspace_creation_allowed(user_id=owner_id)
     module_type, module_config_json = resolve_workspace_module_contract(
         requested_module_type=payload.module_type,
         requested_module_config_json=payload.module_config_json,

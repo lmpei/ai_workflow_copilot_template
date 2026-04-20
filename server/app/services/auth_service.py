@@ -7,9 +7,6 @@ from app.schemas.auth import (
     RegisterRequest,
     UserResponse,
 )
-from app.services.public_demo_service import ensure_registration_allowed
-
-
 class AuthConflictError(Exception):
     pass
 
@@ -36,7 +33,6 @@ def _issue_login_response(user) -> LoginResponse:
 
 
 def register_user(payload: RegisterRequest) -> UserResponse:
-    ensure_registration_allowed()
     existing_user = user_repository.get_user_by_email(payload.email)
     if existing_user is not None:
         raise AuthConflictError("该账号已被注册")
@@ -62,7 +58,6 @@ def login_user(payload: LoginRequest) -> LoginResponse:
 def enter_user(payload: AuthEntryRequest) -> LoginResponse:
     user = user_repository.get_user_by_email(payload.account)
     if user is None:
-        ensure_registration_allowed()
         user = user_repository.create_user(
             email=payload.account,
             password_hash=hash_password(payload.password),

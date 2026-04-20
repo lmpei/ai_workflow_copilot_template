@@ -4,7 +4,6 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.workspace import WorkspaceCreate, WorkspaceResponse, WorkspaceUpdate
 from app.services import workspace_service
-from app.services.public_demo_service import PublicDemoLimitError
 
 router = APIRouter()
 
@@ -23,10 +22,7 @@ async def create_workspace(
     payload: WorkspaceCreate,
     current_user: User = Depends(get_current_user),
 ) -> WorkspaceResponse:
-    try:
-        return workspace_service.create_workspace(payload=payload, owner_id=current_user.id)
-    except PublicDemoLimitError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+    return workspace_service.create_workspace(payload=payload, owner_id=current_user.id)
 
 
 @router.get("/workspaces/{workspace_id}", response_model=WorkspaceResponse)

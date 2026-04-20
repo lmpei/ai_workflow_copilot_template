@@ -11,7 +11,6 @@ import ChatPanel from "../chat/chat-panel";
 import DocumentManager from "../documents/document-manager";
 import JobAssistantActionPanel from "../job/job-assistant-action-panel";
 import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
-import PublicDemoWorkbenchContinuityNote from "../public-demo/public-demo-workbench-continuity-note";
 import AiFrontierRecordsPanel from "../research/ai-frontier-records-panel";
 import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
 import SupportCopilotPanel from "../support/support-copilot-panel";
@@ -199,11 +198,10 @@ function SupportWorkbench({ workspaceId }: { workspaceId: string }) {
     return null;
   }
 
-  return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <PublicDemoWorkbenchContinuityNote moduleType="support" />
-      <SupportCaseWorkbenchSection
-        accessToken={session.accessToken}
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <SupportCaseWorkbenchSection
+          accessToken={session.accessToken}
         onContinueCase={(draft) => setContinuationDraft(draft)}
         onOpenTask={(taskId) => {
           if (typeof window !== "undefined") {
@@ -229,11 +227,10 @@ function JobWorkbench({ workspaceId }: { workspaceId: string }) {
     return null;
   }
 
-  return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <PublicDemoWorkbenchContinuityNote moduleType="job" />
-      <JobHiringWorkbenchSection
-        accessToken={session.accessToken}
+    return (
+      <div style={{ display: "grid", gap: 16 }}>
+        <JobHiringWorkbenchSection
+          accessToken={session.accessToken}
         onContinuePacket={(draft) => setContinuationDraft(draft)}
         onOpenTask={(taskId) => {
           if (typeof window !== "undefined") {

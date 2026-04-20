@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-18
+- Last Updated: 2026-04-20
 
 ## Project Mode
 
@@ -27,11 +27,11 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- keep refining the post-Stage-K `AI 热点追踪` surface while preserving one bounded, repeatable weave deploy path with explicit retry and rollback guidance
+- keep refining the post-Stage-K `AI 热点追踪` surface on top of one canonical workspace-entry path shared by local and deployed environments
 
 ## Active Task
 
-- none currently fixed; the bounded weave deploy-failure and rollback work is now completed and archived
+- none currently fixed; the bounded removal of the legacy public-demo runtime entry path is now completed and archived
 
 ## Current Roadmap Alignment
 
@@ -42,7 +42,7 @@ Current state only. Keep this file short, current, and action-oriented.
 - Interpretation rule:
   - the bounded stage is the execution unit; the roadmap wave remains the broader concept family
 - Current baseline:
-  - `AI 热点追踪` now has one structured content pipeline, one lightweight all-workspaces entry, one permanent owner-only workspace delete path, one split report plus `追问` layout, one repaired saved-record path that persists empty follow-up collections correctly, one homepage-mounted auth overlay entry surface, one fixed production deploy path on the shared weave host, and one explicit retry/rollback path for deploy failures
+  - `AI 热点追踪` now has one structured content pipeline, one lightweight all-workspaces entry, one permanent owner-only workspace delete path, one split report plus `追问` layout, one repaired saved-record path that persists empty follow-up collections correctly, one homepage-mounted auth overlay entry surface, one fixed production deploy path on the shared weave host, one explicit retry/rollback path for deploy failures, and one canonical homepage module-entry path that no longer depends on public-demo bootstrap behavior
 
 ## Verification Status
 
@@ -56,8 +56,9 @@ Current state only. Keep this file short, current, and action-oriented.
   - saving a hot-tracker report now writes `source_set.follow_ups` as a real list at the source path
   - historical saved records have an Alembic backfill that normalizes missing `follow_ups` values to `[]`
   - protected product pages now land on one homepage-mounted auth overlay instead of showing a retained auth-required card or a separate login/register UI
+  - homepage module entry no longer seeds or provisions a public-demo workspace at runtime; local and deployed environments now both create real workspaces through the same canonical path
 
-- Last Verified At: 2026-04-18
+- Last Verified At: 2026-04-20
 
 ## Current Blockers
 
@@ -71,7 +72,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/weave-deploy-failure-and-rollback.md`
+- `tasks/archive/remove-public-demo-runtime-entry.md`
 
 ## Recent Decisions
 
@@ -81,3 +82,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-17-138` move the frontend auth entry onto the homepage as a blocking overlay instead of treating `/login` as the primary product-facing surface
 - `DEC-2026-04-18-139` automate weave production deploys through one repo-owned deploy script, one fixed server wrapper, and one GitHub Actions SSH workflow
 - `DEC-2026-04-18-140` give weave deploy failures one explicit retry and rollback path
+- `DEC-2026-04-20-141` retire the legacy public-demo runtime entry path and converge local plus deployed environments onto one canonical workspace flow
