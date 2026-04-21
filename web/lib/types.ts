@@ -715,6 +715,7 @@ export type AiFrontierEventRecord = {
   title: string;
   summary: string;
   significance: string;
+  source_item_ids: string[];
 };
 
 export type AiFrontierProjectCardRecord = {
@@ -726,6 +727,7 @@ export type AiFrontierProjectCardRecord = {
   repo_url?: string | null;
   docs_url?: string | null;
   tags: string[];
+  source_item_ids: string[];
 };
 
 export type AiFrontierReferenceSourceRecord = {
@@ -782,6 +784,67 @@ export type AiHotTrackerReportRecord = {
   source_set: JsonObject;
   generated_at: string;
   degraded_reason?: string | null;
+};
+
+export type AiHotTrackerTrackingProfileRecord = {
+  topic: string;
+  scope: string;
+  enabled_categories: string[];
+  cadence: "manual" | "daily" | "twice_daily" | "weekly";
+  alert_threshold: number;
+  max_items_per_run: number;
+};
+
+export type AiHotTrackerTrackingRunDeltaRecord = {
+  previous_run_id?: string | null;
+  change_state: "first_run" | "meaningful_update" | "steady_state" | "degraded";
+  summary: string;
+  should_notify: boolean;
+  new_item_count: number;
+  continuing_item_count: number;
+  cooled_down_item_count: number;
+  new_titles: string[];
+  continuing_titles: string[];
+  cooled_down_titles: string[];
+};
+
+export type AiHotTrackerTrackingRunRecord = {
+  id: string;
+  workspace_id: string;
+  previous_run_id?: string | null;
+  created_by: string;
+  trigger_kind: "manual" | "scheduled";
+  status: "completed" | "degraded" | "failed";
+  title: string;
+  question: string;
+  profile: AiHotTrackerTrackingProfileRecord;
+  output: AiFrontierResearchOutputRecord;
+  source_catalog: AiHotTrackerSourceDefinitionRecord[];
+  source_items: AiHotTrackerSourceItemRecord[];
+  source_failures: AiHotTrackerSourceFailureRecord[];
+  source_set: JsonObject;
+  delta: AiHotTrackerTrackingRunDeltaRecord;
+  follow_ups: AiFrontierFollowUpEntryRecord[];
+  degraded_reason?: string | null;
+  error_message?: string | null;
+  generated_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AiHotTrackerTrackingRunCreatePayload = {
+  trigger_kind?: "manual" | "scheduled";
+};
+
+export type AiHotTrackerTrackingRunFollowUpPayload = {
+  question: string;
+  focus_label?: string;
+  focus_context?: string;
+};
+
+export type AiHotTrackerTrackingRunFollowUpResponse = {
+  answer: string;
+  follow_up: AiFrontierFollowUpEntryRecord;
 };
 
 export type AiFrontierFollowUpEntryRecord = {

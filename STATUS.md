@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-20
+- Last Updated: 2026-04-21
 
 ## Project Mode
 
@@ -27,11 +27,11 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- keep refining the post-Stage-K `AI 热点追踪` surface on top of one canonical workspace-entry path shared by local and deployed environments
+- focus current execution on `AI 热点追踪` as one real single-agent tracking product: persistent workspace profile, durable tracking runs, grounded follow-up, and one canonical release path guarded by `CI -> deploy`
 
 ## Active Task
 
-- none currently fixed; the bounded removal of the legacy public-demo runtime entry path is now completed and archived
+- `tasks/ai-hot-tracker-ranking-and-delta-decision-layer.md`
 
 ## Current Roadmap Alignment
 
@@ -42,23 +42,23 @@ Current state only. Keep this file short, current, and action-oriented.
 - Interpretation rule:
   - the bounded stage is the execution unit; the roadmap wave remains the broader concept family
 - Current baseline:
-  - `AI 热点追踪` now has one structured content pipeline, one lightweight all-workspaces entry, one permanent owner-only workspace delete path, one split report plus `追问` layout, one repaired saved-record path that persists empty follow-up collections correctly, one homepage-mounted auth overlay entry surface, one fixed production deploy path on the shared weave host, one explicit retry/rollback path for deploy failures, and one canonical homepage module-entry path that no longer depends on public-demo bootstrap behavior
+  - `AI 热点追踪` now has one fixed content chain: trusted source intake -> normalized source items -> schema-bound report synthesis -> run-bound follow-up grounding
+  - `AI 热点追踪` workspaces now carry one default `tracking_profile`, and the backend now persists durable `ai_hot_tracker_tracking_run` state with delta summary, source payloads, degraded or failed honesty, and follow-up thread history
+  - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
+  - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
 
 ## Verification Status
 
 - Summary:
-  - local Docker development now enables polling-based file watching for the backend and frontend, so routine code edits should not require repeated rebuilds
-  - weave production now has one fixed server wrapper path, one repo-owned auto-deploy workflow shape, and one explicit retry/rollback path
-  - `AI 热点追踪` saved-record load no longer requests an invalid limit
-  - `/workspaces` is now a real lightweight page instead of a redirect
-  - owners can now permanently delete a workspace and its associated data after confirmation
-  - the AI hot tracker report path now retries one invalid structured draft before returning an explicit generation failure
-  - saving a hot-tracker report now writes `source_set.follow_ups` as a real list at the source path
-  - historical saved records have an Alembic backfill that normalizes missing `follow_ups` values to `[]`
-  - protected product pages now land on one homepage-mounted auth overlay instead of showing a retained auth-required card or a separate login/register UI
-  - homepage module entry no longer seeds or provisions a public-demo workspace at runtime; local and deployed environments now both create real workspaces through the same canonical path
+  - local Docker development still uses polling-based hot reload for backend and frontend edits
+  - weave production still deploys through the repo-owned `CI -> deploy` path with retry and rollback visibility
+  - `AI 热点追踪` now exposes manual run creation, run listing, run fetch, run delete, and run-bound follow-up on top of the new tracking-run persistence layer
+  - the hot-tracker frontend now reads durable runs directly instead of depending on an optional save-first report path
+  - owners can permanently delete a workspace and its associated data after confirmation
+  - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
+  - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
 
-- Last Verified At: 2026-04-20
+- Last Verified At: 2026-04-21
 
 ## Current Blockers
 
@@ -66,20 +66,19 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. keep tightening `AI 热点追踪` report readability, typography, and visual hierarchy
-2. keep refining the split surface so the right `追问` module feels like a first-class companion rather than a helper rail
-3. keep improving deploy observability only if the current bounded retry and rollback baseline stops being sufficient
+1. add ranking, authority, freshness, and novelty scoring before report synthesis so the agent stops behaving like a time-ordered summarizer
+2. add clustering and temporal diff so each run compares event groups rather than raw item URLs
+3. add scheduled execution plus notify-or-suppress decisions on top of the current manual run baseline
 
 ## Last Completed Task
 
-- `tasks/archive/remove-public-demo-runtime-entry.md`
+- `tasks/archive/ai-hot-tracker-tracking-agent-foundation.md`
 
 ## Recent Decisions
 
-- `DEC-2026-04-17-135` fix saved-record follow-up shape at the write path and normalize historical data
-- `DEC-2026-04-17-136` remove the retained auth-required surface from protected product paths and restore the prior path after login
-- `DEC-2026-04-17-137` collapse frontend auth into one account-entry surface that auto-registers unknown accounts and signs in existing accounts
 - `DEC-2026-04-17-138` move the frontend auth entry onto the homepage as a blocking overlay instead of treating `/login` as the primary product-facing surface
 - `DEC-2026-04-18-139` automate weave production deploys through one repo-owned deploy script, one fixed server wrapper, and one GitHub Actions SSH workflow
 - `DEC-2026-04-18-140` give weave deploy failures one explicit retry and rollback path
 - `DEC-2026-04-20-141` retire the legacy public-demo runtime entry path and converge local plus deployed environments onto one canonical workspace flow
+- `DEC-2026-04-20-142` keep `CI -> deploy` as the production gate and make blocked deploys explicit when upstream CI fails
+- `DEC-2026-04-21-143` focus active productization on `AI 热点追踪` as one workspace-level continuous tracking agent with durable runs and grounded follow-up

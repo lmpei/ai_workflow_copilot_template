@@ -52,6 +52,7 @@ def test_workspace_crud_requires_auth_and_persists_owner(client: TestClient) -> 
     assert created["module_type"] == "research"
     assert "type" not in created
     assert created["module_config_json"]["result_type"] == "ai_frontier_research_record"
+    assert created["module_config_json"]["tracking_profile"]["cadence"] == "daily"
     assert created["owner_id"] == auth["user_id"]
 
     get_response = client.get(f"/api/v1/workspaces/{workspace_id}", headers=headers)

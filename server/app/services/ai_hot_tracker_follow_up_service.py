@@ -2,67 +2,83 @@ from datetime import UTC, datetime
 
 from app.schemas.ai_frontier_research import (
     AiFrontierFollowUpEntry,
-    AiHotTrackerFollowUpRequest,
-    AiHotTrackerFollowUpResponse,
+    AiHotTrackerTrackingRunFollowUpRequest,
+    AiHotTrackerTrackingRunFollowUpResponse,
+    AiHotTrackerTrackingRunResponse,
 )
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
 from app.services.retrieval_generation_service import ChatProcessingError, get_chat_model_interface
 
 
-def _render_output_context(payload: AiHotTrackerFollowUpRequest) -> str:
-    output = payload.report_output
-    themes = "\n".join(f"- {theme.label}: {theme.summary}" for theme in output.themes) or "- 暂无"
+def _render_run_context(run: AiHotTrackerTrackingRunResponse) -> str:
+    output = run.output
+    themes = "\n".join(f"- {theme.label}: {theme.summary}" for theme in output.themes) or "- 无"
     events = (
-        "\n".join(f"- {event.title}: {event.summary}（{event.significance}）" for event in output.events)
-        or "- 暂无"
+        "\n".join(
+            f"- {event.title}: {event.summary}；为什么重要：{event.significance}"
+            for event in output.events
+        )
+        or "- 无"
     )
     projects = (
         "\n".join(
-            f"- {card.title}: {card.summary}（{card.why_it_matters}）" for card in output.project_cards
+            f"- {card.title}: {card.summary}；为什么值得继续看：{card.why_it_matters}"
+            for card in output.project_cards
         )
-        or "- 暂无"
+        or "- 无"
     )
-    references = "\n".join(f"- {source.label}: {source.url}" for source in output.reference_sources) or "- 暂无"
-
-    source_items = payload.source_set.get("source_items") if isinstance(payload.source_set, dict) else None
-    rendered_source_items = (
+    references = (
+        "\n".join(f"- {source.label}: {source.url}" for source in output.reference_sources) or "- 无"
+    )
+    source_items = (
         "\n".join(
-            f"- {item.get('title')}: {item.get('summary')} ({item.get('url')})"
-            for item in source_items
-            if isinstance(item, dict)
-            and isinstance(item.get("title"), str)
-            and isinstance(item.get("summary"), str)
-            and isinstance(item.get("url"), str)
+            f"- {item.title}: {item.summary} ({item.url})"
+            for item in run.source_items
         )
-        or "- 暂无"
+        or "- 无"
     )
-
     prior_follow_ups = (
-        "\n".join(f"- 问：{item.question}\n  答：{item.answer}" for item in payload.prior_follow_ups) or "- 暂无"
+        "\n".join(f"- 问：{item.question}\n  答：{item.answer}" for item in run.follow_ups) or "- 无"
     )
 
-    parts = [
-        f"报告原始问题：{payload.report_question}",
-        f"报告正文：\n{payload.report_answer or '无完整正文，仅保留结构化结果。'}",
-        f"本轮摘要：\n{output.frontier_summary}",
-        f"本轮判断：\n{output.trend_judgment}",
-        f"主题：\n{themes}",
-        f"事件：\n{events}",
-        f"项目与框架：\n{projects}",
-        f"参考来源：\n{references}",
-        f"来源条目：\n{rendered_source_items}",
-        f"已有追问：\n{prior_follow_ups}",
-    ]
-    return "\n\n".join(parts)
+    return "\n\n".join(
+        [
+            f"报告标题：{run.title}",
+            f"报告问题：{run.question}",
+            f"本轮结论：{output.frontier_summary}",
+            f"本轮判断：{output.trend_judgment}",
+            f"变化总结：{run.delta.summary}",
+            f"主题：\n{themes}",
+            f"正在发生：\n{events}",
+            f"值得继续看：\n{projects}",
+            f"参考来源：\n{references}",
+            f"来源条目：\n{source_items}",
+            f"已存在追问：\n{prior_follow_ups}",
+        ]
+    )
 
 
-def answer_ai_hot_tracker_follow_up(payload: AiHotTrackerFollowUpRequest) -> AiHotTrackerFollowUpResponse:
+def answer_ai_hot_tracker_tracking_run_follow_up(
+    *,
+    run: AiHotTrackerTrackingRunResponse,
+    payload: AiHotTrackerTrackingRunFollowUpRequest,
+) -> AiHotTrackerTrackingRunFollowUpResponse:
+    focus_section = ""
+    if payload.focus_label or payload.focus_context:
+        focus_section = (
+            f"\n\n用户当前焦点：{payload.focus_label or '当前选中内容'}\n"
+            f"{payload.focus_context or ''}"
+        )
+
     prompt = (
-        "你正在回答一份 AI 热点追踪报告的追问。"
-        "你只能根据当前这份报告和它已经引用的来源来解释，不能扩展成新的泛研究。"
-        "回答要简洁、清楚、面向用户。如果报告里的证据还不够，就直接说明还缺什么。"
-        f"\n\n当前报告上下文：\n{_render_output_context(payload)}"
-        f"\n\n用户追问：{payload.follow_up_question}"
+        "你正在回答 AI 热点追踪工作区里的一次追问。"
+        "你只能根据当前这份报告及其来源解释，不得扩展成新的泛研究。"
+        "回答要面向用户、简洁直接、可执行。"
+        "如果证据不足，要明确说清楚缺什么。"
+        "如果引用来源，请在句末用【来源：标题】标出。"
+        f"\n\n当前运行上下文：\n{_render_run_context(run)}"
+        f"{focus_section}"
+        f"\n\n用户追问：{payload.question}"
     )
 
     try:
@@ -83,10 +99,10 @@ def answer_ai_hot_tracker_follow_up(payload: AiHotTrackerFollowUpRequest) -> AiH
     if not answer:
         raise ChatProcessingError("AI hot tracker follow-up returned an empty answer")
 
-    return AiHotTrackerFollowUpResponse(
+    return AiHotTrackerTrackingRunFollowUpResponse(
         answer=answer,
         follow_up=AiFrontierFollowUpEntry(
-            question=payload.follow_up_question,
+            question=payload.question,
             answer=answer,
             created_at=datetime.now(UTC),
         ),

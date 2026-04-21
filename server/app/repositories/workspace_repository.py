@@ -7,6 +7,7 @@ from sqlalchemy import delete, select, update
 from app.core.database import session_scope
 from app.models.agent_run import AgentRun
 from app.models.ai_frontier_research_record import AiFrontierResearchRecord
+from app.models.ai_hot_tracker_tracking_run import AiHotTrackerTrackingRun
 from app.models.conversation import Conversation
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
@@ -178,6 +179,10 @@ def delete_workspace_tree(workspace_id: str, user_id: str) -> WorkspaceDeleteArt
             session,
             select(ResearchAnalysisRun.id).where(ResearchAnalysisRun.workspace_id == workspace_id),
         )
+        hot_tracker_run_ids = _list_scalars(
+            session,
+            select(AiHotTrackerTrackingRun.id).where(AiHotTrackerTrackingRun.workspace_id == workspace_id),
+        )
         snapshot_ids = _list_scalars(
             session,
             select(ResearchExternalResourceSnapshot.id).where(
@@ -267,7 +272,17 @@ def delete_workspace_tree(workspace_id: str, user_id: str) -> WorkspaceDeleteArt
                 .values(source_run_id=None)
             )
 
+        if hot_tracker_run_ids:
+            session.execute(
+                update(AiHotTrackerTrackingRun)
+                .where(AiHotTrackerTrackingRun.previous_run_id.in_(hot_tracker_run_ids))
+                .values(previous_run_id=None)
+            )
+
         session.execute(delete(AiFrontierResearchRecord).where(AiFrontierResearchRecord.workspace_id == workspace_id))
+        session.execute(
+            delete(AiHotTrackerTrackingRun).where(AiHotTrackerTrackingRun.workspace_id == workspace_id)
+        )
         session.execute(
             delete(ResearchExternalResourceSnapshot).where(
                 ResearchExternalResourceSnapshot.workspace_id == workspace_id

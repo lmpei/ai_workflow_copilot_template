@@ -3,6 +3,8 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field
 
+from app.schemas.ai_frontier_research import build_default_ai_hot_tracker_tracking_profile_config
+
 MODULE_TYPE_RESEARCH = "research"
 MODULE_TYPE_SUPPORT = "support"
 MODULE_TYPE_JOB = "job"
@@ -274,11 +276,14 @@ def get_supported_scenario_task_types(module_type: str) -> tuple[str, ...]:
 
 def get_default_module_config(module_type: str) -> dict[str, object]:
     module_definition = _deepcopy_registry_module(module_type)
-    return {
+    config = {
         "entry_task_types": list(_get_registry_tasks(module_definition).keys()),
         "result_type": module_definition["result_type"],
         "features": _get_registry_string_list(module_definition, "features"),
     }
+    if module_type == MODULE_TYPE_RESEARCH:
+        config["tracking_profile"] = build_default_ai_hot_tracker_tracking_profile_config()
+    return config
 
 
 def get_scenario_module_definition(module_type: str) -> dict[str, object]:

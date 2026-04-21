@@ -1,4 +1,4 @@
-ï»¿# Decisions
+# Decisions
 
 Append-only log. Add new entries at the bottom.
 
@@ -1214,7 +1214,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-f-18 project-home and research-workflow reset
 - Context: after `stage-f-17`, human review made it clear that the remaining front-end gaps were no longer small density issues. The `/app` surface still behaved too much like a workspace-center explanation page, and the main workbench still read too much like a generic explanatory chat surface instead of one research workflow page with a clear primary path.
-- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `é–»åº¢î†–é æŽ—å´‘éŽ¾æ–¥æ”½æ¤¤æ—‚â’ˆéŽå¿›æŸ›éŠŠãƒ©å„ç€µî†½æ‚‚éªž?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
+- Choice: define and complete `stage-f-18`, rebuild `/app` into a denser project start surface with top-level login or session actions, one lightweight guided-demo row, one manual-create surface, and one bounded existing-work region; rebuild the main workspace so the left side reads as a research workflow with clickable prompt chips, an obvious `éŽæ®¿å–’é‹æ’³â”‘é¡”ç¢±å„é–¸ã„¥é…£å¯®æå¹?CTA, and visible analysis progress in the main column; archive the task; and return Stage F to final closeout review instead of extending the stage again by default.
 - Why: the human had already confirmed that the front-end should be treated as a product-surface rebuild, not as a series of small explanation edits. The remaining gap was about product shape: start surfaces, workflow hierarchy, and how the main analysis path competes against supporting detail.
 - Impact: the root homepage and `/app` surface are now more clearly separated, the project-facing home behaves more like a true product entry surface, and the main workspace is closer to a research workflow page with clearer hierarchy between prompting, analysis, supporting state, and formal output. Stage F now returns to closeout review with one more coherent end state.
 - Related Task: `tasks/archive/stage-f/stage-f-18-project-home-and-research-workflow-reset.md`
@@ -1923,12 +1923,12 @@ Append-only log. Add new entries at the bottom.
 - Context: the older generic Research module was too broad to provide one coherent MCP learning target or one clear
   user-facing domain. The owner clarified that the real goal is to stay aligned with current AI change, especially
   around frontier developments, industry evolution, and open-source ecosystem movement.
-- Choice: replace the older generic Research product definition with `AI å‰æ²¿ç ”ç©¶`, define it as a workflow that starts
+- Choice: replace the older generic Research product definition with `AI Ç°ÑØÑÐ¾¿`, define it as a workflow that starts
   from high-trust current sources, derives themes, events, and projects from that inflow, and produces summaries,
   judgments, project cards, and durable research records with source links separated from the main prose.
 - Why: the product needs one concrete domain so Stage J MCP work can teach a coherent system instead of serving another
   vague anything-research surface.
-- Impact: future MCP work, product framing, and workflow design should treat `AI å‰æ²¿ç ”ç©¶` as the reference module
+- Impact: future MCP work, product framing, and workflow design should treat `AI Ç°ÑØÑÐ¾¿` as the reference module
   instead of the older generic Research concept, while Support and Job remain unchanged.
 - Related Task: `tasks/archive/stage-j/stage-j-06-ai-frontier-research-redefinition.md`
 - Supersedes:
@@ -1961,8 +1961,8 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-j-04 product resource, tool, and prompt integration
 - Context: after `stage-j-03`, the project had one independent MCP server, but the visible product path still needed to
-  show the difference between MCP resource, MCP tool, and MCP prompt behavior inside `AI å‰æ²¿ç ”ç©¶`.
-- Choice: complete `stage-j-04`, update the visible `AI å‰æ²¿ç ”ç©¶` MCP path so it uses one MCP resource for digest
+  show the difference between MCP resource, MCP tool, and MCP prompt behavior inside `AI Ç°ÑØÑÐ¾¿`.
+- Choice: complete `stage-j-04`, update the visible `AI Ç°ÑØÑÐ¾¿` MCP path so it uses one MCP resource for digest
   context, one MCP prompt for reusable research framing, and one MCP tool for project or event search, while
   preserving consent, snapshot reuse, explicit degraded behavior, and product-host stability.
 - Why: MCP should be understood through a running product path, not only through docs or server-side theory.
@@ -1978,11 +1978,11 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: complete stage-j-05 auth, observability, and learning closeout
-- Context: `stage-j-04` made resource, tool, and prompt behavior visible on the same `AI å‰æ²¿ç ”ç©¶` path, but the
+- Context: `stage-j-04` made resource, tool, and prompt behavior visible on the same `AI Ç°ÑØÑÐ¾¿` path, but the
   Stage J learning target was still incomplete until MCP tool identity, prompt identity, auth outcome, transport
   outcome, and degraded behavior stayed readable enough for operators and future review.
 - Choice: complete `stage-j-05`, extend run traces and regression review to include MCP tool and prompt identity,
-  improve the operator-facing review surface, archive the task, and write a short Stage J learning summary in `AI å‰æ²¿ç ”ç©¶`
+  improve the operator-facing review surface, archive the task, and write a short Stage J learning summary in `AI Ç°ÑØÑÐ¾¿`
   terms.
 - Why: the project should finish Stage J with one coherent, reviewable MCP learning path rather than with a partially
   visible implementation that still hides important protocol behavior.
@@ -1999,7 +1999,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: close Stage J as complete
 - Context: all Stage J tasks are now finished: the MCP capability map is fixed, the independent server exists outside
-  this repo, the visible `AI å‰æ²¿ç ”ç©¶` path uses MCP resource, tool, and prompt distinctly, and auth plus review signals
+  this repo, the visible `AI Ç°ÑØÑÐ¾¿` path uses MCP resource, tool, and prompt distinctly, and auth plus review signals
   are now visible enough for learning and operator inspection.
 - Choice: close Stage J as complete instead of opening another default MCP task inside the same stage.
 - Why: the bounded Stage J goal was a coherent MCP learning path, and that goal is now met. Any further work should
@@ -2020,7 +2020,7 @@ Append-only log. Add new entries at the bottom.
   the older generic Research shape. The next work should not reopen MCP as the main story; it should turn that MCP
   baseline into one concrete module workflow.
 - Choice: open `Stage K: AI Frontier Research Productization`.
-- Why: the next bounded goal is product coherence around `AI å‰æ²¿ç ”ç©¶`, not more protocol learning for its own sake.
+- Why: the next bounded goal is product coherence around `AI Ç°ÑØÑÐ¾¿`, not more protocol learning for its own sake.
 - Impact: the active planning unit moves to `docs/prd/STAGE_K_PLAN.md`, and later implementation should prioritize
   module definition, object model, source intake, output shape, and surface reframe over more generic MCP breadth.
 - Related Task: `tasks/archive/stage-k/stage-k-01-task-stack-planning.md`
@@ -2034,7 +2034,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Planning
 - Topic: define the first Stage K task wave
 - Context: after opening Stage K, the repo needed one bounded execution wave that could turn the completed MCP baseline
-  into a coherent `AI å‰æ²¿ç ”ç©¶` module without reopening broad capability work.
+  into a coherent `AI Ç°ÑØÑÐ¾¿` module without reopening broad capability work.
 - Choice: define the first Stage K wave as:
   - `tasks/stage-k-02-ai-frontier-object-model-and-language-shift.md`
   - `tasks/stage-k-03-latest-source-intake-and-research-record-foundation.md`
@@ -2054,12 +2054,12 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-k-02 AI frontier object-model and language shift
 - Context: Stage J delivered a coherent MCP baseline, but the visible product surface still depended on broad generic
-  Research wording and did not yet expose one durable `AI å‰æ²¿ç ”ç©¶` result contract.
-- Choice: complete `stage-k-02`, replace the older generic Research wording with one explicit `AI å‰æ²¿ç ”ç©¶` object
+  Research wording and did not yet expose one durable `AI Ç°ÑØÑÐ¾¿` result contract.
+- Choice: complete `stage-k-02`, replace the older generic Research wording with one explicit `AI Ç°ÑØÑÐ¾¿` object
   model and response contract, archive the task, and continue Stage K execution.
 - Why: productization needed a stable module definition before source intake, output restructuring, and surface work
   could stay coherent.
-- Impact: `AI å‰æ²¿ç ”ç©¶` is now the explicit reference workflow and later Stage K work can build on one narrower domain
+- Impact: `AI Ç°ÑØÑÐ¾¿` is now the explicit reference workflow and later Stage K work can build on one narrower domain
   contract instead of the older generic Research language.
 - Related Task: `tasks/archive/stage-k/stage-k-02-ai-frontier-object-model-and-language-shift.md`
 - Supersedes:
@@ -2072,10 +2072,10 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-k-03 latest-source intake and research-record foundation
 - Context: after `stage-k-02`, the module definition was narrower, but the product still lacked one durable record for
-  `AI å‰æ²¿ç ”ç©¶` work and one explicit persistence path for frontier outputs beyond raw traces or transient chat turns.
+  `AI Ç°ÑØÑÐ¾¿` work and one explicit persistence path for frontier outputs beyond raw traces or transient chat turns.
 - Choice: complete `stage-k-03`, add persisted `ai_frontier_research_record` state plus listing and retrieval APIs,
   archive the task, and continue Stage K execution.
-- Why: `AI å‰æ²¿ç ”ç©¶` should create durable research records instead of behaving like one more chat-only surface.
+- Why: `AI Ç°ÑØÑÐ¾¿` should create durable research records instead of behaving like one more chat-only surface.
 - Impact: frontier outputs can now outlive one answer or run and can be reviewed through first-class product records.
 - Related Task: `tasks/archive/stage-k/stage-k-03-latest-source-intake-and-research-record-foundation.md`
 - Supersedes:
@@ -2091,7 +2091,7 @@ Append-only log. Add new entries at the bottom.
   summaries, judgments, projects, and sources instead of collapsing everything into one generic answer blob.
 - Choice: complete `stage-k-04`, make frontier summary, trend judgment, theme, event, project-card, and
   reference-source outputs first-class, archive the task, and continue Stage K execution.
-- Why: the module should expose one coherent output grammar that matches the new `AI å‰æ²¿ç ”ç©¶` contract.
+- Why: the module should expose one coherent output grammar that matches the new `AI Ç°ÑØÑÐ¾¿` contract.
 - Impact: both direct chat and background runs can now surface structured frontier outputs and persist them into
   durable research records.
 - Related Task: `tasks/archive/stage-k/stage-k-04-frontier-summary-judgment-and-project-card-outputs.md`
@@ -2105,8 +2105,8 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: complete stage-k-05 AI frontier workbench surface reframe
 - Context: after `stage-k-04`, the repo had the right records and outputs, but the visible workbench still needed to
-  stop behaving like a generic Research shell and start presenting `AI å‰æ²¿ç ”ç©¶` as its own concrete module surface.
-- Choice: complete `stage-k-05`, reframe the visible workbench around `AI å‰æ²¿ç ”ç©¶` outputs and records, archive the
+  stop behaving like a generic Research shell and start presenting `AI Ç°ÑØÑÐ¾¿` as its own concrete module surface.
+- Choice: complete `stage-k-05`, reframe the visible workbench around `AI Ç°ÑØÑÐ¾¿` outputs and records, archive the
   task, and return Stage K to closeout.
 - Why: Stage K should finish by changing what the user actually sees, not only by changing backend contracts.
 - Impact: the visible workbench now presents durable AI frontier outputs and records instead of older broad Research
@@ -2121,8 +2121,8 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: simplify the post-Stage-K AI Frontier Research workbench
-- Context: Stage K delivered the right records and outputs, but the visible `AI å‰æ²¿ç ”ç©¶` workbench still exposed too much technical process, including a right rail, explicit analysis-mode switching, a separate trace or readiness entry, and a separate formal-output action surface that duplicated the main result path.
-- Choice: keep the default `AI å‰æ²¿ç ”ç©¶` workbench to one lighter single-column path built around source intake, one current research result, and recent research records; remove the right rail from that module; stop exposing trace or readiness and separate formal-output actions in the main path; and hide analysis-mode switching from ordinary users.
+- Context: Stage K delivered the right records and outputs, but the visible `AI Ç°ÑØÑÐ¾¿` workbench still exposed too much technical process, including a right rail, explicit analysis-mode switching, a separate trace or readiness entry, and a separate formal-output action surface that duplicated the main result path.
+- Choice: keep the default `AI Ç°ÑØÑÐ¾¿` workbench to one lighter single-column path built around source intake, one current research result, and recent research records; remove the right rail from that module; stop exposing trace or readiness and separate formal-output actions in the main path; and hide analysis-mode switching from ordinary users.
 - Why: the user-facing workbench should show the research object and result, not the internal system shape or repeated output layers.
 - Impact: the research module now reads more like one lightweight workbench than one technical shell, while operator-facing trace and review capability remains available outside the default user path.
 - Related Task: `tasks/archive/stage-k/ai-frontier-workbench-simplification.md`
@@ -2135,10 +2135,10 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: rename the visible module from AI Frontier Research to AI Hot Tracker
-- Context: after the lighter post-Stage-K workbench cleanup, the visible module still carried the older `AI å‰æ²¿ç ”ç©¶` framing, and the product home still looked like a generic internal shell rather than a focused product entry surface.
-- Choice: rename the visible module product name from `AI å‰æ²¿ç ”ç©¶` to `AI çƒ­ç‚¹è¿½è¸ª`, use `AI Signal Tracker` as the English subtitle, remove leftover `Research` wording from the main entry surfaces, and redesign the product home plus the module workbench around that narrower identity.
+- Context: after the lighter post-Stage-K workbench cleanup, the visible module still carried the older `AI Ç°ÑØÑÐ¾¿` framing, and the product home still looked like a generic internal shell rather than a focused product entry surface.
+- Choice: rename the visible module product name from `AI Ç°ÑØÑÐ¾¿` to `AI ÈÈµã×·×Ù`, use `AI Signal Tracker` as the English subtitle, remove leftover `Research` wording from the main entry surfaces, and redesign the product home plus the module workbench around that narrower identity.
 - Why: the product needs a sharper, more external-facing identity so the module reads like one real product surface instead of one leftover generic Research shell.
-- Impact: current user-facing entry surfaces, workbench labels, and control-plane docs should now treat `AI çƒ­ç‚¹è¿½è¸ª` as the visible product name while backend module types remain unchanged.
+- Impact: current user-facing entry surfaces, workbench labels, and control-plane docs should now treat `AI ÈÈµã×·×Ù` as the visible product name while backend module types remain unchanged.
 - Related Task: `tasks/ai-hot-tracker-rename-and-surface-reframe.md`
 - Supersedes:
 
@@ -2149,11 +2149,11 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: close Stage K as complete
-- Context: the Stage K wave is now fully complete: the repo has one explicit `AI å‰æ²¿ç ”ç©¶` contract, one durable
+- Context: the Stage K wave is now fully complete: the repo has one explicit `AI Ç°ÑØÑÐ¾¿` contract, one durable
   research-record layer, one structured frontier-output system, and one reframed workbench surface on top of the
   completed Stage J MCP baseline.
 - Choice: close Stage K as complete instead of opening another default Stage K follow-through task.
-- Why: the bounded Stage K goal was to productize `AI å‰æ²¿ç ”ç©¶`, and that goal is now met.
+- Why: the bounded Stage K goal was to productize `AI Ç°ÑØÑÐ¾¿`, and that goal is now met.
 - Impact: `STATUS.md` no longer points to an active Stage K task, and the next step is a human decision about the next
   bounded stage.
 - Related Task: `tasks/archive/stage-k/stage-k-05-ai-frontier-workbench-surface-reframe.md`
@@ -2166,10 +2166,10 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: rebuild AI hot tracker around one real content pipeline
-- Context: the visible `AI çƒ­ç‚¹è¿½è¸ª` surface had already been narrowed and reframed, but its primary content path still
+- Context: the visible `AI ÈÈµã×·×Ù` surface had already been narrowed and reframed, but its primary content path still
   depended on one answer-first MCP/chat flow plus shallow output post-processing. That made reports feel like internal
   field dumps instead of current, structured tracking briefs.
-- Choice: start one bounded rebuild of `AI çƒ­ç‚¹è¿½è¸ª` around three explicit layers: trusted external source intake, one
+- Choice: start one bounded rebuild of `AI ÈÈµã×·×Ù` around three explicit layers: trusted external source intake, one
   structured normalized source-item middle layer, and one structured report-generation path that the frontend consumes
   directly.
 - Why: the product should first solve whether it can stably fetch current external information and turn that into a real
@@ -2205,7 +2205,7 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: fix saved-record follow-up shape at the write path and normalize historical data
-- Context: `AI çƒ­ç‚¹è¿½è¸ª` saved records had drifted into two shapes: new code sometimes persisted `source_set.follow_ups`
+- Context: `AI ÈÈµã×·×Ù` saved records had drifted into two shapes: new code sometimes persisted `source_set.follow_ups`
   as missing or `None`, while older records already stored that historical inconsistency. A response-time fallback could
   hide the issue, but that kept the underlying contract wrong and made future debugging harder.
 - Choice: make the write path always persist `source_set.follow_ups` as a real list, add one bounded Alembic backfill
@@ -2225,7 +2225,7 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: remove retained auth-required surface from protected product paths
-- Context: the old `éœ€è¦å…ˆç™»å½•` card was still appearing on protected workspace and module pages, and it now reads like a leftover internal surface rather than a necessary product state.
+- Context: the old `ÐèÒªÏÈµÇÂ¼` card was still appearing on protected workspace and module pages, and it now reads like a leftover internal surface rather than a necessary product state.
 - Choice: keep protected-page auth handling, but replace the retained card with a direct redirect to `/login`, and preserve user flow by returning to the originally requested page after successful login.
 - Why: the product should not expose a stale auth-required card when the clearer behavior is to send users straight into the login flow and then back to where they intended to go.
 - Impact: protected pages no longer render the old auth gate, and login now restores the prior path instead of always sending users back to `/`.
@@ -2240,7 +2240,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: collapse frontend auth into one account-entry surface
 - Context: the product no longer needs separate login and register pages with repeated form chrome and explanatory copy. The desired interaction is one short entry path: a user types account plus password, existing accounts sign in, and unknown accounts are created automatically and then signed in.
-- Choice: keep the legacy backend `/auth/login` and `/auth/register` APIs for compatibility, add one new `/auth/enter` API for the unified path, reduce the frontend to one `/login` surface with only `è´¦å·` and `å¯†ç `, and redirect `/register` into that same page instead of preserving a second auth UI.
+- Choice: keep the legacy backend `/auth/login` and `/auth/register` APIs for compatibility, add one new `/auth/enter` API for the unified path, reduce the frontend to one `/login` surface with only `ÕËºÅ` and `ÃÜÂë`, and redirect `/register` into that same page instead of preserving a second auth UI.
 - Why: the auth entry should be shorter, calmer, and easier to understand. Users should not have to decide up front whether they are "logging in" or "registering" when the system can do the right thing from one submission.
 - Impact: protected product paths now route users into one shared auth surface, unknown accounts can be created from that same entry flow when registration is allowed, and the older split auth UI is no longer part of the visible product path.
 - Related Task: `tasks/archive/unified-auth-entry.md`
@@ -2308,4 +2308,32 @@ Append-only log. Add new entries at the bottom.
 - Why: the product is no longer a demo showcase. Module entry should be honest, direct, and environment-consistent instead of relying on a hidden seeded-workspace bootstrap path.
 - Impact: homepage module entry now creates real workspaces directly, deployed behavior matches local behavior, and legacy public-demo bootstrap code is removed from the runtime surface.
 - Related Task: `tasks/archive/remove-public-demo-runtime-entry.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-20-142
+- Date: 2026-04-20
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: keep `CI -> deploy` as the production gate and make blocked deploys explicit
+- Context: commit `85fbad4` did not reach the server automatically because backend lint failed in the upstream `CI` workflow. The deploy workflow itself was still healthy, but the skipped deploy was easy to misread as a deployment malfunction because the workflow did not clearly explain that upstream `CI` had blocked release.
+- Choice: keep the existing `CI -> deploy` release gate, fix the current backend `ruff` blockers, and add an explicit GitHub Actions summary path that records when `Deploy Weave` is skipped because upstream `CI` did not succeed on `main`.
+- Why: production should not auto-deploy code that fails the repository's own quality gate, but the reason a deploy did not happen must be obvious without forcing someone to reverse-engineer the workflow chain.
+- Impact: backend lint must stay green for production deploys to proceed, and future skipped deploy runs now tell collaborators that `CI` blocked release and link them back to the failed upstream run.
+- Related Task: `tasks/archive/fix-ci-lint-and-deploy-visibility.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-21-143
+- Date: 2026-04-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: focus active productization on AI hot tracker as one continuous tracking agent
+- Context: after the content-pipeline rebuild, `AI ÈÈµã×·×Ù` could already fetch real sources and produce one structured report, but the product still behaved like a one-shot generation page. The confirmed next direction is to stop spreading implementation effort across all three modules and instead turn the first module into one real, durable agent system before broadening again.
+- Choice: keep `Support Copilot` and `Job Assistant` visible but implementation-frozen for now, and model `AI ÈÈµã×·×Ù` as a workspace-level tracking container with one default `tracking_profile`, durable `tracking_run` persistence, run-to-run delta summaries, and follow-up threads grounded to the selected run and its sources.
+- Why: this is the shortest path to a real agent product with natural coverage of source intake, structured generation, memory, grounding, and later ranking or novelty logic, without forcing premature multi-agent orchestration or artificial feature sprawl.
+- Impact: the visible hot-tracker surface now reads and writes durable tracking runs instead of relying on an optional save-first report path, backend storage now includes persisted tracking-run state, and the next bounded task should deepen decision logic through ranking, clustering, and temporal diff rather than reopening broad surface work.
+- Related Task: `tasks/archive/ai-hot-tracker-tracking-agent-foundation.md`
 - Supersedes:

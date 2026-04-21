@@ -6,6 +6,7 @@ from app.models.workspace import Workspace
 from app.schemas.scenario import (
     MODULE_TYPE_RESEARCH,
     is_supported_module_type,
+    merge_module_config,
 )
 
 
@@ -86,7 +87,10 @@ class WorkspaceResponse(BaseModel):
             name=workspace.name,
             module_type=workspace.module_type,
             description=workspace.description,
-            module_config_json=workspace.module_config_json,
+            module_config_json=merge_module_config(
+                workspace.module_type,
+                workspace.module_config_json,
+            ),
             created_at=workspace.created_at,
             updated_at=workspace.updated_at,
         )

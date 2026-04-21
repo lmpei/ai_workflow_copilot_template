@@ -1,5 +1,6 @@
 from app.models.agent_run import AgentRun
 from app.models.ai_frontier_research_record import AiFrontierResearchRecord
+from app.models.ai_hot_tracker_tracking_run import AiHotTrackerTrackingRun
 from app.models.base import Base
 from app.models.conversation import Conversation
 from app.models.document import Document
@@ -13,9 +14,9 @@ from app.models.job_hiring_packet import JobHiringPacket
 from app.models.job_hiring_packet_event import JobHiringPacketEvent
 from app.models.message import Message
 from app.models.research_analysis_run import ResearchAnalysisRun
-from app.models.research_external_resource_snapshot import ResearchExternalResourceSnapshot
 from app.models.research_asset import ResearchAsset
 from app.models.research_asset_revision import ResearchAssetRevision
+from app.models.research_external_resource_snapshot import ResearchExternalResourceSnapshot
 from app.models.support_case import SupportCase
 from app.models.support_case_event import SupportCaseEvent
 from app.models.task import Task
@@ -29,6 +30,7 @@ from app.models.workspace_member import WorkspaceMember
 __all__ = [
     "AgentRun",
     "AiFrontierResearchRecord",
+    "AiHotTrackerTrackingRun",
     "Base",
     "Conversation",
     "Document",

@@ -16,10 +16,10 @@ import type {
   JobHiringPacketSummaryRecord,
   LoginRequestPayload,
   LoginResponsePayload,
-  AiHotTrackerFollowUpResponse,
   RegisterRequestPayload,
   AiFrontierResearchRecord,
   AiFrontierResearchRecordWritePayload,
+  AiHotTrackerFollowUpResponse,
   AiHotTrackerFollowUpPayload,
   ResearchAnalysisReviewResponse,
   ResearchAnalysisRunCreatePayload,
@@ -28,6 +28,10 @@ import type {
   ResearchExternalResourceSnapshotRecord,
   ResearchAssetRecord,
   ResearchAssetSummaryRecord,
+  AiHotTrackerTrackingRunCreatePayload,
+  AiHotTrackerTrackingRunFollowUpPayload,
+  AiHotTrackerTrackingRunFollowUpResponse,
+  AiHotTrackerTrackingRunRecord,
   ScenarioModuleRecord,
   SupportCaseRecord,
   SupportCaseSummaryRecord,
@@ -418,6 +422,72 @@ export async function generateAiHotTrackerReport(
     `/workspaces/${workspaceId}/ai-hot-tracker/report`,
     {
       method: "POST",
+    },
+    accessToken,
+  );
+}
+
+export async function listWorkspaceAiHotTrackerRuns(
+  accessToken: string,
+  workspaceId: string,
+  limit = 20,
+): Promise<AiHotTrackerTrackingRunRecord[]> {
+  return fetchBrowserApiJson<AiHotTrackerTrackingRunRecord[]>(
+    `/workspaces/${workspaceId}/ai-hot-tracker/runs?limit=${limit}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function createWorkspaceAiHotTrackerRun(
+  accessToken: string,
+  workspaceId: string,
+  payload: AiHotTrackerTrackingRunCreatePayload = {},
+): Promise<AiHotTrackerTrackingRunRecord> {
+  return fetchBrowserApiJson<AiHotTrackerTrackingRunRecord>(
+    `/workspaces/${workspaceId}/ai-hot-tracker/runs`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    accessToken,
+  );
+}
+
+export async function getAiHotTrackerRun(
+  accessToken: string,
+  runId: string,
+): Promise<AiHotTrackerTrackingRunRecord> {
+  return fetchBrowserApiJson<AiHotTrackerTrackingRunRecord>(
+    `/ai-hot-tracker/runs/${runId}`,
+    {},
+    accessToken,
+  );
+}
+
+export async function deleteAiHotTrackerRun(
+  accessToken: string,
+  runId: string,
+): Promise<void> {
+  await fetchBrowserApiJson<void>(
+    `/ai-hot-tracker/runs/${runId}`,
+    {
+      method: "DELETE",
+    },
+    accessToken,
+  );
+}
+
+export async function askAiHotTrackerRunFollowUp(
+  accessToken: string,
+  runId: string,
+  payload: AiHotTrackerTrackingRunFollowUpPayload,
+): Promise<AiHotTrackerTrackingRunFollowUpResponse> {
+  return fetchBrowserApiJson<AiHotTrackerTrackingRunFollowUpResponse>(
+    `/ai-hot-tracker/runs/${runId}/follow-up`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
     accessToken,
   );

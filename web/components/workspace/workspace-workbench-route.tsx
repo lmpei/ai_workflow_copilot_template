@@ -58,7 +58,7 @@ export default function WorkspaceWorkbenchRoute({ initialPanel, workspaceId }: W
   }
 
   if (workspace.module_type === "research") {
-    return <AiHotTrackerWorkspace workspaceId={workspaceId} />;
+    return <AiHotTrackerWorkspace workspace={workspace} workspaceId={workspaceId} />;
   }
 
   return (

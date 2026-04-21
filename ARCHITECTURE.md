@@ -1,9 +1,9 @@
-﻿# Architecture
+# Architecture
 
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-20
+- Last Updated: 2026-04-21
 
 ## Main Modules
 
@@ -21,160 +21,79 @@ Stable system boundaries only. This is the short architecture summary. The long-
 - chat
   - workspace question -> retrieval -> grounded answer -> citations -> trace
 - tasks
-  - create task -> queue -> worker -> agent/tool execution -> persisted result
+  - create task -> queue -> worker -> agent or tool execution -> persisted result
 - evals
   - dataset -> eval run -> per-case execution -> scoring -> summaries and traces
-- bounded Research background analysis runs
-  - create run -> queue worker job -> optional resumed-run memory -> tool-assisted synthesis -> assistant answer, tool
-    steps, compact memory, and trace linkage
+- AI 热点追踪
+  - workspace -> tracking profile -> source intake -> normalized source items -> schema-bound report synthesis -> tracking run persistence -> grounded follow-up
+
 ## State and Persistence
 
 - PostgreSQL is the system of record for product and workflow state.
-- PostgreSQL also persists the non-Research workbench state through Support case / Support case event and Job hiring
-  packet / Job hiring packet event records, and now also persists bounded Research background analysis run state
-  through `research_analysis_run` records.
-- PostgreSQL now also persists bounded workspace-level connector consent state through
-  `workspace_connector_consent` records before any external-context connector call path is enabled.
-- PostgreSQL now also persists explicit bounded Research external-context matches as
-  `research_external_resource_snapshot` records so approved connector-backed context can outlive one answer or trace.
-- PostgreSQL now also persists durable `ai_frontier_research_record` state so `AI 热点追踪` outputs can outlive one
-  answer or one background run.
-- Redis is the queue boundary for async execution.
+- PostgreSQL persists workspace state, conversations, tasks, evals, and module-specific records.
+- PostgreSQL persists `research_analysis_run` for bounded background analysis execution.
+- PostgreSQL persists `workspace_connector_consent` and `research_external_resource_snapshot` for the bounded external-context path.
+- PostgreSQL persists `ai_frontier_research_record` for older saved hot-tracker records that still need to outlive a single answer.
+- PostgreSQL now also persists `ai_hot_tracker_tracking_run` as the durable unit for the current AI hot-tracker product path, including:
+  - profile snapshot
+  - structured report output
+  - normalized source payload
+  - delta summary
+  - grounded follow-up thread history
+- Research workspaces now carry a default hot-tracker `tracking_profile` inside `module_config_json`.
+- Redis remains the queue boundary for async execution.
 - Chroma stores retrieval vectors and metadata for grounded search.
-- Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime
-  state instead of repo-tracked source content.
+- Files under `storage/uploads/` back uploaded document content during local runtime and should be treated as runtime state rather than repo-tracked source content.
 
 ## Key Interfaces
 
 - Next.js frontend in `web/`
 - `web/app/page.tsx`
-  - owns the canonical product home for the dedicated frontend host and now also hosts the auth overlay entry state
-- `web/next.config.js`
-  - preserves compatibility by redirecting the older `/app` project-home route into `/`
+  - owns the canonical product home and the homepage-mounted auth overlay state
 - `web/app/workspaces/page.tsx`
-  - preserves compatibility by redirecting the older workspace-center route into `/`
-- `web/app/workspaces/[workspaceId]/analytics/page.tsx`
-  - preserves compatibility by redirecting the older analytics page route into the workbench analytics surface
+  - owns the lightweight all-workspaces history surface
 - `web/components/workspace/workspace-center-panel.tsx`
-  - owns the canonical home composition, direct module-entry surface, and homepage-mounted auth overlay gate; homepage entry no longer bootstraps a public-demo workspace before navigation
+  - owns the home composition and direct module-entry surface
 - `web/components/workspace/workspace-workbench-panel.tsx`
-  - still owns the non-hot-tracker primary workspace user path; technical process detail stays outside the default
-    user path
+  - owns the generic non-hot-tracker workspace path
 - `web/components/research/ai-hot-tracker-workspace.tsx`
-  - owns the dedicated `AI 热点追踪` product surface, including one explicit report-generation action, one current
-    report state, one lightweight saved-record drawer, and one bounded follow-up panel that stays tied to the current
-    report instead of reopening the older generic chat shell
+  - owns the dedicated AI hot-tracker surface: run history, current tracking brief, and grounded follow-up side panel
 - FastAPI API in `server/app/api/routes/`
-- `server/app/api/routes/connectors.py`
-  - owns the bounded Stage I consent-check, consent-lifecycle, and connector-to-MCP binding API surface for the
-    Research-first connector and MCP pilot path
-- orchestration in `server/app/services/`
-- persistence in `server/app/repositories/`
-- worker entrypoints in `server/app/workers/`
-- agent runtime in `server/app/agents/`
+- `server/app/api/routes/workspaces.py`
+  - owns canonical workspace creation and deletion paths for all environments
+- `server/app/api/routes/research_analysis_runs.py`
+  - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, and the `/ai-hot-tracker/report` alias
 
 ## Runtime Boundaries
 
-- `server/app/core/runtime_control.py`
-  - owns cancel and retry control-state transitions plus recovery-detail derivation
-- `server/app/services/task_execution_service.py`
-  - owns generic task lifecycle only: pending -> running -> completed or failed
 - `server/app/services/model_interface_service.py`
-  - owns the shared model-facing contract for text generation, structured JSON generation, embeddings, and future
-    tool-call visibility behind the current OpenAI-compatible provider path
-- `server/app/services/research_tool_assisted_chat_service.py`
-  - owns the first bounded Stage H Research pilot: it plans one analysis focus plus search query, invokes existing
-    workspace tools inline, synthesizes the grounded answer, and returns visible tool-step summaries to the main chat
-    flow without creating a separate agent runtime surface
-- `server/app/services/research_analysis_run_service.py`
-  - owns the next bounded Stage H deepening step: create, queue, list, resume, and complete explicit Research
-    background analysis runs that now support both the internal tool-assisted path and the Stage I external-context
-    path while keeping run status, compact run memory, answer delivery, and trace linkage honest on the same workspace
-    surface
-- `server/app/services/research_analysis_review_service.py`
-  - owns the bounded operator-facing review layer for terminal Research analysis runs by mapping persisted runs to
-  their traces and applying the replay/regression baseline before any broader eval flywheel exists; it now also
-  surfaces connector consent state, external-context use, match-count visibility, selected versus actual resource
-  snapshot visibility, resource-selection mode, MCP server and resource identity, MCP transport and read-status
-  visibility, transport-failure detail, and degraded-path honesty for the Stage I pilot
-- `server/app/services/connector_service.py`
-  - owns the bounded Stage I connector definition registry, workspace-level consent boundary, explicit grant or revoke
-    lifecycle, and reusable permission-gate helpers for the first external-context pilot
-- `server/app/services/mcp_service.py`
-  - owns the bounded MCP client facade inside this repo: it preserves the older Stage I local and repo-local baselines
-    for comparison, but it now also describes, validates, and calls one independent MCP server outside this repository
-    for the visible `AI 热点追踪` path, including one resource, one tool, one prompt, and explicit endpoint auth state
-- `server/app/mcp/research_context_local_server.py`
-  - owns one in-process local MCP server foundation for the bounded Research pilot and exposes one MCP resource shape
-    that remains available as a bounded MCP baseline while the visible Research path moves onto the out-of-process
-    transport
-- `server/app/mcp/research_context_stdio_server.py`
-  - owns one bounded stdio MCP server process entrypoint for the same Research-first MCP resource, so the repo can
-    exercise a real out-of-process client or server transport without broadening into generic multi-server support
-- `server/app/mcp/stdio_process_client.py`
-  - owns the bounded subprocess-based MCP client exchange used to describe and read one MCP resource through a separate
-    server process before the visible product path switches to that transport and before the repo reaches a true
-    external MCP endpoint
-- `server/app/services/research_external_context_service.py`
-  - owns the visible `AI 热点追踪` MCP path: it checks connector consent, can reuse an explicitly selected external
-    resource snapshot, and otherwise reads one MCP resource, one MCP prompt, and one MCP tool result through the same
-    permission model while keeping evidence, transport, endpoint identity, auth state, and degraded behavior explicit
-- `server/app/services/ai_frontier_research_record_service.py`
-  - owns durable `AI 热点追踪` record creation plus source-set assembly on top of direct chat and background-run outputs
-- `server/app/services/ai_frontier_research_output_service.py`
-  - owns the structured `AI 热点追踪` output grammar: frontier summary, trend judgment, themes, events, project cards,
-    and reference sources
+  - owns the shared model-facing contract for text generation, structured JSON generation, and embeddings
 - `server/app/services/ai_hot_tracker_source_service.py`
-  - owns the bounded trusted-source intake layer for `AI 热点追踪`: one fixed source catalog, one normalized source-item
-    schema, feed parsing, deduplication, ordering, and partial-failure capture before any report text is generated
+  - owns trusted-source intake, feed parsing, deduplication, ordering, and partial-failure capture
 - `server/app/services/ai_hot_tracker_report_service.py`
-  - owns the structured report-generation path for `AI 热点追踪`: it reads the trusted-source intake result, converts
-    it into one reusable normalized middle layer, and asks the shared model interface for one schema-bound report draft
-    instead of post-processing one generic answer blob
-- `server/app/services/research_external_resource_snapshot_service.py`
-  - owns the bounded Stage I snapshot layer that turns approved external matches into explicit Research resource
-    snapshots and exposes recent snapshots back to the product surface
-- `server/app/connectors/research_external_context_connector.py`
-  - owns one bounded external-context source contract for the first Research pilot instead of broad connector sprawl
-- `server/app/services/retrieval_service.py`
-  - owns the branch between ordinary grounded chat, the internal `research_tool_assisted` pilot, and the new
-    `research_external_context` pilot mode, and now also records the extra trace metadata needed when those pilots
-    are delivered through direct chat or explicit background analysis runs
-- `server/app/api/routes/research_analysis_runs.py`
-  - now also owns one dedicated `POST /workspaces/{workspace_id}/ai-hot-tracker/report` API, so the visible hot-tracker
-  surface can request one structured report directly instead of routing through the older generic chat-answer path
-- `server/app/api/routes/workspaces.py`
-  - owns the canonical workspace creation path for all environments; normal runtime entry no longer depends on demo-specific provisioning or seeded-workspace bootstrap behavior
-- `server/app/services/chat_evaluator_service.py`
-  - owns the bounded retrieval-chat and Research pilot evaluation rules, including the new regression-facing checks for
-    visible tool steps, honest degraded no-source paths, Stage I resource-selection plus consent-lifecycle
-    consistency, and the new MCP server/resource/tool/prompt/transport/read-status visibility checks on the bounded
-    MCP path
-- `server/app/services/task_execution_extensions.py`
-  - owns module-specific execution extensions; Research trace, lineage, and asset-sync behavior plus Support case-sync
-    and Job hiring-packet sync behavior live here instead of in the generic executor
-- `server/app/services/support_case_service.py`
-  - owns persistent Support case synchronization, case timeline assembly, and case-action-loop guidance on top of
-    completed Support task results
-- `server/app/services/job_hiring_packet_service.py`
-  - owns persistent Job hiring packet synchronization, hiring-timeline assembly, and packet-action-loop guidance on top
-    of completed Job task results
-- `server/app/repositories/support_case_repository.py`
-  - owns Support case and Support case event persistence
-- `server/app/repositories/job_hiring_packet_repository.py`
-  - owns Job hiring packet and Job hiring packet event persistence
-- `server/app/repositories/research_analysis_run_repository.py`
-  - owns `research_analysis_run` persistence, resumed-run lookup, and run-status queries for the bounded Stage H
-    background-run path, and now also persists selected external-resource snapshot linkage for Stage I Wave 2
-- `server/app/repositories/workspace_connector_consent_repository.py`
-  - owns `workspace_connector_consent` persistence for the bounded Stage I connector-consent foundation
-- `server/app/agents/graph.py`
-  - owns one shared workspace-agent execution skeleton with module-specific compose steps
+  - owns schema-bound report generation from normalized source items
+- `server/app/services/ai_hot_tracker_tracking_service.py`
+  - owns the hot-tracker control loop for manual runs today:
+    - resolve workspace and profile
+    - execute source intake
+    - generate structured report
+    - compute run-to-run delta
+    - persist the run
+    - answer grounded follow-up questions
+- `server/app/services/ai_hot_tracker_follow_up_service.py`
+  - owns follow-up grounding to the selected tracking run, its report, its source items, and its prior follow-up history
+- `server/app/services/research_external_context_service.py`
+  - still owns the bounded external-context path and snapshot reuse for the research module
+- `server/app/services/research_analysis_run_service.py`
+  - still owns bounded background analysis runs that remain separate from the hot-tracker run model
+- `server/app/repositories/ai_hot_tracker_tracking_run_repository.py`
+  - owns tracking-run persistence, latest-run lookup, history queries, follow-up updates, and deletion
+- `server/app/repositories/workspace_repository.py`
+  - owns workspace persistence and now also clears tracking runs when a workspace is permanently deleted
 - `server/app/workers/task_worker.py`
-  - is the only live ARQ worker bundle today and now also runs `run_research_analysis_run` for the bounded Stage H
-    background-run path
+  - remains the live ARQ worker bundle for async task execution
 - `server/app/api/routes/agents.py`
-  - remains a scaffolded `501` surface until standalone agent runtime contracts exist
+  - remains a scaffolded `501` surface until a broader standalone agent runtime is introduced
 
 ## External Dependencies
 
@@ -188,12 +107,10 @@ Stable system boundaries only. This is the short architecture summary. The long-
 ## Non-Goals
 
 - module-specific architecture forks
-- a single-purpose chatbot architecture
-- advanced multi-agent durability and approval flows at the current baseline
-- a flat or panel-balanced workspace UI that treats documents, task execution, or analytics as equal first-stop surfaces
-- a deployment model where this repository still pretends to own the root marketing site instead of the dedicated
-  product host
-- a runtime entry model that still depends on public-demo bootstrap state before users can enter a real module surface
+- a generic chatbot story for AI 热点追踪
+- advanced multi-agent orchestration before the single-agent tracking loop is stronger
+- reopening public-demo bootstrap behavior in deployed or local entry paths
+- flattening the UI so report, history, follow-up, tasks, and analytics all compete as equal first-stop surfaces
 
 ## Change Guardrails
 

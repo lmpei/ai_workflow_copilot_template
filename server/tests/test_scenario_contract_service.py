@@ -10,6 +10,7 @@ def test_resolve_workspace_module_contract_defaults_to_research() -> None:
         "workspace_report",
     ]
     assert module_config_json["result_type"] == "ai_frontier_research_record"
+    assert module_config_json["tracking_profile"]["topic"] == "AI 模型、产品、开源与工程生态"
 
 
 def test_resolve_workspace_module_contract_merges_requested_config() -> None:

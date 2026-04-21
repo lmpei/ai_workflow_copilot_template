@@ -14,10 +14,7 @@ from app.services.model_interface_service import ModelInterfaceError
 
 class FakeJsonModelInterface:
     def __init__(self, responses: list[dict[str, object]] | dict[str, object]) -> None:
-        if isinstance(responses, dict):
-            self._responses = [responses]
-        else:
-            self._responses = responses
+        self._responses = [responses] if isinstance(responses, dict) else responses
         self.calls: list[dict[str, object]] = []
 
     def generate_json_object(self, **kwargs):
@@ -40,7 +37,7 @@ class FailingJsonModelInterface:
 
 
 def _mock_workspace(*_, **__):
-    return type("Workspace", (), {"module_type": "research"})()
+    return type("Workspace", (), {"module_type": "research", "module_config_json": {}})()
 
 
 def _sample_items(generated_at: datetime) -> list[AiHotTrackerSourceItem]:
@@ -77,7 +74,7 @@ def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSource
     monkeypatch.setattr(
         ai_hot_tracker_report_service,
         "fetch_ai_hot_tracker_source_items",
-        lambda: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
+        lambda total_limit=18: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
             source_catalog=[
                 AiHotTrackerSourceDefinition(
                     id="framework-feed",
@@ -86,13 +83,21 @@ def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSource
                     source_kind="atom_feed",
                     feed_url="https://example.com/framework.atom",
                     tags=["framework"],
-                )
+                ),
+                AiHotTrackerSourceDefinition(
+                    id="paper-feed",
+                    label="Paper Feed",
+                    category="model_research",
+                    source_kind="rss_feed",
+                    feed_url="https://example.com/papers.rss",
+                    tags=["paper"],
+                ),
             ],
             source_items=intake_items,
             source_failures=[
                 AiHotTrackerSourceFailure(
-                    source_id="vendor-feed",
-                    source_label="Vendor Feed",
+                    source_id="paper-feed",
+                    source_label="Paper Feed",
                     message="timeout",
                 )
             ],
@@ -106,11 +111,11 @@ def test_generate_ai_hot_tracker_report_builds_structured_output(monkeypatch: Mo
     _mock_intake(monkeypatch, intake_items)
     fake_interface = FakeJsonModelInterface(
         {
-            "title": "框架与 Agent 训练都在加速",
-            "frontier_summary": "本轮可信来源显示，框架发布与 agent 训练论文同时升温。",
-            "trend_judgment": "短期内最值得继续看的是框架侧的路由能力和 agent 训练方法是否同步成熟。",
+            "title": "框架发布与 Agent 研究同时升温",
+            "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
+            "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
             "themes": [
-                {"label": "Agent", "summary": "Agent 训练与执行链正在继续上行。"}
+                {"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}
             ],
             "events": [
                 {
@@ -136,14 +141,15 @@ def test_generate_ai_hot_tracker_report_builds_structured_output(monkeypatch: Mo
 
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
-    assert result.title == "框架与 Agent 训练都在加速"
+    assert result.title == "框架发布与 Agent 研究同时升温"
     assert result.output.frontier_summary.startswith("本轮可信来源显示")
     assert result.output.project_cards[0].source_label == "Framework Feed"
     assert result.output.project_cards[0].official_url == "https://example.com/framework-2"
+    assert result.output.project_cards[0].source_item_ids == ["source-1"]
     assert result.output.reference_sources[0].url == "https://example.com/framework-2"
     assert result.output.reference_sources[1].source_kind == "paper"
     assert result.degraded_reason == "source_intake_partial"
-    assert result.source_set["mode"] == "ai_hot_tracker_structured_report"
+    assert result.source_set["mode"] == "ai_hot_tracker_tracking_agent"
     assert len(fake_interface.calls) == 1
 
 
@@ -154,10 +160,10 @@ def test_generate_ai_hot_tracker_report_repairs_invalid_first_draft(monkeypatch:
     fake_interface = FakeJsonModelInterface(
         [
             {
-                "title": "框架与 Agent 训练都在加速",
-                "frontier_summary": "本轮可信来源显示，框架发布与 agent 训练论文同时升温。",
-                "trend_judgment": "短期内最值得继续看的是框架侧的路由能力和 agent 训练方法是否同步成熟。",
-                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链正在继续上行。"}],
+                "title": "框架发布与 Agent 研究同时升温",
+                "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
+                "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
+                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}],
                 "events": [
                     {
                         "title": "Framework Release 2.0",
@@ -166,17 +172,13 @@ def test_generate_ai_hot_tracker_report_repairs_invalid_first_draft(monkeypatch:
                         "source_item_ids": ["source-1"],
                     }
                 ],
-                "project_cards": [
-                    {
-                        "title": "Broken Card",
-                    }
-                ],
+                "project_cards": [{"title": "Broken Card"}],
             },
             {
-                "title": "框架与 Agent 训练都在加速",
-                "frontier_summary": "本轮可信来源显示，框架发布与 agent 训练论文同时升温。",
-                "trend_judgment": "短期内最值得继续看的是框架侧的路由能力和 agent 训练方法是否同步成熟。",
-                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链正在继续上行。"}],
+                "title": "框架发布与 Agent 研究同时升温",
+                "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
+                "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
+                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}],
                 "events": [
                     {
                         "title": "Framework Release 2.0",
@@ -202,7 +204,7 @@ def test_generate_ai_hot_tracker_report_repairs_invalid_first_draft(monkeypatch:
 
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
-    assert result.title == "框架与 Agent 训练都在加速"
+    assert result.title == "框架发布与 Agent 研究同时升温"
     assert result.output.project_cards
     assert result.output.reference_sources[0].url == "https://example.com/framework-2"
     assert len(fake_interface.calls) == 2
@@ -219,8 +221,8 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_model_gen
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
     assert result.degraded_reason == "report_generation_failed"
-    assert result.title == "本轮热点暂不可用"
-    assert "结构化报告还没有成功生成" in result.output.frontier_summary
+    assert result.title == "本轮暂无有效热点"
+    assert "结构化简报没有成功生成" in result.output.frontier_summary
 
 
 def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(monkeypatch: MonkeyPatch) -> None:
@@ -228,7 +230,7 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(
     monkeypatch.setattr(
         ai_hot_tracker_report_service,
         "fetch_ai_hot_tracker_source_items",
-        lambda: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
+        lambda total_limit=18: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
             source_catalog=[],
             source_items=[],
             source_failures=[],
@@ -238,5 +240,5 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
     assert result.degraded_reason == "source_intake_unavailable"
-    assert result.title == "本轮热点暂不可用"
-    assert "暂时无法生成有效报告" in result.output.frontier_summary
+    assert result.title == "本轮暂无有效热点"
+    assert "暂时无法形成可用简报" in result.output.frontier_summary

@@ -12,6 +12,8 @@ from app.schemas.ai_frontier_research import (
     AiFrontierTheme,
     AiHotTrackerReportResponse,
     AiHotTrackerSourceItem,
+    AiHotTrackerTrackingProfile,
+    normalize_ai_hot_tracker_tracking_profile,
 )
 from app.services.ai_hot_tracker_source_service import (
     AiHotTrackerSourceIntakeResult,
@@ -20,13 +22,8 @@ from app.services.ai_hot_tracker_source_service import (
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
 from app.services.retrieval_generation_service import get_chat_model_interface
 
-AI_HOT_TRACKER_INTERNAL_QUESTION = (
-    "请根据本轮可信来源，提炼 AI 领域最近最值得关注的模型、产品、开源项目与工程生态变化，"
-    "输出一份可读、可追溯、可保存的热点报告。"
-)
-
 REPORT_SOURCE_ITEM_LIMIT = 10
-REPORT_SOURCE_SUMMARY_LIMIT = 180
+REPORT_SOURCE_SUMMARY_LIMIT = 220
 
 
 class AiHotTrackerReportGenerationError(Exception):
@@ -67,6 +64,44 @@ class _DraftReport(BaseModel):
     reference_item_ids: list[str] = Field(default_factory=list)
 
 
+def build_ai_hot_tracker_internal_question(profile: AiHotTrackerTrackingProfile) -> str:
+    return (
+        f"请围绕「{profile.topic}」生成本轮 AI 热点追踪简报。"
+        f"范围限定为：{profile.scope}"
+    )
+
+
+def filter_ai_hot_tracker_source_intake(
+    *,
+    intake: AiHotTrackerSourceIntakeResult,
+    tracking_profile: AiHotTrackerTrackingProfile,
+) -> AiHotTrackerSourceIntakeResult:
+    allowed_categories = set(tracking_profile.enabled_categories)
+    if not allowed_categories:
+        return intake
+
+    filtered_catalog = [
+        source
+        for source in intake.source_catalog
+        if source.category in allowed_categories
+    ]
+    allowed_source_ids = {source.id for source in filtered_catalog}
+
+    return AiHotTrackerSourceIntakeResult(
+        source_catalog=filtered_catalog,
+        source_items=[
+            item
+            for item in intake.source_items
+            if item.source_id in allowed_source_ids and item.category in allowed_categories
+        ],
+        source_failures=[
+            failure
+            for failure in intake.source_failures
+            if failure.source_id in allowed_source_ids
+        ],
+    )
+
+
 def generate_ai_hot_tracker_report(*, workspace_id: str, user_id: str) -> AiHotTrackerReportResponse:
     workspace = workspace_repository.get_workspace(workspace_id=workspace_id, user_id=user_id)
     if workspace is None:
@@ -74,50 +109,89 @@ def generate_ai_hot_tracker_report(*, workspace_id: str, user_id: str) -> AiHotT
     if workspace.module_type != "research":
         raise AiHotTrackerReportAccessError("AI hot tracker is only available in research workspaces")
 
-    generated_at = datetime.now(UTC)
-    intake = fetch_ai_hot_tracker_source_items()
+    module_config = workspace.module_config_json if isinstance(workspace.module_config_json, dict) else {}
+    tracking_profile = normalize_ai_hot_tracker_tracking_profile(
+        module_config.get("tracking_profile") if isinstance(module_config.get("tracking_profile"), dict) else None
+    )
+    intake = filter_ai_hot_tracker_source_intake(
+        intake=fetch_ai_hot_tracker_source_items(total_limit=tracking_profile.max_items_per_run),
+        tracking_profile=tracking_profile,
+    )
+    return generate_ai_hot_tracker_report_from_intake(
+        intake=intake,
+        tracking_profile=tracking_profile,
+    )
+
+
+def generate_ai_hot_tracker_report_from_intake(
+    *,
+    intake: AiHotTrackerSourceIntakeResult,
+    tracking_profile: AiHotTrackerTrackingProfile,
+    generated_at: datetime | None = None,
+) -> AiHotTrackerReportResponse:
+    final_generated_at = generated_at or datetime.now(UTC)
+    question = build_ai_hot_tracker_internal_question(tracking_profile)
 
     if not intake.source_items:
         return _build_degraded_report(
             intake=intake,
-            generated_at=generated_at,
+            tracking_profile=tracking_profile,
+            generated_at=final_generated_at,
             degraded_reason="source_intake_unavailable",
-            summary="本轮没有从可信来源拿到足够内容，因此暂时无法生成有效报告。",
-            judgment="可信来源当前不可用，建议稍后重新获取。",
+            summary="本轮没有从可信来源拿到足够的有效条目，暂时无法形成可用简报。",
+            judgment="先不要给出趋势判断，建议稍后重新获取来源。",
         )
 
     try:
-        draft = _generate_report_draft(intake=intake)
+        draft = _generate_report_draft(
+            intake=intake,
+            tracking_profile=tracking_profile,
+            question=question,
+        )
     except AiHotTrackerReportGenerationError:
         return _build_degraded_report(
             intake=intake,
-            generated_at=generated_at,
+            tracking_profile=tracking_profile,
+            generated_at=final_generated_at,
             degraded_reason="report_generation_failed",
-            summary="本轮已经获取到外部来源，但结构化报告还没有成功生成。",
-            judgment="来源已经更新，但判断生成失败，建议稍后重新获取。",
+            summary="本轮已经更新了来源，但结构化简报没有成功生成。",
+            judgment="来源已更新，判断层失败。本轮结果应视为不完整，建议稍后重新运行。",
         )
 
     output = _materialize_output(draft=draft, source_items=intake.source_items)
     degraded_reason = "source_intake_partial" if intake.source_failures else None
-    source_set = _build_source_set(intake=intake, generated_at=generated_at)
     return AiHotTrackerReportResponse(
-        title=draft.title.strip() or _fallback_title(output, generated_at),
-        question=AI_HOT_TRACKER_INTERNAL_QUESTION,
+        title=draft.title.strip() or _fallback_title(output, final_generated_at),
+        question=question,
         output=output,
         source_catalog=intake.source_catalog,
         source_items=intake.source_items,
         source_failures=intake.source_failures,
-        source_set=source_set,
-        generated_at=generated_at,
+        source_set=_build_source_set(
+            intake=intake,
+            tracking_profile=tracking_profile,
+            generated_at=final_generated_at,
+            question=question,
+        ),
+        generated_at=final_generated_at,
         degraded_reason=degraded_reason,
     )
 
 
-def _generate_report_draft(*, intake: AiHotTrackerSourceIntakeResult) -> _DraftReport:
+def _generate_report_draft(
+    *,
+    intake: AiHotTrackerSourceIntakeResult,
+    tracking_profile: AiHotTrackerTrackingProfile,
+    question: str,
+) -> _DraftReport:
     interface = get_chat_model_interface()
     selected_items = _select_report_source_items(intake.source_items)
     source_payload = _build_source_payload(selected_items)
-    messages = _build_generation_messages(source_payload)
+    messages = _build_generation_messages(
+        source_payload=source_payload,
+        tracking_profile=tracking_profile,
+        question=question,
+    )
 
     last_model_error: ModelInterfaceError | None = None
     for _ in range(2):
@@ -135,6 +209,7 @@ def _generate_report_draft(*, intake: AiHotTrackerSourceIntakeResult) -> _DraftR
                     source_payload=source_payload,
                     invalid_data=response.data,
                     validation_error=validation_error,
+                    tracking_profile=tracking_profile,
                 )
         except ModelInterfaceError as error:
             last_model_error = error
@@ -148,28 +223,31 @@ def _repair_report_draft(
     source_payload: list[dict[str, object]],
     invalid_data: dict[str, object],
     validation_error: ValidationError,
+    tracking_profile: AiHotTrackerTrackingProfile,
 ) -> _DraftReport:
     messages = [
         ModelMessage(
             role="system",
             content=(
-                "你是结构化 JSON 修正器。"
-                "你的任务不是重新写一篇报告，而是把已有 JSON 修成符合目标 schema 的 JSON object。"
-                "不得输出 Markdown，不得输出代码块，只能输出一个合法 JSON object。"
+                "你是 JSON 修复器。"
+                "你的任务不是重写报告，而是把已有 JSON 修成符合目标 schema 的 JSON object。"
+                "不要输出 Markdown，不要输出代码块，只输出合法 JSON。"
             ),
         ),
         ModelMessage(
             role="user",
             content=(
-                "下面是来源条目、上一次生成出的 JSON，以及校验失败信息。\n"
-                "请在保留原意的前提下修正 JSON，使其符合这些字段："
-                "title, frontier_summary, trend_judgment, themes, events, project_cards, reference_item_ids。\n"
+                f"追踪主题：{tracking_profile.topic}\n"
+                f"追踪范围：{tracking_profile.scope}\n"
+                "请修复下面这份不合法的 JSON。\n"
+                "必须保留字段：title, frontier_summary, trend_judgment, themes, events, "
+                "project_cards, reference_item_ids。\n"
                 "themes 最多 4 条，events 最多 5 条，project_cards 最多 6 条。\n"
-                "events 与 project_cards 中的 source_item_ids 只能引用来源条目的 id。\n"
+                "events 和 project_cards 中的 source_item_ids 只能引用来源条目的 id。\n"
                 "reference_item_ids 也只能引用来源条目的 id。\n"
                 f"\n来源条目：\n{json.dumps(source_payload, ensure_ascii=False)}"
-                f"\n\n上一次 JSON：\n{json.dumps(invalid_data, ensure_ascii=False)}"
-                f"\n\n校验失败：\n{validation_error.json()}"
+                f"\n\n上一版 JSON：\n{json.dumps(invalid_data, ensure_ascii=False)}"
+                f"\n\n校验错误：\n{validation_error.json()}"
             ),
         ),
     ]
@@ -228,33 +306,40 @@ def _select_report_source_items(source_items: list[AiHotTrackerSourceItem]) -> l
     return selected
 
 
-def _build_generation_messages(source_payload: list[dict[str, object]]) -> list[ModelMessage]:
+def _build_generation_messages(
+    *,
+    source_payload: list[dict[str, object]],
+    tracking_profile: AiHotTrackerTrackingProfile,
+    question: str,
+) -> list[ModelMessage]:
     return [
         ModelMessage(
             role="system",
             content=(
-                "你是 AI 热点追踪模块的结构化报告生成器。"
-                "你只能基于提供的可信来源条目输出一份结构化热点报告。"
-                "不要输出解释你做法的内部语言，不要引入未提供的外部事实。"
-                "如果证据不足，要诚实收窄结论。"
-                "只输出一个合法 JSON object，不要输出 Markdown 或代码块。"
+                "你是 AI 热点追踪模块的结构化简报生成器。"
+                "你只能基于提供的可信来源条目生成结果，不能引入未提供的外部事实。"
+                "输出要像面向用户的追踪简报，而不是系统说明。"
+                "如果证据不足，就收窄结论，不要强行延展。"
+                "只输出一个合法 JSON object。"
             ),
         ),
         ModelMessage(
             role="user",
             content=(
-                "请基于以下来源条目生成中文 JSON 报告。\n"
-                "必须输出这些字段：title, frontier_summary, trend_judgment, themes, events, project_cards, reference_item_ids。\n"
-                "字段要求：\n"
-                "- title: 简洁、像报告标题\n"
-                "- frontier_summary: 面向用户的直接摘要\n"
-                "- trend_judgment: 本轮最重要的判断，不要写系统解释\n"
-                "- themes: 每项都要包含 label 和 summary\n"
-                "- events: 每项都要包含 title、summary、significance、source_item_ids\n"
-                "- project_cards: 每项都要包含 title、summary、why_it_matters、source_item_ids、tags\n"
-                "- reference_item_ids: 只允许引用来源条目的 id\n"
+                f"追踪主题：{tracking_profile.topic}\n"
+                f"追踪范围：{tracking_profile.scope}\n"
+                f"本轮任务：{question}\n\n"
+                "请基于下面的来源条目生成结构化简报。\n"
+                "必须输出字段：title, frontier_summary, trend_judgment, themes, events, "
+                "project_cards, reference_item_ids。\n"
+                "- title：像简报标题，不要写成问题。\n"
+                "- frontier_summary：一段直接结论，适合放在报告最前面。\n"
+                "- trend_judgment：说明这轮最重要的判断，以及后续应该继续盯什么。\n"
+                "- themes：每项包含 label 和 summary。\n"
+                "- events：每项包含 title, summary, significance, source_item_ids。\n"
+                "- project_cards：每项包含 title, summary, why_it_matters, source_item_ids, tags。\n"
+                "- reference_item_ids：只允许引用来源条目的 id。\n"
                 "数量限制：themes 最多 4 条，events 最多 5 条，project_cards 最多 6 条。\n"
-                "events 和 project_cards 里的 source_item_ids 只能引用提供条目的 id。\n"
                 f"\n来源条目：\n{json.dumps(source_payload, ensure_ascii=False)}"
             ),
         ),
@@ -281,6 +366,7 @@ def _materialize_output(
                 repo_url=supporting_item.url if supporting_item and "github.com" in supporting_item.url else None,
                 docs_url=supporting_item.url if supporting_item and "docs" in supporting_item.url else None,
                 tags=card.tags or (supporting_item.tags if supporting_item else []),
+                source_item_ids=card.source_item_ids,
             )
         )
 
@@ -299,6 +385,7 @@ def _materialize_output(
                 title=item.title,
                 summary=item.summary,
                 significance=item.significance,
+                source_item_ids=item.source_item_ids,
             )
             for item in draft.events
         ],
@@ -358,11 +445,13 @@ def _pick_first_item(
 def _build_degraded_report(
     *,
     intake: AiHotTrackerSourceIntakeResult,
+    tracking_profile: AiHotTrackerTrackingProfile,
     generated_at: datetime,
     degraded_reason: str,
     summary: str,
     judgment: str,
 ) -> AiHotTrackerReportResponse:
+    question = build_ai_hot_tracker_internal_question(tracking_profile)
     output = AiFrontierResearchOutput(
         frontier_summary=summary,
         trend_judgment=judgment,
@@ -372,13 +461,18 @@ def _build_degraded_report(
         reference_sources=[],
     )
     return AiHotTrackerReportResponse(
-        title="本轮热点暂不可用",
-        question=AI_HOT_TRACKER_INTERNAL_QUESTION,
+        title="本轮暂无有效热点",
+        question=question,
         output=output,
         source_catalog=intake.source_catalog,
         source_items=intake.source_items,
         source_failures=intake.source_failures,
-        source_set=_build_source_set(intake=intake, generated_at=generated_at),
+        source_set=_build_source_set(
+            intake=intake,
+            tracking_profile=tracking_profile,
+            generated_at=generated_at,
+            question=question,
+        ),
         generated_at=generated_at,
         degraded_reason=degraded_reason,
     )
@@ -387,15 +481,18 @@ def _build_degraded_report(
 def _build_source_set(
     *,
     intake: AiHotTrackerSourceIntakeResult,
+    tracking_profile: AiHotTrackerTrackingProfile,
     generated_at: datetime,
+    question: str,
 ) -> dict[str, object]:
     return {
-        "mode": "ai_hot_tracker_structured_report",
+        "mode": "ai_hot_tracker_tracking_agent",
         "generated_at": generated_at.isoformat(),
+        "tracking_profile": tracking_profile.model_dump(mode="json"),
+        "question": question,
         "source_catalog": [item.model_dump(mode="json") for item in intake.source_catalog],
         "source_items": [item.model_dump(mode="json") for item in intake.source_items],
         "source_failures": [item.model_dump(mode="json") for item in intake.source_failures],
-        "question": AI_HOT_TRACKER_INTERNAL_QUESTION,
     }
 
 
