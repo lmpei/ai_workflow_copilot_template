@@ -12,6 +12,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  explain-upstream-failure:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Explain why deploy was skipped
+        run: |
+          echo "::error title=Deploy Weave skipped::CI concluded with '${{ github.event.workflow_run.conclusion }}', so production deploy was not started."
+          {
+            echo "## Weave deploy skipped"
+            echo
+            echo "Deploy did not start because the upstream \`CI\` workflow did not succeed."
+            echo
+            echo "- branch: \`${{ github.event.workflow_run.head_branch }}\`"
+            echo "- conclusion: \`${{ github.event.workflow_run.conclusion }}\`"
+            echo "- upstream run: ${{ github.event.workflow_run.html_url }}"
+            echo
+            echo "### Next step"
+            echo "Open the failed \`CI\` run, fix the blocking job, and push again. Deploy will resume automatically after \`CI\` succeeds on \`main\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   deploy:
     if: >-
       (github.event_name == 'workflow_run' &&

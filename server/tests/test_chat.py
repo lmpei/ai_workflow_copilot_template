@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -21,7 +21,7 @@ from app.services.research_external_context_service import ResearchExternalConte
 from app.services.research_external_resource_snapshot_service import (
     create_research_external_resource_snapshot,
 )
-from app.schemas.ai_frontier_research import AiHotTrackerReportResponse
+from app.schemas.ai_frontier_research import AiHotTrackerTrackingRunResponse
 from app.services.research_tool_assisted_chat_service import ToolAssistedResearchChatResult
 from app.services.retrieval_service import (
     ChatProcessingError,
@@ -603,31 +603,80 @@ def test_chat_supports_selecting_existing_external_resource_snapshot(client: Tes
     assert captured_snapshot_ids == [snapshot_id]
 
 
-def test_generate_ai_hot_tracker_report_endpoint(client: TestClient, monkeypatch: MonkeyPatch) -> None:
+def test_generate_ai_hot_tracker_report_endpoint_canonical_run_response(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
     auth = _register_and_login(client, email="owner@example.com", name="Owner")
     headers = {"Authorization": f"Bearer {auth['token']}"}
     workspace_id = _create_workspace(client, auth["token"])
 
     monkeypatch.setattr(
-        "app.api.routes.research_analysis_runs.generate_ai_hot_tracker_report",
-        lambda **kwargs: AiHotTrackerReportResponse.model_validate(
+        "app.api.routes.research_analysis_runs.create_ai_hot_tracker_tracking_run",
+        lambda **kwargs: AiHotTrackerTrackingRunResponse.model_validate(
             {
+                "id": "run-1",
+                "workspace_id": workspace_id,
+                "previous_run_id": None,
+                "created_by": "user-1",
+                "trigger_kind": "manual",
+                "status": "completed",
                 "title": "本轮 AI 热点",
-                "question": "生成一份热点报告",
+                "question": "生成一份热点简报",
+                "profile": {
+                    "topic": "AI 模型、产品、工具、论文、开源与商业变化",
+                    "scope": "从高可信来源持续追踪全球 AI 变化，筛选对大众 AI 用户真正值得关注的信号。",
+                    "cadence": "daily",
+                    "alert_threshold": 1,
+                    "enabled_categories": ["models", "products"],
+                    "source_strategy": "allowlist_curated",
+                    "max_items_per_run": 24,
+                },
                 "output": {
-                    "frontier_summary": "本轮出现了几个值得关注的变化。",
-                    "trend_judgment": "框架和 agent 生态都在加速。",
-                    "themes": [{"label": "Agent", "summary": "Agent 继续升温。"}],
-                    "events": [],
-                    "project_cards": [],
+                    "headline": "本轮 AI 热点",
+                    "summary": "本轮出现了几条值得关注的变化。",
+                    "change_state": "meaningful_update",
+                    "signals": [
+                        {
+                            "title": "Framework release momentum",
+                            "summary": "Framework releases continue to move.",
+                            "why_now": "This is shaping current engineering choices.",
+                            "impact": "会直接影响开发者的工具选型与交付节奏。",
+                            "audience": ["开发者", "产品团队"],
+                            "change_type": "new",
+                            "priority_level": "high",
+                            "confidence": "high",
+                            "source_item_ids": [],
+                        }
+                    ],
+                    "keep_watching": [],
+                    "blindspots": [],
                     "reference_sources": [],
                 },
                 "source_catalog": [],
                 "source_items": [],
                 "source_failures": [],
-                "source_set": {"mode": "ai_hot_tracker_structured_report"},
-                "generated_at": "2026-04-16T08:00:00Z",
+                "source_set": {"mode": "ai_hot_tracker_tracking_agent"},
+                "delta": {
+                    "previous_run_id": None,
+                    "change_state": "first_run",
+                    "summary": "本轮形成首份可用简报。",
+                    "should_notify": True,
+                    "priority_level": "medium",
+                    "notify_reason": "本轮形成首份可用简报。",
+                    "new_item_count": 1,
+                    "continuing_item_count": 0,
+                    "cooled_down_item_count": 0,
+                    "new_titles": ["Framework release momentum"],
+                    "continuing_titles": [],
+                    "cooled_down_titles": [],
+                },
+                "follow_ups": [],
                 "degraded_reason": None,
+                "error_message": None,
+                "generated_at": "2026-04-16T08:00:00Z",
+                "created_at": "2026-04-16T08:00:00Z",
+                "updated_at": "2026-04-16T08:00:00Z",
             }
         ),
     )
@@ -639,8 +688,16 @@ def test_generate_ai_hot_tracker_report_endpoint(client: TestClient, monkeypatch
     assert response.status_code == 200
     payload = response.json()
     assert payload["title"] == "本轮 AI 热点"
-    assert payload["output"]["frontier_summary"] == "本轮出现了几个值得关注的变化。"
-    assert payload["source_set"]["mode"] == "ai_hot_tracker_structured_report"
+    assert payload["output"]["summary"] == "本轮出现了几条值得关注的变化。"
+    assert payload["source_set"]["mode"] == "ai_hot_tracker_tracking_agent"
+
+
+def _legacy_test_generate_ai_hot_tracker_report_endpoint(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Legacy alias test removed after canonical run-response migration."""
+    return
 
 
 def test_save_ai_frontier_record_succeeds_without_follow_ups(
@@ -674,3 +731,4 @@ def test_save_ai_frontier_record_succeeds_without_follow_ups(
     assert payload["follow_ups"] == []
     assert payload["source_set"]["mode"] == "ai_hot_tracker_structured_report"
     assert payload["source_set"]["follow_ups"] == []
+

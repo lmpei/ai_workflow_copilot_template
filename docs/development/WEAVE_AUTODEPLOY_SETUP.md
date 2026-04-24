@@ -27,6 +27,7 @@ The workflow is designed to:
 2. SSH into the production host
 3. run `/home/ubuntu/deploy-weave.sh`
 4. write a clear retry and rollback summary if deploy fails
+5. write a clear "deploy skipped because CI failed" summary when upstream `CI` blocks deployment
 
 ## One-Time Server Setup
 
@@ -70,6 +71,12 @@ After setup, the normal flow becomes:
 4. the server pulls, rebuilds, migrates, and verifies local health
 
 If deploy fails, the workflow run summary now includes one copyable retry path and one copyable rollback path.
+If deploy does not start because upstream `CI` failed, the `Deploy Weave` run now still records a summary with:
+
+- the blocked branch
+- the upstream `CI` conclusion
+- a direct link to the failed `CI` run
+- the next step: fix `CI`, then push again
 
 ## Retry And Rollback
 

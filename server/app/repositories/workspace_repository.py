@@ -7,7 +7,9 @@ from sqlalchemy import delete, select, update
 from app.core.database import session_scope
 from app.models.agent_run import AgentRun
 from app.models.ai_frontier_research_record import AiFrontierResearchRecord
+from app.models.ai_hot_tracker_signal_memory import AiHotTrackerSignalMemory
 from app.models.ai_hot_tracker_tracking_run import AiHotTrackerTrackingRun
+from app.models.ai_hot_tracker_tracking_state import AiHotTrackerTrackingState
 from app.models.conversation import Conversation
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
@@ -47,6 +49,17 @@ def list_workspaces(user_id: str) -> list[Workspace]:
             select(Workspace)
             .join(WorkspaceMember, WorkspaceMember.workspace_id == Workspace.id)
             .where(WorkspaceMember.user_id == user_id)
+            .order_by(Workspace.created_at.asc())
+        )
+        result = session.scalars(statement)
+        return list(result)
+
+
+def list_workspaces_by_module_type(module_type: str) -> list[Workspace]:
+    with session_scope() as session:
+        statement = (
+            select(Workspace)
+            .where(Workspace.module_type == module_type)
             .order_by(Workspace.created_at.asc())
         )
         result = session.scalars(statement)
@@ -280,6 +293,16 @@ def delete_workspace_tree(workspace_id: str, user_id: str) -> WorkspaceDeleteArt
             )
 
         session.execute(delete(AiFrontierResearchRecord).where(AiFrontierResearchRecord.workspace_id == workspace_id))
+        session.execute(
+            delete(AiHotTrackerSignalMemory).where(
+                AiHotTrackerSignalMemory.workspace_id == workspace_id
+            )
+        )
+        session.execute(
+            delete(AiHotTrackerTrackingState).where(
+                AiHotTrackerTrackingState.workspace_id == workspace_id
+            )
+        )
         session.execute(
             delete(AiHotTrackerTrackingRun).where(AiHotTrackerTrackingRun.workspace_id == workspace_id)
         )

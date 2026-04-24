@@ -2337,3 +2337,99 @@ Append-only log. Add new entries at the bottom.
 - Impact: the visible hot-tracker surface now reads and writes durable tracking runs instead of relying on an optional save-first report path, backend storage now includes persisted tracking-run state, and the next bounded task should deepen decision logic through ranking, clustering, and temporal diff rather than reopening broad surface work.
 - Related Task: `tasks/archive/ai-hot-tracker-tracking-agent-foundation.md`
 - Supersedes:
+## Decision Entry
+
+- ID: DEC-2026-04-21-144
+- Date: 2026-04-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: strengthen AI hot tracker with one bounded decision layer and scheduled evaluation
+- Context: the hot-tracker foundation could already persist real runs and grounded follow-up, but it still behaved too much like a time-ordered summarizer. The next confirmed step was to make the module act more like a selective agent without jumping to multi-agent orchestration.
+- Choice: add one fixed and inspectable decision layer for `AI hot tracker`, including source authority or freshness or novelty or relevance scoring, conservative signal clustering, cluster-based delta comparison, one persisted `ai_hot_tracker_tracking_state` memory model, a 15-minute sweeper for automatic evaluation, and one minimal profile editor for cadence, enabled categories, and alert threshold.
+- Why: the product needs to decide what matters, remember what changed, and suppress steady-state noise before broadening into more ambitious agent patterns.
+- Impact: report synthesis now reads ranked and clustered signal candidates instead of raw source order, automatic scans can update memory without saving every steady-state pass, and the frontend can expose bounded decision metadata without turning into a debug console.
+- Related Task: `tasks/archive/ai-hot-tracker-ranking-and-delta-decision-layer.md`
+- Supersedes:
+## Decision Entry
+
+- ID: DEC-2026-04-21-145
+- Date: 2026-04-21
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: close AI hot tracker onto one brief-style product loop and isolate evaluation as an internal view
+- Context: after the decision layer landed, the hot-tracker backend could already rank, cluster, diff, and schedule runs, but the user-facing product still leaked the older research-style report contract and did not expose runtime state clearly. The next confirmed step was to stop treating the module like a research surface and close it as a real workspace product.
+- Choice: replace the hot-tracker primary output contract with one brief-oriented schema built around `headline`, `summary`, `signals`, `keep_watching`, and lightweight source references; add one workspace state endpoint for recent check and due-time visibility; add one run evaluation endpoint behind an internal `?view=evaluation` variant; and keep grounded follow-up bound to the selected saved run.
+- Why: the first module needs to read like a product and still remain inspectable for ranking, clustering, and delta quality without turning the consumer path into a debug console.
+- Impact: AI hot tracker workspaces now show the last check state even when no new automatic run was saved, the main report surface now renders the new brief contract instead of the legacy research contract, and engineering can inspect decision quality through the hidden evaluation view without exposing raw scoring detail on the public product path.
+- Related Task: `tasks/archive/ai-hot-tracker-product-closure.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-23-146
+- Date: 2026-04-23
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: AI hot tracker mainstream brief closure
+- Context: the first module needed to stop behaving like a research-oriented surface and become a consumer-facing AI judgment product without reopening generic crawling or user-defined sources
+- Choice: position `AI hot tracker` as one mainstream AI brief product built on allowlisted source families, impact-oriented signal judgment, conservative same-event clustering, grounded follow-up, and an internal evaluation path that includes source failures plus brief quality visibility
+- Why: this keeps the module product-real for users while still exercising the source, ranking, clustering, delta, grounding, and evaluation layers the project is meant to teach through code
+- Impact: the hot-tracker source catalog now spans official labs, products, developer tooling, research feeds, open-source releases, and selected media feeds; the consumer UI now reads as a brief plus follow-up surface; internal evaluation now surfaces both algorithm decisions and source-read failures
+- Related Task: `tasks/archive/ai-hot-tracker-mainstream-brief.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-24-147
+- Date: 2026-04-24
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: define AI hot tracker as one strong-agent product with durable event memory and bounded internal roles
+- Context: the hot-tracker product loop already had trusted-source intake, ranking, clustering, delta, and a consumer brief surface, but it still needed one stronger internal definition so the module behaves like a real agent system instead of a report page with extra logic.
+- Choice: keep the consumer path clean and brief-led, but add one durable `ai_hot_tracker_signal_memory` layer, enrich the brief contract with `confidence` and `blindspots`, and expose one bounded internal evaluation read that includes event memory plus the internal role trace for `Scout`, `Resolver`, `Analyst`, `Editor`, `Evaluator`, and `Follow-up`.
+- Why: this gives the module real memory, clearer self-constraint, and a more inspectable single-agent system without turning the user-facing product into a technical shell.
+- Impact: hot-tracker runs now carry stronger evaluation context, the workspace UI can stay product-facing while still supporting internal inspection, and future work can deepen judgment quality on top of a stable strong-agent foundation instead of reworking the core loop again.
+- Related Task: `tasks/archive/ai-hot-tracker-strong-agent-product.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-24-148
+- Date: 2026-04-24
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: collapse AI hot tracker legacy response branches and broken copy onto one canonical product path
+- Context: after the strong-agent closure landed, the hot-tracker module still carried a few code-quality liabilities: the `/ai-hot-tracker/report` alias preserved an old dual-shape compatibility branch, the follow-up service had a stale context-rendering path, and the workspace UI still leaked damaged or inconsistent user-facing copy from earlier iterations.
+- Choice: keep the alias route for compatibility, but make it resolve directly onto canonical tracking-run creation; rewrite run-bound follow-up context around the current brief, source items, event memory, blindspots, and prior follow-ups; and normalize the hot-tracker workspace surface onto one clean Chinese product-copy path across runtime, evaluation, history, and settings.
+- Why: the first module is now the main product and the main learning surface. It needs one honest execution path and one readable product surface instead of historical compatibility branches and broken strings.
+- Impact: the backend no longer needs to synthesize a second alias response shape, follow-up grounding is easier to inspect and reason about, the frontend consumer surface is cleaner, and the archived cleanup task marks this slice as finished rather than leaving it as hidden follow-up debt.
+- Related Task: `tasks/archive/ai-hot-tracker-judgment-quality-and-internal-cleanup.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-24-149
+- Date: 2026-04-24
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: harden AI hot tracker runtime truth with explicit continuity fields and machine-readable judgment checks
+- Context: the hot-tracker canonical product path was already stable, but the end-state spec still required stronger runtime truth. Tracking state did not expose when the latest saved brief or latest meaningful update happened, signal memory could not express streak or cooling windows cleanly, and follow-up answers still lacked persisted grounding metadata that evaluation could inspect directly.
+- Choice: extend `ai_hot_tracker_tracking_state` with latest saved-brief and latest meaningful-update timestamps; extend `ai_hot_tracker_signal_memory` with streak, cooling, and replacement linkage fields; persist bounded grounding metadata on saved follow-up answers; and add one machine-readable `quality_checks` layer to the run evaluation response.
+- Why: the first module should be inspectable as a real agent system, not just readable as a product surface. Runtime state, event continuity, follow-up grounding, and judgment checks all need explicit contracts instead of being inferred indirectly from saved runs or opaque text.
+- Impact: the workspace runtime strip can now show stronger operational truth, event memory can express continuing versus cooling or replaced signals more honestly, follow-up answers expose what evidence they relied on, and evaluation consumers can test judgment quality without reverse-engineering free-form output.
+- Related Task: `tasks/archive/ai-hot-tracker-final-quality-and-runtime-hardening.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-24-150
+- Date: 2026-04-24
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: normalize AI hot tracker brief generation and schema defaults onto one clean UTF-8 Chinese contract
+- Context: the hot-tracker runtime and judgment layers were already stronger, but the user-facing brief generator still carried damaged Chinese prompt text and schema defaults from earlier iterations. That meant degraded paths and even normal brief generation could leak broken copy or lower the quality of the final report.
+- Choice: rewrite the hot-tracker brief-generation service onto one clean Chinese prompt plus fallback contract, and normalize the related schema defaults and legacy brief fallbacks so the product path no longer depends on damaged historical strings.
+- Why: the first module is both the main product surface and the main learning surface. If the final brief contract is corrupted, earlier source, ranking, clustering, delta, and memory work cannot show up cleanly at the product layer.
+- Impact: hot-tracker brief generation now reads from one clean UTF-8 contract, degraded paths no longer leak broken copy, and schema-level fallback behavior is aligned with the current product surface instead of historical damaged text.
+- Related Task: `tasks/archive/ai-hot-tracker-brief-generation-cleanup.md`
+- Supersedes:

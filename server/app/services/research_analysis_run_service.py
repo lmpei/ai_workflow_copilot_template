@@ -15,14 +15,14 @@ from app.schemas.research_analysis_run import (
     ResearchAnalysisRunResponse,
 )
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
-from app.services.research_external_context_service import (
-    ResearchExternalContextChatResult,
-    run_research_external_context_chat,
-)
 from app.services.ai_frontier_research_record_service import (
     build_ai_frontier_source_set,
     create_ai_frontier_research_record,
     get_ai_frontier_research_record_for_run,
+)
+from app.services.research_external_context_service import (
+    ResearchExternalContextChatResult,
+    run_research_external_context_chat,
 )
 from app.services.research_external_resource_snapshot_service import (
     create_research_external_resource_snapshot,

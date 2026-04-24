@@ -15,12 +15,12 @@ from app.schemas.mcp import (
     RemoteMcpReadStatus,
 )
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
+from app.services.ai_frontier_research_output_service import build_ai_frontier_research_output
 from app.services.connector_service import (
     RESEARCH_EXTERNAL_CONTEXT_CONNECTOR_ID,
     ConnectorConsentRequiredError,
     require_workspace_connector_consent,
 )
-from app.services.ai_frontier_research_output_service import build_ai_frontier_research_output
 from app.services.mcp_service import (
     McpExternalEndpointNotConfiguredError,
     McpRemoteAuthDeniedError,

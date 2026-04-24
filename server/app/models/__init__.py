@@ -1,6 +1,8 @@
 from app.models.agent_run import AgentRun
 from app.models.ai_frontier_research_record import AiFrontierResearchRecord
+from app.models.ai_hot_tracker_signal_memory import AiHotTrackerSignalMemory
 from app.models.ai_hot_tracker_tracking_run import AiHotTrackerTrackingRun
+from app.models.ai_hot_tracker_tracking_state import AiHotTrackerTrackingState
 from app.models.base import Base
 from app.models.conversation import Conversation
 from app.models.document import Document
@@ -30,7 +32,9 @@ from app.models.workspace_member import WorkspaceMember
 __all__ = [
     "AgentRun",
     "AiFrontierResearchRecord",
+    "AiHotTrackerSignalMemory",
     "AiHotTrackerTrackingRun",
+    "AiHotTrackerTrackingState",
     "Base",
     "Conversation",
     "Document",

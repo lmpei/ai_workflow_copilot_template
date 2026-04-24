@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-21
+- Last Updated: 2026-04-24
 
 ## Project Mode
 
@@ -27,11 +27,11 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- focus current execution on `AI 热点追踪` as one real single-agent tracking product: persistent workspace profile, durable tracking runs, grounded follow-up, and one canonical release path guarded by `CI -> deploy`
+- keep `AI hot tracker` stable as the first real single-agent product loop for mainstream AI users: allowlisted source intake, impact-oriented signal judgment, brief-style report output, grounded follow-up, richer runtime truth, internal evaluation visibility, and one canonical release path guarded by `CI -> deploy`
 
 ## Active Task
 
-- `tasks/ai-hot-tracker-ranking-and-delta-decision-layer.md`
+- none currently; the hot-tracker final quality-and-runtime-hardening slice is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -42,8 +42,23 @@ Current state only. Keep this file short, current, and action-oriented.
 - Interpretation rule:
   - the bounded stage is the execution unit; the roadmap wave remains the broader concept family
 - Current baseline:
-  - `AI 热点追踪` now has one fixed content chain: trusted source intake -> normalized source items -> schema-bound report synthesis -> run-bound follow-up grounding
-  - `AI 热点追踪` workspaces now carry one default `tracking_profile`, and the backend now persists durable `ai_hot_tracker_tracking_run` state with delta summary, source payloads, degraded or failed honesty, and follow-up thread history
+  - `AI hot tracker` now has one fixed content chain: trusted source intake -> normalized source items -> ranked and clustered signal candidates -> schema-bound report synthesis -> run-bound follow-up grounding
+  - `AI hot tracker` workspaces carry one default `tracking_profile`, and the backend persists durable `ai_hot_tracker_tracking_run` plus `ai_hot_tracker_tracking_state` records for report history, cluster snapshots, notify pointers, due times, and failure memory
+  - the hot-tracker backend now adds one bounded decision layer before synthesis: fixed authority, freshness, novelty, and relevance scoring, conservative signal clustering, cluster-based delta comparison, and stable priority or notify decisions
+  - the hot-tracker source layer now uses one fixed allowlist across official labs, product updates, developer tooling, research feeds, open-source releases, and selected media feeds; media pages stay list-level only and do not trigger full-article crawling
+  - the hot-tracker decision layer now weights actual user impact alongside novelty, freshness, authority, and relevance so the brief reads like a judgment surface instead of a time-sorted digest
+  - scheduled hot-tracker evaluation now runs through the worker on a fixed 15-minute sweeper, while steady-state automatic scans update tracking state without saving noisy duplicate runs
+  - the hot-tracker control loop now keeps one durable `ai_hot_tracker_signal_memory` layer so signals persist beyond the previous snapshot and can reappear as continuing or cooling event memory instead of stateless URLs
+  - the hot-tracker product path now renders one brief-style report contract with `headline`, `summary`, `signals`, `keep_watching`, and lightweight source anchors instead of the older research-style output contract
+  - the hot-tracker brief contract now also carries `confidence` plus `blindspots` so the report can state both what it believes and what still needs confirmation
+  - the hot-tracker workspace surface now exposes a consumer-facing brief plus follow-up layout, one runtime summary strip, a minimal profile editor for cadence, enabled categories, and alert threshold, a saved-run history drawer, and one run-bound follow-up column
+  - the hot-tracker module now also exposes one internal evaluation path so ranking, clustering, delta decisions, source failures, event memory, and brief output quality can be inspected without turning the consumer UI into a debug console
+  - the hot-tracker implementation now records one bounded internal agent-role trace (`Scout`, `Resolver`, `Analyst`, `Editor`, `Evaluator`, `Follow-up`) for evaluation reads without exposing those terms on the consumer path
+  - the hot-tracker canonical path is now cleaner: the `/ai-hot-tracker/report` alias resolves directly onto tracking-run creation, run-bound follow-up reads one cleaned context contract, and the workspace surface no longer carries broken consumer-facing copy
+  - the hot-tracker runtime state now exposes the latest saved brief timestamp plus the latest meaningful-update timestamp instead of relying only on saved-run presence
+  - the hot-tracker event-memory layer now tracks streak count, cooling windows, and replacement linkage so continuing and superseded signals can be inspected explicitly
+  - saved hot-tracker follow-up answers now persist bounded grounding metadata, and evaluation reads now return machine-readable quality checks for judgment alignment
+  - the hot-tracker brief generation path now uses one clean Chinese prompt and fallback contract, and the schema defaults no longer leak damaged copy into degraded or legacy output paths
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
 
@@ -52,13 +67,16 @@ Current state only. Keep this file short, current, and action-oriented.
 - Summary:
   - local Docker development still uses polling-based hot reload for backend and frontend edits
   - weave production still deploys through the repo-owned `CI -> deploy` path with retry and rollback visibility
-  - `AI 热点追踪` now exposes manual run creation, run listing, run fetch, run delete, and run-bound follow-up on top of the new tracking-run persistence layer
-  - the hot-tracker frontend now reads durable runs directly instead of depending on an optional save-first report path
+  - `AI hot tracker` now exposes manual run creation, scheduled sweeper evaluation, run listing, run fetch, run delete, and run-bound follow-up on top of the durable tracking-run persistence layer
+  - the hot-tracker backend now persists `ai_hot_tracker_tracking_state` so automatic steady-state scans can update memory without saving noisy duplicate runs
+  - report generation now consumes ranked and clustered signal candidates and writes the brief-oriented hot-tracker contract instead of the older research-oriented contract
+  - the hot-tracker frontend now reads durable runs directly, shows a consumer-facing brief plus follow-up surface, exposes runtime state and internal evaluation when requested, allows bounded profile edits for cadence, enabled categories, and alert threshold, shows persisted follow-up grounding summaries, and uses one cleaned Chinese copy set across runtime, evaluation, history, and settings
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
+  - verification now includes full backend regression plus frontend verify for the runtime-hardening pass
 
-- Last Verified At: 2026-04-21
+- Last Verified At: 2026-04-24
 
 ## Current Blockers
 
@@ -66,13 +84,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. add ranking, authority, freshness, and novelty scoring before report synthesis so the agent stops behaving like a time-ordered summarizer
-2. add clustering and temporal diff so each run compares event groups rather than raw item URLs
-3. add scheduled execution plus notify-or-suppress decisions on top of the current manual run baseline
+1. deepen offline evaluation around ranking, clustering, signal memory, notify decisions, and brief quality so hot-tracker judgment can be inspected instead of inferred
+2. calibrate meaningful-update, steady-state, and degraded behavior against a replay corpus so runtime decisions are explainable instead of ad hoc
+3. decide whether the next bounded investment is replay-based judgment tuning inside hot-tracker or the first implementation slice of the second module
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-tracking-agent-foundation.md`
+- `tasks/archive/ai-hot-tracker-brief-generation-cleanup.md`
 
 ## Recent Decisions
 
@@ -81,4 +99,11 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-18-140` give weave deploy failures one explicit retry and rollback path
 - `DEC-2026-04-20-141` retire the legacy public-demo runtime entry path and converge local plus deployed environments onto one canonical workspace flow
 - `DEC-2026-04-20-142` keep `CI -> deploy` as the production gate and make blocked deploys explicit when upstream CI fails
-- `DEC-2026-04-21-143` focus active productization on `AI 热点追踪` as one workspace-level continuous tracking agent with durable runs and grounded follow-up
+- `DEC-2026-04-21-143` focus active productization on `AI hot tracker` as one workspace-level continuous tracking agent with durable runs and grounded follow-up
+- `DEC-2026-04-21-144` add one bounded hot-tracker decision layer with ranking, clustering, cluster-based delta, tracking-state memory, and scheduled evaluation
+- `DEC-2026-04-21-145` close `AI hot tracker` onto one brief-style product loop with runtime state visibility and an internal evaluation view
+- `DEC-2026-04-23-146` position `AI hot tracker` as one mainstream AI brief product with allowlisted source families, impact-oriented signal judgment, and a consumer-facing brief plus follow-up surface
+- `DEC-2026-04-24-147` define `AI hot tracker` as one strong-agent product with event memory, internal role traces, and a clean brief-plus-follow-up workspace surface
+- `DEC-2026-04-24-148` collapse hot-tracker legacy response branches and broken copy onto one canonical tracking-run and product-copy path
+- `DEC-2026-04-24-149` harden hot-tracker runtime truth with durable follow-up grounding, explicit event-memory continuity fields, and machine-readable judgment checks
+- `DEC-2026-04-24-150` normalize hot-tracker brief generation and schema defaults onto one clean UTF-8 Chinese contract

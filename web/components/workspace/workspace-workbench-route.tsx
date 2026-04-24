@@ -16,7 +16,10 @@ type WorkspaceWorkbenchRouteProps = {
   workspaceId: string;
 };
 
-export default function WorkspaceWorkbenchRoute({ initialPanel, workspaceId }: WorkspaceWorkbenchRouteProps) {
+export default function WorkspaceWorkbenchRoute({
+  initialPanel,
+  workspaceId,
+}: WorkspaceWorkbenchRouteProps) {
   const { session, isReady } = useAuthSession();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +38,9 @@ export default function WorkspaceWorkbenchRoute({ initialPanel, workspaceId }: W
       const loadedWorkspace = await getWorkspace(session.accessToken, workspaceId);
       setWorkspace(loadedWorkspace);
     } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "无法加载这个工作区。");
+      setErrorMessage(
+        isApiClientError(error) ? error.message : "暂时无法载入这个工作区。",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -46,15 +51,19 @@ export default function WorkspaceWorkbenchRoute({ initialPanel, workspaceId }: W
   }, [loadWorkspace]);
 
   if (!isReady) {
-    return <SectionCard title="工作区">正在加载工作区...</SectionCard>;
+    return <SectionCard title="工作区">正在载入工作区…</SectionCard>;
   }
 
   if (!session) {
-    return <AuthRequired description="登录后才能查看工作区内容。" />;
+    return <AuthRequired description="登录后才可以查看工作区内容。" />;
   }
 
   if (!workspace) {
-    return <SectionCard title="工作区">{isLoading ? "正在加载工作区..." : errorMessage ?? "暂时无法读取工作区。"}</SectionCard>;
+    return (
+      <SectionCard title="工作区">
+        {isLoading ? "正在载入工作区…" : errorMessage ?? "暂时无法读取工作区。"}
+      </SectionCard>
+    );
   }
 
   if (workspace.module_type === "research") {
@@ -68,7 +77,11 @@ export default function WorkspaceWorkbenchRoute({ initialPanel, workspaceId }: W
       title="工作台"
       workspaceId={workspaceId}
     >
-      <WorkspaceWorkbenchPanel initialPanel={initialPanel} workspaceOverride={workspace} workspaceId={workspaceId} />
+      <WorkspaceWorkbenchPanel
+        initialPanel={initialPanel}
+        workspaceId={workspaceId}
+        workspaceOverride={workspace}
+      />
     </WorkspacePageShell>
   );
 }

@@ -686,6 +686,13 @@ export type WorkspaceCreatePayload = {
   description?: string;
 };
 
+export type WorkspaceUpdatePayload = {
+  name?: string;
+  module_type?: ModuleType;
+  description?: string;
+  module_config_json?: JsonObject;
+};
+
 export type DocumentRecord = {
   id: string;
   workspace_id: string;
@@ -745,27 +752,80 @@ export type AiFrontierResearchOutputRecord = {
   reference_sources: AiFrontierReferenceSourceRecord[];
 };
 
+export type AiHotTrackerBriefSignalRecord = {
+  title: string;
+  summary: string;
+  why_now: string;
+  impact: string;
+  audience: string[];
+  change_type: "new" | "continuing" | "cooling";
+  priority_level: "high" | "medium" | "low";
+  confidence: "high" | "medium" | "low";
+  source_item_ids: string[];
+};
+
+export type AiHotTrackerKeepWatchingRecord = {
+  title: string;
+  reason: string;
+  source_item_ids: string[];
+};
+
+export type AiHotTrackerReferenceSourceRecord = {
+  label: string;
+  url: string;
+  source_kind: "official" | "repository" | "docs" | "paper" | "media" | "other";
+};
+
+export type AiHotTrackerBriefOutputRecord = {
+  headline: string;
+  summary: string;
+  change_state: "first_run" | "meaningful_update" | "steady_state" | "degraded" | "failed";
+  signals: AiHotTrackerBriefSignalRecord[];
+  keep_watching: AiHotTrackerKeepWatchingRecord[];
+  blindspots: string[];
+  reference_sources: AiHotTrackerReferenceSourceRecord[];
+};
+
 export type AiHotTrackerSourceDefinitionRecord = {
   id: string;
   label: string;
   category: string;
-  source_kind: "rss_feed" | "atom_feed";
+  source_family: "official" | "media" | "research" | "open_source";
+  source_kind: "rss_feed" | "atom_feed" | "html_list";
+  parse_mode?: "rss_feed" | "atom_feed" | "html_list" | null;
   feed_url: string;
   site_url?: string | null;
   tags: string[];
+  audience_tags: string[];
+  authority_weight: number;
+};
+
+export type AiHotTrackerScoreBreakdownRecord = {
+  novelty: number;
+  freshness: number;
+  authority: number;
+  relevance: number;
+  impact: number;
 };
 
 export type AiHotTrackerSourceItemRecord = {
   id: string;
   source_id: string;
   source_label: string;
-  source_kind: "rss_feed" | "atom_feed";
+  source_kind: "rss_feed" | "atom_feed" | "html_list";
   category: string;
+  source_family: "official" | "media" | "research" | "open_source";
   title: string;
   url: string;
   summary: string;
   published_at?: string | null;
   tags: string[];
+  audience_tags: string[];
+  rank_score: number;
+  score_breakdown: AiHotTrackerScoreBreakdownRecord;
+  rank_reason: string;
+  cluster_id?: string | null;
+  event_id?: string | null;
 };
 
 export type AiHotTrackerSourceFailureRecord = {
@@ -777,7 +837,7 @@ export type AiHotTrackerSourceFailureRecord = {
 export type AiHotTrackerReportRecord = {
   title: string;
   question: string;
-  output: AiFrontierResearchOutputRecord;
+  output: AiHotTrackerBriefOutputRecord;
   source_catalog: AiHotTrackerSourceDefinitionRecord[];
   source_items: AiHotTrackerSourceItemRecord[];
   source_failures: AiHotTrackerSourceFailureRecord[];
@@ -789,6 +849,7 @@ export type AiHotTrackerReportRecord = {
 export type AiHotTrackerTrackingProfileRecord = {
   topic: string;
   scope: string;
+  source_strategy: "allowlist_curated";
   enabled_categories: string[];
   cadence: "manual" | "daily" | "twice_daily" | "weekly";
   alert_threshold: number;
@@ -797,9 +858,11 @@ export type AiHotTrackerTrackingProfileRecord = {
 
 export type AiHotTrackerTrackingRunDeltaRecord = {
   previous_run_id?: string | null;
-  change_state: "first_run" | "meaningful_update" | "steady_state" | "degraded";
+  change_state: "first_run" | "meaningful_update" | "steady_state" | "degraded" | "failed";
   summary: string;
   should_notify: boolean;
+  priority_level: "high" | "medium" | "low";
+  notify_reason?: string | null;
   new_item_count: number;
   continuing_item_count: number;
   cooled_down_item_count: number;
@@ -818,7 +881,7 @@ export type AiHotTrackerTrackingRunRecord = {
   title: string;
   question: string;
   profile: AiHotTrackerTrackingProfileRecord;
-  output: AiFrontierResearchOutputRecord;
+  output: AiHotTrackerBriefOutputRecord;
   source_catalog: AiHotTrackerSourceDefinitionRecord[];
   source_items: AiHotTrackerSourceItemRecord[];
   source_failures: AiHotTrackerSourceFailureRecord[];
@@ -850,6 +913,10 @@ export type AiHotTrackerTrackingRunFollowUpResponse = {
 export type AiFrontierFollowUpEntryRecord = {
   question: string;
   answer: string;
+  grounding_source_item_ids?: string[];
+  grounding_event_ids?: string[];
+  grounding_blindspots?: string[];
+  grounding_notes?: string[];
   created_at?: string | null;
 };
 
@@ -867,7 +934,7 @@ export type AiFrontierResearchRecordWritePayload = {
 export type AiHotTrackerFollowUpPayload = {
   report_question: string;
   report_answer?: string | null;
-  report_output: AiFrontierResearchOutputRecord;
+  report_output: AiHotTrackerBriefOutputRecord;
   follow_up_question: string;
   prior_follow_ups: AiFrontierFollowUpEntryRecord[];
   source_set?: JsonObject;
@@ -893,6 +960,91 @@ export type AiFrontierResearchRecord = {
   source_set: JsonObject;
   created_at: string;
   updated_at: string;
+};
+
+export type AiHotTrackerSignalClusterRecord = {
+  cluster_id: string;
+  event_id: string;
+  title: string;
+  category: string;
+  representative_item_id: string;
+  source_item_ids: string[];
+  source_labels: string[];
+  rank_score: number;
+  priority_level: "high" | "medium" | "low";
+  fingerprint: string;
+  is_new: boolean;
+  is_continuing: boolean;
+  is_cooling: boolean;
+};
+
+export type AiHotTrackerSignalMemoryRecord = {
+  event_id: string;
+  fingerprint: string;
+  title: string;
+  category: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  continuity_state: "new" | "continuing" | "cooling";
+  activity_state: "heating" | "continuing" | "cooling" | "replaced";
+  source_families: ("official" | "media" | "research" | "open_source")[];
+  source_item_ids: string[];
+  source_labels: string[];
+  latest_priority_level: "high" | "medium" | "low";
+  latest_rank_score: number;
+  last_seen_run_id?: string | null;
+  streak_count: number;
+  cooling_since?: string | null;
+  superseded_by_event_id?: string | null;
+  last_cluster_snapshot: JsonObject;
+  note?: string | null;
+};
+
+export type AiHotTrackerAgentRoleTraceRecord = {
+  role: "scout" | "resolver" | "analyst" | "editor" | "evaluator" | "follow_up";
+  summary: string;
+  status: "completed" | "degraded" | "failed";
+  details: JsonObject;
+};
+
+export type AiHotTrackerTrackingStateRecord = {
+  workspace_id: string;
+  tracking_profile: AiHotTrackerTrackingProfileRecord;
+  last_checked_at?: string | null;
+  last_successful_scan_at?: string | null;
+  next_due_at?: string | null;
+  consecutive_failure_count: number;
+  last_error_message?: string | null;
+  latest_saved_run_id?: string | null;
+  latest_saved_run_generated_at?: string | null;
+  latest_change_state?:
+    | "first_run"
+    | "meaningful_update"
+    | "steady_state"
+    | "degraded"
+    | "failed"
+    | null;
+  latest_notify_reason?: string | null;
+  latest_meaningful_update_at?: string | null;
+};
+
+export type AiHotTrackerJudgmentFindingRecord = {
+  code: string;
+  status: "pass" | "warn" | "fail";
+  summary: string;
+  details: JsonObject;
+};
+
+export type AiHotTrackerRunEvaluationRecord = {
+  run_id: string;
+  ranked_items: AiHotTrackerSourceItemRecord[];
+  clustered_signals: AiHotTrackerSignalClusterRecord[];
+  event_memories: AiHotTrackerSignalMemoryRecord[];
+  source_failures: AiHotTrackerSourceFailureRecord[];
+  output: AiHotTrackerBriefOutputRecord;
+  delta: AiHotTrackerTrackingRunDeltaRecord;
+  agent_trace: AiHotTrackerAgentRoleTraceRecord[];
+  quality_checks: AiHotTrackerJudgmentFindingRecord[];
 };
 
 export type ChatSource = {

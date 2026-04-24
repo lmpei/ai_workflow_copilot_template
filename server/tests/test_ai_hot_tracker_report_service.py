@@ -9,6 +9,7 @@ from app.schemas.ai_frontier_research import (
 )
 from app.services import ai_hot_tracker_report_service
 from app.services.ai_hot_tracker_report_service import generate_ai_hot_tracker_report
+from app.services.ai_hot_tracker_source_service import _parse_html_list, _parse_source_feed
 from app.services.model_interface_service import ModelInterfaceError
 
 
@@ -44,27 +45,31 @@ def _sample_items(generated_at: datetime) -> list[AiHotTrackerSourceItem]:
     return [
         AiHotTrackerSourceItem(
             id="source-1",
-            source_id="framework-feed",
-            source_label="Framework Feed",
-            source_kind="atom_feed",
-            category="frameworks",
-            title="Framework Release 2.0",
-            url="https://example.com/framework-2",
-            summary="Added stronger model routing and tracing support.",
+            source_id="openai-news",
+            source_label="OpenAI News",
+            source_kind="html_list",
+            category="models",
+            source_family="official",
+            title="OpenAI launches ChatGPT agent tools",
+            url="https://openai.com/news/chatgpt-agent-tools",
+            summary="OpenAI introduces agent tools for ChatGPT users.",
             published_at=generated_at,
-            tags=["framework", "routing"],
+            tags=["model", "product", "agent", "chatgpt"],
+            audience_tags=["ordinary_user", "product_builder"],
         ),
         AiHotTrackerSourceItem(
             id="source-2",
-            source_id="paper-feed",
-            source_label="Paper Feed",
+            source_id="arxiv-cs-ai",
+            source_label="arXiv cs.AI",
             source_kind="rss_feed",
-            category="model_research",
+            category="research",
+            source_family="research",
             title="New Agent Training Paper",
             url="https://arxiv.org/abs/2604.00001",
             summary="Shows stronger coordination behavior.",
             published_at=generated_at,
             tags=["paper", "agent"],
+            audience_tags=["learner", "developer"],
         ),
     ]
 
@@ -74,30 +79,36 @@ def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSource
     monkeypatch.setattr(
         ai_hot_tracker_report_service,
         "fetch_ai_hot_tracker_source_items",
-        lambda total_limit=18: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
+        lambda total_limit=24: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
             source_catalog=[
                 AiHotTrackerSourceDefinition(
-                    id="framework-feed",
-                    label="Framework Feed",
-                    category="frameworks",
-                    source_kind="atom_feed",
-                    feed_url="https://example.com/framework.atom",
-                    tags=["framework"],
+                    id="openai-news",
+                    label="OpenAI News",
+                    category="models",
+                    source_family="official",
+                    source_kind="html_list",
+                    feed_url="https://openai.com/news/",
+                    tags=["model", "product"],
+                    audience_tags=["ordinary_user"],
+                    authority_weight=0.92,
                 ),
                 AiHotTrackerSourceDefinition(
-                    id="paper-feed",
-                    label="Paper Feed",
-                    category="model_research",
+                    id="arxiv-cs-ai",
+                    label="arXiv cs.AI",
+                    category="research",
+                    source_family="research",
                     source_kind="rss_feed",
                     feed_url="https://example.com/papers.rss",
                     tags=["paper"],
+                    audience_tags=["learner"],
+                    authority_weight=0.78,
                 ),
             ],
             source_items=intake_items,
             source_failures=[
                 AiHotTrackerSourceFailure(
-                    source_id="paper-feed",
-                    source_label="Paper Feed",
+                    source_id="arxiv-cs-ai",
+                    source_label="arXiv cs.AI",
                     message="timeout",
                 )
             ],
@@ -105,51 +116,57 @@ def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSource
     )
 
 
+def _valid_brief_payload() -> dict[str, object]:
+    return {
+        "headline": "ChatGPT agent tools are the clearest signal this round",
+        "summary": "This round is most useful for users watching how AI products become action tools.",
+        "change_state": "meaningful_update",
+        "signals": [
+            {
+                "title": "ChatGPT agent tools move from concept to product",
+                "summary": "OpenAI is positioning ChatGPT around more direct task execution.",
+                "why_now": "It changes what mainstream users can expect from AI assistants.",
+                "impact": "普通用户会更早遇到能执行任务的 AI 产品，而不只是问答工具。",
+                "audience": ["AI 用户", "产品人"],
+                "change_type": "new",
+                "priority_level": "high",
+                "confidence": "high",
+                "source_item_ids": ["source-1"],
+            }
+        ],
+        "keep_watching": [
+            {
+                "title": "Agent training research",
+                "reason": "The research signal is strengthening but still needs more product evidence.",
+                "source_item_ids": ["source-2"],
+            }
+        ],
+        "blindspots": ["还需要继续确认这些 agent 能力会不会稳定进入真实产品。"],
+    }
+
+
 def test_generate_ai_hot_tracker_report_builds_structured_output(monkeypatch: MonkeyPatch) -> None:
     generated_at = datetime(2026, 4, 16, 8, 0, tzinfo=UTC)
     intake_items = _sample_items(generated_at)
     _mock_intake(monkeypatch, intake_items)
-    fake_interface = FakeJsonModelInterface(
-        {
-            "title": "框架发布与 Agent 研究同时升温",
-            "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
-            "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
-            "themes": [
-                {"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}
-            ],
-            "events": [
-                {
-                    "title": "Framework Release 2.0",
-                    "summary": "框架发布强化了路由与 tracing。",
-                    "significance": "这会直接影响工程选型。",
-                    "source_item_ids": ["source-1"],
-                }
-            ],
-            "project_cards": [
-                {
-                    "title": "Framework Release 2.0",
-                    "summary": "这次发布补强了模型路由可见性。",
-                    "why_it_matters": "更适合做复杂 agent 工作流。",
-                    "source_item_ids": ["source-1"],
-                    "tags": ["framework", "routing"],
-                }
-            ],
-            "reference_item_ids": ["source-1", "source-2"],
-        }
-    )
+    fake_interface = FakeJsonModelInterface(_valid_brief_payload())
     monkeypatch.setattr(ai_hot_tracker_report_service, "get_chat_model_interface", lambda: fake_interface)
 
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
-    assert result.title == "框架发布与 Agent 研究同时升温"
-    assert result.output.frontier_summary.startswith("本轮可信来源显示")
-    assert result.output.project_cards[0].source_label == "Framework Feed"
-    assert result.output.project_cards[0].official_url == "https://example.com/framework-2"
-    assert result.output.project_cards[0].source_item_ids == ["source-1"]
-    assert result.output.reference_sources[0].url == "https://example.com/framework-2"
+    assert result.title == "ChatGPT agent tools are the clearest signal this round"
+    assert result.output.headline == result.title
+    assert result.output.signals[0].impact.startswith("普通用户")
+    assert result.output.signals[0].audience == ["AI 用户", "产品人"]
+    assert result.output.signals[0].confidence == "high"
+    assert result.output.blindspots == ["还需要继续确认这些 agent 能力会不会稳定进入真实产品。"]
+    assert result.output.reference_sources[0].url == "https://openai.com/news/chatgpt-agent-tools"
     assert result.output.reference_sources[1].source_kind == "paper"
-    assert result.degraded_reason == "source_intake_partial"
+    assert result.degraded_reason is None
     assert result.source_set["mode"] == "ai_hot_tracker_tracking_agent"
+    assert len(result.source_set["signal_clusters"]) >= 1
+    assert len(result.source_set["event_memories"]) >= 1
+    assert any(trace["role"] == "scout" for trace in result.source_set["agent_trace"])
     assert len(fake_interface.calls) == 1
 
 
@@ -160,57 +177,26 @@ def test_generate_ai_hot_tracker_report_repairs_invalid_first_draft(monkeypatch:
     fake_interface = FakeJsonModelInterface(
         [
             {
-                "title": "框架发布与 Agent 研究同时升温",
-                "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
-                "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
-                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}],
-                "events": [
-                    {
-                        "title": "Framework Release 2.0",
-                        "summary": "框架发布强化了路由与 tracing。",
-                        "significance": "这会直接影响工程选型。",
-                        "source_item_ids": ["source-1"],
-                    }
-                ],
-                "project_cards": [{"title": "Broken Card"}],
+                "headline": "Broken draft",
+                "summary": "Missing required fields in signals.",
+                "change_state": "meaningful_update",
+                "signals": [{"title": "Broken signal"}],
+                "keep_watching": [],
             },
-            {
-                "title": "框架发布与 Agent 研究同时升温",
-                "frontier_summary": "本轮可信来源显示，框架发布与 agent 研究都在继续升温。",
-                "trend_judgment": "短期最值得继续看的，是工程框架能力和 agent 训练方法是否同时成熟。",
-                "themes": [{"label": "Agent", "summary": "Agent 训练与执行链路正在继续推进。"}],
-                "events": [
-                    {
-                        "title": "Framework Release 2.0",
-                        "summary": "框架发布强化了路由与 tracing。",
-                        "significance": "这会直接影响工程选型。",
-                        "source_item_ids": ["source-1"],
-                    }
-                ],
-                "project_cards": [
-                    {
-                        "title": "Framework Release 2.0",
-                        "summary": "这次发布补强了模型路由可见性。",
-                        "why_it_matters": "更适合做复杂 agent 工作流。",
-                        "source_item_ids": ["source-1"],
-                        "tags": ["framework", "routing"],
-                    }
-                ],
-                "reference_item_ids": ["source-1"],
-            },
+            _valid_brief_payload(),
         ]
     )
     monkeypatch.setattr(ai_hot_tracker_report_service, "get_chat_model_interface", lambda: fake_interface)
 
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
-    assert result.title == "框架发布与 Agent 研究同时升温"
-    assert result.output.project_cards
-    assert result.output.reference_sources[0].url == "https://example.com/framework-2"
+    assert result.output.signals
+    assert result.output.blindspots
+    assert result.output.reference_sources[0].url == "https://openai.com/news/chatgpt-agent-tools"
     assert len(fake_interface.calls) == 2
 
 
-def test_generate_ai_hot_tracker_report_returns_degraded_response_when_model_generation_keeps_failing(
+def test_generate_ai_hot_tracker_report_returns_degraded_response_when_model_generation_fails(
     monkeypatch: MonkeyPatch,
 ) -> None:
     generated_at = datetime(2026, 4, 16, 8, 0, tzinfo=UTC)
@@ -221,8 +207,10 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_model_gen
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
     assert result.degraded_reason == "report_generation_failed"
-    assert result.title == "本轮暂无有效热点"
-    assert "结构化简报没有成功生成" in result.output.frontier_summary
+    assert result.output.change_state == "degraded"
+    assert result.title == "本轮简报暂未生成"
+    assert result.output.summary == "来源已经更新，但结构化简报还没有成功生成。这一轮暂时不作为正式判断使用。"
+    assert result.output.blindspots
 
 
 def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(monkeypatch: MonkeyPatch) -> None:
@@ -230,7 +218,7 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(
     monkeypatch.setattr(
         ai_hot_tracker_report_service,
         "fetch_ai_hot_tracker_source_items",
-        lambda total_limit=18: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
+        lambda total_limit=24: ai_hot_tracker_report_service.AiHotTrackerSourceIntakeResult(
             source_catalog=[],
             source_items=[],
             source_failures=[],
@@ -240,5 +228,57 @@ def test_generate_ai_hot_tracker_report_returns_degraded_response_when_no_items(
     result = generate_ai_hot_tracker_report(workspace_id="workspace-1", user_id="user-1")
 
     assert result.degraded_reason == "source_intake_unavailable"
-    assert result.title == "本轮暂无有效热点"
-    assert "暂时无法形成可用简报" in result.output.frontier_summary
+    assert result.output.change_state == "degraded"
+    assert result.title == "本轮暂时没有可用热点"
+    assert result.output.summary == "这次没有拿到足够有效的来源，因此还不能形成可信的热点判断。"
+    assert result.output.blindspots == ["这一轮缺少足够稳定的候选信号，仍需等待更完整来源。"]
+
+
+def test_source_parsers_support_media_rss_and_official_html() -> None:
+    rss_source = AiHotTrackerSourceDefinition(
+        id="media-feed",
+        label="Media Feed",
+        category="business",
+        source_family="media",
+        source_kind="rss_feed",
+        feed_url="https://example.com/feed.xml",
+        tags=["media"],
+        audience_tags=["ordinary_user"],
+    )
+    rss_items = _parse_source_feed(
+        source=rss_source,
+        payload="""
+        <rss><channel><item>
+          <title>AI product funding changes the market</title>
+          <link>https://example.com/ai-product-funding</link>
+          <description>Funding pressure changes product competition.</description>
+          <pubDate>Tue, 21 Apr 2026 08:00:00 GMT</pubDate>
+        </item></channel></rss>
+        """,
+    )
+
+    html_source = AiHotTrackerSourceDefinition(
+        id="official-html",
+        label="Official HTML",
+        category="models",
+        source_family="official",
+        source_kind="html_list",
+        feed_url="https://example.com/news/",
+        tags=["model"],
+        audience_tags=["ordinary_user"],
+    )
+    html_items = _parse_html_list(
+        source=html_source,
+        payload="""
+        <article>
+          <a href="/news/model-launch">New model launch changes AI product use</a>
+          <time datetime="2026-04-21T08:00:00Z"></time>
+          <p>A new model release reaches mainstream product users.</p>
+        </article>
+        """,
+    )
+
+    assert rss_items[0].source_family == "media"
+    assert rss_items[0].summary == "Funding pressure changes product competition."
+    assert html_items[0].source_family == "official"
+    assert html_items[0].url == "https://example.com/news/model-launch"

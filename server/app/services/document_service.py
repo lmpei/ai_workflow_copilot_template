@@ -170,7 +170,6 @@ def create_text_document(
         raise DocumentUploadError("预置文档内容不能为空")
 
     filename = _sanitize_filename(title if title.lower().endswith(".txt") else f"{title}.txt")
-    encoded_content = normalized_text.encode("utf-8")
 
     document_id = str(uuid4())
     relative_path = Path("uploads") / workspace_id / document_id / filename

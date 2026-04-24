@@ -7,6 +7,8 @@ from app.schemas.auth import (
     RegisterRequest,
     UserResponse,
 )
+
+
 class AuthConflictError(Exception):
     pass
 

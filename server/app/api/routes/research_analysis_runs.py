@@ -5,12 +5,12 @@ from app.models.user import User
 from app.schemas.ai_frontier_research import (
     AiFrontierResearchRecordResponse,
     AiFrontierResearchRecordWriteRequest,
-    AiHotTrackerReportResponse,
+    AiHotTrackerRunEvaluationResponse,
+    AiHotTrackerTrackingStateResponse,
     AiHotTrackerTrackingRunCreateRequest,
     AiHotTrackerTrackingRunFollowUpRequest,
     AiHotTrackerTrackingRunFollowUpResponse,
     AiHotTrackerTrackingRunResponse,
-    build_default_ai_hot_tracker_tracking_profile_config,
 )
 from app.schemas.research_analysis_review import ResearchAnalysisReviewResponse
 from app.schemas.research_analysis_run import ResearchAnalysisRunCreate, ResearchAnalysisRunResponse
@@ -28,7 +28,9 @@ from app.services.ai_hot_tracker_tracking_service import (
     answer_ai_hot_tracker_follow_up,
     create_ai_hot_tracker_tracking_run,
     delete_ai_hot_tracker_tracking_run,
+    get_ai_hot_tracker_run_evaluation,
     get_ai_hot_tracker_tracking_run,
+    get_ai_hot_tracker_tracking_state,
     list_workspace_ai_hot_tracker_tracking_runs,
 )
 from app.services.research_analysis_review_service import list_workspace_research_analysis_review
@@ -50,10 +52,6 @@ from app.services.retrieval_generation_service import ChatProcessingError
 
 router = APIRouter()
 
-# Keep the legacy route-level symbol name so the `/ai-hot-tracker/report`
-# alias still maps cleanly onto the new tracking-run implementation.
-generate_ai_hot_tracker_report = create_ai_hot_tracker_tracking_run
-
 
 @router.post(
     "/workspaces/{workspace_id}/ai-hot-tracker/report",
@@ -64,51 +62,10 @@ async def generate_hot_tracker_report_alias(
     current_user: User = Depends(get_current_user),
 ) -> AiHotTrackerTrackingRunResponse:
     try:
-        result = generate_ai_hot_tracker_report(
+        return create_ai_hot_tracker_tracking_run(
             workspace_id=workspace_id,
             user_id=current_user.id,
         )
-        if isinstance(result, AiHotTrackerTrackingRunResponse):
-            return result
-        if isinstance(result, AiHotTrackerReportResponse):
-            generated_at = result.generated_at
-            return AiHotTrackerTrackingRunResponse.model_validate(
-                {
-                    "id": f"report-alias:{workspace_id}",
-                    "workspace_id": workspace_id,
-                    "previous_run_id": None,
-                    "created_by": current_user.id,
-                    "trigger_kind": "manual",
-                    "status": "degraded" if result.degraded_reason else "completed",
-                    "title": result.title,
-                    "question": result.question,
-                    "profile": build_default_ai_hot_tracker_tracking_profile_config(),
-                    "output": result.output.model_dump(mode="json"),
-                    "source_catalog": [item.model_dump(mode="json") for item in result.source_catalog],
-                    "source_items": [item.model_dump(mode="json") for item in result.source_items],
-                    "source_failures": [item.model_dump(mode="json") for item in result.source_failures],
-                    "source_set": result.source_set,
-                    "delta": {
-                        "previous_run_id": None,
-                        "change_state": "first_run",
-                        "summary": "Alias report request completed.",
-                        "should_notify": True,
-                        "new_item_count": len(result.source_items),
-                        "continuing_item_count": 0,
-                        "cooled_down_item_count": 0,
-                        "new_titles": [item.title for item in result.source_items[:5]],
-                        "continuing_titles": [],
-                        "cooled_down_titles": [],
-                    },
-                    "follow_ups": [],
-                    "degraded_reason": result.degraded_reason,
-                    "error_message": None,
-                    "generated_at": generated_at,
-                    "created_at": generated_at,
-                    "updated_at": generated_at,
-                }
-            )
-        raise TypeError("AI hot tracker report alias returned an unsupported response shape")
     except AiHotTrackerTrackingAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
 
@@ -153,6 +110,23 @@ async def list_hot_tracker_runs(
 
 
 @router.get(
+    "/workspaces/{workspace_id}/ai-hot-tracker/state",
+    response_model=AiHotTrackerTrackingStateResponse,
+)
+async def get_hot_tracker_state(
+    workspace_id: str,
+    current_user: User = Depends(get_current_user),
+) -> AiHotTrackerTrackingStateResponse:
+    try:
+        return get_ai_hot_tracker_tracking_state(
+            workspace_id=workspace_id,
+            user_id=current_user.id,
+        )
+    except AiHotTrackerTrackingAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+
+@router.get(
     "/ai-hot-tracker/runs/{run_id}",
     response_model=AiHotTrackerTrackingRunResponse,
 )
@@ -164,6 +138,23 @@ async def get_hot_tracker_run(
     if run is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AI hot tracker run not found")
     return run
+
+
+@router.get(
+    "/ai-hot-tracker/runs/{run_id}/evaluation",
+    response_model=AiHotTrackerRunEvaluationResponse,
+)
+async def get_hot_tracker_run_evaluation(
+    run_id: str,
+    current_user: User = Depends(get_current_user),
+) -> AiHotTrackerRunEvaluationResponse:
+    try:
+        return get_ai_hot_tracker_run_evaluation(
+            run_id=run_id,
+            user_id=current_user.id,
+        )
+    except AiHotTrackerTrackingAccessError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
 
 
 @router.delete("/ai-hot-tracker/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)

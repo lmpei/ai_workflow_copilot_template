@@ -111,6 +111,17 @@ def get_latest_workspace_ai_hot_tracker_tracking_run(
         return session.scalar(statement)
 
 
+def get_ai_hot_tracker_tracking_run(
+    *,
+    run_id: str,
+) -> AiHotTrackerTrackingRun | None:
+    with session_scope() as session:
+        statement = select(AiHotTrackerTrackingRun).where(
+            AiHotTrackerTrackingRun.id == run_id
+        )
+        return session.scalar(statement)
+
+
 def update_ai_hot_tracker_tracking_run_follow_ups(
     *,
     run_id: str,

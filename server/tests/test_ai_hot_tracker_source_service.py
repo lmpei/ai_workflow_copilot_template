@@ -63,7 +63,7 @@ class FakeClient:
     def __exit__(self, exc_type, exc, tb) -> None:
         return None
 
-    def get(self, url: str) -> FakeResponse:
+    def get(self, url: str, **_: object) -> FakeResponse:
         payload = self.mapping[url]
         if isinstance(payload, Exception):
             raise payload
