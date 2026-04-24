@@ -78,12 +78,12 @@ Stable system boundaries only. This is the short architecture summary. The long-
     - bounded tracking-profile editor
     - grounded follow-up side panel
     - persisted follow-up grounding summaries
-    - internal evaluation variant behind `?view=evaluation`, including machine-readable judgment findings
+    - internal evaluation variant behind `?view=evaluation`, including machine-readable judgment findings and replay-calibration visibility
 - FastAPI API in `server/app/api/routes/`
 - `server/app/api/routes/workspaces.py`
   - owns canonical workspace creation, update, and deletion paths for all environments
 - `server/app/api/routes/research_analysis_runs.py`
-  - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, runtime state lookup, run evaluation lookup, and the `/ai-hot-tracker/report` alias that now resolves onto the same canonical tracking-run response path
+  - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, runtime state lookup, run evaluation lookup, replay evaluation lookup, and the `/ai-hot-tracker/report` alias that now resolves onto the same canonical tracking-run response path
 
 ## Runtime Boundaries
 
@@ -110,6 +110,8 @@ Stable system boundaries only. This is the short architecture summary. The long-
     - attach bounded agent-role traces plus machine-readable judgment checks for inspection without exposing them on the consumer path
 - `server/app/services/ai_hot_tracker_follow_up_service.py`
   - owns follow-up grounding to the selected tracking run, its brief output, source items, event memory, blindspots, and prior follow-up history, and persists the bounded grounding metadata with each answer
+- `server/app/services/ai_hot_tracker_replay_service.py`
+  - owns the fixed offline replay corpus plus judgment-calibration suite for the hot-tracker decision loop, so ranking, clustering, delta, steady-state suppression, threshold-driven notify, and replacement memory can be checked without depending on live traffic
 - `server/app/services/research_external_context_service.py`
   - still owns the bounded external-context path and snapshot reuse for the research module
 - `server/app/services/research_analysis_run_service.py`

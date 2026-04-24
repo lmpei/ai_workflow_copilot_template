@@ -1,6 +1,7 @@
 import { clearStoredSession } from "./auth";
 import type {
   AiHotTrackerRunEvaluationRecord,
+  AiHotTrackerReplayEvaluationRecord,
   AiHotTrackerTrackingStateRecord,
   ChatRequestPayload,
   ChatResponsePayload,
@@ -469,6 +470,16 @@ export async function getAiHotTrackerRunEvaluation(
 ): Promise<AiHotTrackerRunEvaluationRecord> {
   return fetchBrowserApiJson<AiHotTrackerRunEvaluationRecord>(
     `/ai-hot-tracker/runs/${runId}/evaluation`,
+    {},
+    accessToken,
+  );
+}
+
+export async function getAiHotTrackerReplayEvaluation(
+  accessToken: string,
+): Promise<AiHotTrackerReplayEvaluationRecord> {
+  return fetchBrowserApiJson<AiHotTrackerReplayEvaluationRecord>(
+    "/ai-hot-tracker/replay-evaluation",
     {},
     accessToken,
   );

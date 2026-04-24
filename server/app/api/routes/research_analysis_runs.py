@@ -12,6 +12,7 @@ from app.schemas.ai_frontier_research import (
     AiHotTrackerTrackingRunFollowUpResponse,
     AiHotTrackerTrackingRunResponse,
 )
+from app.schemas.ai_hot_tracker_replay import AiHotTrackerReplayEvaluationResponse
 from app.schemas.research_analysis_review import ResearchAnalysisReviewResponse
 from app.schemas.research_analysis_run import ResearchAnalysisRunCreate, ResearchAnalysisRunResponse
 from app.schemas.research_external_resource_snapshot import ResearchExternalResourceSnapshotResponse
@@ -33,6 +34,7 @@ from app.services.ai_hot_tracker_tracking_service import (
     get_ai_hot_tracker_tracking_state,
     list_workspace_ai_hot_tracker_tracking_runs,
 )
+from app.services.ai_hot_tracker_replay_service import get_ai_hot_tracker_replay_evaluation
 from app.services.research_analysis_review_service import list_workspace_research_analysis_review
 from app.services.research_analysis_run_service import (
     ResearchAnalysisRunAccessError,
@@ -155,6 +157,16 @@ async def get_hot_tracker_run_evaluation(
         )
     except AiHotTrackerTrackingAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+
+@router.get(
+    "/ai-hot-tracker/replay-evaluation",
+    response_model=AiHotTrackerReplayEvaluationResponse,
+)
+async def get_hot_tracker_replay_evaluation(
+    current_user: User = Depends(get_current_user),
+) -> AiHotTrackerReplayEvaluationResponse:
+    return get_ai_hot_tracker_replay_evaluation()
 
 
 @router.delete("/ai-hot-tracker/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -31,7 +31,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the hot-tracker final quality-and-runtime-hardening slice is complete and the next bounded slice is waiting on human direction
+- none currently; the hot-tracker replay-corpus and judgment-calibration slice is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -59,6 +59,8 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker event-memory layer now tracks streak count, cooling windows, and replacement linkage so continuing and superseded signals can be inspected explicitly
   - saved hot-tracker follow-up answers now persist bounded grounding metadata, and evaluation reads now return machine-readable quality checks for judgment alignment
   - the hot-tracker brief generation path now uses one clean Chinese prompt and fallback contract, and the schema defaults no longer leak damaged copy into degraded or legacy output paths
+  - the hot-tracker backend now also carries one fixed replay corpus plus one judgment-calibration suite so official/media/open-source/research ranking, conservative clustering, steady-state suppression, threshold-driven notify, and replacement memory can be replayed without guessing from live traffic
+  - the hot-tracker internal evaluation surface now also reads that replay suite directly, so offline calibration is visible alongside the selected run instead of living only in tests
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
 
@@ -71,6 +73,8 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker backend now persists `ai_hot_tracker_tracking_state` so automatic steady-state scans can update memory without saving noisy duplicate runs
   - report generation now consumes ranked and clustered signal candidates and writes the brief-oriented hot-tracker contract instead of the older research-oriented contract
   - the hot-tracker frontend now reads durable runs directly, shows a consumer-facing brief plus follow-up surface, exposes runtime state and internal evaluation when requested, allows bounded profile edits for cadence, enabled categories, and alert threshold, shows persisted follow-up grounding summaries, and uses one cleaned Chinese copy set across runtime, evaluation, history, and settings
+  - the backend now has one deterministic hot-tracker replay suite that can re-run core judgment scenarios locally before someone retunes scoring, clustering, delta, or event-memory logic
+  - the internal evaluation view now also reads one replay-evaluation endpoint so offline calibration failures can be seen without leaving the product shell
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
@@ -84,13 +88,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. deepen offline evaluation around ranking, clustering, signal memory, notify decisions, and brief quality so hot-tracker judgment can be inspected instead of inferred
-2. calibrate meaningful-update, steady-state, and degraded behavior against a replay corpus so runtime decisions are explainable instead of ad hoc
-3. decide whether the next bounded investment is replay-based judgment tuning inside hot-tracker or the first implementation slice of the second module
+1. use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior until the highest-risk hot-tracker judgment failures are explained away
+2. deepen brief-quality evaluation so the saved Chinese brief stays aligned with the ranked or clustered judgment instead of drifting into generic copy
+3. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-brief-generation-cleanup.md`
+- `tasks/archive/ai-hot-tracker-replay-evaluation-surface.md`
 
 ## Recent Decisions
 
@@ -107,3 +111,5 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-24-148` collapse hot-tracker legacy response branches and broken copy onto one canonical tracking-run and product-copy path
 - `DEC-2026-04-24-149` harden hot-tracker runtime truth with durable follow-up grounding, explicit event-memory continuity fields, and machine-readable judgment checks
 - `DEC-2026-04-24-150` normalize hot-tracker brief generation and schema defaults onto one clean UTF-8 Chinese contract
+- `DEC-2026-04-24-151` add a fixed hot-tracker replay corpus and judgment-calibration suite for offline inspection
+- `DEC-2026-04-24-152` expose replay calibration on the internal hot-tracker evaluation surface

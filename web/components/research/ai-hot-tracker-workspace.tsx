@@ -18,6 +18,7 @@ import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import {
   askAiHotTrackerRunFollowUp,
+  getAiHotTrackerReplayEvaluation,
   createWorkspaceAiHotTrackerRun,
   deleteAiHotTrackerRun,
   getAiHotTrackerRunEvaluation,
@@ -31,6 +32,7 @@ import type {
   AiHotTrackerAgentRoleTraceRecord,
   AiHotTrackerBriefSignalRecord,
   AiHotTrackerJudgmentFindingRecord,
+  AiHotTrackerReplayEvaluationRecord,
   AiHotTrackerRunEvaluationRecord,
   AiHotTrackerSignalClusterRecord,
   AiHotTrackerSignalMemoryRecord,
@@ -742,6 +744,7 @@ export default function AiHotTrackerWorkspace({
   const [runs, setRuns] = useState<AiHotTrackerTrackingRunRecord[]>([]);
   const [stateRecord, setStateRecord] = useState<AiHotTrackerTrackingStateRecord | null>(null);
   const [evaluation, setEvaluation] = useState<AiHotTrackerRunEvaluationRecord | null>(null);
+  const [replayEvaluation, setReplayEvaluation] = useState<AiHotTrackerReplayEvaluationRecord | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -755,6 +758,7 @@ export default function AiHotTrackerWorkspace({
   const [isLoadingRuns, setIsLoadingRuns] = useState(false);
   const [isLoadingState, setIsLoadingState] = useState(false);
   const [isLoadingEvaluation, setIsLoadingEvaluation] = useState(false);
+  const [isLoadingReplayEvaluation, setIsLoadingReplayEvaluation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>({
@@ -882,6 +886,41 @@ export default function AiHotTrackerWorkspace({
       cancelled = true;
     };
   }, [activeRun, evaluationMode, session]);
+
+  useEffect(() => {
+    if (!session || !evaluationMode) {
+      setReplayEvaluation(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadReplayEvaluation = async () => {
+      setIsLoadingReplayEvaluation(true);
+      try {
+        const nextReplayEvaluation = await getAiHotTrackerReplayEvaluation(session.accessToken);
+        if (!cancelled) {
+          setReplayEvaluation(nextReplayEvaluation);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(
+            isApiClientError(error) ? error.message : "暂时无法读取 replay 校准视图。",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingReplayEvaluation(false);
+        }
+      }
+    };
+
+    void loadReplayEvaluation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [evaluationMode, session]);
 
   useEffect(() => {
     if (!streamingReply) {
@@ -1351,6 +1390,175 @@ export default function AiHotTrackerWorkspace({
                 <div style={{ color: "#64748b", padding: "8px 0" }}>正在读取内部评测…</div>
               ) : evaluation ? (
                 <>
+                  <EvaluationSection
+                    title="Replay 校准"
+                    subtitle="这是固定回放样本，不依赖当前 run。它用来检查热点判断层有没有整体跑偏。"
+                  >
+                    {isLoadingReplayEvaluation ? (
+                      <div style={{ color: "#64748b", fontSize: 14 }}>正在读取 replay 校准…</div>
+                    ) : replayEvaluation ? (
+                      <div style={{ display: "grid", gap: 14 }}>
+                        <div
+                          style={{
+                            alignItems: "center",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 12,
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div style={{ display: "grid", gap: 6 }}>
+                            <strong style={{ color: "#0f172a", fontSize: 17 }}>
+                              当前 replay suite {replayEvaluation.status === "pass" ? "通过" : "失败"}
+                            </strong>
+                            <span style={{ color: "#64748b", fontSize: 13 }}>
+                              共 {replayEvaluation.total_case_count} 组 case · 通过{" "}
+                              {replayEvaluation.passed_case_count} 组 · 失败{" "}
+                              {replayEvaluation.failed_case_count} 组
+                            </span>
+                          </div>
+                          <span
+                            style={findingBadgeStyle(
+                              replayEvaluation.status === "pass" ? "pass" : "fail",
+                            )}
+                          >
+                            {replayEvaluation.status === "pass" ? "通过" : "失败"}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "grid", gap: 12 }}>
+                          {replayEvaluation.cases.map((replayCase) => (
+                            <div
+                              key={replayCase.case_id}
+                              style={{
+                                backgroundColor: "rgba(255, 255, 255, 0.72)",
+                                border: "1px solid rgba(148, 163, 184, 0.14)",
+                                borderRadius: 18,
+                                display: "grid",
+                                gap: 12,
+                                padding: "14px 16px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  alignItems: "center",
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: 10,
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <div style={{ display: "grid", gap: 4 }}>
+                                  <strong style={{ color: "#0f172a", fontSize: 15 }}>
+                                    {replayCase.title}
+                                  </strong>
+                                  <span style={{ color: "#64748b", fontSize: 13, lineHeight: 1.7 }}>
+                                    {replayCase.description}
+                                  </span>
+                                </div>
+                                <span
+                                  style={findingBadgeStyle(
+                                    replayCase.status === "pass" ? "pass" : "fail",
+                                  )}
+                                >
+                                  {replayCase.status === "pass" ? "通过" : "失败"}
+                                </span>
+                              </div>
+
+                              <div style={{ display: "grid", gap: 10 }}>
+                                {replayCase.steps.map((step) => (
+                                  <div
+                                    key={`${replayCase.case_id}-${step.label}`}
+                                    style={{
+                                      borderTop: "1px solid rgba(148, 163, 184, 0.12)",
+                                      display: "grid",
+                                      gap: 8,
+                                      paddingTop: 10,
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        alignItems: "center",
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: 10,
+                                        justifyContent: "space-between",
+                                      }}
+                                    >
+                                      <strong style={{ color: "#0f172a", fontSize: 14 }}>
+                                        {step.label}
+                                      </strong>
+                                      <div style={{ alignItems: "center", display: "flex", gap: 8 }}>
+                                        <span style={{ color: "#64748b", fontSize: 12 }}>
+                                          {CHANGE_STATE_LABEL[step.delta_change_state]}
+                                          {step.notify_reason ? ` · ${step.notify_reason}` : ""}
+                                        </span>
+                                        <span
+                                          style={findingBadgeStyle(
+                                            step.status === "pass" ? "pass" : "fail",
+                                          )}
+                                        >
+                                          {step.status === "pass" ? "通过" : "失败"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {step.findings.some((finding) => finding.status !== "pass") ? (
+                                      <div style={{ display: "grid", gap: 8 }}>
+                                        {step.findings
+                                          .filter((finding) => finding.status !== "pass")
+                                          .map((finding) => (
+                                            <div
+                                              key={`${step.label}-${finding.code}`}
+                                              style={{
+                                                backgroundColor:
+                                                  finding.status === "fail"
+                                                    ? "rgba(185, 28, 28, 0.05)"
+                                                    : "rgba(245, 158, 11, 0.08)",
+                                                border:
+                                                  finding.status === "fail"
+                                                    ? "1px solid rgba(185, 28, 28, 0.10)"
+                                                    : "1px solid rgba(245, 158, 11, 0.12)",
+                                                borderRadius: 14,
+                                                display: "grid",
+                                                gap: 6,
+                                                padding: "10px 12px",
+                                              }}
+                                            >
+                                              <div
+                                                style={{
+                                                  alignItems: "center",
+                                                  display: "flex",
+                                                  gap: 8,
+                                                  justifyContent: "space-between",
+                                                }}
+                                              >
+                                                <strong style={{ color: "#0f172a", fontSize: 13 }}>
+                                                  {finding.summary}
+                                                </strong>
+                                                <span style={findingBadgeStyle(finding.status)}>
+                                                  {renderFindingStatusLabel(finding.status)}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    ) : (
+                                      <div style={{ color: "#64748b", fontSize: 12 }}>
+                                        这一步的 replay 检查全部通过。
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ color: "#64748b", fontSize: 14 }}>当前还没有 replay 校准结果。</div>
+                    )}
+                  </EvaluationSection>
+
                   <EvaluationSection
                     title="判断检查"
                     subtitle="先看这一轮是否触发了核心判断护栏，再往下看细节。"

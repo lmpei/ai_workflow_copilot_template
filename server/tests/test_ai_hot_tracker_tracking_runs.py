@@ -406,6 +406,26 @@ def test_ai_hot_tracker_state_and_evaluation_endpoints_expose_runtime_context(
     assert evaluation_payload["quality_checks"]
 
 
+def test_ai_hot_tracker_replay_evaluation_endpoint_exposes_suite_summary(
+    client: TestClient,
+) -> None:
+    auth = _register_and_login(client, email="replay@example.com", name="Replay")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+
+    replay_response = client.get(
+        "/api/v1/ai-hot-tracker/replay-evaluation",
+        headers=headers,
+    )
+    assert replay_response.status_code == 200
+    replay_payload = replay_response.json()
+    assert replay_payload["status"] == "pass"
+    assert replay_payload["total_case_count"] >= 5
+    assert replay_payload["passed_case_count"] == replay_payload["total_case_count"]
+    assert replay_payload["failed_case_count"] == 0
+    assert replay_payload["cases"]
+    assert replay_payload["cases"][0]["steps"]
+
+
 def test_ai_hot_tracker_sweeper_skips_manual_cadence_workspaces(
     client: TestClient,
     monkeypatch: MonkeyPatch,

@@ -1047,6 +1047,33 @@ export type AiHotTrackerRunEvaluationRecord = {
   quality_checks: AiHotTrackerJudgmentFindingRecord[];
 };
 
+export type AiHotTrackerReplayStepEvaluationRecord = {
+  label: string;
+  status: "pass" | "fail";
+  delta_change_state: AiHotTrackerTrackingRunDeltaRecord["change_state"];
+  should_notify: boolean;
+  notify_reason: string | null;
+  ranked_item_ids: string[];
+  cluster_titles: string[];
+  findings: AiHotTrackerJudgmentFindingRecord[];
+};
+
+export type AiHotTrackerReplayCaseEvaluationRecord = {
+  case_id: string;
+  title: string;
+  description: string;
+  status: "pass" | "fail";
+  steps: AiHotTrackerReplayStepEvaluationRecord[];
+};
+
+export type AiHotTrackerReplayEvaluationRecord = {
+  status: "pass" | "fail";
+  total_case_count: number;
+  passed_case_count: number;
+  failed_case_count: number;
+  cases: AiHotTrackerReplayCaseEvaluationRecord[];
+};
+
 export type ChatSource = {
   document_id: string;
   chunk_id: string;
