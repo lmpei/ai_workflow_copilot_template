@@ -125,6 +125,10 @@ The next bounded follow-through on top of that product surface is now explicit a
 around one fixed trusted external source set, one normalized source-item middle layer, and one structured report path
 instead of depending on one answer-first generic chat response.
 
+The stable end-state product definition for `AI 热点追踪` now lives in
+`docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`. Control-plane docs should reference that file instead of trying to
+restate the full module contract inline.
+
 ## Roadmap Alignment
 
 - Current roadmap theme:

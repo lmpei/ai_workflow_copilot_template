@@ -3,6 +3,8 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
+For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`.
+
 - Last Updated: 2026-04-25
 
 ## Main Modules
@@ -26,6 +28,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
   - dataset -> eval run -> per-case execution -> scoring -> summaries and traces
 - AI hot tracker
   - workspace -> tracking profile -> allowlisted source intake -> normalized source items -> impact-oriented fixed scoring -> conservative signal clustering -> cluster-based delta evaluation -> brief synthesis -> saved tracking run or suppressed steady-state update -> grounded follow-up
+  - the end-state product and evaluation contract for this loop is defined in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`
 
 ## State and Persistence
 

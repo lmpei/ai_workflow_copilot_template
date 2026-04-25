@@ -28,6 +28,7 @@ Current state only. Keep this file short, current, and action-oriented.
 ## Current Objective
 
 - keep `AI hot tracker` stable as the first real single-agent product loop for mainstream AI users: allowlisted source intake, impact-oriented signal judgment, brief-style report output, grounded follow-up, richer runtime truth, internal evaluation visibility, one clean UTF-8 Chinese contract, and one canonical release path guarded by `CI -> deploy`
+- treat `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md` as the long-form source of truth for the module's end-state product definition
 
 ## Active Task
 
@@ -63,6 +64,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker internal evaluation surface now also reads that replay suite directly, so offline calibration is visible alongside the selected run instead of living only in tests
   - the hot-tracker run-evaluation layer now also checks whether the saved brief stays aligned with delta and cluster-level judgment, including change-state honesty, high-priority coverage, single-cluster consistency, and priority or change-type alignment
   - the hot-tracker schema defaults, replay findings, follow-up prompt chain, and task control-plane docs now use one clean UTF-8 Chinese contract instead of mixed damaged strings
+  - the long-form end-state definition for `AI hot tracker` now lives in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`, while the older frontier-research contract remains a historical pointer only
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
 
@@ -97,7 +99,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-final-completion-line.md`
+- `tasks/archive/ai-hot-tracker-final-definition-source-of-truth.md`
 
 ## Recent Decisions
 
@@ -118,3 +120,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-24-152` expose replay calibration on the internal hot-tracker evaluation surface
 - `DEC-2026-04-24-153` make hot-tracker run evaluation judge brief alignment against delta and cluster-level decisions
 - `DEC-2026-04-25-154` close hot-tracker stabilization by normalizing UTF-8 Chinese copy and archiving the final completion-line task
+- `DEC-2026-04-25-155` make `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md` the long-form source of truth for the module end state

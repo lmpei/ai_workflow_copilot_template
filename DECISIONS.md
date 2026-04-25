@@ -2490,3 +2490,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/ai-hot-tracker-final-completion-line.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-04-25-155
+- Date: 2026-04-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: make one long-form final-definition document the source of truth for AI hot tracker
+- Context: the repo already had a stable hot-tracker control loop, runtime state, replay calibration, and evaluation surface, but the module's final product definition still lived mostly in chat history plus scattered control-plane summaries. The older `AI_FRONTIER_RESEARCH_CONTRACT.md` file also remained too close to a competing product-definition document even though the module had moved beyond that earlier contract.
+- Choice: add `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md` as the long-form source of truth for the module's end-state product, system, contract, evaluation, and non-goal definition; downgrade `docs/prd/AI_FRONTIER_RESEARCH_CONTRACT.md` into a historical pointer only; and update control-plane docs to reference the new final-definition document instead of restating the full contract inline.
+- Why: the first module is now the project's main product and main learning surface. Contributors need one durable place to read what the module is supposed to be without reconstructing intent from archived tasks or chat history.
+- Impact: future implementation and review work can use one canonical product-definition document, the old frontier-research contract no longer acts like a second truth source, and the control-plane docs can stay concise while still pointing at a durable end-state definition.
+- Related Task: `tasks/archive/ai-hot-tracker-final-definition-source-of-truth.md`
+- Supersedes:
+

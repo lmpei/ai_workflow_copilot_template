@@ -30,6 +30,10 @@ Use these files for detailed reference material:
 
 - `docs/prd/PLATFORM_PRD.md`
   - product scope, module responsibilities, success criteria, and phase roadmap
+- `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`
+  - long-term source of truth for the `AI 热点追踪` end-state product and internal strong-agent definition
+- `docs/prd/AI_FRONTIER_RESEARCH_CONTRACT.md`
+  - historical pointer for the earlier transition away from the generic Research definition; no longer the main source of truth
 - `docs/prd/LONG_TERM_ROADMAP.md`
   - post-Stage-C multi-stage direction for public demo work, later workbench productization, staged AI capability waves, and the long-term learning path
 - `docs/prd/STAGE_A_PLAN.md`

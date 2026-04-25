@@ -50,7 +50,7 @@ Replace the older generic Research surface with one concrete `AI 热点追踪` w
 
 Stage K delivered:
 
-- one clear `AI 热点追踪` contract of record
+- one clear `AI 热点追踪` contract of record, now superseded by the later long-form final-definition document
 - one narrower object model for themes, events, projects, and durable research records
 - one latest-source-oriented workflow instead of generic question answering
 - one output system centered on frontier summaries, trend judgments, project cards, and reference sources
@@ -77,7 +77,11 @@ Stage K succeeded because:
 
 ## Contract Of Record
 
-The detailed module contract of record is:
+The current long-form source of truth is:
+
+- `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`
+
+The older transition-era contract remains as a historical pointer:
 
 - `docs/prd/AI_FRONTIER_RESEARCH_CONTRACT.md`
 
