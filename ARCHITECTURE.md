@@ -3,7 +3,7 @@
 Stable system boundaries only. This is the short architecture summary. The long-form reference remains
 `docs/architecture/PLATFORM_ARCHITECTURE.md`.
 
-- Last Updated: 2026-04-24
+- Last Updated: 2026-04-25
 
 ## Main Modules
 
@@ -78,7 +78,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
     - bounded tracking-profile editor
     - grounded follow-up side panel
     - persisted follow-up grounding summaries
-    - internal evaluation variant behind `?view=evaluation`, including machine-readable judgment findings and replay-calibration visibility
+    - internal evaluation variant behind `?view=evaluation`, including machine-readable judgment findings, replay-calibration visibility, and saved-brief alignment checks
 - FastAPI API in `server/app/api/routes/`
 - `server/app/api/routes/workspaces.py`
   - owns canonical workspace creation, update, and deletion paths for all environments
@@ -108,10 +108,11 @@ Stable system boundaries only. This is the short architecture summary. The long-
     - answer grounded follow-up questions
     - expose runtime state and internal evaluation reads for the selected run
     - attach bounded agent-role traces plus machine-readable judgment checks for inspection without exposing them on the consumer path
+    - verify that the saved brief stays aligned with delta and cluster-level judgment before evaluation consumers trust the run
 - `server/app/services/ai_hot_tracker_follow_up_service.py`
-  - owns follow-up grounding to the selected tracking run, its brief output, source items, event memory, blindspots, and prior follow-up history, and persists the bounded grounding metadata with each answer
+  - owns follow-up grounding to the selected tracking run, its brief output, source items, event memory, blindspots, and prior follow-up history, and persists the bounded grounding metadata with each answer on one clean UTF-8 Chinese prompt chain
 - `server/app/services/ai_hot_tracker_replay_service.py`
-  - owns the fixed offline replay corpus plus judgment-calibration suite for the hot-tracker decision loop, so ranking, clustering, delta, steady-state suppression, threshold-driven notify, and replacement memory can be checked without depending on live traffic
+  - owns the fixed offline replay corpus plus judgment-calibration suite for the hot-tracker decision loop, so ranking, clustering, delta, steady-state suppression, threshold-driven notify, and replacement memory can be checked without depending on live traffic, and exposes readable replay findings to the internal evaluation surface
 - `server/app/services/research_external_context_service.py`
   - still owns the bounded external-context path and snapshot reuse for the research module
 - `server/app/services/research_analysis_run_service.py`

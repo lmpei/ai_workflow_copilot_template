@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-24
+- Last Updated: 2026-04-25
 
 ## Project Mode
 
@@ -27,11 +27,11 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Current Objective
 
-- keep `AI hot tracker` stable as the first real single-agent product loop for mainstream AI users: allowlisted source intake, impact-oriented signal judgment, brief-style report output, grounded follow-up, richer runtime truth, internal evaluation visibility, and one canonical release path guarded by `CI -> deploy`
+- keep `AI hot tracker` stable as the first real single-agent product loop for mainstream AI users: allowlisted source intake, impact-oriented signal judgment, brief-style report output, grounded follow-up, richer runtime truth, internal evaluation visibility, one clean UTF-8 Chinese contract, and one canonical release path guarded by `CI -> deploy`
 
 ## Active Task
 
-- none currently; the hot-tracker replay-corpus and judgment-calibration slice is complete and the next bounded slice is waiting on human direction
+- none currently; the hot-tracker final stabilization slice is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -61,6 +61,8 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker brief generation path now uses one clean Chinese prompt and fallback contract, and the schema defaults no longer leak damaged copy into degraded or legacy output paths
   - the hot-tracker backend now also carries one fixed replay corpus plus one judgment-calibration suite so official/media/open-source/research ranking, conservative clustering, steady-state suppression, threshold-driven notify, and replacement memory can be replayed without guessing from live traffic
   - the hot-tracker internal evaluation surface now also reads that replay suite directly, so offline calibration is visible alongside the selected run instead of living only in tests
+  - the hot-tracker run-evaluation layer now also checks whether the saved brief stays aligned with delta and cluster-level judgment, including change-state honesty, high-priority coverage, single-cluster consistency, and priority or change-type alignment
+  - the hot-tracker schema defaults, replay findings, follow-up prompt chain, and task control-plane docs now use one clean UTF-8 Chinese contract instead of mixed damaged strings
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
 
@@ -75,12 +77,13 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker frontend now reads durable runs directly, shows a consumer-facing brief plus follow-up surface, exposes runtime state and internal evaluation when requested, allows bounded profile edits for cadence, enabled categories, and alert threshold, shows persisted follow-up grounding summaries, and uses one cleaned Chinese copy set across runtime, evaluation, history, and settings
   - the backend now has one deterministic hot-tracker replay suite that can re-run core judgment scenarios locally before someone retunes scoring, clustering, delta, or event-memory logic
   - the internal evaluation view now also reads one replay-evaluation endpoint so offline calibration failures can be seen without leaving the product shell
+  - run evaluation now also surfaces deterministic brief-alignment failures instead of only source grounding or blindspot honesty checks
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
-  - verification now includes full backend regression plus frontend verify for the runtime-hardening pass
+  - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
 
-- Last Verified At: 2026-04-24
+- Last Verified At: 2026-04-25
 
 ## Current Blockers
 
@@ -88,13 +91,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior until the highest-risk hot-tracker judgment failures are explained away
-2. deepen brief-quality evaluation so the saved Chinese brief stays aligned with the ranked or clustered judgment instead of drifting into generic copy
-3. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
+1. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
+2. if the first module continues, use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior
+3. if the first module continues, use the brief-alignment checks to tune saved-brief wording and priority consistency without reopening product scope
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-replay-evaluation-surface.md`
+- `tasks/archive/ai-hot-tracker-final-completion-line.md`
 
 ## Recent Decisions
 
@@ -113,3 +116,5 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-24-150` normalize hot-tracker brief generation and schema defaults onto one clean UTF-8 Chinese contract
 - `DEC-2026-04-24-151` add a fixed hot-tracker replay corpus and judgment-calibration suite for offline inspection
 - `DEC-2026-04-24-152` expose replay calibration on the internal hot-tracker evaluation surface
+- `DEC-2026-04-24-153` make hot-tracker run evaluation judge brief alignment against delta and cluster-level decisions
+- `DEC-2026-04-25-154` close hot-tracker stabilization by normalizing UTF-8 Chinese copy and archiving the final completion-line task

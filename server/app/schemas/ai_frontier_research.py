@@ -500,6 +500,9 @@ class AiHotTrackerRunEvaluationResponse(BaseModel):
     delta: AiHotTrackerTrackingRunDelta
     agent_trace: list[AiHotTrackerAgentRoleTrace] = Field(default_factory=list)
     quality_checks: list[AiHotTrackerJudgmentFinding] = Field(default_factory=list)
+    judgment_findings: list[AiHotTrackerJudgmentFinding] = Field(default_factory=list)
+    brief_alignment_checks: list[AiHotTrackerJudgmentFinding] = Field(default_factory=list)
+    follow_up_grounding_checks: list[AiHotTrackerJudgmentFinding] = Field(default_factory=list)
 
 
 class AiHotTrackerTrackingRunResponse(BaseModel):

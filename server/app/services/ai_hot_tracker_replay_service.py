@@ -278,8 +278,8 @@ def _evaluate_step(
             _finding(
                 code=f"merged_group_{'-'.join(expected_group)}",
                 passed=matched_cluster is not None,
-                passed_summary="同事件来源被保守合并到同一信号。",
-                failed_summary="同事件来源没有按预期合并到同一信号。",
+                passed_summary="同一事件来源被保守合并到同一信号。",
+                failed_summary="同一事件来源没有按预期合并到同一信号。",
                 details={
                     "expected_group": list(expected_group),
                     "matched_cluster": matched_cluster,
@@ -301,6 +301,7 @@ def _evaluate_step(
         )
         if memory is None:
             continue
+
         if memory_expectation.continuity_state is not None:
             findings.append(
                 _finding(
@@ -315,6 +316,7 @@ def _evaluate_step(
                     },
                 )
             )
+
         if memory_expectation.activity_state is not None:
             findings.append(
                 _finding(
@@ -329,6 +331,7 @@ def _evaluate_step(
                     },
                 )
             )
+
         if memory_expectation.streak_count is not None:
             findings.append(
                 _finding(
@@ -343,6 +346,7 @@ def _evaluate_step(
                     },
                 )
             )
+
         if memory_expectation.has_superseded_by_event_id is not None:
             has_superseded = bool(memory.superseded_by_event_id)
             findings.append(
@@ -366,7 +370,10 @@ def _evaluate_step(
 def _build_replay_cases() -> list[AiHotTrackerReplayCaseSpec]:
     now = datetime(2026, 4, 24, 10, 0, tzinfo=UTC)
     default_profile = AiHotTrackerTrackingProfile()
-    research_threshold_profile = AiHotTrackerTrackingProfile(alert_threshold=2, enabled_categories=["research"])
+    research_threshold_profile = AiHotTrackerTrackingProfile(
+        alert_threshold=2,
+        enabled_categories=["research"],
+    )
 
     official_vs_open_source_catalog = [
         _source_definition(
@@ -426,7 +433,7 @@ def _build_replay_cases() -> list[AiHotTrackerReplayCaseSpec]:
         AiHotTrackerReplayCaseSpec(
             case_id="official-impact-beats-old-open-source",
             title="官方高影响更新应压过老旧开源 release",
-            description="新鲜且高影响的官方产品信号不应被旧的高权重开源更新压住。",
+            description="新鲜且高影响的官方产品信号不应被老旧的高权重开源更新压住。",
             source_catalog=official_vs_open_source_catalog,
             tracking_profile=default_profile,
             reference_time=now,

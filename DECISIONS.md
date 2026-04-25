@@ -2135,10 +2135,10 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: rename the visible module from AI Frontier Research to AI Hot Tracker
-- Context: after the lighter post-Stage-K workbench cleanup, the visible module still carried the older `AI 鍓嶆部鐮旂┒` framing, and the product home still looked like a generic internal shell rather than a focused product entry surface.
-- Choice: rename the visible module product name from `AI 鍓嶆部鐮旂┒` to `AI 鐑偣杩借釜`, use `AI Signal Tracker` as the English subtitle, remove leftover `Research` wording from the main entry surfaces, and redesign the product home plus the module workbench around that narrower identity.
+- Context: after the lighter post-Stage-K workbench cleanup, the visible module still carried the older `AI 前沿研究` framing, and the product home still looked like a generic internal shell rather than a focused product entry surface.
+- Choice: rename the visible module product name from `AI 前沿研究` to `AI 热点追踪`, use `AI Signal Tracker` as the English subtitle, remove leftover `Research` wording from the main entry surfaces, and redesign the product home plus the module workbench around that narrower identity.
 - Why: the product needs a sharper, more external-facing identity so the module reads like one real product surface instead of one leftover generic Research shell.
-- Impact: current user-facing entry surfaces, workbench labels, and control-plane docs should now treat `AI 鐑偣杩借釜` as the visible product name while backend module types remain unchanged.
+- Impact: current user-facing entry surfaces, workbench labels, and control-plane docs should now treat `AI 热点追踪` as the visible product name while backend module types remain unchanged.
 - Related Task: `tasks/ai-hot-tracker-rename-and-surface-reframe.md`
 - Supersedes:
 
@@ -2166,10 +2166,10 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: rebuild AI hot tracker around one real content pipeline
-- Context: the visible `AI 鐑偣杩借釜` surface had already been narrowed and reframed, but its primary content path still
+- Context: the visible `AI 热点追踪` surface had already been narrowed and reframed, but its primary content path still
   depended on one answer-first MCP/chat flow plus shallow output post-processing. That made reports feel like internal
   field dumps instead of current, structured tracking briefs.
-- Choice: start one bounded rebuild of `AI 鐑偣杩借釜` around three explicit layers: trusted external source intake, one
+- Choice: start one bounded rebuild of `AI 热点追踪` around three explicit layers: trusted external source intake, one
   structured normalized source-item middle layer, and one structured report-generation path that the frontend consumes
   directly.
 - Why: the product should first solve whether it can stably fetch current external information and turn that into a real
@@ -2205,7 +2205,7 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: fix saved-record follow-up shape at the write path and normalize historical data
-- Context: `AI 鐑偣杩借釜` saved records had drifted into two shapes: new code sometimes persisted `source_set.follow_ups`
+- Context: `AI 热点追踪` saved records had drifted into two shapes: new code sometimes persisted `source_set.follow_ups`
   as missing or `None`, while older records already stored that historical inconsistency. A response-time fallback could
   hide the issue, but that kept the underlying contract wrong and made future debugging harder.
 - Choice: make the write path always persist `source_set.follow_ups` as a real list, add one bounded Alembic backfill
@@ -2331,8 +2331,8 @@ Append-only log. Add new entries at the bottom.
 - Status: Confirmed
 - Source: Human + Implementation
 - Topic: focus active productization on AI hot tracker as one continuous tracking agent
-- Context: after the content-pipeline rebuild, `AI 鐑偣杩借釜` could already fetch real sources and produce one structured report, but the product still behaved like a one-shot generation page. The confirmed next direction is to stop spreading implementation effort across all three modules and instead turn the first module into one real, durable agent system before broadening again.
-- Choice: keep `Support Copilot` and `Job Assistant` visible but implementation-frozen for now, and model `AI 鐑偣杩借釜` as a workspace-level tracking container with one default `tracking_profile`, durable `tracking_run` persistence, run-to-run delta summaries, and follow-up threads grounded to the selected run and its sources.
+- Context: after the content-pipeline rebuild, `AI 热点追踪` could already fetch real sources and produce one structured report, but the product still behaved like a one-shot generation page. The confirmed next direction is to stop spreading implementation effort across all three modules and instead turn the first module into one real, durable agent system before broadening again.
+- Choice: keep `Support Copilot` and `Job Assistant` visible but implementation-frozen for now, and model `AI 热点追踪` as a workspace-level tracking container with one default `tracking_profile`, durable `tracking_run` persistence, run-to-run delta summaries, and follow-up threads grounded to the selected run and its sources.
 - Why: this is the shortest path to a real agent product with natural coverage of source intake, structured generation, memory, grounding, and later ranking or novelty logic, without forcing premature multi-agent orchestration or artificial feature sprawl.
 - Impact: the visible hot-tracker surface now reads and writes durable tracking runs instead of relying on an optional save-first report path, backend storage now includes persisted tracking-run state, and the next bounded task should deepen decision logic through ranking, clustering, and temporal diff rather than reopening broad surface work.
 - Related Task: `tasks/archive/ai-hot-tracker-tracking-agent-foundation.md`
@@ -2460,5 +2460,33 @@ Append-only log. Add new entries at the bottom.
 - Why: the first module needs one visible internal quality loop. Replay-based calibration should be inspectable inside the same product shell where single-run evaluation already lives, otherwise judgment tuning stays too disconnected from the actual module surface.
 - Impact: hot-tracker internal evaluation now shows both run-specific judgment checks and suite-level replay calibration, giving future scoring or clustering changes one clearer inspection path before they reach live users.
 - Related Task: `tasks/archive/ai-hot-tracker-replay-evaluation-surface.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-24-153
+- Date: 2026-04-24
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: make AI hot tracker run evaluation judge brief alignment against delta and cluster-level decisions
+- Context: the hot-tracker module already had replay calibration and run-level evaluation, but it still lacked one explicit check that the saved consumer brief remained honest to the underlying decision layer. Without that guardrail, a run could hide a high-priority cluster, overstate priority, merge multiple events into one signal, or drift away from the real delta state while still looking polished.
+- Choice: extend hot-tracker run evaluation with deterministic brief-alignment checks for change-state consistency, high-priority cluster visibility, single-cluster signal consistency, and signal priority or change-type alignment against the underlying clustered decisions.
+- Why: the first module should be inspectable as a real judgment system, not only as a grounded-source system. The saved brief must stay faithful to the same decision layer that ranking, clustering, delta, and replay calibration already evaluate.
+- Impact: internal evaluation can now distinguish “the sources are grounded” from “the brief is actually honest,” future hot-tracker brief tuning has a more precise failure surface, and consumer-facing polish is less likely to hide judgment drift.
+- Related Task: `tasks/archive/ai-hot-tracker-brief-alignment-quality-checks.md`
+- Supersedes:
+
+## Decision Entry
+
+- ID: DEC-2026-04-25-154
+- Date: 2026-04-25
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: close AI hot tracker stabilization on one clean UTF-8 Chinese contract and one archived completion-line task
+- Context: the hot-tracker product loop, replay calibration, and evaluation surface were already in place, but the repo still sat in an unstable middle state. The remaining risk was no longer missing capability; it was damaged Chinese strings in shared schema defaults, replay findings, and follow-up prompts plus one unfinished root task file that kept the control plane looking half-done.
+- Choice: normalize the remaining hot-tracker schema defaults, follow-up prompts, replay findings, and task control-plane docs onto one clean UTF-8 Chinese contract; keep the existing public APIs unchanged; and archive the final completion-line task once the backend and frontend verification gates pass.
+- Why: the first module is now both the main product and the main code-learning surface. It should stop looking like an active repair zone before the project moves on to any next module or deeper tuning.
+- Impact: hot-tracker follow-up and replay evaluation are now readable without damaged strings, the control-plane docs point at one finished stabilization slice instead of an active broken task, and the module can move from “mid-cleanup” to “stable baseline ready for either judgment tuning or the next module decision.”
+- Related Task: `tasks/archive/ai-hot-tracker-final-completion-line.md`
 - Supersedes:
 

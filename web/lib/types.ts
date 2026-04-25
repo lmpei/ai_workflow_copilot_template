@@ -1045,6 +1045,9 @@ export type AiHotTrackerRunEvaluationRecord = {
   delta: AiHotTrackerTrackingRunDeltaRecord;
   agent_trace: AiHotTrackerAgentRoleTraceRecord[];
   quality_checks: AiHotTrackerJudgmentFindingRecord[];
+  judgment_findings: AiHotTrackerJudgmentFindingRecord[];
+  brief_alignment_checks: AiHotTrackerJudgmentFindingRecord[];
+  follow_up_grounding_checks: AiHotTrackerJudgmentFindingRecord[];
 };
 
 export type AiHotTrackerReplayStepEvaluationRecord = {

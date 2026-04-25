@@ -166,6 +166,14 @@ def _brief_payload(*signal_ids: str) -> dict[str, object]:
     }
 
 
+def _quality_checks_by_code(payload: dict[str, object]) -> dict[str, dict[str, object]]:
+    return {
+        check["code"]: check
+        for check in payload["quality_checks"]
+        if isinstance(check, dict) and isinstance(check.get("code"), str)
+    }
+
+
 def test_ai_hot_tracker_runs_persist_and_diff_between_rounds(
     client: TestClient,
     monkeypatch: MonkeyPatch,
@@ -404,6 +412,121 @@ def test_ai_hot_tracker_state_and_evaluation_endpoints_expose_runtime_context(
     assert evaluation_payload["ranked_items"][0]["score_breakdown"]["impact"] > 0
     assert evaluation_payload["delta"]["change_state"] == "first_run"
     assert evaluation_payload["quality_checks"]
+    checks = _quality_checks_by_code(evaluation_payload)
+    assert checks["brief_change_state_matches_delta"]["status"] == "pass"
+    assert checks["high_priority_clusters_surface_in_brief"]["status"] == "pass"
+    assert checks["brief_signal_cluster_consistency"]["status"] == "pass"
+    assert checks["brief_signal_priority_alignment"]["status"] == "pass"
+    assert checks["brief_signal_change_type_alignment"]["status"] == "pass"
+
+
+def test_ai_hot_tracker_evaluation_flags_brief_alignment_failures(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="brief-check@example.com", name="Brief Check")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    workspace_id = _create_workspace(client, auth["token"])
+    now = datetime(2026, 4, 21, 8, 0, tzinfo=UTC)
+
+    monkeypatch.setattr(
+        ai_hot_tracker_tracking_service,
+        "fetch_ai_hot_tracker_source_items",
+        lambda total_limit=24: _build_intake(
+            _build_item(
+                item_id="source-1",
+                source_id="openai-news",
+                source_label="OpenAI News",
+                category="models",
+                title="OpenAI launches ChatGPT agent tools",
+                url="https://openai.com/news/chatgpt-agent-tools",
+                summary="OpenAI introduces agent tools for ChatGPT users.",
+                published_at=now,
+            ),
+            _build_item(
+                item_id="source-2",
+                source_id="arxiv-cs-ai",
+                source_label="arXiv cs.AI",
+                category="research",
+                source_family="research",
+                title="New Agent Training Paper",
+                url="https://arxiv.org/abs/2604.00001",
+                summary="Shows stronger coordination behavior.",
+                published_at=now,
+            ),
+            _build_item(
+                item_id="source-4",
+                source_id="arxiv-cs-ai",
+                source_label="arXiv cs.AI",
+                category="research",
+                source_family="research",
+                title="Tool Reliability Study",
+                url="https://arxiv.org/abs/2604.00002",
+                summary="Tracks reliability changes in multi-step tool use.",
+                published_at=now - timedelta(hours=1),
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        ai_hot_tracker_report_service,
+        "get_chat_model_interface",
+        lambda: FakeJsonModelInterface(
+            {
+                "headline": "Research still dominates this round",
+                "summary": "This draft intentionally misaligns with the internal decision layer.",
+                "change_state": "steady_state",
+                "signals": [
+                    {
+                        "title": "Two research threads are one signal",
+                        "summary": "This merges multiple research items into one surface signal.",
+                        "why_now": "The draft intentionally blends separate evidence.",
+                        "impact": "学习者会最先感受到这些变化。",
+                        "audience": ["学习者"],
+                        "change_type": "continuing",
+                        "priority_level": "medium",
+                        "source_item_ids": ["source-2", "source-4"],
+                    },
+                    {
+                        "title": "Research is the top story",
+                        "summary": "This overstates the research signal and hides the product launch.",
+                        "why_now": "The draft intentionally suppresses the strongest product signal.",
+                        "impact": "开发者会立刻受到影响。",
+                        "audience": ["开发者"],
+                        "change_type": "continuing",
+                        "priority_level": "high",
+                        "source_item_ids": ["source-2"],
+                    },
+                ],
+                "keep_watching": [
+                    {
+                        "title": "Product rollout",
+                        "reason": "The strongest product signal is incorrectly pushed out of the main brief.",
+                        "source_item_ids": ["source-1"],
+                    }
+                ],
+                "blindspots": ["This draft keeps one blindspot just to stay schema-valid."],
+            }
+        ),
+    )
+
+    run_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+        headers=headers,
+    )
+    assert run_response.status_code == 201
+    run_id = run_response.json()["id"]
+
+    evaluation_response = client.get(
+        f"/api/v1/ai-hot-tracker/runs/{run_id}/evaluation",
+        headers=headers,
+    )
+    assert evaluation_response.status_code == 200
+    checks = _quality_checks_by_code(evaluation_response.json())
+    assert checks["brief_change_state_matches_delta"]["status"] == "pass"
+    assert checks["high_priority_clusters_surface_in_brief"]["status"] == "fail"
+    assert checks["brief_signal_cluster_consistency"]["status"] == "fail"
+    assert checks["brief_signal_priority_alignment"]["status"] == "fail"
+    assert checks["brief_signal_change_type_alignment"]["status"] == "fail"
 
 
 def test_ai_hot_tracker_replay_evaluation_endpoint_exposes_suite_summary(

@@ -714,6 +714,139 @@ function renderFindingStatusLabel(status: AiHotTrackerJudgmentFindingRecord["sta
   return labelMap[status];
 }
 
+function renderReplayCaseTitle(caseId: string, fallback: string) {
+  const labelMap: Record<string, string> = {
+    "official-impact-beats-old-open-source": "官方高影响更新应压过老旧开源 release",
+    "official-and-media-merge-same-event": "官方发布与媒体跟进应保守合并为同一事件",
+    "steady-state-repeated-signal-keeps-streak": "重复出现的同一信号应进入 steady state 并累积 streak",
+    "threshold-driven-meaningful-update": "达到阈值的两个中高优先级新信号应触发提醒",
+    "replacement-signal-creates-superseded-memory": "新事件替代旧事件时应显式标记 superseded",
+  };
+
+  return labelMap[caseId] ?? fallback;
+}
+
+function renderReplayCaseDescription(caseId: string, fallback: string) {
+  const labelMap: Record<string, string> = {
+    "official-impact-beats-old-open-source":
+      "新鲜且高影响的官方产品信号不应被旧的高权重开源更新压住。",
+    "official-and-media-merge-same-event":
+      "同一事件的官方说明和精选媒体跟进不应拆成两个完全独立的主信号。",
+    "steady-state-repeated-signal-keeps-streak":
+      "第二轮同信号重复出现时，不应继续触发重要变化提醒，但要保留连续记忆。",
+    "threshold-driven-meaningful-update":
+      "meaningful update 不应只看单个高优先级信号，也要支持阈值驱动。",
+    "replacement-signal-creates-superseded-memory":
+      "热点不只是出现或消失，还需要表达旧信号被新信号替代。",
+  };
+
+  return labelMap[caseId] ?? fallback;
+}
+
+function renderReplayFindingSummary(finding: AiHotTrackerJudgmentFindingRecord) {
+  const labelMap: Record<string, string> = {
+    top_ranked_item: "最高优先信号符合回放预期",
+    cluster_count: "聚类数量符合回放预期",
+    delta_change_state: "变化状态符合回放预期",
+    delta_should_notify: "提醒判断符合回放预期",
+    delta_notify_reason: "提醒原因符合回放预期",
+  };
+
+  if (finding.code.startsWith("merged_group_")) {
+    return "同一事件来源已按预期合并";
+  }
+  if (finding.code.startsWith("memory_presence_")) {
+    return "事件记忆存在";
+  }
+  if (finding.code.startsWith("memory_continuity_")) {
+    return "事件记忆连续性符合预期";
+  }
+  if (finding.code.startsWith("memory_activity_")) {
+    return "事件记忆活动状态符合预期";
+  }
+  if (finding.code.startsWith("memory_streak_")) {
+    return "事件记忆 streak 符合预期";
+  }
+  if (finding.code.startsWith("memory_superseded_")) {
+    return "事件替代关系符合预期";
+  }
+
+  return labelMap[finding.code] ?? finding.summary;
+}
+
+function formatFindingDetailValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "--";
+  }
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    if (!value.length) {
+      return "[]";
+    }
+    return value.map((item) => formatFindingDetailValue(item)).join("、");
+  }
+
+  return JSON.stringify(value);
+}
+
+function FindingList({
+  findings,
+  emptyLabel,
+  summaryOverride,
+}: {
+  findings: AiHotTrackerJudgmentFindingRecord[];
+  emptyLabel: string;
+  summaryOverride?: (finding: AiHotTrackerJudgmentFindingRecord) => string;
+}) {
+  if (!findings.length) {
+    return <div style={{ color: "#64748b", fontSize: 14 }}>{emptyLabel}</div>;
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      {findings.map((finding) => (
+        <div
+          key={finding.code}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.72)",
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            borderRadius: 18,
+            display: "grid",
+            gap: 10,
+            padding: "14px 16px",
+          }}
+        >
+          <div
+            style={{
+              alignItems: "center",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              justifyContent: "space-between",
+            }}
+          >
+            <strong style={{ color: "#0f172a", fontSize: 15 }}>
+              {summaryOverride ? summaryOverride(finding) : finding.summary}
+            </strong>
+            <span style={findingBadgeStyle(finding.status)}>
+              {renderFindingStatusLabel(finding.status)}
+            </span>
+          </div>
+          {Object.keys(finding.details).length ? (
+            <div style={{ color: "#64748b", fontSize: 12, lineHeight: 1.8 }}>
+              {Object.entries(finding.details)
+                .map(([key, value]) => `${key}: ${formatFindingDetailValue(value)}`)
+                .join(" · ")}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function buildFollowUpGroundingSummary(entry: AiFrontierFollowUpEntryRecord) {
   const parts: string[] = [];
   if (entry.grounding_source_item_ids?.length) {

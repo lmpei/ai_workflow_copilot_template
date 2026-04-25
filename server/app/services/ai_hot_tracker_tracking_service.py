@@ -354,6 +354,55 @@ def _store_tracking_state(
     )
 
 
+def _priority_rank(value: str) -> int:
+    return {"low": 0, "medium": 1, "high": 2}.get(value, 1)
+
+
+def _resolve_expected_signal_change_type(cluster: AiHotTrackerSignalCluster) -> str:
+    if cluster.is_new:
+        return "new"
+    if cluster.is_cooling:
+        return "cooling"
+    return "continuing"
+
+
+_BRIEF_ALIGNMENT_CHECK_CODES = {
+    "brief_change_state_matches_delta",
+    "brief_signals_have_grounding_sources",
+    "high_priority_clusters_surface_in_brief",
+    "brief_signal_cluster_consistency",
+    "brief_signal_priority_alignment",
+    "brief_signal_change_type_alignment",
+}
+
+_FOLLOW_UP_GROUNDING_CHECK_CODES = {
+    "follow_up_grounding_visibility",
+}
+
+
+def _partition_run_quality_checks(
+    findings: list[AiHotTrackerJudgmentFinding],
+) -> tuple[
+    list[AiHotTrackerJudgmentFinding],
+    list[AiHotTrackerJudgmentFinding],
+    list[AiHotTrackerJudgmentFinding],
+]:
+    judgment_findings: list[AiHotTrackerJudgmentFinding] = []
+    brief_alignment_checks: list[AiHotTrackerJudgmentFinding] = []
+    follow_up_grounding_checks: list[AiHotTrackerJudgmentFinding] = []
+
+    for finding in findings:
+        if finding.code in _BRIEF_ALIGNMENT_CHECK_CODES:
+            brief_alignment_checks.append(finding)
+            continue
+        if finding.code in _FOLLOW_UP_GROUNDING_CHECK_CODES:
+            follow_up_grounding_checks.append(finding)
+            continue
+        judgment_findings.append(finding)
+
+    return judgment_findings, brief_alignment_checks, follow_up_grounding_checks
+
+
 def _build_run_quality_checks(
     *,
     run: AiHotTrackerTrackingRunResponse,
@@ -362,6 +411,23 @@ def _build_run_quality_checks(
 ) -> list[AiHotTrackerJudgmentFinding]:
     findings: list[AiHotTrackerJudgmentFinding] = []
     source_item_ids = {item.id for item in run.source_items}
+    cluster_by_item_id = {
+        item_id: cluster
+        for cluster in clustered_signals
+        for item_id in cluster.source_item_ids
+    }
+    source_set = run.source_set if isinstance(run.source_set, dict) else {}
+    raw_candidate_cluster_ids = source_set.get("candidate_cluster_ids", [])
+    candidate_cluster_ids = {
+        cluster_id
+        for cluster_id in raw_candidate_cluster_ids
+        if isinstance(cluster_id, str)
+    }
+    evaluation_clusters = (
+        [cluster for cluster in clustered_signals if cluster.cluster_id in candidate_cluster_ids]
+        if candidate_cluster_ids
+        else clustered_signals
+    )
 
     expected_new_count = sum(1 for cluster in clustered_signals if cluster.is_new)
     expected_continuing_count = sum(1 for cluster in clustered_signals if cluster.is_continuing)
@@ -395,6 +461,22 @@ def _build_run_quality_checks(
         )
     )
 
+    findings.append(
+        AiHotTrackerJudgmentFinding(
+            code="brief_change_state_matches_delta",
+            status="pass" if run.output.change_state == run.delta.change_state else "fail",
+            summary=(
+                "简报变化状态与 delta 判断一致。"
+                if run.output.change_state == run.delta.change_state
+                else "简报变化状态与 delta 判断不一致，产品层表达不够诚实。"
+            ),
+            details={
+                "brief_change_state": run.output.change_state,
+                "delta_change_state": run.delta.change_state,
+            },
+        )
+    )
+
     invalid_signal_titles = [
         signal.title
         for signal in run.output.signals
@@ -410,6 +492,149 @@ def _build_run_quality_checks(
                 else "有主信号缺少来源锚点，简报与内部判断没有完全对齐。"
             ),
             details={"invalid_signal_titles": invalid_signal_titles},
+        )
+    )
+
+    surfaced_high_priority_cluster_ids: set[str] = set()
+    multi_cluster_signal_titles: list[str] = []
+    unclustered_signal_titles: list[str] = []
+    overstated_priority_signals: list[dict[str, object]] = []
+    understated_priority_signals: list[dict[str, object]] = []
+    change_type_mismatches: list[dict[str, object]] = []
+
+    for signal in run.output.signals:
+        referenced_clusters: list[AiHotTrackerSignalCluster] = []
+        seen_cluster_ids: set[str] = set()
+        for item_id in signal.source_item_ids:
+            cluster = cluster_by_item_id.get(item_id)
+            if cluster is None or cluster.cluster_id in seen_cluster_ids:
+                continue
+            seen_cluster_ids.add(cluster.cluster_id)
+            referenced_clusters.append(cluster)
+
+        if not referenced_clusters:
+            unclustered_signal_titles.append(signal.title)
+            continue
+
+        for cluster in referenced_clusters:
+            if cluster.priority_level == "high":
+                surfaced_high_priority_cluster_ids.add(cluster.cluster_id)
+
+        if len(referenced_clusters) > 1:
+            multi_cluster_signal_titles.append(signal.title)
+
+        expected_priority = max(
+            referenced_clusters,
+            key=lambda cluster: _priority_rank(cluster.priority_level),
+        ).priority_level
+        signal_priority_rank = _priority_rank(signal.priority_level)
+        expected_priority_rank = _priority_rank(expected_priority)
+        if signal_priority_rank > expected_priority_rank:
+            overstated_priority_signals.append(
+                {
+                    "title": signal.title,
+                    "signal_priority": signal.priority_level,
+                    "expected_priority": expected_priority,
+                }
+            )
+        elif signal_priority_rank < expected_priority_rank:
+            understated_priority_signals.append(
+                {
+                    "title": signal.title,
+                    "signal_priority": signal.priority_level,
+                    "expected_priority": expected_priority,
+                }
+            )
+
+        expected_change_types = {
+            _resolve_expected_signal_change_type(cluster)
+            for cluster in referenced_clusters
+        }
+        if len(expected_change_types) == 1:
+            expected_change_type = next(iter(expected_change_types))
+            if signal.change_type != expected_change_type:
+                change_type_mismatches.append(
+                    {
+                        "title": signal.title,
+                        "signal_change_type": signal.change_type,
+                        "expected_change_type": expected_change_type,
+                    }
+                )
+
+    high_priority_clusters = [
+        cluster for cluster in evaluation_clusters if cluster.priority_level == "high"
+    ]
+    missing_high_priority_clusters = [
+        cluster.title
+        for cluster in high_priority_clusters
+        if cluster.cluster_id not in surfaced_high_priority_cluster_ids
+    ]
+    findings.append(
+        AiHotTrackerJudgmentFinding(
+            code="high_priority_clusters_surface_in_brief",
+            status="pass" if not missing_high_priority_clusters else "fail",
+            summary=(
+                "高优先级候选信号都出现在主简报里。"
+                if not missing_high_priority_clusters
+                else "有高优先级候选没有出现在主简报里。"
+            ),
+            details={
+                "high_priority_cluster_titles": [cluster.title for cluster in high_priority_clusters],
+                "missing_high_priority_cluster_titles": missing_high_priority_clusters,
+            },
+        )
+    )
+
+    signal_cluster_status = "pass"
+    signal_cluster_summary = "每条主信号都绑定到单一事件簇。"
+    if multi_cluster_signal_titles:
+        signal_cluster_status = "fail"
+        signal_cluster_summary = "有主信号把多个事件簇混在一起，简报表达过于松散。"
+    elif unclustered_signal_titles:
+        signal_cluster_status = "warn"
+        signal_cluster_summary = "有主信号虽然挂了来源，但没有映射到当前事件簇。"
+    findings.append(
+        AiHotTrackerJudgmentFinding(
+            code="brief_signal_cluster_consistency",
+            status=signal_cluster_status,
+            summary=signal_cluster_summary,
+            details={
+                "multi_cluster_signal_titles": multi_cluster_signal_titles,
+                "unclustered_signal_titles": unclustered_signal_titles,
+            },
+        )
+    )
+
+    signal_priority_status = "pass"
+    signal_priority_summary = "主信号的优先级与底层判断一致。"
+    if overstated_priority_signals:
+        signal_priority_status = "fail"
+        signal_priority_summary = "有主信号在简报里夸大了优先级。"
+    elif understated_priority_signals:
+        signal_priority_status = "warn"
+        signal_priority_summary = "有主信号在简报里压低了优先级，可能削弱重点。"
+    findings.append(
+        AiHotTrackerJudgmentFinding(
+            code="brief_signal_priority_alignment",
+            status=signal_priority_status,
+            summary=signal_priority_summary,
+            details={
+                "overstated_signals": overstated_priority_signals,
+                "understated_signals": understated_priority_signals,
+            },
+        )
+    )
+
+    findings.append(
+        AiHotTrackerJudgmentFinding(
+            code="brief_signal_change_type_alignment",
+            status="pass" if not change_type_mismatches else "fail",
+            summary=(
+                "主信号的变化类型与底层簇状态一致。"
+                if not change_type_mismatches
+                else "有主信号的变化类型与底层簇状态不一致。"
+            ),
+            details={"mismatched_signals": change_type_mismatches},
         )
     )
 
@@ -454,13 +679,13 @@ def _build_run_quality_checks(
         or any(signal.confidence == "low" for signal in run.output.signals)
     )
     blindspot_check_status = "pass"
-    blindspot_summary = "本轮盲区说明与当前证据状态一致。"
+    blindspot_summary = "本轮盲点说明与当前证据状态一致。"
     if needs_blindspots and not run.output.blindspots:
         blindspot_check_status = "fail"
-        blindspot_summary = "当前证据明显不完整，但简报没有暴露 blindspots。"
+        blindspot_summary = "当前证据明显不完整，但简报没有暴露盲点。"
     elif not needs_blindspots and not run.output.blindspots:
         blindspot_check_status = "warn"
-        blindspot_summary = "本轮没有额外 blindspots，这轮判断需要人工确认是否过于乐观。"
+        blindspot_summary = "本轮没有额外盲点，这轮判断需要人工确认是否过于乐观。"
     findings.append(
         AiHotTrackerJudgmentFinding(
             code="blindspot_honesty",
@@ -785,7 +1010,7 @@ def _load_agent_trace_from_run(
             summary=(
                 f"本轮产出 {len(run.output.signals)} 条主信号、"
                 f"{len(run.output.keep_watching)} 条继续观察，"
-                f"{len(run.output.blindspots)} 条盲区提示。"
+                f"{len(run.output.blindspots)} 条盲点提示。"
             ),
             status="degraded" if run.degraded_reason else "completed",
             details={
@@ -973,6 +1198,14 @@ def get_ai_hot_tracker_run_evaluation(
 
     clustered_signals = _load_signal_clusters_from_run(run)
     event_memories = _load_event_memories_from_run(run)
+    quality_checks = _build_run_quality_checks(
+        run=run,
+        clustered_signals=clustered_signals,
+        event_memories=event_memories,
+    )
+    judgment_findings, brief_alignment_checks, follow_up_grounding_checks = (
+        _partition_run_quality_checks(quality_checks)
+    )
 
     return AiHotTrackerRunEvaluationResponse(
         run_id=run.id,
@@ -983,11 +1216,10 @@ def get_ai_hot_tracker_run_evaluation(
         output=run.output,
         delta=run.delta,
         agent_trace=_load_agent_trace_from_run(run),
-        quality_checks=_build_run_quality_checks(
-            run=run,
-            clustered_signals=clustered_signals,
-            event_memories=event_memories,
-        ),
+        quality_checks=quality_checks,
+        judgment_findings=judgment_findings,
+        brief_alignment_checks=brief_alignment_checks,
+        follow_up_grounding_checks=follow_up_grounding_checks,
     )
 
 
