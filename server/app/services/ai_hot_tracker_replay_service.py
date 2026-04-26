@@ -4,11 +4,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 
-from app.schemas.ai_hot_tracker_replay import (
-    AiHotTrackerReplayCaseEvaluationResponse,
-    AiHotTrackerReplayEvaluationResponse,
-    AiHotTrackerReplayStepEvaluationResponse,
-)
 from app.schemas.ai_frontier_research import (
     AiHotTrackerJudgmentFinding,
     AiHotTrackerSignalMemoryRecord,
@@ -16,6 +11,11 @@ from app.schemas.ai_frontier_research import (
     AiHotTrackerSourceItem,
     AiHotTrackerTrackingProfile,
     AiHotTrackerTrackingRunDelta,
+)
+from app.schemas.ai_hot_tracker_replay import (
+    AiHotTrackerReplayCaseEvaluationResponse,
+    AiHotTrackerReplayEvaluationResponse,
+    AiHotTrackerReplayStepEvaluationResponse,
 )
 from app.services.ai_hot_tracker_decision_service import (
     build_signal_decision_result,

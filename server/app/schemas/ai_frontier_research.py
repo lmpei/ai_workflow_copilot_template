@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, model_validator
 from app.models.ai_frontier_research_record import AiFrontierResearchRecord
 from app.models.ai_hot_tracker_tracking_run import AiHotTrackerTrackingRun
 
-
 AI_HOT_TRACKER_SOURCE_CATEGORIES = (
     "models",
     "products",

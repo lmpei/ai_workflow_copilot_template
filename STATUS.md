@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-25
+- Last Updated: 2026-04-26
 
 ## Project Mode
 
@@ -67,6 +67,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - the long-form end-state definition for `AI hot tracker` now lives in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`, while the older frontier-research contract remains a historical pointer only
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
+  - the latest `main` branch lint regression that blocked `Deploy Weave` has been cleared locally, with backend lint plus full backend regression passing again before repush
 
 ## Verification Status
 
@@ -85,7 +86,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
 
-- Last Verified At: 2026-04-25
+- Last Verified At: 2026-04-26
 
 ## Current Blockers
 
@@ -95,11 +96,11 @@ Current state only. Keep this file short, current, and action-oriented.
 
 1. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
 2. if the first module continues, use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior
-3. if the first module continues, use the brief-alignment checks to tune saved-brief wording and priority consistency without reopening product scope
+3. after the repush, confirm that GitHub `CI -> Deploy Weave` has reached production before starting the next bounded slice
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-final-definition-source-of-truth.md`
+- `tasks/archive/fix-ci-and-unblock-weave-deploy.md`
 
 ## Recent Decisions
 
