@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -21,6 +22,7 @@ import {
   getAiHotTrackerReplayEvaluation,
   createWorkspaceAiHotTrackerRun,
   deleteAiHotTrackerRun,
+  getAiHotTrackerRun,
   getAiHotTrackerRunEvaluation,
   getWorkspaceAiHotTrackerState,
   isApiClientError,
@@ -122,6 +124,12 @@ const SOURCE_FAMILY_MARK: Record<AiHotTrackerSourceItemRecord["source_family"], 
   research: "研",
   open_source: "源",
 };
+
+const TERMINAL_RUN_STATUSES = new Set<AiHotTrackerTrackingRunRecord["status"]>([
+  "completed",
+  "degraded",
+  "failed",
+]);
 
 const defaultTrackingProfile: AiHotTrackerTrackingProfileRecord = {
   alert_threshold: 1,
@@ -439,7 +447,13 @@ function HistoryRow({
           }}
         >
           <span>{formatTime(run.updated_at)}</span>
-          <span>{CHANGE_STATE_LABEL[run.delta.change_state]}</span>
+          <span>
+            {run.status === "queued"
+              ? "排队中"
+              : run.status === "running"
+                ? "整理中"
+                : CHANGE_STATE_LABEL[run.delta.change_state]}
+          </span>
         </div>
       </button>
 
@@ -913,6 +927,8 @@ export default function AiHotTrackerWorkspace({
     () => orderedRuns.find((run) => run.id === activeRunId) ?? orderedRuns[0] ?? null,
     [activeRunId, orderedRuns],
   );
+  const activeRunIsInProgress = activeRun ? !TERMINAL_RUN_STATUSES.has(activeRun.status) : false;
+  const latestTraceEvent = activeRun?.trace_events.at(-1) ?? null;
 
   useEffect(() => {
     setWorkspaceSnapshot(workspace);
@@ -985,8 +1001,69 @@ export default function AiHotTrackerWorkspace({
     setStreamingReply(null);
   }, [activeRun]);
 
+  const refreshRuntimeState = useCallback(async () => {
+    if (!session) {
+      return;
+    }
+
+    setIsLoadingState(true);
+    try {
+      const nextState = await getWorkspaceAiHotTrackerState(session.accessToken, workspaceId);
+      setStateRecord(nextState);
+    } catch (error) {
+      setErrorMessage(isApiClientError(error) ? error.message : "暂时无法刷新运行状态。");
+    } finally {
+      setIsLoadingState(false);
+    }
+  }, [session, workspaceId]);
+
   useEffect(() => {
-    if (!session || !evaluationMode || !activeRun) {
+    if (!session || !activeRun || TERMINAL_RUN_STATUSES.has(activeRun.status)) {
+      setIsRunning(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsRunning(true);
+
+    const pollRun = async () => {
+      try {
+        const nextRun = await getAiHotTrackerRun(session.accessToken, activeRun.id);
+        if (cancelled) {
+          return;
+        }
+
+        setRuns((previousRuns) =>
+          [nextRun, ...previousRuns.filter((run) => run.id !== nextRun.id)].sort((left, right) =>
+            right.updated_at.localeCompare(left.updated_at),
+          ),
+        );
+
+        if (TERMINAL_RUN_STATUSES.has(nextRun.status)) {
+          setIsRunning(false);
+          await refreshRuntimeState();
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setIsRunning(false);
+          setErrorMessage(isApiClientError(error) ? error.message : "暂时无法刷新这一轮运行状态。");
+        }
+      }
+    };
+
+    const timer = window.setInterval(() => {
+      void pollRun();
+    }, 2500);
+    void pollRun();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [activeRun, refreshRuntimeState, session]);
+
+  useEffect(() => {
+    if (!session || !evaluationMode || !activeRun || !TERMINAL_RUN_STATUSES.has(activeRun.status)) {
       setEvaluation(null);
       return;
     }
@@ -1120,22 +1197,6 @@ export default function AiHotTrackerWorkspace({
     router.replace(suffix ? `${pathname}?${suffix}` : pathname);
   }
 
-  async function refreshRuntimeState() {
-    if (!session) {
-      return;
-    }
-
-    setIsLoadingState(true);
-    try {
-      const nextState = await getWorkspaceAiHotTrackerState(session.accessToken, workspaceId);
-      setStateRecord(nextState);
-    } catch (error) {
-      setErrorMessage(isApiClientError(error) ? error.message : "暂时无法刷新运行状态。");
-    } finally {
-      setIsLoadingState(false);
-    }
-  }
-
   async function handleRunTracking() {
     if (!session) {
       return;
@@ -1153,13 +1214,13 @@ export default function AiHotTrackerWorkspace({
       );
       setActiveRunId(nextRun.id);
       setHistoryOpen(false);
+      setIsRunning(!TERMINAL_RUN_STATUSES.has(nextRun.status));
       await refreshRuntimeState();
     } catch (error) {
+      setIsRunning(false);
       setErrorMessage(
         isApiClientError(error) ? error.message : "这一轮热点获取没有成功。",
       );
-    } finally {
-      setIsRunning(false);
     }
   }
 
@@ -1209,7 +1270,7 @@ export default function AiHotTrackerWorkspace({
   }
 
   async function handleAskFollowUp(presetQuestion?: string) {
-    if (!session || !activeRun) {
+    if (!session || !activeRun || activeRunIsInProgress) {
       return;
     }
 
@@ -1397,6 +1458,31 @@ export default function AiHotTrackerWorkspace({
             value={String(stateRecord?.consecutive_failure_count ?? 0)}
           />
         </section>
+
+        {activeRunIsInProgress ? (
+          <section
+            style={{
+              ...surfaceStyle(),
+              alignItems: "center",
+              display: "flex",
+              gap: 14,
+              justifyContent: "space-between",
+              padding: "14px 18px",
+            }}
+          >
+            <div style={{ display: "grid", gap: 4 }}>
+              <strong style={{ color: "#0f172a", fontSize: 15 }}>
+                {latestTraceEvent?.message ?? "这一轮正在后台整理。"}
+              </strong>
+              <span style={{ color: "#64748b", fontSize: 12 }}>
+                页面可以保持打开，完成后会自动切换到最新简报。
+              </span>
+            </div>
+            <span style={changeStateBadgeStyle("steady_state")}>
+              {activeRun.status === "queued" ? "排队中" : "整理中"}
+            </span>
+          </section>
+        ) : null}
 
         {!activeRun ? (
           <section
@@ -2038,6 +2124,25 @@ export default function AiHotTrackerWorkspace({
                   <span style={{ color: "#64748b", fontSize: 13, lineHeight: 1.75 }}>
                     {activeRun.delta.notify_reason ?? runtimeSummary}
                   </span>
+                  {activeRun.status === "failed" ? (
+                    <div
+                      style={{
+                        backgroundColor: "rgba(185, 28, 28, 0.06)",
+                        border: "1px solid rgba(185, 28, 28, 0.12)",
+                        borderRadius: 16,
+                        color: "#991b1b",
+                        display: "grid",
+                        gap: 6,
+                        padding: "12px 14px",
+                      }}
+                    >
+                      <strong style={{ fontSize: 14 }}>这一轮没有成功完成</strong>
+                      <span style={{ fontSize: 13, lineHeight: 1.7 }}>
+                        {activeRun.failure_stage ? `失败阶段：${activeRun.failure_stage}。` : ""}
+                        {activeRun.error_message ?? "系统已经记录失败原因，请稍后重新获取。"}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -2261,9 +2366,9 @@ export default function AiHotTrackerWorkspace({
                   paddingTop: 16,
                 }}
               >
-                {FOLLOW_UP_PRESETS.map((preset) => (
-                  <button
-                    disabled={isAsking}
+                  {FOLLOW_UP_PRESETS.map((preset) => (
+                    <button
+                      disabled={isAsking || activeRunIsInProgress}
                     key={preset}
                     onClick={() => void handleAskFollowUp(preset)}
                     style={{
@@ -2430,8 +2535,9 @@ export default function AiHotTrackerWorkspace({
                 }}
               >
                 <textarea
+                  disabled={activeRunIsInProgress}
                   onChange={(event) => setFollowUpInput(event.target.value)}
-                  placeholder="继续追问当前简报"
+                  placeholder={activeRunIsInProgress ? "这一轮完成后可以继续追问" : "继续追问当前简报"}
                   rows={3}
                   style={{
                     backgroundColor: "rgba(248, 250, 252, 0.92)",
@@ -2450,10 +2556,10 @@ export default function AiHotTrackerWorkspace({
                   value={followUpInput}
                 />
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <button
-                    disabled={isAsking || !!pendingQuestion || !followUpInput.trim()}
-                    onClick={() => void handleAskFollowUp()}
-                    style={primaryButtonStyle(isAsking || !!pendingQuestion || !followUpInput.trim())}
+                    <button
+                      disabled={activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()}
+                      onClick={() => void handleAskFollowUp()}
+                      style={primaryButtonStyle(activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim())}
                     type="button"
                   >
                     {isAsking ? "发送中…" : "发送"}

@@ -28,7 +28,7 @@ AiHotTrackerSourceParseMode = Literal["rss_feed", "atom_feed", "html_list"]
 AiHotTrackerSourceFamily = Literal["official", "media", "research", "open_source"]
 AiHotTrackerCadence = Literal["manual", "daily", "twice_daily", "weekly"]
 AiHotTrackerRunTriggerKind = Literal["manual", "scheduled"]
-AiHotTrackerRunStatus = Literal["completed", "degraded", "failed"]
+AiHotTrackerRunStatus = Literal["queued", "running", "completed", "degraded", "failed"]
 AiHotTrackerPriorityLevel = Literal["high", "medium", "low"]
 AiHotTrackerSignalConfidence = Literal["high", "medium", "low"]
 AiHotTrackerChangeState = Literal[
@@ -480,6 +480,21 @@ class AiHotTrackerAgentRoleTrace(BaseModel):
     details: dict[str, object] = Field(default_factory=dict)
 
 
+class AiHotTrackerTraceEvent(BaseModel):
+    stage: Literal[
+        "queued",
+        "source_intake",
+        "decision",
+        "report_synthesis",
+        "evaluation",
+        "finalize",
+    ]
+    status: Literal["queued", "running", "completed", "degraded", "failed"]
+    message: str
+    created_at: datetime
+    details: dict[str, object] = Field(default_factory=dict)
+
+
 class AiHotTrackerJudgmentFinding(BaseModel):
     code: str
     status: Literal["pass", "warn", "fail"]
@@ -523,6 +538,11 @@ class AiHotTrackerTrackingRunResponse(BaseModel):
     follow_ups: list[AiFrontierFollowUpEntry] = Field(default_factory=list)
     degraded_reason: str | None = None
     error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    failed_at: datetime | None = None
+    failure_stage: str | None = None
+    trace_events: list[AiHotTrackerTraceEvent] = Field(default_factory=list)
     generated_at: datetime
     created_at: datetime
     updated_at: datetime
@@ -533,6 +553,7 @@ class AiHotTrackerTrackingRunResponse(BaseModel):
         source_items = run.source_items_json if isinstance(run.source_items_json, list) else []
         source_failures = run.source_failures_json if isinstance(run.source_failures_json, list) else []
         follow_ups = run.follow_ups_json if isinstance(run.follow_ups_json, list) else []
+        trace_events = run.trace_events_json if isinstance(run.trace_events_json, list) else []
         return cls(
             id=run.id,
             workspace_id=run.workspace_id,
@@ -568,6 +589,15 @@ class AiHotTrackerTrackingRunResponse(BaseModel):
             ],
             degraded_reason=run.degraded_reason,
             error_message=run.error_message,
+            started_at=run.started_at,
+            completed_at=run.completed_at,
+            failed_at=run.failed_at,
+            failure_stage=run.failure_stage,
+            trace_events=[
+                AiHotTrackerTraceEvent.model_validate(item)
+                for item in trace_events
+                if isinstance(item, dict)
+            ],
             generated_at=run.generated_at,
             created_at=run.created_at,
             updated_at=run.updated_at,

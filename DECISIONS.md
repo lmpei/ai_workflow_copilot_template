@@ -2504,3 +2504,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/ai-hot-tracker-final-definition-source-of-truth.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-07-156
+- Date: 2026-05-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: move manual AI hot tracker generation onto durable background runs with polling
+- Context: the hot-tracker agent loop could complete on the server, but public browsers could still surface `API unreachable` because manual report generation happened inside one long synchronous POST request. That made the product feel unstable even when the backend eventually produced a run.
+- Choice: keep the existing public API paths, but change manual run creation to persist a `queued` tracking run immediately, enqueue a dedicated ARQ worker job, update the same run through `running` into `completed`, `degraded`, or `failed`, and let the frontend poll the run detail endpoint until the terminal status arrives.
+- Why: this makes the first module behave like a real durable agent run instead of a browser-held generation call. It also gives users and internal reviewers visible progress, real failure stages, and trace events without adding a new product surface.
+- Impact: deployed hot-tracker generation no longer depends on a long-lived browser request, failed runs persist honest error details, the worker remains the async execution boundary, and the frontend can show queued/running status while preserving the existing brief plus follow-up product surface.
+- Related Task: `tasks/archive/ai-hot-tracker-background-agent-run.md`
+- Supersedes:
+

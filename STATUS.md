@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-04-26
+- Last Updated: 2026-05-07
 
 ## Project Mode
 
@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the hot-tracker final stabilization slice is complete and the next bounded slice is waiting on human direction
+- none currently; the hot-tracker background-run stabilization slice is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -56,6 +56,8 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker module now also exposes one internal evaluation path so ranking, clustering, delta decisions, source failures, event memory, and brief output quality can be inspected without turning the consumer UI into a debug console
   - the hot-tracker implementation now records one bounded internal agent-role trace (`Scout`, `Resolver`, `Analyst`, `Editor`, `Evaluator`, `Follow-up`) for evaluation reads without exposing those terms on the consumer path
   - the hot-tracker canonical path is now cleaner: the `/ai-hot-tracker/report` alias resolves directly onto tracking-run creation, run-bound follow-up reads one cleaned context contract, and the workspace surface no longer carries broken consumer-facing copy
+  - manual hot-tracker run creation now returns a durable `queued` tracking run immediately and the ARQ worker completes the same canonical agent loop in the background, so deployed browsers no longer need to hold a long POST request while the report is generated
+  - hot-tracker tracking runs now carry lifecycle timestamps, failure stage, and trace events so queued, running, degraded, and failed states are visible through the existing run detail path
   - the hot-tracker runtime state now exposes the latest saved brief timestamp plus the latest meaningful-update timestamp instead of relying only on saved-run presence
   - the hot-tracker event-memory layer now tracks streak count, cooling windows, and replacement linkage so continuing and superseded signals can be inspected explicitly
   - saved hot-tracker follow-up answers now persist bounded grounding metadata, and evaluation reads now return machine-readable quality checks for judgment alignment
@@ -75,6 +77,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - local Docker development still uses polling-based hot reload for backend and frontend edits
   - weave production still deploys through the repo-owned `CI -> deploy` path with retry and rollback visibility
   - `AI hot tracker` now exposes manual run creation, scheduled sweeper evaluation, run listing, run fetch, run delete, and run-bound follow-up on top of the durable tracking-run persistence layer
+  - manual run creation is now background-delivered: the browser receives a queued run, polls the run detail endpoint, and stops polling when the worker marks the run completed, degraded, or failed
   - the hot-tracker backend now persists `ai_hot_tracker_tracking_state` so automatic steady-state scans can update memory without saving noisy duplicate runs
   - report generation now consumes ranked and clustered signal candidates and writes the brief-oriented hot-tracker contract instead of the older research-oriented contract
   - the hot-tracker frontend now reads durable runs directly, shows a consumer-facing brief plus follow-up surface, exposes runtime state and internal evaluation when requested, allows bounded profile edits for cadence, enabled categories, and alert threshold, shows persisted follow-up grounding summaries, and uses one cleaned Chinese copy set across runtime, evaluation, history, and settings
@@ -100,7 +103,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/fix-ci-and-unblock-weave-deploy.md`
+- `tasks/archive/ai-hot-tracker-background-agent-run.md`
 
 ## Recent Decisions
 
@@ -122,3 +125,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-04-24-153` make hot-tracker run evaluation judge brief alignment against delta and cluster-level decisions
 - `DEC-2026-04-25-154` close hot-tracker stabilization by normalizing UTF-8 Chinese copy and archiving the final completion-line task
 - `DEC-2026-04-25-155` make `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md` the long-form source of truth for the module end state
+- `DEC-2026-05-07-156` move manual AI hot tracker generation onto durable background runs with polling

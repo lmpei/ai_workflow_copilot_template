@@ -3,6 +3,10 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from arq import create_pool
+
+from app.core.config import get_settings
+from app.core.queue import build_redis_settings
 from app.models.workspace import Workspace
 from app.repositories import (
     ai_hot_tracker_signal_memory_repository,
@@ -26,6 +30,7 @@ from app.schemas.ai_frontier_research import (
     AiHotTrackerTrackingRunFollowUpResponse,
     AiHotTrackerTrackingRunResponse,
     AiHotTrackerTrackingStateResponse,
+    AiHotTrackerTraceEvent,
     normalize_ai_hot_tracker_tracking_profile,
 )
 from app.services.ai_hot_tracker_decision_service import (
@@ -49,9 +54,14 @@ _CADENCE_INTERVALS: dict[str, timedelta] = {
     "twice_daily": timedelta(hours=12),
     "weekly": timedelta(days=7),
 }
+AI_HOT_TRACKER_RUN_JOB_NAME = "run_ai_hot_tracker_tracking_run"
 
 
 class AiHotTrackerTrackingAccessError(Exception):
+    pass
+
+
+class AiHotTrackerTrackingQueueError(Exception):
     pass
 
 
@@ -136,6 +146,50 @@ def _build_failed_report(
     )
 
 
+def _build_trace_event(
+    *,
+    stage: str,
+    status: str,
+    message: str,
+    created_at: datetime | None = None,
+    details: dict[str, object] | None = None,
+) -> dict[str, object]:
+    return AiHotTrackerTraceEvent(
+        stage=stage,
+        status=status,
+        message=message,
+        created_at=created_at or datetime.now(UTC),
+        details=details or {},
+    ).model_dump(mode="json")
+
+
+def _build_running_report(
+    *,
+    tracking_profile: AiHotTrackerTrackingProfile,
+    generated_at: datetime,
+) -> AiHotTrackerReportResponse:
+    output = AiHotTrackerBriefOutput(
+        headline="正在获取 AI 热点",
+        summary="系统已经开始整理这一轮热点，完成后会自动展示判断简报。",
+        change_state="steady_state",
+        signals=[],
+        keep_watching=[],
+        blindspots=[],
+        reference_sources=[],
+    )
+    return AiHotTrackerReportResponse(
+        title=output.headline,
+        question=f"请围绕“{tracking_profile.topic}”继续追踪。",
+        output=output,
+        source_catalog=[],
+        source_items=[],
+        source_failures=[],
+        source_set={"mode": "ai_hot_tracker_background_run"},
+        generated_at=generated_at,
+        degraded_reason=None,
+    )
+
+
 def _persist_run(
     *,
     workspace_id: str,
@@ -168,6 +222,44 @@ def _persist_run(
         error_message=error_message,
         generated_at=report.generated_at,
     )
+    return AiHotTrackerTrackingRunResponse.from_model(run)
+
+
+def _finalize_existing_run(
+    *,
+    run_id: str,
+    status: str,
+    report: AiHotTrackerReportResponse,
+    delta: AiHotTrackerTrackingRunDelta,
+    started_at: datetime,
+    completed_at: datetime | None,
+    failed_at: datetime | None,
+    failure_stage: str | None,
+    trace_events: list[dict[str, object]],
+    error_message: str | None = None,
+) -> AiHotTrackerTrackingRunResponse:
+    run = ai_hot_tracker_tracking_run_repository.update_ai_hot_tracker_tracking_run_runtime(
+        run_id=run_id,
+        status=status,
+        title=report.title,
+        question=report.question,
+        output_json=report.output.model_dump(mode="json"),
+        source_catalog_json=[item.model_dump(mode="json") for item in report.source_catalog],
+        source_items_json=[item.model_dump(mode="json") for item in report.source_items],
+        source_failures_json=[item.model_dump(mode="json") for item in report.source_failures],
+        source_set_json=report.source_set,
+        delta_json=delta.model_dump(mode="json"),
+        degraded_reason=report.degraded_reason,
+        error_message=error_message,
+        started_at=started_at,
+        completed_at=completed_at,
+        failed_at=failed_at,
+        failure_stage=failure_stage,
+        trace_events_json=trace_events,
+        generated_at=report.generated_at,
+    )
+    if run is None:
+        raise AiHotTrackerTrackingAccessError("AI hot tracker run not found")
     return AiHotTrackerTrackingRunResponse.from_model(run)
 
 
@@ -788,6 +880,7 @@ def _execute_tracking_cycle(
     actor_user_id: str,
     trigger_kind: str,
     persist_run: bool | None,
+    existing_run_id: str | None = None,
 ) -> _TrackingExecutionResult:
     tracking_profile = _resolve_tracking_profile(workspace.module_config_json)
     previous_snapshot, previous_saved_run_id = _load_previous_snapshot(
@@ -795,11 +888,58 @@ def _execute_tracking_cycle(
     )
     previous_memories = _load_signal_memories(workspace_id=workspace.id)
     reference_time = datetime.now(UTC)
+    started_at = reference_time
+    trace_events: list[dict[str, object]] = [
+        _build_trace_event(
+            stage="source_intake",
+            status="running",
+            message="正在获取可信来源。",
+            created_at=started_at,
+        )
+    ]
+    if existing_run_id is not None:
+        existing_run = ai_hot_tracker_tracking_run_repository.get_ai_hot_tracker_tracking_run(
+            run_id=existing_run_id
+        )
+        existing_trace = (
+            existing_run.trace_events_json
+            if existing_run is not None and isinstance(existing_run.trace_events_json, list)
+            else []
+        )
+        trace_events = [
+            *existing_trace,
+            _build_trace_event(
+                stage="source_intake",
+                status="running",
+                message="正在获取可信来源。",
+                created_at=started_at,
+            ),
+        ]
 
     try:
         intake = filter_ai_hot_tracker_source_intake(
             intake=fetch_ai_hot_tracker_source_items(total_limit=tracking_profile.max_items_per_run),
             tracking_profile=tracking_profile,
+        )
+        trace_events.append(
+            _build_trace_event(
+                stage="source_intake",
+                status="degraded" if intake.source_failures else "completed",
+                message=(
+                    f"已获取 {len(intake.source_items)} 条来源条目。"
+                    if not intake.source_failures
+                    else f"已获取 {len(intake.source_items)} 条来源条目，"
+                    f"{len(intake.source_failures)} 个来源失败。"
+                ),
+                details={"source_failure_count": len(intake.source_failures)},
+            )
+        )
+        trace_events.append(
+            _build_trace_event(
+                stage="decision",
+                status="running",
+                message="正在整理信号和判断变化。",
+            )
         )
         decision_result = build_signal_decision_result(
             source_catalog=intake.source_catalog,
@@ -809,6 +949,21 @@ def _execute_tracking_cycle(
             previous_memories=previous_memories,
             reference_time=reference_time,
         )
+        trace_events.append(
+            _build_trace_event(
+                stage="decision",
+                status="completed",
+                message=f"已形成 {len(decision_result.signal_clusters)} 个候选信号。",
+                details={"candidate_cluster_count": len(decision_result.candidate_clusters)},
+            )
+        )
+        trace_events.append(
+            _build_trace_event(
+                stage="report_synthesis",
+                status="running",
+                message="正在生成本轮简报。",
+            )
+        )
         report = generate_ai_hot_tracker_report_from_intake(
             intake=intake,
             tracking_profile=tracking_profile,
@@ -816,6 +971,14 @@ def _execute_tracking_cycle(
             generated_at=reference_time,
         )
         status = "degraded" if report.degraded_reason else "completed"
+        trace_events.append(
+            _build_trace_event(
+                stage="report_synthesis",
+                status=status,
+                message="本轮简报已生成。" if status == "completed" else "本轮简报已生成，但信息不完整。",
+                details={"degraded_reason": report.degraded_reason},
+            )
+        )
         delta = build_tracking_delta(
             previous_run_id=previous_saved_run_id,
             previous_snapshot=previous_snapshot,
@@ -825,6 +988,18 @@ def _execute_tracking_cycle(
             degraded_reason=report.degraded_reason,
         )
         report = _finalize_report_change_state(report=report, delta=delta)
+        trace_events.append(
+            _build_trace_event(
+                stage="evaluation",
+                status=status,
+                message="已完成变化判断。",
+                details={
+                    "change_state": delta.change_state,
+                    "priority_level": delta.priority_level,
+                    "should_notify": delta.should_notify,
+                },
+            )
+        )
 
         should_persist_run = (
             persist_run
@@ -833,16 +1008,38 @@ def _execute_tracking_cycle(
         )
         run: AiHotTrackerTrackingRunResponse | None = None
         if should_persist_run:
-            run = _persist_run(
-                workspace_id=workspace.id,
-                previous_run_id=previous_saved_run_id,
-                user_id=actor_user_id,
-                trigger_kind=trigger_kind,
-                status=status,
-                report=report,
-                tracking_profile=tracking_profile,
-                delta=delta,
+            completed_at = datetime.now(UTC)
+            trace_events.append(
+                _build_trace_event(
+                    stage="finalize",
+                    status=status,
+                    message="本轮运行已保存。",
+                    created_at=completed_at,
+                )
             )
+            if existing_run_id is not None:
+                run = _finalize_existing_run(
+                    run_id=existing_run_id,
+                    status=status,
+                    report=report,
+                    delta=delta,
+                    started_at=started_at,
+                    completed_at=completed_at,
+                    failed_at=None,
+                    failure_stage=None,
+                    trace_events=trace_events,
+                )
+            else:
+                run = _persist_run(
+                    workspace_id=workspace.id,
+                    previous_run_id=previous_saved_run_id,
+                    user_id=actor_user_id,
+                    trigger_kind=trigger_kind,
+                    status=status,
+                    report=report,
+                    tracking_profile=tracking_profile,
+                    delta=delta,
+                )
 
         _store_signal_memories(
             workspace_id=workspace.id,
@@ -868,6 +1065,21 @@ def _execute_tracking_cycle(
         )
         return _TrackingExecutionResult(run=run, status=status, delta=delta)
     except Exception as error:
+        failed_at = datetime.now(UTC)
+        failure_stage = (
+            trace_events[-1].get("stage")
+            if trace_events and isinstance(trace_events[-1].get("stage"), str)
+            else "finalize"
+        )
+        trace_events.append(
+            _build_trace_event(
+                stage="finalize",
+                status="failed",
+                message="本轮运行失败，已记录真实错误原因。",
+                created_at=failed_at,
+                details={"error_message": str(error), "failure_stage": failure_stage},
+            )
+        )
         report = _build_failed_report(
             tracking_profile=tracking_profile,
             generated_at=reference_time,
@@ -889,17 +1101,31 @@ def _execute_tracking_cycle(
         )
         run: AiHotTrackerTrackingRunResponse | None = None
         if should_persist_run:
-            run = _persist_run(
-                workspace_id=workspace.id,
-                previous_run_id=previous_saved_run_id,
-                user_id=actor_user_id,
-                trigger_kind=trigger_kind,
-                status="failed",
-                report=report,
-                tracking_profile=tracking_profile,
-                delta=delta,
-                error_message=str(error),
-            )
+            if existing_run_id is not None:
+                run = _finalize_existing_run(
+                    run_id=existing_run_id,
+                    status="failed",
+                    report=report,
+                    delta=delta,
+                    started_at=started_at,
+                    completed_at=None,
+                    failed_at=failed_at,
+                    failure_stage=failure_stage,
+                    trace_events=trace_events,
+                    error_message=str(error),
+                )
+            else:
+                run = _persist_run(
+                    workspace_id=workspace.id,
+                    previous_run_id=previous_saved_run_id,
+                    user_id=actor_user_id,
+                    trigger_kind=trigger_kind,
+                    status="failed",
+                    report=report,
+                    tracking_profile=tracking_profile,
+                    delta=delta,
+                    error_message=str(error),
+                )
 
         _store_tracking_state(
             workspace_id=workspace.id,
@@ -1049,7 +1275,25 @@ def _load_agent_trace_from_run(
     return trace
 
 
-def create_ai_hot_tracker_tracking_run(
+async def enqueue_ai_hot_tracker_tracking_run_execution(run_id: str) -> str:
+    try:
+        redis = await create_pool(build_redis_settings())
+        job = await redis.enqueue_job(
+            AI_HOT_TRACKER_RUN_JOB_NAME,
+            run_id,
+            _queue_name=get_settings().task_queue_name,
+        )
+        close = getattr(redis, "aclose", None)
+        if callable(close):
+            await close()
+    except Exception as error:
+        raise AiHotTrackerTrackingQueueError("Failed to enqueue the AI hot tracker run") from error
+    if job is None:
+        raise AiHotTrackerTrackingQueueError("Failed to enqueue the AI hot tracker run")
+    return str(job.job_id)
+
+
+async def create_ai_hot_tracker_tracking_run(
     *,
     workspace_id: str,
     user_id: str,
@@ -1062,15 +1306,128 @@ def create_ai_hot_tracker_tracking_run(
         raise AiHotTrackerTrackingAccessError("AI hot tracker is only available in research workspaces")
 
     request = payload or AiHotTrackerTrackingRunCreateRequest()
+    tracking_profile = _resolve_tracking_profile(workspace.module_config_json)
+    previous_snapshot, previous_saved_run_id = _load_previous_snapshot(workspace_id=workspace.id)
+    queued_at = datetime.now(UTC)
+    report = _build_running_report(tracking_profile=tracking_profile, generated_at=queued_at)
+    delta = AiHotTrackerTrackingRunDelta(
+        previous_run_id=previous_saved_run_id,
+        change_state="steady_state",
+        summary="本轮热点追踪已经进入后台整理。",
+        should_notify=False,
+        priority_level="low",
+        notify_reason="后台运行中，完成后会更新简报。",
+        new_item_count=0,
+        continuing_item_count=len(previous_snapshot),
+        cooled_down_item_count=0,
+    )
+    run_model = ai_hot_tracker_tracking_run_repository.create_queued_ai_hot_tracker_tracking_run(
+        workspace_id=workspace.id,
+        previous_run_id=previous_saved_run_id,
+        created_by=user_id,
+        trigger_kind=request.trigger_kind,
+        title=report.title,
+        question=report.question,
+        profile_snapshot_json=tracking_profile.model_dump(mode="json"),
+        output_json=report.output.model_dump(mode="json"),
+        delta_json=delta.model_dump(mode="json"),
+        trace_events_json=[
+            _build_trace_event(
+                stage="queued",
+                status="queued",
+                message="本轮热点追踪已进入后台队列。",
+                created_at=queued_at,
+            )
+        ],
+        generated_at=queued_at,
+    )
+    queued_run = AiHotTrackerTrackingRunResponse.from_model(run_model)
+
+    try:
+        await enqueue_ai_hot_tracker_tracking_run_execution(queued_run.id)
+    except AiHotTrackerTrackingQueueError as error:
+        failed_at = datetime.now(UTC)
+        failed_report = _build_failed_report(
+            tracking_profile=tracking_profile,
+            generated_at=failed_at,
+            error_message=str(error),
+        )
+        failed_delta = AiHotTrackerTrackingRunDelta(
+            previous_run_id=previous_saved_run_id,
+            change_state="failed",
+            summary="后台任务没有成功入队。",
+            should_notify=False,
+            priority_level="low",
+            notify_reason=None,
+        )
+        failed_run = _finalize_existing_run(
+            run_id=queued_run.id,
+            status="failed",
+            report=failed_report,
+            delta=failed_delta,
+            started_at=queued_at,
+            completed_at=None,
+            failed_at=failed_at,
+            failure_stage="queued",
+            trace_events=[
+                *queued_run.trace_events,
+                AiHotTrackerTraceEvent(
+                    stage="queued",
+                    status="failed",
+                    message="后台任务入队失败。",
+                    created_at=failed_at,
+                    details={"error_message": str(error)},
+                ).model_dump(mode="json"),
+            ],
+            error_message=str(error),
+        )
+        return failed_run
+
+    return queued_run
+
+
+def run_ai_hot_tracker_tracking_run_execution(run_id: str) -> dict[str, object]:
+    run_model = ai_hot_tracker_tracking_run_repository.get_ai_hot_tracker_tracking_run(run_id=run_id)
+    if run_model is None:
+        raise AiHotTrackerTrackingAccessError("AI hot tracker run not found")
+
+    workspace = workspace_repository.get_workspace(
+        workspace_id=run_model.workspace_id,
+        user_id=run_model.created_by,
+    )
+    if workspace is None:
+        raise AiHotTrackerTrackingAccessError("Workspace not found")
+
+    started_at = datetime.now(UTC)
+    existing_trace = run_model.trace_events_json if isinstance(run_model.trace_events_json, list) else []
+    ai_hot_tracker_tracking_run_repository.update_ai_hot_tracker_tracking_run_runtime(
+        run_id=run_id,
+        status="running",
+        started_at=started_at,
+        trace_events_json=[
+            *existing_trace,
+            _build_trace_event(
+                stage="source_intake",
+                status="running",
+                message="后台运行已开始，正在获取可信来源。",
+                created_at=started_at,
+            ),
+        ],
+    )
+
     result = _execute_tracking_cycle(
         workspace=workspace,
-        actor_user_id=user_id,
-        trigger_kind=request.trigger_kind,
+        actor_user_id=run_model.created_by,
+        trigger_kind=run_model.trigger_kind,
         persist_run=True,
+        existing_run_id=run_id,
     )
-    if result.run is None:
-        raise AiHotTrackerTrackingAccessError("Manual tracking run did not persist a result")
-    return result.run
+    return {
+        "run_id": run_id,
+        "status": result.status,
+        "saved": result.run is not None,
+        "completed_at": datetime.now(UTC).isoformat(),
+    }
 
 
 def run_ai_hot_tracker_tracking_sweeper() -> dict[str, object]:
@@ -1195,6 +1552,8 @@ def get_ai_hot_tracker_run_evaluation(
     run = get_ai_hot_tracker_tracking_run(run_id=run_id, user_id=user_id)
     if run is None:
         raise AiHotTrackerTrackingAccessError("AI hot tracker run not found")
+    if run.status in {"queued", "running"}:
+        raise AiHotTrackerTrackingAccessError("AI hot tracker run is still running")
 
     clustered_signals = _load_signal_clusters_from_run(run)
     event_memories = _load_event_memories_from_run(run)

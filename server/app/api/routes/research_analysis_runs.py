@@ -27,6 +27,7 @@ from app.services.ai_frontier_research_record_service import (
 from app.services.ai_hot_tracker_replay_service import get_ai_hot_tracker_replay_evaluation
 from app.services.ai_hot_tracker_tracking_service import (
     AiHotTrackerTrackingAccessError,
+    AiHotTrackerTrackingQueueError,
     answer_ai_hot_tracker_follow_up,
     create_ai_hot_tracker_tracking_run,
     delete_ai_hot_tracker_tracking_run,
@@ -64,12 +65,14 @@ async def generate_hot_tracker_report_alias(
     current_user: User = Depends(get_current_user),
 ) -> AiHotTrackerTrackingRunResponse:
     try:
-        return create_ai_hot_tracker_tracking_run(
+        return await create_ai_hot_tracker_tracking_run(
             workspace_id=workspace_id,
             user_id=current_user.id,
         )
     except AiHotTrackerTrackingAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except AiHotTrackerTrackingQueueError as error:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(error)) from error
 
 
 @router.post(
@@ -83,13 +86,15 @@ async def create_hot_tracker_run(
     current_user: User = Depends(get_current_user),
 ) -> AiHotTrackerTrackingRunResponse:
     try:
-        return create_ai_hot_tracker_tracking_run(
+        return await create_ai_hot_tracker_tracking_run(
             workspace_id=workspace_id,
             user_id=current_user.id,
             payload=payload,
         )
     except AiHotTrackerTrackingAccessError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+    except AiHotTrackerTrackingQueueError as error:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(error)) from error
 
 
 @router.get(

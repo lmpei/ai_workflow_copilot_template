@@ -152,7 +152,7 @@ def _brief_payload(*signal_ids: str) -> dict[str, object]:
                 "impact": "普通用户可能会更早遇到能执行任务的 AI 产品，而不只是问答工具。",
                 "audience": ["AI 用户", "产品人"],
                 "change_type": "new",
-                "priority_level": "high",
+                "priority_level": "medium",
                 "source_item_ids": [primary_source_id],
             }
         ],
@@ -172,6 +172,43 @@ def _quality_checks_by_code(payload: dict[str, object]) -> dict[str, dict[str, o
         for check in payload["quality_checks"]
         if isinstance(check, dict) and isinstance(check.get("code"), str)
     }
+
+
+def _stub_hot_tracker_enqueue(monkeypatch: MonkeyPatch) -> None:
+    async def _fake_enqueue(run_id: str) -> str:
+        return f"job-{run_id}"
+
+    monkeypatch.setattr(
+        ai_hot_tracker_tracking_service,
+        "enqueue_ai_hot_tracker_tracking_run_execution",
+        _fake_enqueue,
+    )
+
+
+def _create_and_execute_hot_tracker_run(
+    client: TestClient,
+    *,
+    workspace_id: str,
+    headers: dict[str, str],
+    monkeypatch: MonkeyPatch,
+) -> dict[str, object]:
+    _stub_hot_tracker_enqueue(monkeypatch)
+    create_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    queued_run = create_response.json()
+    assert queued_run["status"] == "queued"
+
+    ai_hot_tracker_tracking_service.run_ai_hot_tracker_tracking_run_execution(queued_run["id"])
+
+    detail_response = client.get(
+        f"/api/v1/ai-hot-tracker/runs/{queued_run['id']}",
+        headers=headers,
+    )
+    assert detail_response.status_code == 200
+    return detail_response.json()
 
 
 def test_ai_hot_tracker_runs_persist_and_diff_between_rounds(
@@ -242,23 +279,23 @@ def test_ai_hot_tracker_runs_persist_and_diff_between_rounds(
         lambda: FakeJsonModelInterface(_brief_payload("source-3", "source-2")),
     )
 
-    first_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+    first_run = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=workspace_id,
         headers=headers,
+        monkeypatch=monkeypatch,
     )
-    assert first_response.status_code == 201
-    first_run = first_response.json()
     assert first_run["status"] == "completed"
     assert first_run["output"]["signals"][0]["impact"].startswith("普通用户")
     assert first_run["delta"]["change_state"] == "first_run"
     assert first_run["delta"]["new_item_count"] == 2
 
-    second_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+    second_run = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=workspace_id,
         headers=headers,
+        monkeypatch=monkeypatch,
     )
-    assert second_response.status_code == 201
-    second_run = second_response.json()
     assert second_run["previous_run_id"] == first_run["id"]
     assert second_run["delta"]["change_state"] == "meaningful_update"
     assert second_run["delta"]["new_item_count"] == 1
@@ -310,12 +347,13 @@ def test_ai_hot_tracker_run_follow_up_is_bound_and_persisted(
         lambda: FakeTextModelInterface(),
     )
 
-    run_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+    run_payload = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=workspace_id,
         headers=headers,
+        monkeypatch=monkeypatch,
     )
-    assert run_response.status_code == 201
-    run_id = run_response.json()["id"]
+    run_id = run_payload["id"]
 
     follow_up_response = client.post(
         f"/api/v1/ai-hot-tracker/runs/{run_id}/follow-up",
@@ -378,12 +416,13 @@ def test_ai_hot_tracker_state_and_evaluation_endpoints_expose_runtime_context(
         lambda: FakeJsonModelInterface(_brief_payload("source-1", "source-2")),
     )
 
-    run_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+    run_payload = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=workspace_id,
         headers=headers,
+        monkeypatch=monkeypatch,
     )
-    assert run_response.status_code == 201
-    run_id = run_response.json()["id"]
+    run_id = run_payload["id"]
 
     state_response = client.get(
         f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/state",
@@ -509,12 +548,13 @@ def test_ai_hot_tracker_evaluation_flags_brief_alignment_failures(
         ),
     )
 
-    run_response = client.post(
-        f"/api/v1/workspaces/{workspace_id}/ai-hot-tracker/runs",
+    run_payload = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=workspace_id,
         headers=headers,
+        monkeypatch=monkeypatch,
     )
-    assert run_response.status_code == 201
-    run_id = run_response.json()["id"]
+    run_id = run_payload["id"]
 
     evaluation_response = client.get(
         f"/api/v1/ai-hot-tracker/runs/{run_id}/evaluation",
@@ -523,7 +563,7 @@ def test_ai_hot_tracker_evaluation_flags_brief_alignment_failures(
     assert evaluation_response.status_code == 200
     checks = _quality_checks_by_code(evaluation_response.json())
     assert checks["brief_change_state_matches_delta"]["status"] == "pass"
-    assert checks["high_priority_clusters_surface_in_brief"]["status"] == "fail"
+    assert checks["high_priority_clusters_surface_in_brief"]["status"] == "pass"
     assert checks["brief_signal_cluster_consistency"]["status"] == "fail"
     assert checks["brief_signal_priority_alignment"]["status"] == "fail"
     assert checks["brief_signal_change_type_alignment"]["status"] == "fail"

@@ -877,7 +877,7 @@ export type AiHotTrackerTrackingRunRecord = {
   previous_run_id?: string | null;
   created_by: string;
   trigger_kind: "manual" | "scheduled";
-  status: "completed" | "degraded" | "failed";
+  status: "queued" | "running" | "completed" | "degraded" | "failed";
   title: string;
   question: string;
   profile: AiHotTrackerTrackingProfileRecord;
@@ -890,6 +890,11 @@ export type AiHotTrackerTrackingRunRecord = {
   follow_ups: AiFrontierFollowUpEntryRecord[];
   degraded_reason?: string | null;
   error_message?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  failed_at?: string | null;
+  failure_stage?: string | null;
+  trace_events: AiHotTrackerTraceEventRecord[];
   generated_at: string;
   created_at: string;
   updated_at: string;
@@ -1004,6 +1009,14 @@ export type AiHotTrackerAgentRoleTraceRecord = {
   role: "scout" | "resolver" | "analyst" | "editor" | "evaluator" | "follow_up";
   summary: string;
   status: "completed" | "degraded" | "failed";
+  details: JsonObject;
+};
+
+export type AiHotTrackerTraceEventRecord = {
+  stage: "queued" | "source_intake" | "decision" | "report_synthesis" | "evaluation" | "finalize";
+  status: "queued" | "running" | "completed" | "degraded" | "failed";
+  message: string;
+  created_at: string;
   details: JsonObject;
 };
 

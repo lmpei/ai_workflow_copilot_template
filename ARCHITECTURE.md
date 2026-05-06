@@ -5,7 +5,7 @@ Stable system boundaries only. This is the short architecture summary. The long-
 
 For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`.
 
-- Last Updated: 2026-04-25
+- Last Updated: 2026-05-07
 
 ## Main Modules
 
@@ -27,7 +27,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - evals
   - dataset -> eval run -> per-case execution -> scoring -> summaries and traces
 - AI hot tracker
-  - workspace -> tracking profile -> allowlisted source intake -> normalized source items -> impact-oriented fixed scoring -> conservative signal clustering -> cluster-based delta evaluation -> brief synthesis -> saved tracking run or suppressed steady-state update -> grounded follow-up
+  - workspace -> queued tracking run -> ARQ worker -> allowlisted source intake -> normalized source items -> impact-oriented fixed scoring -> conservative signal clustering -> cluster-based delta evaluation -> brief synthesis -> saved tracking run or suppressed steady-state update -> grounded follow-up
   - the end-state product and evaluation contract for this loop is defined in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`
 
 ## State and Persistence
@@ -38,6 +38,8 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - PostgreSQL persists `workspace_connector_consent` and `research_external_resource_snapshot` for the bounded external-context path.
 - PostgreSQL persists `ai_frontier_research_record` for older saved hot-tracker records that still need to outlive a single answer.
 - PostgreSQL persists `ai_hot_tracker_tracking_run` as the durable saved run unit for the current hot-tracker product path, including:
+  - queued/running/completed/degraded/failed lifecycle status
+  - runtime timestamps, failure stage, and trace events
   - profile snapshot
   - structured report output
   - normalized source payload
@@ -86,7 +88,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `server/app/api/routes/workspaces.py`
   - owns canonical workspace creation, update, and deletion paths for all environments
 - `server/app/api/routes/research_analysis_runs.py`
-  - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, runtime state lookup, run evaluation lookup, replay evaluation lookup, and the `/ai-hot-tracker/report` alias that now resolves onto the same canonical tracking-run response path
+  - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, runtime state lookup, run evaluation lookup, replay evaluation lookup, and the `/ai-hot-tracker/report` alias; manual run creation returns a queued tracking-run response and the selected worker completes the canonical loop asynchronously
 
 ## Runtime Boundaries
 
@@ -101,6 +103,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `server/app/services/ai_hot_tracker_tracking_service.py`
   - owns the hot-tracker control loop:
     - resolve workspace and profile
+    - create queued manual runs and enqueue worker execution
     - execute source intake
     - build ranked and clustered decisions
     - refresh event memory
@@ -127,7 +130,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `server/app/repositories/workspace_repository.py`
   - owns workspace persistence and also clears tracking runs and tracking state when a workspace is permanently deleted
 - `server/app/workers/task_worker.py`
-  - remains the live ARQ worker bundle for async task execution and now also hosts the 15-minute hot-tracker sweeper entrypoint
+  - remains the live ARQ worker bundle for async task execution and now also hosts manual hot-tracker run execution plus the 15-minute hot-tracker sweeper entrypoint
 - `server/app/api/routes/agents.py`
   - remains a scaffolded `501` surface until a broader standalone agent runtime is introduced
 

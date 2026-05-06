@@ -611,9 +611,8 @@ def test_generate_ai_hot_tracker_report_endpoint_canonical_run_response(
     headers = {"Authorization": f"Bearer {auth['token']}"}
     workspace_id = _create_workspace(client, auth["token"])
 
-    monkeypatch.setattr(
-        "app.api.routes.research_analysis_runs.create_ai_hot_tracker_tracking_run",
-        lambda **kwargs: AiHotTrackerTrackingRunResponse.model_validate(
+    async def fake_create_ai_hot_tracker_tracking_run(**kwargs: object) -> AiHotTrackerTrackingRunResponse:
+        return AiHotTrackerTrackingRunResponse.model_validate(
             {
                 "id": "run-1",
                 "workspace_id": workspace_id,
@@ -678,7 +677,11 @@ def test_generate_ai_hot_tracker_report_endpoint_canonical_run_response(
                 "created_at": "2026-04-16T08:00:00Z",
                 "updated_at": "2026-04-16T08:00:00Z",
             }
-        ),
+        )
+
+    monkeypatch.setattr(
+        "app.api.routes.research_analysis_runs.create_ai_hot_tracker_tracking_run",
+        fake_create_ai_hot_tracker_tracking_run,
     )
 
     response = client.post(
