@@ -2338,7 +2338,7 @@ export default function AiHotTrackerWorkspace({
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
-                padding: "20px 18px 16px",
+                padding: "20px 18px 28px",
               }}
             >
               <div style={{ display: "grid", gap: 4 }}>
@@ -2532,42 +2532,48 @@ export default function AiHotTrackerWorkspace({
                 style={{
                   borderTop: "1px solid rgba(148, 163, 184, 0.14)",
                   display: "grid",
-                  gap: 10,
-                  gridTemplateColumns: "minmax(0, 1fr) auto",
-                  paddingTop: 12,
+                  gap: 8,
+                  gridTemplateColumns: "minmax(0, 1fr) 76px",
+                  minWidth: 0,
+                  paddingTop: 10,
                 }}
               >
                 <textarea
                   disabled={activeRunIsInProgress}
                   onChange={(event) => setFollowUpInput(event.target.value)}
                   placeholder={activeRunIsInProgress ? "这一轮完成后可以继续追问" : "继续追问当前简报"}
-                  rows={2}
+                  rows={1}
                   style={{
                     backgroundColor: "rgba(248, 250, 252, 0.92)",
                     border: "1px solid rgba(148, 163, 184, 0.18)",
-                    borderRadius: 18,
+                    borderRadius: 16,
                     boxSizing: "border-box",
                     color: "#0f172a",
                     fontFamily: "inherit",
-                    fontSize: 15,
-                    lineHeight: 1.65,
-                    minHeight: 66,
+                    fontSize: 14,
+                    height: 52,
+                    lineHeight: 1.55,
+                    minHeight: 52,
+                    minWidth: 0,
                     maxWidth: "100%",
+                    overflowY: "auto",
                     padding: "12px 14px",
                     resize: "none",
                     width: "100%",
                   }}
                   value={followUpInput}
                 />
-                <div style={{ alignSelf: "end", display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ alignSelf: "stretch", display: "flex", minWidth: 0 }}>
                   <button
                     disabled={activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()}
                     onClick={() => void handleAskFollowUp()}
                     style={{
                       ...primaryButtonStyle(activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()),
-                      minHeight: 54,
-                      minWidth: 86,
-                      padding: "0 18px",
+                      height: 52,
+                      minHeight: 52,
+                      minWidth: 0,
+                      padding: 0,
+                      width: "100%",
                     }}
                     type="button"
                   >
