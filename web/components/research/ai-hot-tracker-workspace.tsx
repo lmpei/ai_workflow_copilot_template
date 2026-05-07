@@ -1337,9 +1337,9 @@ export default function AiHotTrackerWorkspace({
     >
       <div
         style={{
-          display: "grid",
+          display: "flex",
+          flexDirection: "column",
           gap: 16,
-          gridTemplateRows: "auto auto minmax(0, 1fr)",
           height: "100svh",
           margin: "0 auto",
           maxWidth: 1760,
@@ -1491,6 +1491,7 @@ export default function AiHotTrackerWorkspace({
               alignItems: "center",
               display: "grid",
               gap: 22,
+              flex: "1 1 0",
               justifyItems: "center",
               minHeight: 0,
               overflow: "hidden",
@@ -1571,6 +1572,7 @@ export default function AiHotTrackerWorkspace({
           <section
             style={{
               display: "grid",
+              flex: "1 1 0",
               gap: 18,
               gridTemplateColumns: "minmax(0, 1fr)",
               minHeight: 0,
@@ -2063,9 +2065,11 @@ export default function AiHotTrackerWorkspace({
         ) : (
           <section
             style={{
+              alignItems: "stretch",
               display: "grid",
+              flex: "1 1 0",
               gap: 18,
-              gridTemplateColumns: "minmax(0, 1.38fr) minmax(360px, 0.82fr)",
+              gridTemplateColumns: "minmax(0, 1.62fr) minmax(340px, 0.68fr)",
               minHeight: 0,
               overflow: "hidden",
             }}
@@ -2075,6 +2079,7 @@ export default function AiHotTrackerWorkspace({
                 ...surfaceStyle(),
                 display: "grid",
                 gridTemplateRows: "auto minmax(0, 1fr)",
+                height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
               }}
@@ -2332,6 +2337,7 @@ export default function AiHotTrackerWorkspace({
                 ...surfaceStyle(),
                 display: "grid",
                 gridTemplateRows: "auto auto minmax(0, 1fr) auto",
+                height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
                 padding: "24px 22px 18px",
@@ -2829,14 +2835,29 @@ export default function AiHotTrackerWorkspace({
 
         <style jsx global>{`
           .${HIDDEN_SCROLL_CLASS} {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+            scrollbar-color: rgba(100, 116, 139, 0.42) rgba(226, 232, 240, 0.36);
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
           }
 
           .${HIDDEN_SCROLL_CLASS}::-webkit-scrollbar {
-            display: none;
-            height: 0;
-            width: 0;
+            height: 10px;
+            width: 10px;
+          }
+
+          .${HIDDEN_SCROLL_CLASS}::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.36);
+            border-radius: 999px;
+          }
+
+          .${HIDDEN_SCROLL_CLASS}::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.42);
+            border: 2px solid rgba(248, 251, 255, 0.88);
+            border-radius: 999px;
+          }
+
+          .${HIDDEN_SCROLL_CLASS}::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.62);
           }
         `}</style>
       </div>

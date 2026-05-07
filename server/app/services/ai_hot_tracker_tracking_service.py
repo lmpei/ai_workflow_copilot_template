@@ -297,46 +297,50 @@ def _load_signal_memories(
     memories = ai_hot_tracker_signal_memory_repository.list_workspace_ai_hot_tracker_signal_memories(
         workspace_id=workspace_id
     )
-    return [
-        AiHotTrackerSignalMemoryRecord(
-            event_id=memory.id,
-            fingerprint=memory.fingerprint,
-            title=memory.title,
-            category=memory.category,
-            first_seen_at=_normalize_datetime(memory.first_seen_at) or datetime.now(UTC),
-            last_seen_at=_normalize_datetime(memory.last_seen_at) or datetime.now(UTC),
-            continuity_state=memory.continuity_state,
-            activity_state=memory.activity_state,
-            source_families=[
-                item
-                for item in memory.source_families_json
-                if isinstance(item, str)
-            ],
-            source_item_ids=[
-                item
-                for item in memory.source_item_ids_json
-                if isinstance(item, str)
-            ],
-            source_labels=[
-                item
-                for item in memory.source_labels_json
-                if isinstance(item, str)
-            ],
-            latest_priority_level=memory.latest_priority_level,
-            latest_rank_score=memory.latest_rank_score,
-            last_seen_run_id=memory.last_seen_run_id,
-            streak_count=memory.streak_count,
-            cooling_since=_normalize_datetime(memory.cooling_since),
-            superseded_by_event_id=memory.superseded_by_event_id,
-            last_cluster_snapshot=(
-                memory.last_cluster_snapshot_json
-                if isinstance(memory.last_cluster_snapshot_json, dict)
-                else {}
-            ),
-            note=memory.note,
+    records: list[AiHotTrackerSignalMemoryRecord] = []
+    for memory in memories:
+        snapshot = (
+            memory.last_cluster_snapshot_json
+            if isinstance(memory.last_cluster_snapshot_json, dict)
+            else {}
         )
-        for memory in memories
-    ]
+        event_id = snapshot.get("event_id")
+        records.append(
+            AiHotTrackerSignalMemoryRecord(
+                event_id=event_id if isinstance(event_id, str) else memory.id,
+                fingerprint=memory.fingerprint,
+                title=memory.title,
+                category=memory.category,
+                first_seen_at=_normalize_datetime(memory.first_seen_at) or datetime.now(UTC),
+                last_seen_at=_normalize_datetime(memory.last_seen_at) or datetime.now(UTC),
+                continuity_state=memory.continuity_state,
+                activity_state=memory.activity_state,
+                source_families=[
+                    item
+                    for item in memory.source_families_json
+                    if isinstance(item, str)
+                ],
+                source_item_ids=[
+                    item
+                    for item in memory.source_item_ids_json
+                    if isinstance(item, str)
+                ],
+                source_labels=[
+                    item
+                    for item in memory.source_labels_json
+                    if isinstance(item, str)
+                ],
+                latest_priority_level=memory.latest_priority_level,
+                latest_rank_score=memory.latest_rank_score,
+                last_seen_run_id=memory.last_seen_run_id,
+                streak_count=memory.streak_count,
+                cooling_since=_normalize_datetime(memory.cooling_since),
+                superseded_by_event_id=memory.superseded_by_event_id,
+                last_cluster_snapshot=snapshot,
+                note=memory.note,
+            )
+        )
+    return records
 
 
 def _store_signal_memories(

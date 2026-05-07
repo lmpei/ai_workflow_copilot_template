@@ -52,6 +52,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
   - latest saved-brief and latest meaningful-update timestamps
   - consecutive failure count and last error
 - PostgreSQL persists `ai_hot_tracker_signal_memory` as the durable event-memory layer for:
+  - workspace-scoped storage keys that prevent different workspaces from colliding when they observe the same event
   - event fingerprint and event id
   - first-seen and last-seen timestamps
   - continuity, cooling, or replacement state
@@ -78,6 +79,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
   - owns the dedicated AI hot-tracker surface:
     - runtime state summary
     - consumer-facing brief rendering
+    - remaining-height report and follow-up panes with visible internal scrollbars
     - blindspots and confidence-aware signal rendering
     - saved-run history drawer
     - bounded tracking-profile editor

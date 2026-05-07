@@ -2518,3 +2518,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/ai-hot-tracker-background-agent-run.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-07-157
+- Date: 2026-05-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: scope AI hot tracker signal-memory storage per workspace and make brief-pane scrolling visible
+- Context: after the background-run deploy, production hot-tracker runs could repeatedly fail even though source intake and API polling were working. The stored failure showed a PostgreSQL primary-key collision in `ai_hot_tracker_signal_memory`: multiple workspaces observed the same AI event and tried to insert the same deterministic `event-*` id. The product surface also made the generated brief hard to read because report and follow-up panes were squeezed into a small area with hidden scrollbars.
+- Choice: keep stable `event_id` values as the decision-layer semantic identity, but store signal-memory rows under workspace-scoped storage ids and read the semantic event id back from the stored cluster snapshot. Also change the hot-tracker product surface to use remaining-height panes and visible thin internal scrollbars.
+- Why: event memory is a per-workspace product memory, not a global singleton. Different users can track the same external AI event without corrupting each other's runs. The generated brief is the product's main value surface, so scrolling must be discoverable and readable without relying on hidden browser behavior.
+- Impact: different workspaces can now complete runs for the same observed event without primary-key collisions, while follow-up and evaluation still reason over stable event ids. The report and follow-up panes are easier to read on public deployment because the scroll affordance is visible and the main layout gives them the remaining viewport height.
+- Related Task: `tasks/archive/ai-hot-tracker-production-failure-and-reading-fix.md`
+- Supersedes:
+

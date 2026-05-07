@@ -311,6 +311,59 @@ def test_ai_hot_tracker_runs_persist_and_diff_between_rounds(
     assert [item["id"] for item in listed] == [second_run["id"], first_run["id"]]
 
 
+def test_ai_hot_tracker_signal_memory_is_scoped_per_workspace(
+    client: TestClient,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    auth = _register_and_login(client, email="scoped-memory@example.com", name="Scoped Memory")
+    headers = {"Authorization": f"Bearer {auth['token']}"}
+    first_workspace_id = _create_workspace(client, auth["token"])
+    second_workspace_id = _create_workspace(client, auth["token"])
+    now = datetime(2026, 4, 21, 8, 0, tzinfo=UTC)
+
+    def _same_signal_intake(total_limit=24):
+        return _build_intake(
+            _build_item(
+                item_id="source-1",
+                source_id="openai-news",
+                source_label="OpenAI News",
+                category="models",
+                title="OpenAI launches ChatGPT agent tools",
+                url="https://openai.com/news/chatgpt-agent-tools",
+                summary="OpenAI introduces agent tools for ChatGPT users.",
+                published_at=now,
+            ),
+        )
+
+    monkeypatch.setattr(
+        ai_hot_tracker_tracking_service,
+        "fetch_ai_hot_tracker_source_items",
+        _same_signal_intake,
+    )
+    monkeypatch.setattr(
+        ai_hot_tracker_report_service,
+        "get_chat_model_interface",
+        lambda: FakeJsonModelInterface(_brief_payload("source-1")),
+    )
+
+    first_run = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=first_workspace_id,
+        headers=headers,
+        monkeypatch=monkeypatch,
+    )
+    second_run = _create_and_execute_hot_tracker_run(
+        client,
+        workspace_id=second_workspace_id,
+        headers=headers,
+        monkeypatch=monkeypatch,
+    )
+
+    assert first_run["status"] == "completed"
+    assert second_run["status"] == "completed"
+    assert first_run["id"] != second_run["id"]
+
+
 def test_ai_hot_tracker_run_follow_up_is_bound_and_persisted(
     client: TestClient,
     monkeypatch: MonkeyPatch,
