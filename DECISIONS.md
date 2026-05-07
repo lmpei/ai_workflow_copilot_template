@@ -2532,3 +2532,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/ai-hot-tracker-production-failure-and-reading-fix.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-07-158
+- Date: 2026-05-07
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: prioritize the AI hot tracker brief and follow-up reading panes over chrome height
+- Context: after the production run path was fixed, the public hot-tracker page still made the product's core value hard to use. The runtime strip, brief header, preset prompts, and stacked follow-up composer consumed too much vertical space, leaving the actual brief body and answer transcript cramped.
+- Choice: compress the runtime summary and brief header, make the whole left report card the primary internal reading pane, compact the follow-up presets, and pin the follow-up composer with an always-visible send button at the bottom of the right pane.
+- Why: the module is a briefing product. The user must be able to read the generated judgment and ask follow-up questions without hunting for hidden scroll behavior or a missing send action.
+- Impact: the consumer path now allocates more viewport height to the brief body and follow-up transcript, while the composer remains visible and usable even when the transcript scrolls internally.
+- Related Task: `tasks/archive/ai-hot-tracker-brief-reading-layout-fix.md`
+- Supersedes:
+

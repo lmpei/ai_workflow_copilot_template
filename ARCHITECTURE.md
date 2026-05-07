@@ -79,7 +79,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
   - owns the dedicated AI hot-tracker surface:
     - runtime state summary
     - consumer-facing brief rendering
-    - remaining-height report and follow-up panes with visible internal scrollbars
+    - remaining-height report and follow-up panes with visible internal scrollbars, a primary left-side brief reading pane, and a bottom-pinned follow-up composer with an always-visible send action
     - blindspots and confidence-aware signal rendering
     - saved-run history drawer
     - bounded tracking-profile editor

@@ -520,18 +520,18 @@ function RuntimeMeta({
   value: string;
 }) {
   return (
-    <div style={{ display: "grid", gap: 6 }}>
+    <div style={{ display: "grid", gap: 4 }}>
       <span
         style={{
           color: "#94a3b8",
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 800,
           letterSpacing: "0.12em",
         }}
       >
         {label}
       </span>
-      <span style={{ color: "#0f172a", fontSize: 14, lineHeight: 1.5 }}>{value}</span>
+      <span style={{ color: "#0f172a", fontSize: 13, lineHeight: 1.42 }}>{value}</span>
     </div>
   );
 }
@@ -1339,11 +1339,11 @@ export default function AiHotTrackerWorkspace({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: 12,
           height: "100svh",
           margin: "0 auto",
           maxWidth: 1760,
-          padding: "26px 28px 22px",
+          padding: "22px 28px 20px",
         }}
       >
         <header
@@ -1426,9 +1426,9 @@ export default function AiHotTrackerWorkspace({
           style={{
             ...surfaceStyle(),
             display: "grid",
-            gap: 12,
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            padding: "18px 20px",
+            gap: 10,
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            padding: "12px 18px",
           }}
         >
           <RuntimeMeta label="关注方向" value={trackingProfile.enabled_categories.map((item) => CATEGORY_LABEL[item] ?? item).join(" · ")} />
@@ -2078,39 +2078,48 @@ export default function AiHotTrackerWorkspace({
               style={{
                 ...surfaceStyle(),
                 display: "grid",
-                gridTemplateRows: "auto minmax(0, 1fr)",
+                gridTemplateRows: "minmax(0, 1fr)",
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
               }}
             >
               <div
+                className={HIDDEN_SCROLL_CLASS}
                 style={{
-                  borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
                   display: "grid",
-                  gap: 14,
-                  padding: "26px 28px 20px",
+                  gap: 18,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  padding: "22px 26px 30px",
                 }}
               >
-                <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
-                  <span style={priorityBadgeStyle(activeRun.delta.priority_level)}>
-                    {PRIORITY_LABEL[activeRun.delta.priority_level]}
-                  </span>
-                  <span style={changeStateBadgeStyle(activeRun.delta.change_state)}>
-                    {CHANGE_STATE_LABEL[activeRun.delta.change_state]}
-                  </span>
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    {formatTime(activeRun.generated_at)}
-                  </span>
-                </div>
-                <div style={{ display: "grid", gap: 10 }}>
+                <section
+                  style={{
+                    borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
+                    display: "grid",
+                    gap: 12,
+                    paddingBottom: 16,
+                  }}
+                >
+                  <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
+                    <span style={priorityBadgeStyle(activeRun.delta.priority_level)}>
+                      {PRIORITY_LABEL[activeRun.delta.priority_level]}
+                    </span>
+                    <span style={changeStateBadgeStyle(activeRun.delta.change_state)}>
+                      {CHANGE_STATE_LABEL[activeRun.delta.change_state]}
+                    </span>
+                    <span style={{ color: "#64748b", fontSize: 13 }}>
+                      {formatTime(activeRun.generated_at)}
+                    </span>
+                  </div>
                   <strong
                     style={{
                       color: "#0f172a",
-                      fontSize: "clamp(28px, 3.2vw, 44px)",
+                      fontSize: "clamp(22px, 2.35vw, 34px)",
                       fontWeight: 800,
-                      letterSpacing: "-0.05em",
-                      lineHeight: 1.02,
+                      letterSpacing: "-0.045em",
+                      lineHeight: 1.08,
                     }}
                   >
                     {activeRun.output.headline}
@@ -2118,8 +2127,8 @@ export default function AiHotTrackerWorkspace({
                   <p
                     style={{
                       color: "#334155",
-                      fontSize: 16,
-                      lineHeight: 1.88,
+                      fontSize: 15,
+                      lineHeight: 1.68,
                       margin: 0,
                       maxWidth: 900,
                     }}
@@ -2148,19 +2157,8 @@ export default function AiHotTrackerWorkspace({
                       </span>
                     </div>
                   ) : null}
-                </div>
-              </div>
+                </section>
 
-              <div
-                className={HIDDEN_SCROLL_CLASS}
-                style={{
-                  display: "grid",
-                  gap: 24,
-                  minHeight: 0,
-                  overflowY: "auto",
-                  padding: "26px 28px 34px",
-                }}
-              >
                 <section style={{ display: "grid", gap: 18 }}>
                   <span
                     style={{
@@ -2340,10 +2338,10 @@ export default function AiHotTrackerWorkspace({
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
-                padding: "24px 22px 18px",
+                padding: "20px 18px 16px",
               }}
             >
-              <div style={{ display: "grid", gap: 6 }}>
+              <div style={{ display: "grid", gap: 4 }}>
                 <span
                   style={{
                     color: "#64748b",
@@ -2357,9 +2355,7 @@ export default function AiHotTrackerWorkspace({
                 <strong style={{ color: "#0f172a", fontSize: 18, lineHeight: 1.35 }}>
                   {currentFocus?.label ?? "整份简报"}
                 </strong>
-                <span style={{ color: "#64748b", fontSize: 13, lineHeight: 1.8 }}>
-                  这里只围绕当前简报和它的来源回答，不会漂移成泛聊天。
-                </span>
+                <span style={{ color: "#64748b", fontSize: 12, lineHeight: 1.55 }}>基于当前简报回答。</span>
               </div>
 
               <div
@@ -2368,8 +2364,8 @@ export default function AiHotTrackerWorkspace({
                   display: "flex",
                   flexWrap: "wrap",
                   gap: 8,
-                  paddingBottom: 14,
-                  paddingTop: 16,
+                  paddingBottom: 12,
+                  paddingTop: 12,
                 }}
               >
                   {FOLLOW_UP_PRESETS.map((preset) => (
@@ -2385,7 +2381,7 @@ export default function AiHotTrackerWorkspace({
                       cursor: "pointer",
                       fontSize: 11,
                       fontWeight: 800,
-                      padding: "7px 10px",
+                      padding: "6px 9px",
                     }}
                     type="button"
                   >
@@ -2399,10 +2395,10 @@ export default function AiHotTrackerWorkspace({
                 ref={followUpScrollRef}
                 style={{
                   display: "grid",
-                  gap: 14,
+                  gap: 12,
                   minHeight: 0,
                   overflowY: "auto",
-                  padding: "18px 2px 18px 0",
+                  padding: "14px 2px 14px 0",
                 }}
               >
                 {activeFollowUps.map((entry, index) => (
@@ -2537,14 +2533,15 @@ export default function AiHotTrackerWorkspace({
                   borderTop: "1px solid rgba(148, 163, 184, 0.14)",
                   display: "grid",
                   gap: 10,
-                  paddingTop: 16,
+                  gridTemplateColumns: "minmax(0, 1fr) auto",
+                  paddingTop: 12,
                 }}
               >
                 <textarea
                   disabled={activeRunIsInProgress}
                   onChange={(event) => setFollowUpInput(event.target.value)}
                   placeholder={activeRunIsInProgress ? "这一轮完成后可以继续追问" : "继续追问当前简报"}
-                  rows={3}
+                  rows={2}
                   style={{
                     backgroundColor: "rgba(248, 250, 252, 0.92)",
                     border: "1px solid rgba(148, 163, 184, 0.18)",
@@ -2553,19 +2550,25 @@ export default function AiHotTrackerWorkspace({
                     color: "#0f172a",
                     fontFamily: "inherit",
                     fontSize: 15,
-                    lineHeight: 1.8,
+                    lineHeight: 1.65,
+                    minHeight: 66,
                     maxWidth: "100%",
-                    padding: "14px 16px",
+                    padding: "12px 14px",
                     resize: "none",
                     width: "100%",
                   }}
                   value={followUpInput}
                 />
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <button
-                      disabled={activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()}
-                      onClick={() => void handleAskFollowUp()}
-                      style={primaryButtonStyle(activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim())}
+                <div style={{ alignSelf: "end", display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    disabled={activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()}
+                    onClick={() => void handleAskFollowUp()}
+                    style={{
+                      ...primaryButtonStyle(activeRunIsInProgress || isAsking || !!pendingQuestion || !followUpInput.trim()),
+                      minHeight: 54,
+                      minWidth: 86,
+                      padding: "0 18px",
+                    }}
                     type="button"
                   >
                     {isAsking ? "发送中…" : "发送"}
