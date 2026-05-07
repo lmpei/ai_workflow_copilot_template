@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the hot-tracker follow-up composer boundary fix is complete and the next bounded slice is waiting on human direction
+- none currently; the hot-tracker follow-up footer safe-area fix is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -60,7 +60,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - hot-tracker tracking runs now carry lifecycle timestamps, failure stage, and trace events so queued, running, degraded, and failed states are visible through the existing run detail path
   - hot-tracker signal memory now uses workspace-scoped storage keys while preserving stable event ids for decision and follow-up semantics, preventing different workspaces from colliding when they track the same AI event
   - the hot-tracker brief surface now uses a remaining-height layout with visible thin scrollbars so the report and follow-up panes stay readable without relying on hidden scroll behavior
-  - the hot-tracker brief surface now treats the whole left report card as the primary reading pane, keeps the right follow-up transcript as the main side-pane area, and pins the follow-up composer plus send button at the bottom of that pane without letting the input or button clip against panel edges
+  - the hot-tracker brief surface now treats the whole left report card as the primary reading pane, keeps the right follow-up transcript as the main side-pane area, and uses a flex-based safe footer for the follow-up composer so the input and send button do not clip against panel or browser edges
   - the hot-tracker runtime state now exposes the latest saved brief timestamp plus the latest meaningful-update timestamp instead of relying only on saved-run presence
   - the hot-tracker event-memory layer now tracks streak count, cooling windows, and replacement linkage so continuing and superseded signals can be inspected explicitly
   - saved hot-tracker follow-up answers now persist bounded grounding metadata, and evaluation reads now return machine-readable quality checks for judgment alignment
@@ -91,7 +91,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
-  - the latest frontend verify passes after tightening the hot-tracker brief reading layout and follow-up composer boundary
+  - the latest frontend verify passes after moving the hot-tracker follow-up composer into a safe footer layout
 
 - Last Verified At: 2026-05-07
 
@@ -107,7 +107,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-follow-up-composer-boundary-fix.md`
+- `tasks/archive/ai-hot-tracker-follow-up-footer-safe-area.md`
 
 ## Recent Decisions
 

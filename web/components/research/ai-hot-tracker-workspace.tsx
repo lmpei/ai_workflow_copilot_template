@@ -2333,15 +2333,15 @@ export default function AiHotTrackerWorkspace({
             <aside
               style={{
                 ...surfaceStyle(),
-                display: "grid",
-                gridTemplateRows: "auto auto minmax(0, 1fr) auto",
+                display: "flex",
+                flexDirection: "column",
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
-                padding: "20px 18px 28px",
+                padding: "20px 18px 0",
               }}
             >
-              <div style={{ display: "grid", gap: 4 }}>
+              <div style={{ display: "grid", flex: "0 0 auto", gap: 4 }}>
                 <span
                   style={{
                     color: "#64748b",
@@ -2362,6 +2362,7 @@ export default function AiHotTrackerWorkspace({
                 style={{
                   borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
                   display: "flex",
+                  flex: "0 0 auto",
                   flexWrap: "wrap",
                   gap: 8,
                   paddingBottom: 12,
@@ -2395,10 +2396,11 @@ export default function AiHotTrackerWorkspace({
                 ref={followUpScrollRef}
                 style={{
                   display: "grid",
+                  flex: "1 1 auto",
                   gap: 12,
                   minHeight: 0,
                   overflowY: "auto",
-                  padding: "14px 2px 14px 0",
+                  padding: "14px 2px 18px 0",
                 }}
               >
                 {activeFollowUps.map((entry, index) => (
@@ -2531,11 +2533,12 @@ export default function AiHotTrackerWorkspace({
               <div
                 style={{
                   borderTop: "1px solid rgba(148, 163, 184, 0.14)",
+                  flex: "0 0 auto",
                   display: "grid",
                   gap: 8,
                   gridTemplateColumns: "minmax(0, 1fr) 76px",
                   minWidth: 0,
-                  paddingTop: 10,
+                  padding: "10px 0 calc(26px + env(safe-area-inset-bottom))",
                 }}
               >
                 <textarea
