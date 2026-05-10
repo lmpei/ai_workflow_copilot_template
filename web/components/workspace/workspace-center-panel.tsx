@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { clearStoredSession } from "../../lib/auth";
+import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
+import type { ModuleType, Workspace } from "../../lib/types";
 import AuthEntryOverlay from "../auth/auth-entry-overlay";
 import { useAuthSession } from "../auth/use-auth-session";
-import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
-import { clearStoredSession } from "../../lib/auth";
-import type { ModuleType, Workspace } from "../../lib/types";
 
 const MODULE_PRODUCT_NAMES: Record<ModuleType, string> = {
-  research: "AI热点追踪",
+  research: "AI 热点追踪",
   support: "Support Copilot",
   job: "Job Assistant",
 };
@@ -27,6 +27,8 @@ const MODULE_BLURBS: Record<ModuleType, string> = {
   support: "围绕固定产品问题生成回应、记录与升级判断。",
   job: "围绕岗位与候选人推进筛选、判断与记录。",
 };
+
+const CLOSED_MODULE_TYPES = new Set<ModuleType>(["support", "job"]);
 
 const CONCEPT_GROUPS = [
   ["多模态", "推理模型", "长上下文", "工具调用"],
@@ -86,9 +88,7 @@ function TopAction({
     <Link
       href={href}
       style={{
-        borderBottom: primary
-          ? "2px solid #111827"
-          : "1px solid rgba(15,23,42,0.16)",
+        borderBottom: primary ? "2px solid #111827" : "1px solid rgba(15,23,42,0.16)",
         color: "#0f172a",
         fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
         fontSize: 14,
@@ -103,6 +103,7 @@ function TopAction({
 }
 
 function ModuleEntry({
+  closed = false,
   disabled,
   isBusy,
   label,
@@ -110,6 +111,7 @@ function ModuleEntry({
   onClick,
   teaser,
 }: {
+  closed?: boolean;
   disabled: boolean;
   isBusy: boolean;
   label: string;
@@ -119,17 +121,18 @@ function ModuleEntry({
 }) {
   return (
     <button
-      disabled={disabled}
+      aria-disabled={disabled || closed}
+      disabled={disabled || closed}
       onClick={onClick}
       style={{
         background: "transparent",
         border: "none",
         color: "#111827",
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: disabled || closed ? "not-allowed" : "pointer",
         display: "grid",
         gap: 20,
         minHeight: 238,
-        opacity: disabled ? 0.52 : 1,
+        opacity: closed ? 0.5 : disabled ? 0.62 : 1,
         padding: "32px 42px 28px 0",
         position: "relative",
         textAlign: "left",
@@ -150,29 +153,46 @@ function ModuleEntry({
       </span>
 
       <div style={{ display: "grid", gap: 12, maxWidth: 320 }}>
-        <strong
-          style={{
-            fontFamily:
-              '"Bahnschrift SemiCondensed", "Aptos Display", "Arial Narrow", "Microsoft YaHei UI", sans-serif',
-            fontSize: 34,
-            fontWeight: 700,
-            letterSpacing: "-0.05em",
-            lineHeight: 0.96,
-          }}
-        >
-          {label}
-        </strong>
+        <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <strong
+            style={{
+              fontFamily:
+                '"Bahnschrift SemiCondensed", "Aptos Display", "Arial Narrow", "Microsoft YaHei UI", sans-serif',
+              fontSize: 34,
+              fontWeight: 700,
+              letterSpacing: "-0.05em",
+              lineHeight: 0.96,
+            }}
+          >
+            {label}
+          </strong>
+          {closed ? (
+            <span
+              style={{
+                background: "rgba(100, 116, 139, 0.1)",
+                border: "1px solid rgba(100, 116, 139, 0.16)",
+                borderRadius: 999,
+                color: "#64748b",
+                fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+                fontSize: 11,
+                fontWeight: 800,
+                padding: "5px 8px",
+              }}
+            >
+              暂未开放
+            </span>
+          ) : null}
+        </div>
         <p
           style={{
             color: "#475569",
-            fontFamily:
-              '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+            fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
             fontSize: 15,
             lineHeight: 1.8,
             margin: 0,
           }}
         >
-          {teaser}
+          {closed ? "该模块暂时关闭，当前只开放 AI 热点追踪。" : teaser}
         </p>
       </div>
 
@@ -190,11 +210,12 @@ function ModuleEntry({
           aria-hidden="true"
           style={{
             fontFamily: '"Bahnschrift SemiCondensed", "Arial Narrow", sans-serif',
-            fontSize: 22,
+            fontSize: closed ? 13 : 22,
             fontWeight: 700,
+            letterSpacing: closed ? "0.08em" : undefined,
           }}
         >
-          {isBusy ? "↗" : "→"}
+          {closed ? "暂停" : isBusy ? "…" : "→"}
         </span>
       </div>
     </button>
@@ -212,10 +233,7 @@ export default function WorkspaceCenterPanel() {
   const [launchingKey, setLaunchingKey] = useState<string | null>(null);
 
   const authOverlayVisible = !session && searchParams.get("auth") === "1";
-  const nextPath = useMemo(
-    () => resolveSafeNextPath(searchParams.get("next")),
-    [searchParams],
-  );
+  const nextPath = useMemo(() => resolveSafeNextPath(searchParams.get("next")), [searchParams]);
 
   useEffect(() => {
     if (!session) {
@@ -229,9 +247,7 @@ export default function WorkspaceCenterPanel() {
       try {
         setWorkspaces(await listWorkspaces(session.accessToken));
       } catch (error) {
-        setErrorMessage(
-          isApiClientError(error) ? error.message : "无法加载已有工作区。",
-        );
+        setErrorMessage(isApiClientError(error) ? error.message : "无法加载已有工作区。");
       } finally {
         setIsLoading(false);
       }
@@ -251,9 +267,7 @@ export default function WorkspaceCenterPanel() {
   const orderedWorkspaces = useMemo(
     () =>
       [...workspaces].sort(
-        (left, right) =>
-          new Date(right.updated_at).getTime() -
-          new Date(left.updated_at).getTime(),
+        (left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime(),
       ),
     [workspaces],
   );
@@ -263,6 +277,11 @@ export default function WorkspaceCenterPanel() {
   };
 
   const launchWorkspace = async (moduleType: ModuleType) => {
+    if (CLOSED_MODULE_TYPES.has(moduleType)) {
+      setErrorMessage("这个模块暂时关闭，当前只开放 AI 热点追踪。");
+      return;
+    }
+
     if (!session) {
       openAuthOverlay(pathname ?? "/");
       return;
@@ -280,9 +299,7 @@ export default function WorkspaceCenterPanel() {
       setWorkspaces((current) => [workspace, ...current]);
       router.push(`/workspaces/${workspace.id}`);
     } catch (error) {
-      setErrorMessage(
-        isApiClientError(error) ? error.message : "无法创建工作区。",
-      );
+      setErrorMessage(isApiClientError(error) ? error.message : "无法创建工作区。");
     } finally {
       setLaunchingKey(null);
     }
@@ -298,8 +315,7 @@ export default function WorkspaceCenterPanel() {
       <div
         style={{
           color: "#475569",
-          fontFamily:
-            '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+          fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
           padding: 24,
         }}
       >
@@ -314,16 +330,15 @@ export default function WorkspaceCenterPanel() {
         aria-hidden={authOverlayVisible}
         style={{
           display: "grid",
+          filter: authOverlayVisible ? "blur(14px)" : "none",
           gap: 12,
           height: "100%",
           opacity: authOverlayVisible ? 0.54 : 1,
           padding: "14px 0 10px",
           pointerEvents: authOverlayVisible ? "none" : "auto",
           transform: authOverlayVisible ? "scale(0.985)" : "scale(1)",
-          transition:
-            "filter 220ms ease, opacity 220ms ease, transform 220ms ease",
+          transition: "filter 220ms ease, opacity 220ms ease, transform 220ms ease",
           userSelect: authOverlayVisible ? "none" : "auto",
-          filter: authOverlayVisible ? "blur(14px)" : "none",
         }}
       >
         <section
@@ -358,20 +373,12 @@ export default function WorkspaceCenterPanel() {
               LMPAI WEAVE
             </span>
 
-            <div
-              style={{
-                alignItems: "center",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 18,
-              }}
-            >
+            <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: 18 }}>
               {session ? (
                 <span
                   style={{
                     color: "#64748b",
-                    fontFamily:
-                      '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+                    fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
                     fontSize: 13,
                   }}
                 >
@@ -383,11 +390,7 @@ export default function WorkspaceCenterPanel() {
                 <>
                   <TopAction href="/workspaces" label="所有工作区" />
                   <TopAction
-                    href={
-                      orderedWorkspaces[0]
-                        ? `/workspaces/${orderedWorkspaces[0].id}`
-                        : "/workspaces"
-                    }
+                    href={orderedWorkspaces[0] ? `/workspaces/${orderedWorkspaces[0].id}` : "/workspaces"}
                     label="继续最近工作"
                     primary
                   />
@@ -399,8 +402,7 @@ export default function WorkspaceCenterPanel() {
                       borderBottom: "1px solid rgba(15,23,42,0.16)",
                       color: "#0f172a",
                       cursor: "pointer",
-                      fontFamily:
-                        '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+                      fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
                       fontSize: 14,
                       fontWeight: 600,
                       padding: "8px 0",
@@ -442,20 +444,12 @@ export default function WorkspaceCenterPanel() {
               </h1>
             </div>
 
-            <div
-              style={{
-                alignSelf: "center",
-                display: "grid",
-                gap: 14,
-                maxWidth: 420,
-              }}
-            >
+            <div style={{ alignSelf: "center", display: "grid", gap: 14, maxWidth: 420 }}>
               {CONCEPT_GROUPS.map((group, index) => (
                 <div
                   key={group.join("-")}
                   style={{
-                    borderTop:
-                      index === 0 ? "none" : "1px solid rgba(148,163,184,0.18)",
+                    borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.18)",
                     display: "grid",
                     gap: 6,
                     paddingTop: index === 0 ? 0 : 12,
@@ -464,8 +458,7 @@ export default function WorkspaceCenterPanel() {
                   <p
                     style={{
                       color: "#0f172a",
-                      fontFamily:
-                        '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+                      fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
                       fontSize: 15,
                       lineHeight: 1.8,
                       margin: 0,
@@ -522,6 +515,7 @@ export default function WorkspaceCenterPanel() {
                 teaser={MODULE_BLURBS.research}
               />
               <ModuleEntry
+                closed
                 disabled={launchingKey !== null}
                 isBusy={launchingKey === "support"}
                 label={MODULE_PRODUCT_NAMES.support}
@@ -530,6 +524,7 @@ export default function WorkspaceCenterPanel() {
                 teaser={MODULE_BLURBS.support}
               />
               <ModuleEntry
+                closed
                 disabled={launchingKey !== null}
                 isBusy={launchingKey === "job"}
                 label={MODULE_PRODUCT_NAMES.job}
@@ -544,8 +539,7 @@ export default function WorkspaceCenterPanel() {
                 href="/workspaces"
                 style={{
                   color: "#0f172a",
-                  fontFamily:
-                    '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+                  fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
                   fontSize: 14,
                   fontWeight: 700,
                   textDecoration: "none",
@@ -561,8 +555,7 @@ export default function WorkspaceCenterPanel() {
           <div
             style={{
               color: "#64748b",
-              fontFamily:
-                '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+              fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
               fontSize: 13,
             }}
           >
@@ -577,8 +570,7 @@ export default function WorkspaceCenterPanel() {
               border: "1px solid #fecdd3",
               borderRadius: 18,
               color: "#b91c1c",
-              fontFamily:
-                '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
+              fontFamily: '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif',
               padding: 16,
             }}
           >

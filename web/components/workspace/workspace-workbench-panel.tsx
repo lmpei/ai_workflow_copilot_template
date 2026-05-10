@@ -3,17 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getWorkspace, isApiClientError } from "../../lib/api";
-import type { JobHiringPacketContinuationDraft, ModuleType, Workspace } from "../../lib/types";
-import type { SupportCaseContinuationDraft } from "../../lib/types";
+import type { ModuleType, Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
 import ChatPanel from "../chat/chat-panel";
 import DocumentManager from "../documents/document-manager";
-import JobAssistantActionPanel from "../job/job-assistant-action-panel";
-import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
 import AiFrontierRecordsPanel from "../research/ai-frontier-records-panel";
-import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
-import SupportCopilotPanel from "../support/support-copilot-panel";
 import SectionCard from "../ui/section-card";
 
 type WorkspaceWorkbenchPanelProps = {
@@ -190,61 +185,23 @@ function ResearchWorkbench({ workspace, workspaceId }: { workspace: Workspace; w
   );
 }
 
-function SupportWorkbench({ workspaceId }: { workspaceId: string }) {
-  const { session } = useAuthSession();
-  const [continuationDraft, setContinuationDraft] = useState<SupportCaseContinuationDraft | null>(null);
-
-  if (!session) {
-    return null;
-  }
-
-    return (
-      <div style={{ display: "grid", gap: 16 }}>
-        <SupportCaseWorkbenchSection
-          accessToken={session.accessToken}
-        onContinueCase={(draft) => setContinuationDraft(draft)}
-        onOpenTask={(taskId) => {
-          if (typeof window !== "undefined") {
-            window.location.hash = `task-${taskId}`;
-          }
-        }}
-        workspaceId={workspaceId}
-      />
-      <SupportCopilotPanel
-        continuationDraft={continuationDraft}
-        onContinuationHandled={() => setContinuationDraft(null)}
-        workspaceId={workspaceId}
-      />
-    </div>
+function SupportWorkbench() {
+  return (
+    <SectionCard title="Support Copilot 暂未开放" description="该模块入口已临时关闭。">
+      <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>
+        当前产品只开放 AI 热点追踪。这个工作区会保留历史数据，但不会进入旧的 Support Copilot 工作台。
+      </p>
+    </SectionCard>
   );
 }
 
-function JobWorkbench({ workspaceId }: { workspaceId: string }) {
-  const { session } = useAuthSession();
-  const [continuationDraft, setContinuationDraft] = useState<JobHiringPacketContinuationDraft | null>(null);
-
-  if (!session) {
-    return null;
-  }
-
-    return (
-      <div style={{ display: "grid", gap: 16 }}>
-        <JobHiringWorkbenchSection
-          accessToken={session.accessToken}
-        onContinuePacket={(draft) => setContinuationDraft(draft)}
-        onOpenTask={(taskId) => {
-          if (typeof window !== "undefined") {
-            window.location.hash = `job-task-${taskId}`;
-          }
-        }}
-        workspaceId={workspaceId}
-      />
-      <JobAssistantActionPanel
-        continuationDraft={continuationDraft}
-        onContinuationHandled={() => setContinuationDraft(null)}
-        workspaceId={workspaceId}
-      />
-    </div>
+function JobWorkbench() {
+  return (
+    <SectionCard title="Job Assistant 暂未开放" description="该模块入口已临时关闭。">
+      <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>
+        当前产品只开放 AI 热点追踪。这个工作区会保留历史数据，但不会进入旧的 Job Assistant 工作台。
+      </p>
+    </SectionCard>
   );
 }
 
@@ -319,8 +276,8 @@ export default function WorkspaceWorkbenchPanel({
       ) : null}
 
       {workspace.module_type === "research" ? <ResearchWorkbench workspace={workspace} workspaceId={workspaceId} /> : null}
-      {workspace.module_type === "support" ? <SupportWorkbench workspaceId={workspaceId} /> : null}
-      {workspace.module_type === "job" ? <JobWorkbench workspaceId={workspaceId} /> : null}
+      {workspace.module_type === "support" ? <SupportWorkbench /> : null}
+      {workspace.module_type === "job" ? <JobWorkbench /> : null}
 
       {workspace.module_type !== "research" &&
       workspace.module_type !== "support" &&

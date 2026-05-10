@@ -2546,3 +2546,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/ai-hot-tracker-brief-reading-layout-fix.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-10-159
+- Date: 2026-05-10
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: temporarily close Support Copilot and Job Assistant user entry paths
+- Context: active product focus is intentionally narrowed to `AI hot tracker`, while `Support Copilot` and `Job Assistant` are not ready to behave like product-complete modules. Keeping their launch paths open creates a misleading product surface and lets users enter older unfinished workbench paths.
+- Choice: keep the module names and code in the repository, but temporarily disable the homepage launch entries for `Support Copilot` and `Job Assistant`. Existing support/job workspaces remain accessible from history, but they now show paused-state explanations instead of entering the old module workbench or task surfaces.
+- Why: this keeps the public product honest while preserving future module direction and historical data. The user-facing product should not present scaffolded or unfinished modules as available features.
+- Impact: new users can only create and enter `AI hot tracker` from the product home. Existing secondary-module workspaces do not break, but their old interactive surfaces are no longer exposed while those modules are paused.
+- Related Task: `tasks/archive/temporarily-close-secondary-module-entries.md`
+- Supersedes:
+

@@ -3,18 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getWorkspace, isApiClientError } from "../../lib/api";
-import type {
-  JobHiringPacketContinuationDraft,
-  SupportCaseContinuationDraft,
-  Workspace,
-} from "../../lib/types";
+import type { Workspace } from "../../lib/types";
 import AuthRequired from "../auth/auth-required";
 import { useAuthSession } from "../auth/use-auth-session";
-import JobAssistantActionPanel from "../job/job-assistant-action-panel";
-import JobHiringWorkbenchSection from "../job/job-hiring-workbench-section";
 import ResearchAssistantPanel from "../research/research-assistant-panel";
-import SupportCaseWorkbenchSection from "../support/support-case-workbench-section";
-import SupportCopilotPanel from "../support/support-copilot-panel";
 import SectionCard from "../ui/section-card";
 
 type TaskModulePanelProps = {
@@ -36,8 +28,6 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [supportContinuationDraft, setSupportContinuationDraft] = useState<SupportCaseContinuationDraft | null>(null);
-  const [jobContinuationDraft, setJobContinuationDraft] = useState<JobHiringPacketContinuationDraft | null>(null);
 
   const loadWorkspace = useCallback(async () => {
     if (!session) {
@@ -81,46 +71,22 @@ export default function TaskModulePanel({ workspaceId }: TaskModulePanelProps) {
   }
 
   if (workspace?.module_type === "support") {
-      return (
-        <>
-          <SupportCaseWorkbenchSection
-            workspaceId={workspaceId}
-          accessToken={session.accessToken}
-          onOpenTask={(taskId) => {
-            if (typeof window !== "undefined") {
-              window.location.hash = `task-${taskId}`;
-            }
-          }}
-          onContinueCase={(draft) => setSupportContinuationDraft(draft)}
-        />
-        <SupportCopilotPanel
-          workspaceId={workspaceId}
-          continuationDraft={supportContinuationDraft}
-          onContinuationHandled={() => setSupportContinuationDraft(null)}
-        />
-      </>
+    return (
+      <SectionCard title="Support Copilot 暂未开放" description="该模块任务入口已临时关闭。">
+        <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>
+          当前产品只开放 AI 热点追踪。这个工作区会保留历史数据，但不会进入旧的 Support Copilot 任务面板。
+        </p>
+      </SectionCard>
     );
   }
 
   if (workspace?.module_type === "job") {
-      return (
-        <>
-          <JobHiringWorkbenchSection
-            workspaceId={workspaceId}
-          accessToken={session.accessToken}
-          onOpenTask={(taskId) => {
-            if (typeof window !== "undefined") {
-              window.location.hash = `job-task-${taskId}`;
-            }
-          }}
-          onContinuePacket={(draft) => setJobContinuationDraft(draft)}
-        />
-        <JobAssistantActionPanel
-          workspaceId={workspaceId}
-          continuationDraft={jobContinuationDraft}
-          onContinuationHandled={() => setJobContinuationDraft(null)}
-        />
-      </>
+    return (
+      <SectionCard title="Job Assistant 暂未开放" description="该模块任务入口已临时关闭。">
+        <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>
+          当前产品只开放 AI 热点追踪。这个工作区会保留历史数据，但不会进入旧的 Job Assistant 任务面板。
+        </p>
+      </SectionCard>
     );
   }
 

@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the hot-tracker follow-up footer safe-area fix is complete and the next bounded slice is waiting on human direction
+- none currently; the secondary module entry closure is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -70,7 +70,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - the hot-tracker run-evaluation layer now also checks whether the saved brief stays aligned with delta and cluster-level judgment, including change-state honesty, high-priority coverage, single-cluster consistency, and priority or change-type alignment
   - the hot-tracker schema defaults, replay findings, follow-up prompt chain, and task control-plane docs now use one clean UTF-8 Chinese contract instead of mixed damaged strings
   - the long-form end-state definition for `AI hot tracker` now lives in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`, while the older frontier-research contract remains a historical pointer only
-  - `Support Copilot` and `Job Assistant` remain visible in the product frame, but active implementation focus is intentionally frozen onto the first module until the hot-tracker agent loop is stronger
+  - `Support Copilot` and `Job Assistant` remain visible in the product frame, but their normal user entry paths are temporarily closed; existing support/job workspaces show a paused-state explanation instead of entering the old module surfaces
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
   - the latest `main` branch lint regression that blocked `Deploy Weave` has been cleared locally, with backend lint plus full backend regression passing again before repush
 
@@ -91,7 +91,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
-  - the latest frontend verify passes after moving the hot-tracker follow-up composer into a safe footer layout
+  - the latest frontend verify passes after temporarily closing the secondary module entries and existing-workspace module surfaces
 
 - Last Verified At: 2026-05-07
 
@@ -107,7 +107,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-follow-up-footer-safe-area.md`
+- `tasks/archive/temporarily-close-secondary-module-entries.md`
 
 ## Recent Decisions
 
@@ -132,3 +132,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-05-07-156` move manual AI hot tracker generation onto durable background runs with polling
 - `DEC-2026-05-07-157` scope AI hot tracker signal-memory storage per workspace and make brief-pane scrolling visible
 - `DEC-2026-05-07-158` prioritize the hot-tracker brief and follow-up reading panes over chrome height
+- `DEC-2026-05-10-159` temporarily close Support Copilot and Job Assistant user entry paths

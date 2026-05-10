@@ -72,9 +72,9 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `web/app/workspaces/page.tsx`
   - owns the lightweight all-workspaces history surface
 - `web/components/workspace/workspace-center-panel.tsx`
-  - owns the home composition and direct module-entry surface
+  - owns the home composition and direct module-entry surface; currently only `AI hot tracker` is launchable, while `Support Copilot` and `Job Assistant` are visible as paused entries
 - `web/components/workspace/workspace-workbench-panel.tsx`
-  - owns the generic non-hot-tracker workspace path
+  - owns the generic non-hot-tracker workspace path and shows paused-state explanations for existing support/job workspaces while those modules are closed
 - `web/components/research/ai-hot-tracker-workspace.tsx`
   - owns the dedicated AI hot-tracker surface:
     - runtime state summary
