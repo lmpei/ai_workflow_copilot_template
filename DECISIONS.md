@@ -2560,3 +2560,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/temporarily-close-secondary-module-entries.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-15-160
+- Date: 2026-05-15
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: switch default Qwen chat and evaluation model to `qwen3.6-plus`
+- Context: the deployed product was using `qwen-plus` for chat and evaluation calls, but that model no longer had usable free quota in the current DashScope account. Direct provider checks showed DashScope account billing state was the reason calls had failed earlier, and the user confirmed that other Qwen models still had free quota.
+- Choice: keep the existing DashScope OpenAI-compatible endpoint and API keys, but change `CHAT_MODEL` and `EVAL_MODEL` from `qwen-plus` to `qwen3.6-plus`. Keep `text-embedding-v4` unchanged.
+- Why: `qwen3.6-plus` is a closer general-purpose replacement for the existing brief-generation and evaluation path than special-purpose math, vision, translation, code, or distilled reasoning models, and direct probes confirmed that it works for both ordinary chat and JSON-mode completions.
+- Impact: hot-tracker brief generation, follow-up, and internal evaluation calls now use `qwen3.6-plus` by default in local examples and deployed runtime configuration, while the embedding path remains unchanged.
+- Related Task: `tasks/archive/switch-qwen36-plus-model.md`
+- Supersedes:
+

@@ -141,7 +141,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - PostgreSQL
 - Redis
 - Chroma
-- OpenAI-compatible chat and embedding providers
+- OpenAI-compatible chat and embedding providers; the current Qwen default uses `qwen3.6-plus` for chat/evaluation and `text-embedding-v4` for embeddings through the DashScope compatible API
 - Docker Compose for local orchestration
 - Caddy as the shared edge for host-based frontend and API routing in the multi-subdomain deployment target
 
