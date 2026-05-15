@@ -30,6 +30,7 @@ from app.services.retrieval_generation_service import get_chat_model_interface
 REPORT_SOURCE_SUMMARY_LIMIT = 160
 REPORT_RANK_REASON_LIMIT = 120
 REPORT_SUPPORTING_ITEM_LIMIT = 3
+REPORT_GENERATION_CLUSTER_LIMIT = 4
 
 
 class AiHotTrackerReportGenerationError(Exception):
@@ -216,7 +217,7 @@ def _generate_report_draft(
 ) -> _DraftBrief:
     interface = get_chat_model_interface()
     cluster_payload = _build_cluster_payload(
-        signal_clusters=signal_clusters,
+        signal_clusters=signal_clusters[:REPORT_GENERATION_CLUSTER_LIMIT],
         source_items=source_items,
     )
     messages = _build_generation_messages(

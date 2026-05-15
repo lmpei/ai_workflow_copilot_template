@@ -132,6 +132,57 @@ def test_cluster_payload_keeps_model_input_compact() -> None:
     assert len(payload[0]["supporting_items"]) == ai_hot_tracker_report_service.REPORT_SUPPORTING_ITEM_LIMIT
 
 
+def test_report_draft_caps_candidate_clusters_sent_to_model(monkeypatch: MonkeyPatch) -> None:
+    generated_at = datetime(2026, 4, 16, 8, 0, tzinfo=UTC)
+    source_items = [
+        AiHotTrackerSourceItem(
+            id=f"source-{index}",
+            source_id="openai-news",
+            source_label="OpenAI News",
+            source_kind="html_list",
+            category="models",
+            source_family="official",
+            title=f"OpenAI product update {index}",
+            url=f"https://openai.com/news/update-{index}",
+            summary=f"OpenAI product update summary {index}.",
+            published_at=generated_at,
+            tags=["model", "product"],
+            audience_tags=["ordinary_user"],
+            rank_reason="fresh high-authority source",
+        )
+        for index in range(6)
+    ]
+    clusters = [
+        AiHotTrackerSignalCluster(
+            cluster_id=f"cluster-{index}",
+            event_id=f"event-{index}",
+            title=f"OpenAI product update {index}",
+            category="models",
+            representative_item_id=f"source-{index}",
+            source_item_ids=[f"source-{index}"],
+            source_labels=["OpenAI News"],
+            rank_score=0.9,
+            priority_level="high",
+            fingerprint=f"openai product update {index}",
+            is_new=True,
+        )
+        for index in range(6)
+    ]
+    fake_interface = FakeJsonModelInterface(_valid_brief_payload())
+    monkeypatch.setattr(ai_hot_tracker_report_service, "get_chat_model_interface", lambda: fake_interface)
+
+    ai_hot_tracker_report_service._generate_report_draft(
+        source_items=source_items,
+        signal_clusters=clusters,
+        tracking_profile=ai_hot_tracker_report_service.AiHotTrackerTrackingProfile(),
+        question="追踪 AI 热点",
+    )
+
+    sent_prompt = "\n".join(message.content for message in fake_interface.calls[0]["messages"])
+    assert sent_prompt.count('"cluster_id":') == ai_hot_tracker_report_service.REPORT_GENERATION_CLUSTER_LIMIT
+    assert "cluster-4" not in sent_prompt
+
+
 def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSourceItem]) -> None:
     monkeypatch.setattr(ai_hot_tracker_report_service.workspace_repository, "get_workspace", _mock_workspace)
     monkeypatch.setattr(

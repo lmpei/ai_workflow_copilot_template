@@ -73,7 +73,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but their normal user entry paths are temporarily closed; existing support/job workspaces show a paused-state explanation instead of entering the old module surfaces
   - the local and deployed default Qwen chat/evaluation model is now `qwen3.6-plus`, while embedding remains on `text-embedding-v4`
   - qwen3.6 chat/evaluation calls now disable provider thinking mode through the shared model interface so JSON-mode brief generation does not spend the run budget on hidden reasoning output
-  - hot-tracker brief generation now sends a compact cluster payload into the schema-bound model call, keeping full URLs and score breakdowns in backend records for references and evaluation instead of feeding those noisy debug fields into report synthesis
+  - hot-tracker brief generation now sends only the top four compact cluster candidates into the schema-bound model call, keeping full URLs, full candidate sets, and score breakdowns in backend records for references and evaluation instead of feeding those noisy debug fields into report synthesis
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
   - the latest `main` branch lint regression that blocked `Deploy Weave` has been cleared locally, with backend lint plus full backend regression passing again before repush
 
