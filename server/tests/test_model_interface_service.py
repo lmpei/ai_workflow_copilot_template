@@ -126,6 +126,43 @@ def test_generate_json_object_uses_json_response_format(
     assert response.usage.total_tokens == 15
 
 
+def test_qwen36_disables_thinking_for_json_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_payload: dict[str, object] = {}
+
+    def fake_post(*args: object, **kwargs: object) -> FakeHTTPResponse:
+        captured_payload["payload"] = kwargs["json"]
+        return FakeHTTPResponse(
+            {
+                "choices": [
+                    {
+                        "message": {"content": "{\"ok\": true}"},
+                        "finish_reason": "stop",
+                    }
+                ],
+            }
+        )
+
+    monkeypatch.setattr("app.services.model_interface_service.httpx.post", fake_post)
+
+    interface = OpenAICompatibleModelInterface(
+        settings=OpenAICompatibleModelSettings(
+            api_key="judge-key",
+            model="qwen3.6-plus",
+            base_url="https://example.com/v1",
+            provider_name="qwen",
+        )
+    )
+    response = interface.generate_json_object(
+        messages=[ModelMessage(role="user", content="Return JSON.")],
+    )
+
+    assert captured_payload["payload"]["response_format"] == {"type": "json_object"}
+    assert captured_payload["payload"]["enable_thinking"] is False
+    assert response.data == {"ok": True}
+
+
 def test_embed_texts_orders_vectors_by_index(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

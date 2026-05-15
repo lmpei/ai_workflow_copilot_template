@@ -2574,3 +2574,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/switch-qwen36-plus-model.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-15-161
+- Date: 2026-05-15
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: disable qwen3.6 thinking mode for shared model-interface calls
+- Context: after switching to `qwen3.6-plus`, direct provider probes showed the model was reachable and supported JSON mode, but public hot-tracker report generation still degraded after a long run. The provider response included large `reasoning_content` by default, and a simple JSON-mode call was significantly faster with `enable_thinking=false`.
+- Choice: keep `qwen3.6-plus`, but add `enable_thinking=false` in the shared OpenAI-compatible model-interface payload for Qwen 3.6 models.
+- Why: the hot-tracker brief path needs reliable schema-bound JSON output, not long hidden reasoning. Disabling thinking preserves JSON-mode behavior and reduces report-generation latency without changing product APIs or module behavior.
+- Impact: hot-tracker brief generation, follow-up, and evaluation calls that use Qwen 3.6 now avoid provider-side thinking output by default. Other providers and non-Qwen-3.6 models are unchanged.
+- Related Task: `tasks/archive/qwen36-thinking-timeout-fix.md`
+- Supersedes:
+

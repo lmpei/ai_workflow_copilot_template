@@ -103,6 +103,8 @@ class OpenAICompatibleModelInterface:
                 for message in messages
             ],
         }
+        if _should_disable_qwen_thinking(self.settings):
+            payload["enable_thinking"] = False
         if response_format is not None:
             payload["response_format"] = response_format
         if tools:
@@ -263,6 +265,12 @@ def _extract_text_content(content: object) -> str:
         return ""
 
     raise TypeError("Unsupported model content type")
+
+
+def _should_disable_qwen_thinking(settings: OpenAICompatibleModelSettings) -> bool:
+    if settings.provider_name != "qwen":
+        return False
+    return settings.model.startswith("qwen3.6-")
 
 
 def _extract_tool_calls(message: dict[str, Any]) -> list[ModelToolCall]:

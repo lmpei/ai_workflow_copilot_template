@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the default Qwen chat and evaluation model switch is complete and the next bounded slice is waiting on human direction
+- none currently; the qwen3.6 thinking-timeout fix is complete and the next bounded slice is waiting on human direction
 
 ## Current Roadmap Alignment
 
@@ -72,6 +72,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - the long-form end-state definition for `AI hot tracker` now lives in `docs/prd/AI_HOT_TRACKER_FINAL_DEFINITION.md`, while the older frontier-research contract remains a historical pointer only
   - `Support Copilot` and `Job Assistant` remain visible in the product frame, but their normal user entry paths are temporarily closed; existing support/job workspaces show a paused-state explanation instead of entering the old module surfaces
   - the local and deployed default Qwen chat/evaluation model is now `qwen3.6-plus`, while embedding remains on `text-embedding-v4`
+  - qwen3.6 chat/evaluation calls now disable provider thinking mode through the shared model interface so JSON-mode brief generation does not spend the run budget on hidden reasoning output
   - backend `ruff` now passes again on the active branch, and blocked production deploys now write a clear GitHub Actions summary that points back to the failed upstream `CI` run
   - the latest `main` branch lint regression that blocked `Deploy Weave` has been cleared locally, with backend lint plus full backend regression passing again before repush
 
@@ -92,7 +93,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
-  - the public API health check and a direct DashScope probe now pass after switching chat/evaluation calls to `qwen3.6-plus`
+  - targeted backend model-interface and hot-tracker report tests pass after disabling qwen3.6 thinking mode
 
 - Last Verified At: 2026-05-07
 
@@ -102,13 +103,13 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. run one manual public hot-tracker pass after the billing/model change to confirm full brief generation
+1. run one manual public hot-tracker pass after the qwen3.6 thinking-timeout fix is deployed to confirm full brief generation
 2. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
 3. if the first module continues, use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior
 
 ## Last Completed Task
 
-- `tasks/archive/switch-qwen36-plus-model.md`
+- `tasks/archive/qwen36-thinking-timeout-fix.md`
 
 ## Recent Decisions
 
@@ -135,3 +136,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-05-07-158` prioritize the hot-tracker brief and follow-up reading panes over chrome height
 - `DEC-2026-05-10-159` temporarily close Support Copilot and Job Assistant user entry paths
 - `DEC-2026-05-15-160` switch default Qwen chat and evaluation model to `qwen3.6-plus`
+- `DEC-2026-05-15-161` disable qwen3.6 thinking mode for shared model-interface calls

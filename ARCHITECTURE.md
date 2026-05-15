@@ -95,7 +95,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 ## Runtime Boundaries
 
 - `server/app/services/model_interface_service.py`
-  - owns the shared model-facing contract for text generation, structured JSON generation, and embeddings
+  - owns the shared model-facing contract for text generation, structured JSON generation, and embeddings, including provider-specific payload normalization such as disabling Qwen 3.6 thinking mode for schema-bound runtime paths
 - `server/app/services/ai_hot_tracker_source_service.py`
   - owns trusted-source intake, list-level feed or HTML parsing, deduplication, ordering, and partial-failure capture
 - `server/app/services/ai_hot_tracker_decision_service.py`
