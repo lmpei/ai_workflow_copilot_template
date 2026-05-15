@@ -3,6 +3,8 @@ from datetime import UTC, datetime
 from pytest import MonkeyPatch
 
 from app.schemas.ai_frontier_research import (
+    AiHotTrackerScoreBreakdown,
+    AiHotTrackerSignalCluster,
     AiHotTrackerSourceDefinition,
     AiHotTrackerSourceFailure,
     AiHotTrackerSourceItem,
@@ -72,6 +74,62 @@ def _sample_items(generated_at: datetime) -> list[AiHotTrackerSourceItem]:
             audience_tags=["learner", "developer"],
         ),
     ]
+
+
+def test_cluster_payload_keeps_model_input_compact() -> None:
+    generated_at = datetime(2026, 4, 16, 8, 0, tzinfo=UTC)
+    source_items = [
+        AiHotTrackerSourceItem(
+            id=f"source-{index}",
+            source_id="openai-news",
+            source_label="OpenAI News",
+            source_kind="html_list",
+            category="models",
+            source_family="official",
+            title=f"OpenAI product update {index}",
+            url=f"https://openai.com/news/update-{index}",
+            summary="A" * 260,
+            published_at=generated_at,
+            tags=["model", "product", "agent"],
+            audience_tags=["ordinary_user", "product_builder"],
+            rank_score=0.9,
+            score_breakdown=AiHotTrackerScoreBreakdown(
+                novelty=1.0,
+                freshness=1.0,
+                authority=0.92,
+                relevance=0.8,
+                impact=0.9,
+            ),
+            rank_reason="B" * 220,
+        )
+        for index in range(5)
+    ]
+    cluster = AiHotTrackerSignalCluster(
+        cluster_id="cluster-openai-update",
+        event_id="event-openai-update",
+        title="OpenAI product update",
+        category="models",
+        representative_item_id="source-0",
+        source_item_ids=[item.id for item in source_items],
+        source_labels=["OpenAI News"],
+        rank_score=0.9,
+        priority_level="high",
+        fingerprint="openai product update",
+        is_new=True,
+    )
+
+    payload = ai_hot_tracker_report_service._build_cluster_payload(
+        signal_clusters=[cluster],
+        source_items=source_items,
+    )
+
+    item_payload = payload[0]["representative_item"]
+    assert isinstance(item_payload, dict)
+    assert "url" not in item_payload
+    assert "score_breakdown" not in item_payload
+    assert len(item_payload["summary"]) == ai_hot_tracker_report_service.REPORT_SOURCE_SUMMARY_LIMIT
+    assert len(item_payload["rank_reason"]) == ai_hot_tracker_report_service.REPORT_RANK_REASON_LIMIT
+    assert len(payload[0]["supporting_items"]) == ai_hot_tracker_report_service.REPORT_SUPPORTING_ITEM_LIMIT
 
 
 def _mock_intake(monkeypatch: MonkeyPatch, intake_items: list[AiHotTrackerSourceItem]) -> None:

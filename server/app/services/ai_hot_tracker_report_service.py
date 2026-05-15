@@ -27,7 +27,9 @@ from app.services.ai_hot_tracker_source_service import (
 from app.services.model_interface_service import ModelInterfaceError, ModelMessage
 from app.services.retrieval_generation_service import get_chat_model_interface
 
-REPORT_SOURCE_SUMMARY_LIMIT = 240
+REPORT_SOURCE_SUMMARY_LIMIT = 160
+REPORT_RANK_REASON_LIMIT = 120
+REPORT_SUPPORTING_ITEM_LIMIT = 3
 
 
 class AiHotTrackerReportGenerationError(Exception):
@@ -321,7 +323,7 @@ def _build_cluster_payload(
                 "representative_item": _build_item_payload(representative) if representative else None,
                 "supporting_items": [
                     _build_item_payload(item)
-                    for item_id in cluster.source_item_ids
+                    for item_id in cluster.source_item_ids[:REPORT_SUPPORTING_ITEM_LIMIT]
                     for item in [item_map.get(item_id)]
                     if item is not None
                 ],
@@ -340,12 +342,10 @@ def _build_item_payload(item: AiHotTrackerSourceItem | None) -> dict[str, object
         "category": item.category,
         "title": item.title,
         "summary": item.summary[:REPORT_SOURCE_SUMMARY_LIMIT],
-        "url": item.url,
         "published_at": item.published_at.isoformat() if item.published_at else None,
         "tags": item.tags,
         "audience_tags": item.audience_tags,
-        "rank_reason": item.rank_reason,
-        "score_breakdown": item.score_breakdown.model_dump(mode="json"),
+        "rank_reason": item.rank_reason[:REPORT_RANK_REASON_LIMIT],
     }
 
 

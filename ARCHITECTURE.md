@@ -101,7 +101,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `server/app/services/ai_hot_tracker_decision_service.py`
   - owns impact-oriented fixed scoring, conservative signal clustering, cluster snapshots, durable event-memory projection, and change-state classification for the hot-tracker loop
 - `server/app/services/ai_hot_tracker_report_service.py`
-  - owns mainstream brief-style schema-bound synthesis from ranked and clustered source candidates, including signal confidence, blindspot shaping, and the clean Chinese prompt or fallback contract for the user-facing brief path
+  - owns mainstream brief-style schema-bound synthesis from ranked and clustered source candidates, including signal confidence, blindspot shaping, a compact model-facing cluster payload, and the clean Chinese prompt or fallback contract for the user-facing brief path
 - `server/app/services/ai_hot_tracker_tracking_service.py`
   - owns the hot-tracker control loop:
     - resolve workspace and profile

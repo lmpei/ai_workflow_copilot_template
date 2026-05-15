@@ -2588,3 +2588,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/qwen36-thinking-timeout-fix.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-05-15-162
+- Date: 2026-05-15
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: compact AI hot tracker report-generation payloads for Qwen JSON-mode synthesis
+- Context: after `qwen3.6-plus` became the default and thinking mode was disabled, public hot-tracker runs could still degrade at the report-generation stage. Source intake and decision candidates were available, but the schema-bound brief prompt included full source URLs, score breakdowns, long rank reasons, and too many supporting items per cluster.
+- Choice: keep full source and scoring data in backend records for references and evaluation, but send only a compact cluster payload into the brief-synthesis model call: short summaries, bounded rank reasons, limited supporting items, and no URL or score-breakdown debug fields.
+- Why: the user-facing brief generator needs enough evidence to write a grounded Chinese briefing, not the full internal decision trace. Removing noisy debug fields lowers prompt size and reduces timeout risk without weakening the stored evaluation surface.
+- Impact: hot-tracker report generation is less likely to exceed the runtime budget on Qwen JSON-mode calls, while reference-source rendering and internal evaluation still read the complete stored source items and decision metadata.
+- Related Task: `tasks/archive/ai-hot-tracker-report-generation-payload-fix.md`
+- Supersedes:
+
