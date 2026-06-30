@@ -8,6 +8,8 @@ TEST_DB_PATH = Path(__file__).with_name("test_app.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH.resolve().as_posix()}"
 os.environ["AUTH_SECRET_KEY"] = "test-auth-secret-key"
 os.environ["PUBLIC_AUTH_DISABLED"] = "false"
+os.environ["PASSWORD_AUTH_DISABLED"] = "false"
+os.environ["GUEST_ACCESS_ENABLED"] = "false"
 
 from app.core.config import get_settings  # noqa: E402
 

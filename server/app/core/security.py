@@ -15,6 +15,7 @@ AUTH_TOKEN_URL = "/api/v1/auth/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_TOKEN_URL, auto_error=False)
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 PUBLIC_AUTH_DISABLED_MESSAGE = "产品访问暂未开放"
+PASSWORD_AUTH_DISABLED_MESSAGE = "账号密码登录暂未开放，请使用访客体验。"
 
 
 def _get_auth_secret_key() -> str:
@@ -88,6 +89,15 @@ def raise_if_public_auth_disabled() -> None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=PUBLIC_AUTH_DISABLED_MESSAGE,
+        )
+
+
+def raise_if_password_auth_disabled() -> None:
+    raise_if_public_auth_disabled()
+    if get_settings().password_auth_disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=PASSWORD_AUTH_DISABLED_MESSAGE,
         )
 
 

@@ -1,10 +1,10 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { enterAuth, isApiClientError } from "../../lib/api";
+import { enterAuth, enterGuestAuth, isApiClientError } from "../../lib/api";
 import { storeLoginSession } from "../../lib/auth";
 
 type AuthEntryOverlayProps = {
@@ -13,6 +13,8 @@ type AuthEntryOverlayProps = {
 
 const productFont = '"Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif';
 const authAccessDisabled = process.env.NEXT_PUBLIC_AUTH_DISABLED === "true";
+const guestAccessEnabled = process.env.NEXT_PUBLIC_GUEST_ACCESS_ENABLED === "true";
+const passwordAuthDisabled = process.env.NEXT_PUBLIC_PASSWORD_AUTH_DISABLED === "true";
 
 const inputStyle = {
   background: "rgba(241, 245, 249, 0.82)",
@@ -58,17 +60,72 @@ const primaryButtonStyle = {
   width: "100%",
 } as const;
 
+function resolveEntryMessage(errorMessage: string | null, isEnteringGuest: boolean) {
+  if (errorMessage) {
+    return errorMessage;
+  }
+  if (authAccessDisabled) {
+    return "产品访问暂未开放。";
+  }
+  if (guestAccessEnabled) {
+    return isEnteringGuest ? "正在准备访客体验..." : "即将进入访客体验。";
+  }
+  if (passwordAuthDisabled) {
+    return "当前仅开放访客体验，账号密码登录暂未开放。";
+  }
+  return null;
+}
+
 export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
   const router = useRouter();
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEnteringGuest, setIsEnteringGuest] = useState(guestAccessEnabled);
+
+  useEffect(() => {
+    if (!guestAccessEnabled || authAccessDisabled) {
+      setIsEnteringGuest(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const startGuestSession = async () => {
+      setIsEnteringGuest(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await enterGuestAuth();
+        if (cancelled) {
+          return;
+        }
+        storeLoginSession(response);
+        router.replace(nextPath);
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(isApiClientError(error) ? error.message : "访客体验进入失败，请稍后再试。");
+          setIsEnteringGuest(false);
+        }
+      }
+    };
+
+    void startGuestSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [nextPath, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (authAccessDisabled) {
       setErrorMessage("产品访问暂未开放。");
+      return;
+    }
+    if (passwordAuthDisabled) {
+      setErrorMessage("账号密码登录暂未开放，请使用访客体验。");
       return;
     }
 
@@ -85,6 +142,9 @@ export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
       setIsSubmitting(false);
     }
   };
+
+  const entryMessage = resolveEntryMessage(errorMessage, isEnteringGuest);
+  const showPasswordForm = !authAccessDisabled && !guestAccessEnabled && !passwordAuthDisabled;
 
   return (
     <div
@@ -111,14 +171,14 @@ export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
           boxShadow:
             "0 44px 120px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.46) inset",
           display: "grid",
-          gap: 26,
+          gap: 24,
           margin: "0 auto",
           maxWidth: 480,
           padding: "34px 34px 30px",
           width: "min(100%, 480px)",
         }}
       >
-        <div style={{ display: "grid", gap: 10, justifyItems: "center" }}>
+        <div style={{ display: "grid", gap: 10, justifyItems: "center", textAlign: "center" }}>
           <span
             style={{
               color: "#64748b",
@@ -131,50 +191,20 @@ export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
           >
             LMPAI WEAVE
           </span>
-        </div>
-
-        {authAccessDisabled ? (
-          <div
+          <h1
             style={{
-              display: "grid",
-              gap: 18,
-              justifyItems: "center",
-              padding: "14px 6px 4px",
-              textAlign: "center",
+              color: "#0f172a",
+              fontFamily: productFont,
+              fontSize: 38,
+              lineHeight: 1.05,
+              margin: 0,
             }}
           >
-            <div style={{ display: "grid", gap: 10 }}>
-              <h1
-                style={{
-                  color: "#0f172a",
-                  fontFamily: productFont,
-                  fontSize: 32,
-                  lineHeight: 1.05,
-                  margin: 0,
-                }}
-              >
-                暂不开放访问
-              </h1>
-              <p
-                style={{
-                  color: "#64748b",
-                  fontFamily: productFont,
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                  margin: 0,
-                }}
-              >
-                当前产品入口已经临时关闭，暂不接受登录或创建工作区。
-              </p>
-            </div>
-            <a
-              href={process.env.NEXT_PUBLIC_MARKETING_SITE_URL || "https://lmpai.online"}
-              style={{ ...primaryButtonStyle, width: "min(100%, 280px)" }}
-            >
-              返回主页
-            </a>
-          </div>
-        ) : (
+            立即体验
+          </h1>
+        </div>
+
+        {showPasswordForm ? (
           <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18, width: "100%" }}>
             <label style={{ display: "grid", gap: 8 }}>
               <span style={labelStyle}>账号</span>
@@ -202,17 +232,17 @@ export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
               />
             </label>
 
-            {errorMessage ? (
+            {entryMessage ? (
               <p
                 style={{
-                  color: "#b91c1c",
+                  color: errorMessage ? "#b91c1c" : "#64748b",
                   fontFamily: productFont,
                   fontSize: 14,
                   margin: "2px 4px 0",
                   textAlign: "center",
                 }}
               >
-                {errorMessage}
+                {entryMessage}
               </p>
             ) : null}
 
@@ -220,6 +250,36 @@ export default function AuthEntryOverlay({ nextPath }: AuthEntryOverlayProps) {
               {isSubmitting ? "进入中..." : "立即体验"}
             </button>
           </form>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: 18,
+              justifyItems: "center",
+              padding: "4px 6px 2px",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                color: errorMessage ? "#b91c1c" : "#64748b",
+                fontFamily: productFont,
+                fontSize: 15,
+                lineHeight: 1.7,
+                margin: 0,
+              }}
+            >
+              {entryMessage}
+            </p>
+            {authAccessDisabled ? (
+              <a
+                href={process.env.NEXT_PUBLIC_MARKETING_SITE_URL || "https://lmpai.online"}
+                style={{ ...primaryButtonStyle, width: "min(100%, 280px)" }}
+              >
+                返回主页
+              </a>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

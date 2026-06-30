@@ -2616,3 +2616,17 @@ Append-only log. Add new entries at the bottom.
 - Related Task: `tasks/archive/temporary-close-product-auth-access.md`
 - Supersedes:
 
+## Decision Entry
+
+- ID: DEC-2026-06-30-164
+- Date: 2026-06-30
+- Status: Confirmed
+- Source: Human + Implementation
+- Topic: replace temporary public auth closure with guest access and hidden password entry
+- Context: the product should be usable from a resume or public link without forcing interviewers through an unfinished implicit login/register flow. The previous hard-close switch protected access but made the product unavailable, which did not match the intended public demo behavior.
+- Choice: keep bearer-token protected APIs, add an explicit guest session endpoint, allow deployments to hide account/password login independently, and let the homepage create a guest session automatically when guest mode is enabled. Keep `PUBLIC_AUTH_DISABLED` only as an emergency hard-close switch.
+- Why: this removes first-step product friction while preserving backend authorization boundaries. It also makes public behavior explicit through environment switches instead of relying on the unfinished account/password form.
+- Impact: public deployment can be opened in guest mode with `GUEST_ACCESS_ENABLED=true`, `NEXT_PUBLIC_GUEST_ACCESS_ENABLED=true`, `PASSWORD_AUTH_DISABLED=true`, and `NEXT_PUBLIC_PASSWORD_AUTH_DISABLED=true`; account/password onboarding can be revisited later without blocking product evaluation.
+- Related Task: `tasks/archive/guest-access-with-login-hidden.md`
+- Supersedes: `DEC-2026-06-30-163`
+

@@ -1,3 +1,6 @@
+import secrets
+from uuid import uuid4
+
 from app.core.security import create_access_token, hash_password, verify_password
 from app.repositories import user_repository
 from app.schemas.auth import (
@@ -72,6 +75,24 @@ def enter_user(payload: AuthEntryRequest) -> LoginResponse:
         raise AuthCredentialsError("账号或密码不正确")
 
     return _issue_login_response(user)
+
+
+def issue_guest_session() -> LoginResponse:
+    for _ in range(3):
+        guest_slug = uuid4().hex[:12]
+        guest_email = f"guest-{guest_slug}@guest.local"
+        if user_repository.get_user_by_email(guest_email) is not None:
+            continue
+
+        user = user_repository.create_user(
+            email=guest_email,
+            password_hash=hash_password(secrets.token_urlsafe(32)),
+            name="访客用户",
+            role="guest",
+        )
+        return _issue_login_response(user)
+
+    raise AuthConflictError("无法创建访客会话，请稍后再试。")
 
 
 def get_current_user_response(user) -> UserResponse:

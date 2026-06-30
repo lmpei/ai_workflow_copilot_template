@@ -189,6 +189,12 @@ export async function enterAuth(payload: EnterAuthRequestPayload): Promise<Login
   });
 }
 
+export async function enterGuestAuth(): Promise<LoginResponsePayload> {
+  return fetchBrowserApiJson<LoginResponsePayload>("/auth/guest", {
+    method: "POST",
+  });
+}
+
 export async function loginUser(payload: LoginRequestPayload): Promise<LoginResponsePayload> {
   return fetchBrowserApiJson<LoginResponsePayload>("/auth/login", {
     method: "POST",

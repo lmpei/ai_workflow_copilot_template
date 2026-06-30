@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { clearStoredSession } from "../../lib/auth";
-import { createWorkspace, isApiClientError, listWorkspaces } from "../../lib/api";
+import { clearStoredSession, storeLoginSession } from "../../lib/auth";
+import { createWorkspace, enterGuestAuth, isApiClientError, listWorkspaces } from "../../lib/api";
 import type { ModuleType, Workspace } from "../../lib/types";
 import AuthEntryOverlay from "../auth/auth-entry-overlay";
 import { useAuthSession } from "../auth/use-auth-session";
@@ -29,6 +29,7 @@ const MODULE_BLURBS: Record<ModuleType, string> = {
 };
 
 const CLOSED_MODULE_TYPES = new Set<ModuleType>(["support", "job"]);
+const guestAccessEnabled = process.env.NEXT_PUBLIC_GUEST_ACCESS_ENABLED === "true";
 
 const CONCEPT_GROUPS = [
   ["多模态", "推理模型", "长上下文", "工具调用"],
@@ -230,10 +231,47 @@ export default function WorkspaceCenterPanel() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStartingGuestSession, setIsStartingGuestSession] = useState(false);
   const [launchingKey, setLaunchingKey] = useState<string | null>(null);
+  const guestEntryAttemptedRef = useRef(false);
 
   const authOverlayVisible = !session && searchParams.get("auth") === "1";
   const nextPath = useMemo(() => resolveSafeNextPath(searchParams.get("next")), [searchParams]);
+
+  useEffect(() => {
+    if (!isReady || session || authOverlayVisible || !guestAccessEnabled || guestEntryAttemptedRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+    guestEntryAttemptedRef.current = true;
+
+    const startGuestSession = async () => {
+      setIsStartingGuestSession(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await enterGuestAuth();
+        if (!cancelled) {
+          storeLoginSession(response);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(isApiClientError(error) ? error.message : "访客体验进入失败，请稍后再试。");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsStartingGuestSession(false);
+        }
+      }
+    };
+
+    void startGuestSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authOverlayVisible, isReady, session]);
 
   useEffect(() => {
     if (!session) {
@@ -283,6 +321,10 @@ export default function WorkspaceCenterPanel() {
     }
 
     if (!session) {
+      if (guestAccessEnabled) {
+        setErrorMessage("正在准备访客体验，请稍后再试。");
+        return;
+      }
       openAuthOverlay(pathname ?? "/");
       return;
     }
@@ -382,7 +424,7 @@ export default function WorkspaceCenterPanel() {
                     fontSize: 13,
                   }}
                 >
-                  {session.user.email}
+                  {session.user.role === "guest" ? "访客体验" : session.user.email}
                 </span>
               ) : null}
               <TopAction href="https://lmpai.online" label="个人主页" />
@@ -507,7 +549,7 @@ export default function WorkspaceCenterPanel() {
                 }}
               />
               <ModuleEntry
-                disabled={launchingKey !== null}
+                disabled={launchingKey !== null || isStartingGuestSession}
                 isBusy={launchingKey === "research"}
                 label={MODULE_PRODUCT_NAMES.research}
                 note={MODULE_NOTES.research}
@@ -516,7 +558,7 @@ export default function WorkspaceCenterPanel() {
               />
               <ModuleEntry
                 closed
-                disabled={launchingKey !== null}
+                disabled={launchingKey !== null || isStartingGuestSession}
                 isBusy={launchingKey === "support"}
                 label={MODULE_PRODUCT_NAMES.support}
                 note={MODULE_NOTES.support}
@@ -525,7 +567,7 @@ export default function WorkspaceCenterPanel() {
               />
               <ModuleEntry
                 closed
-                disabled={launchingKey !== null}
+                disabled={launchingKey !== null || isStartingGuestSession}
                 isBusy={launchingKey === "job"}
                 label={MODULE_PRODUCT_NAMES.job}
                 note={MODULE_NOTES.job}

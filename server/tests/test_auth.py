@@ -186,6 +186,73 @@ def test_existing_token_is_blocked_when_public_auth_is_disabled(
     assert me_response.json()["detail"] == "产品访问暂未开放"
 
 
+def test_guest_auth_is_closed_by_default(client: TestClient) -> None:
+    response = client.post("/api/v1/auth/guest")
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "访客体验暂未开放"
+
+
+def test_guest_auth_issues_guest_session(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(get_settings(), "guest_access_enabled", True)
+
+    response = client.post("/api/v1/auth/guest")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["token_type"] == "bearer"
+    assert payload["user"]["role"] == "guest"
+    assert payload["user"]["email"].endswith("@guest.local")
+
+    me_response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {payload['access_token']}"},
+    )
+    assert me_response.status_code == 200
+    assert me_response.json()["role"] == "guest"
+
+
+@pytest.mark.parametrize(
+    ("path", "payload"),
+    [
+        ("/api/v1/auth/enter", {"account": "owner-account", "password": "super-secret"}),
+        (
+            "/api/v1/auth/register",
+            {"email": "owner@example.com", "password": "super-secret", "name": "Owner"},
+        ),
+        ("/api/v1/auth/login", {"email": "owner@example.com", "password": "super-secret"}),
+    ],
+)
+def test_password_auth_can_be_disabled(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+    payload: dict[str, str],
+) -> None:
+    monkeypatch.setattr(get_settings(), "password_auth_disabled", True)
+
+    response = client.post(path, json=payload)
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "账号密码登录暂未开放，请使用访客体验。"
+
+
+def test_guest_auth_still_works_when_password_auth_is_disabled(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(get_settings(), "guest_access_enabled", True)
+    monkeypatch.setattr(get_settings(), "password_auth_disabled", True)
+
+    response = client.post("/api/v1/auth/guest")
+
+    assert response.status_code == 200
+    assert response.json()["user"]["role"] == "guest"
+
+
 @pytest.mark.parametrize("secret", ["phase1-dev-secret", "replace_me", "   "])
 def test_settings_rejects_insecure_auth_secret_key(secret: str) -> None:
     with pytest.raises(

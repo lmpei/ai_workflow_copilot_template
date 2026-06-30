@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; temporary product auth closure is implemented and deployed through environment switches
+- none currently; public product entry uses guest access while account/password entry is hidden
 
 ## Current Roadmap Alignment
 
@@ -93,7 +93,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
-  - product access is temporarily closed by default in deployed builds through `PUBLIC_AUTH_DISABLED=true` plus `NEXT_PUBLIC_AUTH_DISABLED=true`; local/env-specific runs can explicitly reopen with both switches set to `false`
+  - public product entry now uses explicit guest access switches: backend token authorization stays active, the homepage can create a guest session automatically, and account/password entry can be hidden without closing the product
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
   - targeted backend model-interface and hot-tracker report tests pass after disabling qwen3.6 thinking mode and compacting the report-generation payload
 
@@ -105,12 +105,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. when access should reopen, set `PUBLIC_AUTH_DISABLED=false` and `NEXT_PUBLIC_AUTH_DISABLED=false`, then redeploy
-2. after reopening, decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
+1. keep public deployment in guest mode while the account/password onboarding flow remains unfinished
+2. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
 
 ## Last Completed Task
 
-- `tasks/archive/temporary-close-product-auth-access.md`
+- `tasks/archive/guest-access-with-login-hidden.md`
 
 ## Recent Decisions
 
@@ -139,3 +139,4 @@ Current state only. Keep this file short, current, and action-oriented.
 - `DEC-2026-05-15-160` switch default Qwen chat and evaluation model to `qwen3.6-plus`
 - `DEC-2026-05-15-161` disable qwen3.6 thinking mode for shared model-interface calls
 - `DEC-2026-05-15-162` compact AI hot tracker report-generation payloads for Qwen JSON-mode synthesis
+- `DEC-2026-06-30-164` replace the temporary public auth closure with guest access and hidden password entry
