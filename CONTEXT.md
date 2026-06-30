@@ -121,9 +121,10 @@ The frontend auth experience is now also narrower: protected product paths no lo
 primary product-facing auth surface. Instead, the product home acts as the visible auth host and mounts one blocking
 auth overlay when entry is required.
 
-The product also has one explicit temporary access lock: `PUBLIC_AUTH_DISABLED=true` rejects auth entry, login,
-registration, and existing-token protected API access, while `NEXT_PUBLIC_AUTH_DISABLED=true` makes the homepage auth
-overlay show a closed-access message instead of the account form.
+The product also has one explicit temporary access lock: deployed builds default to closed access unless the selected
+environment explicitly sets `PUBLIC_AUTH_DISABLED=false` and `NEXT_PUBLIC_AUTH_DISABLED=false`. When closed, the backend
+rejects auth entry, login, registration, and existing-token protected API access, while the homepage auth overlay shows a
+closed-access message instead of the account form.
 
 The next bounded follow-through on top of that product surface is now explicit as well: `AI 热点追踪` is being rebuilt
 around one fixed trusted external source set, one normalized source-item middle layer, and one structured report path

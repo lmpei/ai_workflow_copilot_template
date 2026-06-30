@@ -93,7 +93,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
-  - product access can be temporarily closed with `PUBLIC_AUTH_DISABLED=true` plus `NEXT_PUBLIC_AUTH_DISABLED=true`; this blocks auth entry, login/register, and existing-token access while keeping the public shell online
+  - product access is temporarily closed by default in deployed builds through `PUBLIC_AUTH_DISABLED=true` plus `NEXT_PUBLIC_AUTH_DISABLED=true`; local/env-specific runs can explicitly reopen with both switches set to `false`
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
   - targeted backend model-interface and hot-tracker report tests pass after disabling qwen3.6 thinking mode and compacting the report-generation payload
 

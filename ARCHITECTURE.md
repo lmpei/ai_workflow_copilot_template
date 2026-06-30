@@ -70,7 +70,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `web/app/page.tsx`
   - owns the canonical product home and the homepage-mounted auth overlay state
 - `web/components/auth/auth-entry-overlay.tsx`
-  - owns the homepage auth overlay and can render a temporary closed-access state when `NEXT_PUBLIC_AUTH_DISABLED=true`
+  - owns the homepage auth overlay and can render a temporary closed-access state when `NEXT_PUBLIC_AUTH_DISABLED=true`; deployed builds default this switch to closed unless the environment explicitly opts back in
 - `web/app/workspaces/page.tsx`
   - owns the lightweight all-workspaces history surface
 - `web/components/workspace/workspace-center-panel.tsx`
@@ -92,7 +92,7 @@ For the long-form product definition of `AI hot tracker`, use `docs/prd/AI_HOT_T
 - `server/app/api/routes/workspaces.py`
   - owns canonical workspace creation, update, and deletion paths for all environments
 - `server/app/api/routes/auth.py` and `server/app/core/security.py`
-  - own the temporary public access lock: `PUBLIC_AUTH_DISABLED=true` rejects auth entry, login/register, and existing-token protected API access without changing the rest of the deployment
+  - own the temporary public access lock: `PUBLIC_AUTH_DISABLED=true` rejects auth entry, login/register, and existing-token protected API access without changing the rest of the deployment; deployed builds default this switch to closed unless the environment explicitly opts back in
 - `server/app/api/routes/research_analysis_runs.py`
   - owns AI hot-tracker run creation, listing, retrieval, deletion, run-bound follow-up, runtime state lookup, run evaluation lookup, replay evaluation lookup, and the `/ai-hot-tracker/report` alias; manual run creation returns a queued tracking-run response and the selected worker completes the canonical loop asynchronously
 

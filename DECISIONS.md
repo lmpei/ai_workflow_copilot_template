@@ -2610,7 +2610,7 @@ Append-only log. Add new entries at the bottom.
 - Source: Human + Implementation
 - Topic: temporarily close public product auth access
 - Context: the deployed product's unified auth entry could create a user on first login, which made the public product reachable by anyone who visited the product host while the project owner wanted to prevent outside access temporarily.
-- Choice: add an explicit `PUBLIC_AUTH_DISABLED` backend switch and a matching `NEXT_PUBLIC_AUTH_DISABLED` frontend switch. When enabled, auth entry, login/register, and existing-token protected API access return `403`, while the homepage auth overlay shows a closed-access message instead of the login form.
+- Choice: add an explicit `PUBLIC_AUTH_DISABLED` backend switch and a matching `NEXT_PUBLIC_AUTH_DISABLED` frontend switch. When enabled, auth entry, login/register, and existing-token protected API access return `403`, while the homepage auth overlay shows a closed-access message instead of the login form. Deployment defaults now close access unless the selected environment explicitly sets both switches to `false`.
 - Why: hiding the login form alone would not protect the backend. The temporary closure needs to be enforceable at the API boundary and still easy to reverse by changing environment variables and redeploying.
 - Impact: the public shell can remain online, but login-required product functionality is closed until the switches are set back to `false`.
 - Related Task: `tasks/archive/temporary-close-product-auth-access.md`

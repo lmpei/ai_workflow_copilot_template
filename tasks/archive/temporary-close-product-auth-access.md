@@ -9,6 +9,7 @@ Temporarily close all login-required product access while keeping the deployment
 - Add a backend runtime switch for public auth closure.
 - Add a frontend build/runtime switch so the auth overlay shows a closed-access state instead of the account/password form.
 - Wire the switch into the weave deployment compose path.
+- Default deployed builds to closed access unless the selected environment explicitly opts back in with `PUBLIC_AUTH_DISABLED=false` and `NEXT_PUBLIC_AUTH_DISABLED=false`.
 - Update env examples and control-plane docs.
 - Verify auth behavior locally and deploy the switch to the public server.
 
