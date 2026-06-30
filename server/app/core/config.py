@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
     task_queue_name: str = "platform_tasks"
     auth_secret_key: str = Field(default="")
+    public_auth_disabled: bool = False
     openai_api_key: str = "replace_me"
     chat_provider: str = "qwen"
     chat_api_key: str = "replace_me"

@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 
 
 def test_enter_registers_new_account_and_returns_session(client: TestClient) -> None:
@@ -143,6 +143,47 @@ def test_me_rejects_invalid_or_missing_token(client: TestClient) -> None:
         headers={"Authorization": "Bearer invalid-token"},
     )
     assert invalid_token_response.status_code == 401
+
+
+def test_auth_entry_is_closed_when_public_auth_is_disabled(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(get_settings(), "public_auth_disabled", True)
+
+    response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "closed-account",
+            "password": "super-secret",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "产品访问暂未开放"
+
+
+def test_existing_token_is_blocked_when_public_auth_is_disabled(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    login_response = client.post(
+        "/api/v1/auth/enter",
+        json={
+            "account": "owner-account",
+            "password": "super-secret",
+        },
+    )
+    assert login_response.status_code == 200
+
+    monkeypatch.setattr(get_settings(), "public_auth_disabled", True)
+    me_response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {login_response.json()['access_token']}"},
+    )
+
+    assert me_response.status_code == 403
+    assert me_response.json()["detail"] == "产品访问暂未开放"
 
 
 @pytest.mark.parametrize("secret", ["phase1-dev-secret", "replace_me", "   "])

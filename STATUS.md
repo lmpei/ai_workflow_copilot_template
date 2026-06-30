@@ -4,7 +4,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Metadata
 
-- Last Updated: 2026-05-07
+- Last Updated: 2026-06-30
 
 ## Project Mode
 
@@ -32,7 +32,7 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Active Task
 
-- none currently; the hot-tracker qwen3.6 report-generation payload fix is complete and the next bounded slice is waiting on human direction
+- none currently; temporary product auth closure is implemented and deployed through environment switches
 
 ## Current Roadmap Alignment
 
@@ -93,6 +93,7 @@ Current state only. Keep this file short, current, and action-oriented.
   - owners can permanently delete a workspace and its associated data after confirmation
   - protected product pages still use the homepage-mounted auth overlay instead of a separate auth page
   - local and deployed environments both enter through the same canonical workspace path without public-demo bootstrap behavior
+  - product access can be temporarily closed with `PUBLIC_AUTH_DISABLED=true` plus `NEXT_PUBLIC_AUTH_DISABLED=true`; this blocks auth entry, login/register, and existing-token access while keeping the public shell online
   - verification now includes full backend regression plus frontend verify for the final hot-tracker stabilization pass
   - targeted backend model-interface and hot-tracker report tests pass after disabling qwen3.6 thinking mode and compacting the report-generation payload
 
@@ -104,13 +105,12 @@ Current state only. Keep this file short, current, and action-oriented.
 
 ## Ready Now
 
-1. run one manual public hot-tracker pass after the qwen3.6 thinking and report-payload fixes are deployed to confirm full brief generation
-2. decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
-3. if the first module continues, use the replay corpus and replay-evaluation surface to tune impact, novelty, notify, and replacement behavior
+1. when access should reopen, set `PUBLIC_AUTH_DISABLED=false` and `NEXT_PUBLIC_AUTH_DISABLED=false`, then redeploy
+2. after reopening, decide whether the next bounded investment is more hot-tracker judgment tuning or the first implementation slice of the second module
 
 ## Last Completed Task
 
-- `tasks/archive/ai-hot-tracker-report-generation-payload-fix.md`
+- `tasks/archive/temporary-close-product-auth-access.md`
 
 ## Recent Decisions
 

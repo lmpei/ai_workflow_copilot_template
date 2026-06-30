@@ -14,6 +14,7 @@ from app.repositories import user_repository
 AUTH_TOKEN_URL = "/api/v1/auth/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_TOKEN_URL, auto_error=False)
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+PUBLIC_AUTH_DISABLED_MESSAGE = "产品访问暂未开放"
 
 
 def _get_auth_secret_key() -> str:
@@ -82,6 +83,14 @@ def _unauthorized_exception() -> HTTPException:
     )
 
 
+def raise_if_public_auth_disabled() -> None:
+    if get_settings().public_auth_disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=PUBLIC_AUTH_DISABLED_MESSAGE,
+        )
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 100_000)
@@ -119,6 +128,7 @@ def get_current_user_from_token(token: str):
 
 
 def get_current_user(token: str | None = Depends(oauth2_scheme)):
+    raise_if_public_auth_disabled()
     if token is None:
         raise _unauthorized_exception()
     return get_current_user_from_token(token)

@@ -4,7 +4,7 @@ Stable project facts only. Keep this file concise and update it when the project
 
 ## Metadata
 
-- Last Updated: 2026-04-16
+- Last Updated: 2026-06-30
 - Maintainer: project owner plus coding agents
 
 ## Project Description
@@ -120,6 +120,10 @@ no longer exposed as equal first-stop surfaces inside that module.
 The frontend auth experience is now also narrower: protected product paths no longer keep a separate login page as the
 primary product-facing auth surface. Instead, the product home acts as the visible auth host and mounts one blocking
 auth overlay when entry is required.
+
+The product also has one explicit temporary access lock: `PUBLIC_AUTH_DISABLED=true` rejects auth entry, login,
+registration, and existing-token protected API access, while `NEXT_PUBLIC_AUTH_DISABLED=true` makes the homepage auth
+overlay show a closed-access message instead of the account form.
 
 The next bounded follow-through on top of that product surface is now explicit as well: `AI 热点追踪` is being rebuilt
 around one fixed trusted external source set, one normalized source-item middle layer, and one structured report path

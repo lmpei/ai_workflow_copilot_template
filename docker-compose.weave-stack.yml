@@ -57,6 +57,7 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.lmpai.online/api/v1}
         NEXT_PUBLIC_MARKETING_SITE_URL: ${NEXT_PUBLIC_MARKETING_SITE_URL:-https://lmpai.online}
+        NEXT_PUBLIC_AUTH_DISABLED: ${NEXT_PUBLIC_AUTH_DISABLED:-false}
     restart: unless-stopped
     env_file:
       - ${APP_ENV_FILE:-.env.weave.example}
@@ -64,6 +65,7 @@ services:
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://server:8000/api/v1}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.lmpai.online/api/v1}
       NEXT_PUBLIC_MARKETING_SITE_URL: ${NEXT_PUBLIC_MARKETING_SITE_URL:-https://lmpai.online}
+      NEXT_PUBLIC_AUTH_DISABLED: ${NEXT_PUBLIC_AUTH_DISABLED:-false}
     depends_on:
       - server
     ports:

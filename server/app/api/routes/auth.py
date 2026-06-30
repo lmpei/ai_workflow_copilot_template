@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, raise_if_public_auth_disabled
 from app.models.user import User
 from app.schemas.auth import (
     AuthEntryRequest,
@@ -23,6 +23,7 @@ router = APIRouter()
 
 @router.post("/auth/enter", response_model=LoginResponse)
 async def enter(payload: AuthEntryRequest) -> LoginResponse:
+    raise_if_public_auth_disabled()
     try:
         return enter_user(payload)
     except AuthCredentialsError as error:
@@ -31,6 +32,7 @@ async def enter(payload: AuthEntryRequest) -> LoginResponse:
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(payload: RegisterRequest) -> UserResponse:
+    raise_if_public_auth_disabled()
     try:
         return register_user(payload)
     except AuthConflictError as error:
@@ -39,6 +41,7 @@ async def register(payload: RegisterRequest) -> UserResponse:
 
 @router.post("/auth/login", response_model=LoginResponse)
 async def login(payload: LoginRequest) -> LoginResponse:
+    raise_if_public_auth_disabled()
     try:
         return login_user(payload)
     except AuthCredentialsError as error:
